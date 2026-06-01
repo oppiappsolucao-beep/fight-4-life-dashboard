@@ -557,12 +557,24 @@ def aplicar_css() -> None:
             }}
 
             [data-testid="stSidebar"] div[role="radiogroup"] label {{
+                align-items: center;
                 background: rgba(255,255,255,0.035);
                 border: 1px solid rgba(255,255,255,0.08);
                 border-radius: 12px;
                 cursor: pointer;
+                display: flex !important;
+                min-height: 48px;
                 padding: 0.68rem 0.72rem;
                 transition: 0.18s ease;
+                width: 100% !important;
+            }}
+
+            [data-testid="stSidebar"] div[role="radiogroup"] {{
+                width: 100% !important;
+            }}
+
+            [data-testid="stSidebar"] div[role="radiogroup"] > label {{
+                max-width: 100% !important;
             }}
 
             [data-testid="stSidebar"] div[role="radiogroup"] label:hover {{
