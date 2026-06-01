@@ -2179,6 +2179,175 @@ def aplicar_css_dashboard_claro() -> None:
                     padding: 0.64rem !important;
                 }
             }
+
+
+            /* LAYOUT FINAL DOS STATUS: CARD + BOTÃO VER NOMES */
+            .status-final-panel {
+                background: rgba(255,255,255,0.97);
+                border: 1px solid rgba(255,255,255,0.72);
+                border-radius: 22px;
+                box-shadow: 0 12px 28px rgba(15, 23, 42, 0.065);
+                padding: 1rem;
+            }
+
+            .status-final-header {
+                align-items: center;
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 0.85rem;
+            }
+
+            .status-final-title {
+                color: #202020;
+                font-size: 1rem;
+                font-weight: 800;
+                letter-spacing: -0.025rem;
+                margin: 0;
+            }
+
+            .status-final-sub {
+                color: #7a8494;
+                font-size: 0.69rem;
+                margin: 0.15rem 0 0 0;
+            }
+
+            .status-final-card {
+                background: #ffffff;
+                border: 1px solid #dfe4ea;
+                border-radius: 17px;
+                box-shadow: 0 7px 16px rgba(15, 23, 42, 0.05);
+                min-height: 104px;
+                padding: 0.72rem;
+                transition: 0.18s ease;
+            }
+
+            .status-final-card:hover {
+                border-color: rgba(251,196,16,0.90);
+                box-shadow: 0 10px 20px rgba(15,23,42,0.09);
+                transform: translateY(-2px);
+            }
+
+            .status-final-card-selected {
+                border-color: #fbc410 !important;
+                box-shadow:
+                    0 0 0 2px rgba(251,196,16,0.18),
+                    0 10px 20px rgba(15,23,42,0.09) !important;
+            }
+
+            .status-final-top {
+                align-items: center;
+                display: flex;
+                gap: 0.56rem;
+            }
+
+            .status-final-icon {
+                align-items: center;
+                border-radius: 11px;
+                display: flex;
+                flex: 0 0 auto;
+                font-size: 0.78rem;
+                height: 34px;
+                justify-content: center;
+                width: 34px;
+            }
+
+            .status-final-name {
+                color: #111111;
+                font-size: 0.70rem;
+                font-weight: 800;
+                line-height: 1.14;
+                margin: 0;
+            }
+
+            .status-final-number {
+                color: #111111;
+                font-size: 1.34rem;
+                font-weight: 800;
+                letter-spacing: -0.06rem;
+                line-height: 1;
+                margin: 0.45rem 0 0 0;
+            }
+
+            .status-final-period {
+                color: #8791a0;
+                font-size: 0.58rem;
+                font-weight: 600;
+                margin: 0.18rem 0 0 0;
+            }
+
+            .status-final-button-wrap {
+                margin-top: 0.35rem;
+            }
+
+            .st-key-btn_status_novo_lead button,
+            .st-key-btn_status_conversando button,
+            .st-key-btn_status_nao_tem_interesse button,
+            .st-key-btn_status_nao_responde button,
+            .st-key-btn_status_fechado button {
+                background: #ffffff !important;
+                border: 1px solid #dfe4ea !important;
+                border-radius: 999px !important;
+                box-shadow: 0 5px 12px rgba(15,23,42,0.04) !important;
+                color: #23395d !important;
+                font-size: 0.69rem !important;
+                font-weight: 700 !important;
+                min-height: 34px !important;
+                padding: 0.30rem 0.60rem !important;
+                text-transform: none !important;
+                width: 100% !important;
+            }
+
+            .st-key-btn_status_novo_lead button:hover,
+            .st-key-btn_status_conversando button:hover,
+            .st-key-btn_status_nao_tem_interesse button:hover,
+            .st-key-btn_status_nao_responde button:hover,
+            .st-key-btn_status_fechado button:hover {
+                background: #fffdf5 !important;
+                border-color: #fbc410 !important;
+                color: #111111 !important;
+            }
+
+            .st-key-btn_status_novo_lead button p,
+            .st-key-btn_status_conversando button p,
+            .st-key-btn_status_nao_tem_interesse button p,
+            .st-key-btn_status_nao_responde button p,
+            .st-key-btn_status_fechado button p {
+                color: inherit !important;
+                font-size: 0.69rem !important;
+                font-weight: 700 !important;
+                text-transform: none !important;
+            }
+
+            @media (max-width: 1100px) {
+                .status-final-card {
+                    min-height: 100px;
+                }
+            }
+
+            @media (max-width: 620px) {
+                .status-final-panel {
+                    border-radius: 18px;
+                    padding: 0.78rem;
+                }
+
+                .status-final-header {
+                    margin-bottom: 0.68rem;
+                }
+
+                .status-final-card {
+                    border-radius: 14px;
+                    min-height: 96px;
+                    padding: 0.62rem;
+                }
+
+                .status-final-name {
+                    font-size: 0.63rem;
+                }
+
+                .status-final-number {
+                    font-size: 1.18rem;
+                }
+            }
 </style>
         ''',
         unsafe_allow_html=True,
@@ -2450,65 +2619,104 @@ def contar_status_comercial() -> dict[str, int]:
 
 def render_cards_status_comercial_clicaveis() -> None:
     """
-    Cards clicáveis com botões nativos do Streamlit.
-    O clique faz apenas rerun interno, mantendo os leads na sessão.
+    Exibe os status no formato:
+    card visual branco + botão separado "Ver nomes".
+
+    O clique usa botão nativo do Streamlit, preservando os leads salvos
+    na sessão e abrindo a lista de nomes logo abaixo.
     """
     contagem = contar_status_comercial()
     status_selecionado = st.session_state.get("status_card_selecionado", "")
 
     cards = [
-        ("✦", "Novo Lead", "status_card_novo_lead"),
-        ("●", "Conversando", "status_card_conversando"),
-        ("⊘", "Não tem Interesse", "status_card_nao_tem_interesse"),
-        ("⚑", "Não Responde", "status_card_nao_responde"),
-        ("✓", "Fechado", "status_card_fechado"),
+        {
+            "icone": "✦",
+            "nome": "Novo Lead",
+            "classe": "status-blue",
+            "botao_key": "btn_status_novo_lead",
+        },
+        {
+            "icone": "●",
+            "nome": "Conversando",
+            "classe": "status-brown",
+            "botao_key": "btn_status_conversando",
+        },
+        {
+            "icone": "⊘",
+            "nome": "Não tem Interesse",
+            "classe": "status-teal",
+            "botao_key": "btn_status_nao_tem_interesse",
+        },
+        {
+            "icone": "⚑",
+            "nome": "Não Responde",
+            "classe": "status-red",
+            "botao_key": "btn_status_nao_responde",
+        },
+        {
+            "icone": "✓",
+            "nome": "Fechado",
+            "classe": "status-green",
+            "botao_key": "btn_status_fechado",
+        },
     ]
 
-    with st.container(key="status_cards_area"):
+    with st.container():
         st.markdown(
             """
-            <div class="status-native-header">
-                <div>
-                    <h2 class="status-native-title">Acompanhamento comercial</h2>
-                    <p class="status-native-sub">
-                        Clique em um card para visualizar os nomes daquela etapa
-                    </p>
+            <section class="status-final-panel">
+                <div class="status-final-header">
+                    <div>
+                        <h2 class="status-final-title">Acompanhamento comercial</h2>
+                        <p class="status-final-sub">
+                            Clique em “Ver nomes” para visualizar os alunos daquela etapa
+                        </p>
+                    </div>
+                    <span class="placeholder-pill">Status</span>
                 </div>
-                <span class="placeholder-pill">Status</span>
-            </div>
             """,
             unsafe_allow_html=True,
         )
 
-        linha_1 = st.columns(3, gap="small")
-        linha_2 = st.columns(2, gap="small")
+        colunas = st.columns(5, gap="small")
 
-        for coluna, (icone, status, chave_base) in zip(
-            linha_1 + linha_2,
-            cards,
-        ):
-            total = int(contagem[status])
-            texto_registro = "registro" if total == 1 else "registros"
-
-            container_key = (
-                f"{chave_base}_container_selected"
-                if status == status_selecionado
-                else f"{chave_base}_container"
+        for coluna, item in zip(colunas, cards):
+            total = int(contagem[item["nome"]])
+            texto_registro = "registro nesta sessão" if total == 1 else "registros nesta sessão"
+            classe_selecionado = (
+                " status-final-card-selected"
+                if item["nome"] == status_selecionado
+                else ""
             )
 
             with coluna:
-                with st.container(key=container_key):
+                st.markdown(
+                    f"""
+                    <article class="status-final-card{classe_selecionado}">
+                        <div class="status-final-top">
+                            <div class="status-final-icon {item["classe"]}">
+                                {item["icone"]}
+                            </div>
+                            <p class="status-final-name">{item["nome"]}</p>
+                        </div>
+
+                        <p class="status-final-number">{total}</p>
+                        <p class="status-final-period">{texto_registro}</p>
+                    </article>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+                with st.container(key=item["botao_key"]):
                     if st.button(
-                        (
-                            f"{icone}  {status}\n\n"
-                            f"{total} {texto_registro}\n\n"
-                            "Clique para ver os nomes"
-                        ),
-                        key=chave_base,
+                        "Ver nomes",
+                        key=f'acao_{item["botao_key"]}',
                         use_container_width=True,
                     ):
-                        st.session_state["status_card_selecionado"] = status
+                        st.session_state["status_card_selecionado"] = item["nome"]
                         st.rerun()
+
+        st.markdown("</section>", unsafe_allow_html=True)
 
 
 def render_registros_card_clicado() -> None:
