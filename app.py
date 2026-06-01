@@ -776,24 +776,13 @@ def aplicar_css() -> None:
                 text-transform: uppercase;
             }}
 
-            .diretoria-login-box {{
-                background:
-                    linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025));
-                border: 1px solid rgba(251,196,16,0.38);
-                border-radius: 22px;
-                box-shadow: 0 24px 60px rgba(0,0,0,0.30);
-                margin: 1.2rem auto 0 auto;
-                max-width: 560px;
-                padding: 1.2rem 1.2rem 0.25rem 1.2rem;
-            }}
-
             .diretoria-login-title {{
                 color: #ffffff;
                 font-size: 1.42rem;
                 font-weight: 1000;
                 letter-spacing: -0.04rem;
-                margin: 0;
-                text-align: center;
+                margin: 0.10rem 0 0 0;
+                text-align: left;
                 text-transform: uppercase;
             }}
 
@@ -801,9 +790,9 @@ def aplicar_css() -> None:
                 color: #bdbdbd;
                 font-size: 0.80rem;
                 line-height: 1.45;
-                margin: 0.38rem auto 0.8rem auto;
-                max-width: 420px;
-                text-align: center;
+                margin: 0.42rem 0 0.82rem 0;
+                max-width: 100%;
+                text-align: left;
             }}
 
             .diretoria-badge {{
@@ -814,13 +803,22 @@ def aplicar_css() -> None:
                 font-size: 0.62rem;
                 font-weight: 950;
                 letter-spacing: 0.12rem;
-                margin-bottom: 0.58rem;
+                margin-bottom: 0.42rem;
                 padding: 0.40rem 0.66rem;
                 text-transform: uppercase;
             }}
 
             .diretoria-badge-wrap {{
-                text-align: center;
+                text-align: left;
+            }}
+
+            /* Card real do Streamlit envolvendo título + campos + botão */
+            [data-testid="stVerticalBlockBorderWrapper"] {{
+                background:
+                    linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.022));
+                border: 1px solid rgba(251,196,16,0.38) !important;
+                border-radius: 22px !important;
+                box-shadow: 0 24px 60px rgba(0,0,0,0.30);
             }}
 
             @media (max-width: 900px) {{
@@ -1003,47 +1001,54 @@ def exibir_login_diretoria() -> None:
                 <p class="page-subtitle">Acesso restrito</p>
             </div>
         </div>
-
-        <div class="diretoria-login-box">
-            <div class="diretoria-badge-wrap">
-                <span class="diretoria-badge">Área protegida</span>
-            </div>
-            <h2 class="diretoria-login-title">Login da Diretoria</h2>
-            <p class="diretoria-login-sub">
-                Digite as credenciais exclusivas da diretoria para visualizar
-                os indicadores estratégicos da academia.
-            </p>
         """,
         unsafe_allow_html=True,
     )
 
-    with st.form("formulario_login_diretoria", clear_on_submit=False):
-        usuario_diretoria = st.text_input(
-            "Usuário da Diretoria",
-            placeholder="Digite o usuário da diretoria",
-            key="usuario_diretoria",
-        )
-        senha_diretoria = st.text_input(
-            "Senha da Diretoria",
-            type="password",
-            placeholder="Digite a senha da diretoria",
-            key="senha_diretoria",
-        )
-        entrar_diretoria = st.form_submit_button("Entrar na Diretoria")
+    coluna_esquerda, coluna_central, coluna_direita = st.columns(
+        [1, 1.45, 1],
+        gap="large",
+    )
 
-    if entrar_diretoria:
-        usuario_configurado, senha_configurada = carregar_credenciais_diretoria()
+    with coluna_central:
+        with st.container(border=True):
+            st.markdown(
+                """
+                <div class="diretoria-badge-wrap">
+                    <span class="diretoria-badge">Área protegida</span>
+                </div>
+                <h2 class="diretoria-login-title">Login da Diretoria</h2>
+                <p class="diretoria-login-sub">
+                    Digite as credenciais exclusivas da diretoria para visualizar
+                    os indicadores estratégicos da academia.
+                </p>
+                """,
+                unsafe_allow_html=True,
+            )
 
-        if credenciais_diretoria_validas(
-            usuario_diretoria,
-            senha_diretoria,
-        ):
-            st.session_state["diretoria_autenticada"] = True
-            st.rerun()
-        else:
-            st.error("Usuário ou senha da Diretoria incorretos.")
+            with st.form("formulario_login_diretoria", clear_on_submit=False):
+                usuario_diretoria = st.text_input(
+                    "Usuário da Diretoria",
+                    placeholder="Digite o usuário da diretoria",
+                    key="usuario_diretoria",
+                )
+                senha_diretoria = st.text_input(
+                    "Senha da Diretoria",
+                    type="password",
+                    placeholder="Digite a senha da diretoria",
+                    key="senha_diretoria",
+                )
+                entrar_diretoria = st.form_submit_button("Entrar na Diretoria")
 
-    st.markdown("</div>", unsafe_allow_html=True)
+            if entrar_diretoria:
+                if credenciais_diretoria_validas(
+                    usuario_diretoria,
+                    senha_diretoria,
+                ):
+                    st.session_state["diretoria_autenticada"] = True
+                    st.rerun()
+                else:
+                    st.error("Usuário ou senha da Diretoria incorretos.")
 
 
 def exibir_dashboard_inicial() -> None:
