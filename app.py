@@ -139,30 +139,72 @@ def carregar_credenciais_diretoria() -> tuple[str, str]:
     """
     Busca as credenciais exclusivas da Diretoria nos Secrets do Streamlit.
 
-    Aceita qualquer um destes formatos:
+    O código aceita três formatos diferentes para evitar erro de configuração:
 
-    FORMATO 1:
+    FORMATO RECOMENDADO E MAIS SIMPLES:
+    [auth]
+    username = "fight4life"
+    password = "Fight4life2026!"
+    diretoria_username = "fight4lifediretoria"
+    diretoria_password = "Fight4LifeDiretoria!"
+
+    FORMATO ALTERNATIVO 1:
     [diretoria]
     username = "fight4lifediretoria"
     password = "Fight4LifeDiretoria!"
 
-    FORMATO 2:
+    FORMATO ALTERNATIVO 2:
     diretoria_username = "fight4lifediretoria"
     diretoria_password = "Fight4LifeDiretoria!"
     """
     try:
-        # Formato 1: seção [diretoria]
-        if "diretoria" in st.secrets:
-            secao_diretoria = st.secrets["diretoria"]
-            usuario = str(secao_diretoria["username"]) if "username" in secao_diretoria else ""
-            senha = str(secao_diretoria["password"]) if "password" in secao_diretoria else ""
+        # Formato recomendado: credenciais da Diretoria dentro da seção [auth]
+        if "auth" in st.secrets:
+            secao_auth = st.secrets["auth"]
+
+            usuario = (
+                str(secao_auth["diretoria_username"])
+                if "diretoria_username" in secao_auth
+                else ""
+            )
+            senha = (
+                str(secao_auth["diretoria_password"])
+                if "diretoria_password" in secao_auth
+                else ""
+            )
 
             if usuario and senha:
                 return usuario, senha
 
-        # Formato 2: chaves diretas
-        usuario = str(st.secrets["diretoria_username"]) if "diretoria_username" in st.secrets else ""
-        senha = str(st.secrets["diretoria_password"]) if "diretoria_password" in st.secrets else ""
+        # Formato alternativo 1: seção independente [diretoria]
+        if "diretoria" in st.secrets:
+            secao_diretoria = st.secrets["diretoria"]
+
+            usuario = (
+                str(secao_diretoria["username"])
+                if "username" in secao_diretoria
+                else ""
+            )
+            senha = (
+                str(secao_diretoria["password"])
+                if "password" in secao_diretoria
+                else ""
+            )
+
+            if usuario and senha:
+                return usuario, senha
+
+        # Formato alternativo 2: chaves diretas na raiz do Secrets
+        usuario = (
+            str(st.secrets["diretoria_username"])
+            if "diretoria_username" in st.secrets
+            else ""
+        )
+        senha = (
+            str(st.secrets["diretoria_password"])
+            if "diretoria_password" in st.secrets
+            else ""
+        )
 
         if usuario and senha:
             return usuario, senha
