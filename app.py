@@ -5,6 +5,7 @@ import hmac
 import hashlib
 import os
 from pathlib import Path
+from urllib.parse import quote, unquote
 
 import streamlit as st
 
@@ -1814,6 +1815,30 @@ def aplicar_css_dashboard_claro() -> None:
                 transform: translateY(-2px);
             }
 
+            .status-card-link {
+                color: inherit !important;
+                display: block;
+                text-decoration: none !important;
+            }
+
+            .status-card-link:hover,
+            .status-card-link:focus,
+            .status-card-link:active,
+            .status-card-link:visited {
+                color: inherit !important;
+                text-decoration: none !important;
+            }
+
+            .status-card-selected {
+                border-color: #fbc410 !important;
+                box-shadow: 0 0 0 2px rgba(251,196,16,0.22),
+                            0 12px 24px rgba(15,23,42,0.10) !important;
+            }
+
+            .status-card-footer strong {
+                color: #866500;
+            }
+
             .status-card-top {
                 align-items: center;
                 display: flex;
@@ -2165,6 +2190,26 @@ def normalizar_status_comercial(status: str) -> str:
     return status
 
 
+def obter_status_clicado() -> str:
+    """
+    Lê o status selecionado ao clicar em um dos cards.
+    """
+    try:
+        raw_status = st.query_params.get("status_card", "")
+    except Exception:
+        raw_status = ""
+
+    if isinstance(raw_status, list):
+        raw_status = raw_status[0] if raw_status else ""
+
+    status = unquote(str(raw_status or "").strip())
+
+    if status in STATUS_COMERCIAL_OPCOES:
+        st.session_state["status_card_selecionado"] = status
+
+    return st.session_state.get("status_card_selecionado", "")
+
+
 def contar_status_comercial() -> dict[str, int]:
     contagem = {status: 0 for status in STATUS_COMERCIAL_OPCOES}
 
@@ -2181,6 +2226,7 @@ def contar_status_comercial() -> dict[str, int]:
 
 def montar_cards_status_comercial_html() -> str:
     contagem = contar_status_comercial()
+    status_selecionado = obter_status_clicado()
 
     status = [
         {
@@ -2220,24 +2266,37 @@ def montar_cards_status_comercial_html() -> str:
     for item in status:
         total = int(item["numero"])
         texto_registros = "registro nesta sessão" if total == 1 else "registros nesta sessão"
+        link_status = quote(item["nome"])
+        classe_selecionado = (
+            " status-card-selected"
+            if item["nome"] == status_selecionado
+            else ""
+        )
 
         cards.append(
             f"""
-            <article class="status-card">
-                <div class="status-card-top">
-                    <div class="status-card-icon {item["classe"]}">
-                        {item["icone"]}
+            <a
+                class="status-card-link"
+                href="?status_card={link_status}"
+                target="_self"
+                aria-label="Abrir registros de {item["nome"]}"
+            >
+                <article class="status-card{classe_selecionado}">
+                    <div class="status-card-top">
+                        <div class="status-card-icon {item["classe"]}">
+                            {item["icone"]}
+                        </div>
+                        <p class="status-card-name">{item["nome"]}</p>
                     </div>
-                    <p class="status-card-name">{item["nome"]}</p>
-                </div>
 
-                <p class="status-card-number">{total}</p>
-                <p class="status-card-period">{texto_registros}</p>
+                    <p class="status-card-number">{total}</p>
+                    <p class="status-card-period">{texto_registros}</p>
 
-                <div class="status-card-footer">
-                    Consulte os nomes abaixo
-                </div>
-            </article>
+                    <div class="status-card-footer">
+                        <strong>Clique para ver os nomes</strong>
+                    </div>
+                </article>
+            </a>
             """
         )
 
@@ -2247,7 +2306,7 @@ def montar_cards_status_comercial_html() -> str:
             <div>
                 <h2 class="status-panel-title">Acompanhamento comercial</h2>
                 <p class="status-panel-sub">
-                    Distribuição dos leads por etapa de atendimento
+                    Clique em um card para visualizar os nomes daquela etapa
                 </p>
             </div>
             <span class="placeholder-pill">Status</span>
@@ -2260,55 +2319,56 @@ def montar_cards_status_comercial_html() -> str:
     """
 
 
-def render_registros_por_status_comercial() -> None:
+def render_registros_card_clicado() -> None:
     cadastros = obter_cadastros_comerciais()
+    status_selecionado = obter_status_clicado()
 
-    if not cadastros:
+    if not status_selecionado:
         return
 
-    with st.expander("Ver nomes por status", expanded=False):
-        st.markdown(
-            """
-            <p class="form-card-intro">
-                Escolha um quadro para visualizar os nomes cadastrados nele.
-            </p>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        status_escolhido = st.selectbox(
-            "Status para consultar",
-            options=STATUS_COMERCIAL_OPCOES,
-            key="status_consulta_nomes",
-        )
-
+    with st.expander(
+        f"Registros em: {status_selecionado}",
+        expanded=True,
+    ):
         registros_filtrados = [
             cadastro
             for cadastro in cadastros
             if normalizar_status_comercial(
                 cadastro.get("Status Comercial", "Novo Lead")
-            ) == status_escolhido
+            ) == status_selecionado
         ]
 
         if not registros_filtrados:
-            st.info(f'Nenhum aluno cadastrado em "{status_escolhido}".')
+            st.info(f'Nenhum aluno cadastrado em "{status_selecionado}".')
             return
 
         st.markdown(
-            f"**{len(registros_filtrados)} registro(s) em {status_escolhido}:**"
+            f"**{len(registros_filtrados)} registro(s) em {status_selecionado}:**"
         )
 
         for indice, cadastro in enumerate(registros_filtrados, start=1):
             nome = cadastro.get("Nome Completo", "Sem nome")
             produto = cadastro.get("Produto ou Serviço", "")
             rede_social = cadastro.get("Rede Social", "")
+            email = cadastro.get("E-mail", "")
+            cpf = cadastro.get("CPF", "")
 
-            complemento = f" • {produto}" if produto else ""
+            linhas = [f"**{indice}. {nome}**"]
+
+            if produto:
+                linhas.append(f"Modalidade: {produto}")
 
             if rede_social:
-                complemento += f" • {rede_social}"
+                linhas.append(f"Rede Social: {rede_social}")
 
-            st.markdown(f"{indice}. **{nome}**{complemento}")
+            if email:
+                linhas.append(f"E-mail: {email}")
+
+            if cpf:
+                linhas.append(f"CPF: {cpf}")
+
+            st.markdown("<br>".join(linhas), unsafe_allow_html=True)
+            st.markdown("---")
 
 
 def render_movimentacao_status_comercial() -> None:
@@ -2358,6 +2418,13 @@ def render_movimentacao_status_comercial() -> None:
 
         if atualizar_status:
             cadastros[indice_selecionado]["Status Comercial"] = novo_status
+            st.session_state["status_card_selecionado"] = novo_status
+
+            try:
+                st.query_params["status_card"] = novo_status
+            except Exception:
+                pass
+
             st.success(
                 f'Status de {cadastros[indice_selecionado].get("Nome Completo", "aluno")} '
                 f'alterado para: {novo_status}.'
@@ -2446,12 +2513,20 @@ def render_formulario_retratil_comercial() -> None:
                         "Status Comercial": status_comercial,
                     }
                 )
+
+                st.session_state["status_card_selecionado"] = status_comercial
+
+                try:
+                    st.query_params["status_card"] = status_comercial
+                except Exception:
+                    pass
+
                 st.success(
                     f'Aluno registrado no status: {status_comercial}.'
                 )
                 st.rerun()
 
-    render_registros_por_status_comercial()
+    render_registros_card_clicado()
     render_movimentacao_status_comercial()
 
 
