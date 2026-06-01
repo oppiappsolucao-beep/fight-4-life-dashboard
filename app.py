@@ -2348,6 +2348,27 @@ def aplicar_css_dashboard_claro() -> None:
                     font-size: 1.18rem;
                 }
             }
+
+
+            /* CONTAINER NATIVO DO PAINEL DE STATUS */
+            .st-key-status_final_panel_container {
+                background: rgba(255,255,255,0.97) !important;
+                border: 1px solid rgba(255,255,255,0.72) !important;
+                border-radius: 22px !important;
+                box-shadow: 0 12px 28px rgba(15, 23, 42, 0.065) !important;
+                padding: 1rem !important;
+            }
+
+            .st-key-status_final_panel_container [data-testid="stHorizontalBlock"] {
+                gap: 0.62rem !important;
+            }
+
+            @media (max-width: 620px) {
+                .st-key-status_final_panel_container {
+                    border-radius: 18px !important;
+                    padding: 0.78rem !important;
+                }
+            }
 </style>
         ''',
         unsafe_allow_html=True,
@@ -2619,11 +2640,12 @@ def contar_status_comercial() -> dict[str, int]:
 
 def render_cards_status_comercial_clicaveis() -> None:
     """
-    Exibe os status no formato:
+    Exibe os status com:
     card visual branco + botão separado "Ver nomes".
 
-    O clique usa botão nativo do Streamlit, preservando os leads salvos
-    na sessão e abrindo a lista de nomes logo abaixo.
+    Os cards visuais usam st.html e os botões usam widgets nativos do
+    Streamlit. Assim não aparecem tags HTML na tela e os leads continuam
+    preservados durante o rerun interno.
     """
     contagem = contar_status_comercial()
     status_selecionado = st.session_state.get("status_card_selecionado", "")
@@ -2661,28 +2683,31 @@ def render_cards_status_comercial_clicaveis() -> None:
         },
     ]
 
-    with st.container():
-        st.markdown(
+    with st.container(key="status_final_panel_container"):
+        st.html(
             """
-            <section class="status-final-panel">
-                <div class="status-final-header">
-                    <div>
-                        <h2 class="status-final-title">Acompanhamento comercial</h2>
-                        <p class="status-final-sub">
-                            Clique em “Ver nomes” para visualizar os alunos daquela etapa
-                        </p>
-                    </div>
-                    <span class="placeholder-pill">Status</span>
+            <div class="status-final-header">
+                <div>
+                    <h2 class="status-final-title">Acompanhamento comercial</h2>
+                    <p class="status-final-sub">
+                        Clique em “Ver nomes” para visualizar os alunos daquela etapa
+                    </p>
                 </div>
-            """,
-            unsafe_allow_html=True,
+                <span class="placeholder-pill">Status</span>
+            </div>
+            """
         )
 
         colunas = st.columns(5, gap="small")
 
         for coluna, item in zip(colunas, cards):
             total = int(contagem[item["nome"]])
-            texto_registro = "registro nesta sessão" if total == 1 else "registros nesta sessão"
+            texto_registro = (
+                "registro nesta sessão"
+                if total == 1
+                else "registros nesta sessão"
+            )
+
             classe_selecionado = (
                 " status-final-card-selected"
                 if item["nome"] == status_selecionado
@@ -2690,7 +2715,7 @@ def render_cards_status_comercial_clicaveis() -> None:
             )
 
             with coluna:
-                st.markdown(
+                st.html(
                     f"""
                     <article class="status-final-card{classe_selecionado}">
                         <div class="status-final-top">
@@ -2703,8 +2728,7 @@ def render_cards_status_comercial_clicaveis() -> None:
                         <p class="status-final-number">{total}</p>
                         <p class="status-final-period">{texto_registro}</p>
                     </article>
-                    """,
-                    unsafe_allow_html=True,
+                    """
                 )
 
                 with st.container(key=item["botao_key"]):
@@ -2715,8 +2739,6 @@ def render_cards_status_comercial_clicaveis() -> None:
                     ):
                         st.session_state["status_card_selecionado"] = item["nome"]
                         st.rerun()
-
-        st.markdown("</section>", unsafe_allow_html=True)
 
 
 def render_registros_card_clicado() -> None:
