@@ -1614,7 +1614,112 @@ def aplicar_css_dashboard_claro() -> None:
                     width: min(28px, 74%);
                 }
             }
-        </style>
+        
+
+            /* FORMULÁRIO RETRÁTIL COMERCIAL */
+            [data-testid="stExpander"] {
+                background: rgba(255,255,255,0.96) !important;
+                border: 1px solid rgba(255,255,255,0.68) !important;
+                border-radius: 22px !important;
+                box-shadow: 0 12px 28px rgba(15, 23, 42, 0.065) !important;
+                overflow: hidden !important;
+            }
+
+            [data-testid="stExpander"] details {
+                border: 0 !important;
+            }
+
+            [data-testid="stExpander"] summary {
+                background: transparent !important;
+                padding: 0.95rem 1rem !important;
+            }
+
+            [data-testid="stExpander"] summary p {
+                color: #202020 !important;
+                font-size: 1rem !important;
+                font-weight: 800 !important;
+                letter-spacing: -0.025rem !important;
+            }
+
+            [data-testid="stExpander"] [data-testid="stExpanderDetails"] {
+                padding: 0 1rem 1rem 1rem !important;
+            }
+
+            .form-card-intro {
+                color: #7a8494;
+                font-size: 0.70rem;
+                line-height: 1.45;
+                margin: -0.2rem 0 0.7rem 0;
+            }
+
+            .form-card-badge {
+                background: #fff7d6;
+                border: 1px solid #f3db80;
+                border-radius: 999px;
+                color: #866500;
+                display: inline-flex;
+                font-size: 0.61rem;
+                font-weight: 800;
+                letter-spacing: 0.06rem;
+                margin-bottom: 0.55rem;
+                padding: 0.30rem 0.50rem;
+                text-transform: uppercase;
+            }
+
+            [data-testid="stExpander"] label {
+                color: #303030 !important;
+                font-size: 0.72rem !important;
+                font-weight: 700 !important;
+            }
+
+            [data-testid="stExpander"] input,
+            [data-testid="stExpander"] textarea,
+            [data-testid="stExpander"] [data-baseweb="select"] > div {
+                background: #ffffff !important;
+                border-color: #e1e5ea !important;
+                color: #111111 !important;
+            }
+
+            [data-testid="stExpander"] textarea {
+                min-height: 74px !important;
+            }
+
+            [data-testid="stExpander"] div[data-testid="stFormSubmitButton"] button {
+                background: #fbc410 !important;
+                border: 0 !important;
+                border-radius: 10px !important;
+                color: #111111 !important;
+                font-weight: 800 !important;
+                min-height: 42px !important;
+                width: 100% !important;
+            }
+
+            [data-testid="stExpander"] div[data-testid="stFormSubmitButton"] button:hover {
+                filter: brightness(1.04);
+            }
+
+            .chart-streamlit-wrap {
+                background: rgba(255,255,255,0.96);
+                border: 1px solid rgba(255,255,255,0.68);
+                border-radius: 22px;
+                box-shadow: 0 12px 28px rgba(15, 23, 42, 0.065);
+                min-height: 355px;
+                overflow: hidden;
+                padding: 1.05rem 1.1rem;
+            }
+
+            @media (max-width: 620px) {
+                [data-testid="stExpander"] {
+                    border-radius: 18px !important;
+                }
+
+                .chart-streamlit-wrap {
+                    border-radius: 18px;
+                    min-height: 300px;
+                    padding: 0.88rem;
+                }
+            }
+</style>
         ''',
         unsafe_allow_html=True,
     )
@@ -1641,61 +1746,57 @@ def montar_kpis_dashboard(metricas: list[dict]) -> str:
     return f'<div class="dashboard-grid-4">{"".join(cards)}</div>'
 
 
-def montar_dashboard_visual(
-    logo_b64: str,
-    pagina: str,
-) -> str:
+def montar_config_dashboard(pagina: str) -> dict:
     if pagina == "📈 Comercial":
-        titulo = "Painel Comercial"
-        subtitulo = "Acompanhamento de alunos, aulas teste e novas matrículas"
-        chamada = "Transformando acompanhamento em <strong>crescimento</strong>"
-        descricao = (
-            "Estrutura visual preparada para receber os dados comerciais "
-            "da academia em tempo real."
-        )
+        return {
+            "titulo": "Painel Comercial",
+            "subtitulo": "Acompanhamento de alunos, aulas teste e novas matrículas",
+            "chamada": "Transformando acompanhamento em <strong>crescimento</strong>",
+            "descricao": (
+                "Estrutura visual preparada para receber os dados comerciais "
+                "da academia em tempo real."
+            ),
+            "metricas": [
+                {"titulo": "Alunos ativos", "valor": "—", "rodape": "aguardando integração", "icone": "🥋", "classe": "kpi-black"},
+                {"titulo": "Aulas teste", "valor": "—", "rodape": "aguardando integração", "icone": "🎯", "classe": "kpi-yellow"},
+                {"titulo": "Novas matrículas", "valor": "—", "rodape": "aguardando integração", "icone": "⚡", "classe": "kpi-darkyellow"},
+                {"titulo": "Conversão", "valor": "—", "rodape": "aguardando integração", "icone": "🏆", "classe": "kpi-gray"},
+            ],
+            "barras_title": "Desempenho por modalidade",
+            "barras_sub": "Estrutura pronta para exibir procura e matrículas",
+            "bar_labels": ["Jiu-Jitsu", "Muay Thai", "MMA", "Kids", "Nogi", "Boxe"],
+            "painel_title": "Aulas teste e novas matrículas",
+            "painel_sub": "Comparativo semanal",
+        }
 
-        metricas = [
-            {"titulo": "Alunos ativos", "valor": "—", "rodape": "aguardando integração", "icone": "🥋", "classe": "kpi-black"},
-            {"titulo": "Aulas teste", "valor": "—", "rodape": "aguardando integração", "icone": "🎯", "classe": "kpi-yellow"},
-            {"titulo": "Novas matrículas", "valor": "—", "rodape": "aguardando integração", "icone": "⚡", "classe": "kpi-darkyellow"},
-            {"titulo": "Conversão", "valor": "—", "rodape": "aguardando integração", "icone": "🏆", "classe": "kpi-gray"},
-        ]
-
-        gauge_title = "Conversão comercial"
-        gauge_sub = "Aulas teste convertidas em matrícula"
-        gauge_label = "Taxa de conversão"
-        painel_title = "Aulas teste e novas matrículas"
-        painel_sub = "Comparativo semanal"
-        barras_title = "Desempenho por modalidade"
-        barras_sub = "Estrutura pronta para exibir procura e matrículas"
-        bar_labels = ["Jiu-Jitsu", "Muay Thai", "MMA", "Kids", "Nogi", "Boxe"]
-
-    else:
-        titulo = "Painel da Diretoria"
-        subtitulo = "Visão estratégica para acompanhamento da academia"
-        chamada = "Decisões mais rápidas com <strong>visão clara</strong>"
-        descricao = (
+    return {
+        "titulo": "Painel da Diretoria",
+        "subtitulo": "Visão estratégica para acompanhamento da academia",
+        "chamada": "Decisões mais rápidas com <strong>visão clara</strong>",
+        "descricao": (
             "Indicadores estratégicos organizados para facilitar "
             "o acompanhamento da diretoria."
-        )
-
-        metricas = [
+        ),
+        "metricas": [
             {"titulo": "Receita do mês", "valor": "—", "rodape": "aguardando integração", "icone": "💰", "classe": "kpi-black"},
             {"titulo": "Alunos ativos", "valor": "—", "rodape": "aguardando integração", "icone": "🥋", "classe": "kpi-yellow"},
             {"titulo": "Ticket médio", "valor": "—", "rodape": "aguardando integração", "icone": "📊", "classe": "kpi-darkyellow"},
             {"titulo": "Cancelamentos", "valor": "—", "rodape": "aguardando integração", "icone": "⚠️", "classe": "kpi-gray"},
-        ]
+        ],
+        "barras_title": "Resultado por modalidade",
+        "barras_sub": "Estrutura pronta para comparar desempenho",
+        "bar_labels": ["Jiu-Jitsu", "Muay Thai", "MMA", "Kids", "Nogi", "Boxe"],
+        "painel_title": "Receita e matrículas",
+        "painel_sub": "Evolução semanal da operação",
+    }
 
-        gauge_title = "Retenção de alunos"
-        gauge_sub = "Acompanhamento mensal da permanência"
-        gauge_label = "Taxa de retenção"
-        painel_title = "Receita e matrículas"
-        painel_sub = "Evolução semanal da operação"
-        barras_title = "Resultado por modalidade"
-        barras_sub = "Estrutura pronta para comparar desempenho"
-        bar_labels = ["Jiu-Jitsu", "Muay Thai", "MMA", "Kids", "Nogi", "Boxe"]
 
-    kpis_html = montar_kpis_dashboard(metricas)
+def montar_dashboard_topo_visual(
+    logo_b64: str,
+    pagina: str,
+) -> str:
+    config = montar_config_dashboard(pagina)
+    kpis_html = montar_kpis_dashboard(config["metricas"])
 
     barras = [
         ("62%", "bar-yellow"),
@@ -1708,31 +1809,31 @@ def montar_dashboard_visual(
 
     barras_html = "".join(
         [
-            f'''
+            f"""
             <div class="bar-group">
                 <div class="bar {classe}" style="height:{altura};"></div>
                 <div class="bar-label">{label}</div>
             </div>
-            '''
-            for label, (altura, classe) in zip(bar_labels, barras)
+            """
+            for label, (altura, classe) in zip(config["bar_labels"], barras)
         ]
     )
 
-    return f'''
+    return f"""
     <section class="dashboard-shell">
         <div class="dashboard-header">
             <div class="dash-brand">
                 <img src="data:image/png;base64,{logo_b64}" alt="Fight for Life" />
                 <div>
                     <p class="dash-brand-kicker">Fight for Life • Dashboard</p>
-                    <h1 class="dash-brand-title">{titulo}</h1>
-                    <p class="dash-brand-sub">{subtitulo}</p>
+                    <h1 class="dash-brand-title">{config["titulo"]}</h1>
+                    <p class="dash-brand-sub">{config["subtitulo"]}</p>
                 </div>
             </div>
 
             <div class="dash-side-text">
-                <p class="dash-side-title">{chamada}</p>
-                <p class="dash-side-sub">{descricao}</p>
+                <p class="dash-side-title">{config["chamada"]}</p>
+                <p class="dash-side-sub">{config["descricao"]}</p>
             </div>
         </div>
 
@@ -1741,8 +1842,8 @@ def montar_dashboard_visual(
         <article class="dash-panel dash-panel-large" style="margin-bottom:0.95rem;">
             <div class="dash-panel-header">
                 <div>
-                    <h2 class="dash-panel-title">{barras_title}</h2>
-                    <p class="dash-panel-sub">{barras_sub}</p>
+                    <h2 class="dash-panel-title">{config["barras_title"]}</h2>
+                    <p class="dash-panel-sub">{config["barras_sub"]}</p>
                 </div>
                 <div class="dash-panel-icon">▥</div>
             </div>
@@ -1755,78 +1856,168 @@ def montar_dashboard_visual(
                 Valores demonstrativos apenas para visualização do layout.
             </div>
         </article>
-
-        <div class="dashboard-grid-main">
-            <article class="dash-panel">
-                <div class="dash-panel-header">
-                    <div>
-                        <h2 class="dash-panel-title">{gauge_title}</h2>
-                        <p class="dash-panel-sub">{gauge_sub}</p>
-                    </div>
-                    <div class="dash-panel-icon">◎</div>
-                </div>
-
-                <div class="gauge-wrap">
-                    <div class="gauge">
-                        <div class="gauge-center">
-                            <span class="gauge-label">{gauge_label}</span>
-                            <strong class="gauge-value">—</strong>
-                        </div>
-                    </div>
-                    <div class="gauge-note">Aguardando integração dos dados</div>
-                </div>
-            </article>
-
-            <article class="dash-panel dash-panel-large">
-                <div class="dash-panel-header">
-                    <div>
-                        <h2 class="dash-panel-title">{painel_title}</h2>
-                        <p class="dash-panel-sub">{painel_sub}</p>
-                    </div>
-                    <span class="placeholder-pill">Layout inicial</span>
-                </div>
-
-                <div class="chart-legend">
-                    <span class="legend-item"><span class="legend-dot legend-yellow"></span>Indicador principal</span>
-                    <span class="legend-item"><span class="legend-dot legend-black"></span>Indicador secundário</span>
-                </div>
-
-                <div class="chart-area">
-                    <svg viewBox="0 0 760 220" preserveAspectRatio="none" aria-label="Estrutura visual do gráfico">
-                        <line x1="0" y1="30" x2="760" y2="30" class="chart-grid-line"/>
-                        <line x1="0" y1="75" x2="760" y2="75" class="chart-grid-line"/>
-                        <line x1="0" y1="120" x2="760" y2="120" class="chart-grid-line"/>
-                        <line x1="0" y1="165" x2="760" y2="165" class="chart-grid-line"/>
-                        <line x1="0" y1="210" x2="760" y2="210" class="chart-grid-line"/>
-
-                        <polyline points="20,164 135,139 250,74 365,115 480,98 595,139 730,69" class="chart-line-yellow"/>
-                        <polyline points="20,184 135,172 250,133 365,126 480,151 595,145 730,112" class="chart-line-black"/>
-
-                        <circle cx="20" cy="164" r="6" class="chart-dot-yellow"/>
-                        <circle cx="135" cy="139" r="6" class="chart-dot-yellow"/>
-                        <circle cx="250" cy="74" r="6" class="chart-dot-yellow"/>
-                        <circle cx="365" cy="115" r="6" class="chart-dot-yellow"/>
-                        <circle cx="480" cy="98" r="6" class="chart-dot-yellow"/>
-                        <circle cx="595" cy="139" r="6" class="chart-dot-yellow"/>
-                        <circle cx="730" cy="69" r="6" class="chart-dot-yellow"/>
-
-                        <circle cx="20" cy="184" r="5" class="chart-dot-black"/>
-                        <circle cx="135" cy="172" r="5" class="chart-dot-black"/>
-                        <circle cx="250" cy="133" r="5" class="chart-dot-black"/>
-                        <circle cx="365" cy="126" r="5" class="chart-dot-black"/>
-                        <circle cx="480" cy="151" r="5" class="chart-dot-black"/>
-                        <circle cx="595" cy="145" r="5" class="chart-dot-black"/>
-                        <circle cx="730" cy="112" r="5" class="chart-dot-black"/>
-                    </svg>
-                </div>
-
-                <div class="axis-labels">
-                    <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span>
-                </div>
-            </article>
-        </div>
     </section>
-    '''
+    """
+
+
+def montar_painel_grafico_html(
+    titulo: str,
+    subtitulo: str,
+) -> str:
+    return f"""
+    <article class="chart-streamlit-wrap">
+        <div class="dash-panel-header">
+            <div>
+                <h2 class="dash-panel-title">{titulo}</h2>
+                <p class="dash-panel-sub">{subtitulo}</p>
+            </div>
+            <span class="placeholder-pill">Layout inicial</span>
+        </div>
+
+        <div class="chart-legend">
+            <span class="legend-item"><span class="legend-dot legend-yellow"></span>Indicador principal</span>
+            <span class="legend-item"><span class="legend-dot legend-black"></span>Indicador secundário</span>
+        </div>
+
+        <div class="chart-area">
+            <svg viewBox="0 0 760 220" preserveAspectRatio="none" aria-label="Estrutura visual do gráfico">
+                <line x1="0" y1="30" x2="760" y2="30" class="chart-grid-line"/>
+                <line x1="0" y1="75" x2="760" y2="75" class="chart-grid-line"/>
+                <line x1="0" y1="120" x2="760" y2="120" class="chart-grid-line"/>
+                <line x1="0" y1="165" x2="760" y2="165" class="chart-grid-line"/>
+                <line x1="0" y1="210" x2="760" y2="210" class="chart-grid-line"/>
+
+                <polyline points="20,164 135,139 250,74 365,115 480,98 595,139 730,69" class="chart-line-yellow"/>
+                <polyline points="20,184 135,172 250,133 365,126 480,151 595,145 730,112" class="chart-line-black"/>
+
+                <circle cx="20" cy="164" r="6" class="chart-dot-yellow"/>
+                <circle cx="135" cy="139" r="6" class="chart-dot-yellow"/>
+                <circle cx="250" cy="74" r="6" class="chart-dot-yellow"/>
+                <circle cx="365" cy="115" r="6" class="chart-dot-yellow"/>
+                <circle cx="480" cy="98" r="6" class="chart-dot-yellow"/>
+                <circle cx="595" cy="139" r="6" class="chart-dot-yellow"/>
+                <circle cx="730" cy="69" r="6" class="chart-dot-yellow"/>
+
+                <circle cx="20" cy="184" r="5" class="chart-dot-black"/>
+                <circle cx="135" cy="172" r="5" class="chart-dot-black"/>
+                <circle cx="250" cy="133" r="5" class="chart-dot-black"/>
+                <circle cx="365" cy="126" r="5" class="chart-dot-black"/>
+                <circle cx="480" cy="151" r="5" class="chart-dot-black"/>
+                <circle cx="595" cy="145" r="5" class="chart-dot-black"/>
+                <circle cx="730" cy="112" r="5" class="chart-dot-black"/>
+            </svg>
+        </div>
+
+        <div class="axis-labels">
+            <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span>
+        </div>
+    </article>
+    """
+
+
+def montar_painel_retencao_diretoria_html() -> str:
+    return """
+    <article class="chart-streamlit-wrap">
+        <div class="dash-panel-header">
+            <div>
+                <h2 class="dash-panel-title">Retenção de alunos</h2>
+                <p class="dash-panel-sub">Acompanhamento mensal da permanência</p>
+            </div>
+            <div class="dash-panel-icon">◎</div>
+        </div>
+
+        <div class="gauge-wrap">
+            <div class="gauge">
+                <div class="gauge-center">
+                    <span class="gauge-label">Taxa de retenção</span>
+                    <strong class="gauge-value">—</strong>
+                </div>
+            </div>
+            <div class="gauge-note">Aguardando integração dos dados</div>
+        </div>
+    </article>
+    """
+
+
+def render_formulario_retratil_comercial() -> None:
+    with st.expander("Cadastrar novo aluno", expanded=False):
+        st.markdown(
+            """
+            <div class="form-card-badge">Formulário comercial</div>
+            <p class="form-card-intro">
+                Abra o formulário para registrar os dados do novo aluno.
+                A integração com a planilha será adicionada na próxima etapa.
+            </p>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        with st.form("formulario_novo_aluno", clear_on_submit=True):
+            nome_completo = st.text_input(
+                "Nome Completo",
+                placeholder="Digite o nome completo",
+            )
+            data_nascimento = st.date_input(
+                "Data de Nascimento",
+                value=None,
+                format="DD/MM/YYYY",
+            )
+            cpf = st.text_input(
+                "CPF",
+                placeholder="000.000.000-00",
+            )
+            email = st.text_input(
+                "E-mail",
+                placeholder="nome@exemplo.com",
+            )
+            endereco = st.text_area(
+                "Endereço",
+                placeholder="Digite o endereço completo",
+            )
+            produto_servico = st.selectbox(
+                "Produto ou Serviço escolhido",
+                options=[
+                    "",
+                    "Muay Thai",
+                    "Jiu-Jitsu",
+                    "Jiu-Jitsu Infantil",
+                    "MMA",
+                ],
+            )
+            rede_social = st.text_input(
+                "Rede Social",
+                placeholder="@usuario ou link do perfil",
+            )
+
+            enviar = st.form_submit_button("Registrar aluno")
+
+        if enviar:
+            if not nome_completo.strip():
+                st.error("Preencha o nome completo.")
+            elif not produto_servico:
+                st.error("Selecione o produto ou serviço escolhido.")
+            else:
+                st.session_state.setdefault("cadastros_comerciais_temporarios", [])
+                st.session_state["cadastros_comerciais_temporarios"].append(
+                    {
+                        "Nome Completo": nome_completo.strip(),
+                        "Data de Nascimento": (
+                            data_nascimento.strftime("%d/%m/%Y")
+                            if data_nascimento
+                            else ""
+                        ),
+                        "CPF": cpf.strip(),
+                        "E-mail": email.strip(),
+                        "Endereço": endereco.strip(),
+                        "Produto ou Serviço": produto_servico,
+                        "Rede Social": rede_social.strip(),
+                    }
+                )
+                st.success(
+                    "Cadastro preenchido com sucesso. "
+                    "Por enquanto, ele ficará salvo apenas durante esta sessão."
+                )
+
 
 
 
@@ -1841,7 +2032,7 @@ def exibir_dashboard_inicial() -> None:
     with st.sidebar:
         if logo_b64:
             st.markdown(
-                f'''
+                f"""
                 <div class="sidebar-brand">
                     <img src="data:image/png;base64,{logo_b64}" alt="Fight for Life" />
                     <div>
@@ -1849,7 +2040,7 @@ def exibir_dashboard_inicial() -> None:
                         <div class="sidebar-brand-sub">Painel interno</div>
                     </div>
                 </div>
-                ''',
+                """,
                 unsafe_allow_html=True,
             )
 
@@ -1878,11 +2069,32 @@ def exibir_dashboard_inicial() -> None:
         return
 
     st.html(
-        montar_dashboard_visual(
+        montar_dashboard_topo_visual(
             logo_b64=logo_b64,
             pagina=pagina,
         )
     )
+
+    config = montar_config_dashboard(pagina)
+
+    coluna_esquerda, coluna_direita = st.columns(
+        [0.82, 1.7],
+        gap="medium",
+    )
+
+    with coluna_esquerda:
+        if pagina == "📈 Comercial":
+            render_formulario_retratil_comercial()
+        else:
+            st.html(montar_painel_retencao_diretoria_html())
+
+    with coluna_direita:
+        st.html(
+            montar_painel_grafico_html(
+                titulo=config["painel_title"],
+                subtitulo=config["painel_sub"],
+            )
+        )
 
     if pagina == "👔 Diretoria":
         st.markdown("<div style='height:0.7rem'></div>", unsafe_allow_html=True)
