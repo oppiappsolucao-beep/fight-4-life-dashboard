@@ -19,7 +19,7 @@ st.set_page_config(
 )
 
 BASE_DIR = Path(__file__).resolve().parent
-LOGO_PATH = BASE_DIR / "assets" / "logo_fight4life.png"
+LOGO_PATH = BASE_DIR / "fight4life.png"
 
 PRETO = "#000000"
 AMARELO = "#fbc410"
@@ -33,25 +33,25 @@ FOTOS_MODALIDADES = [
     {
         "titulo": "MUAY THAI",
         "subtitulo": "Técnica, intensidade e disciplina",
-        "arquivo": BASE_DIR / "assets" / "muay_thai.jpg",
+        "arquivo": BASE_DIR / "muaythai.png",
         "posicao": "center 43%",
     },
     {
         "titulo": "JIU-JITSU",
         "subtitulo": "Estratégia dentro e fora do tatame",
-        "arquivo": BASE_DIR / "assets" / "jiu_jitsu.jpg",
+        "arquivo": BASE_DIR / "jiujitsu.png",
         "posicao": "center 57%",
     },
     {
         "titulo": "JIU-JITSU KIDS",
         "subtitulo": "Confiança e evolução desde cedo",
-        "arquivo": BASE_DIR / "assets" / "jiu_jitsu_kids.jpg",
+        "arquivo": BASE_DIR / "jiujitsukids.png",
         "posicao": "center 46%",
     },
     {
         "titulo": "MMA",
         "subtitulo": "Preparação completa para novos desafios",
-        "arquivo": BASE_DIR / "assets" / "mma.jpg",
+        "arquivo": BASE_DIR / "mma.png",
         "posicao": "center 42%",
     },
 ]
@@ -506,7 +506,7 @@ def montar_cards_modalidades() -> str:
     for modalidade in FOTOS_MODALIDADES:
         posicao = modalidade.get("posicao", "center")
         imagem_b64 = arquivo_para_base64(modalidade["arquivo"])
-        imagem_src = f"data:image/jpeg;base64,{imagem_b64}"
+        imagem_src = f"data:image/png;base64,{imagem_b64}"
 
         cards.append(
             f"""
