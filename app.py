@@ -281,9 +281,9 @@ def aplicar_css() -> None:
                 box-shadow:
                     0 25px 65px rgba(0,0,0,0.50),
                     inset 0 1px 0 rgba(255,255,255,0.13);
-                margin-top: 2.6rem;
+                margin-top: 1.15rem;
                 overflow: hidden;
-                padding: 1.1rem 1.15rem 0.15rem 1.15rem;
+                padding: 0.78rem 1rem 0.05rem 1rem;
                 position: relative;
             }}
 
@@ -317,19 +317,19 @@ def aplicar_css() -> None:
             .logo-wrap {{
                 display: flex;
                 justify-content: center;
-                margin: 0.6rem 0 0.7rem 0;
+                margin: 0.25rem 0 0.34rem 0;
             }}
 
             .logo-wrap img {{
                 filter: drop-shadow(0 10px 24px rgba(0,0,0,0.48));
-                height: 144px;
+                height: 94px;
                 object-fit: contain;
-                width: 144px;
+                width: 94px;
             }}
 
             .login-title {{
                 color: var(--branco);
-                font-size: 1.45rem;
+                font-size: 1.08rem;
                 font-weight: 1000;
                 letter-spacing: -0.05rem;
                 margin: 0;
@@ -341,7 +341,7 @@ def aplicar_css() -> None:
                 color: #bebebe;
                 font-size: 0.76rem;
                 line-height: 1.35;
-                margin: 0.38rem auto 0.78rem auto;
+                margin: 0.22rem auto 0.48rem auto;
                 max-width: 340px;
                 text-align: center;
             }}
@@ -354,10 +354,18 @@ def aplicar_css() -> None:
 
             div[data-testid="stTextInput"] label {{
                 color: #ffffff !important;
-                font-size: 0.73rem !important;
+                font-size: 0.70rem !important;
                 font-weight: 900 !important;
                 letter-spacing: 0.07rem !important;
                 text-transform: uppercase !important;
+            }}
+
+            div[data-testid="stTextInput"] {{
+                margin-bottom: 0.18rem !important;
+            }}
+
+            div[data-testid="stFormSubmitButton"] {{
+                margin-top: 0.18rem !important;
             }}
 
             div[data-testid="stTextInput"] input {{
@@ -367,7 +375,7 @@ def aplicar_css() -> None:
                 color: #000000 !important;
                 font-size: 0.9rem !important;
                 font-weight: 750 !important;
-                min-height: 46px !important;
+                min-height: 39px !important;
             }}
 
             div[data-testid="stTextInput"] input:focus {{
@@ -383,7 +391,7 @@ def aplicar_css() -> None:
                 color: #000000 !important;
                 font-size: 0.80rem !important;
                 font-weight: 1000 !important;
-                min-height: 46px !important;
+                min-height: 39px !important;
                 text-transform: uppercase !important;
                 transition: 0.18s ease !important;
                 width: 100% !important;
@@ -400,7 +408,7 @@ def aplicar_css() -> None:
                 color: #a7a7a7;
                 font-size: 0.68rem;
                 line-height: 1.35;
-                margin: 0.85rem 0 1rem 0;
+                margin: 0.54rem 0 0.58rem 0;
                 padding-left: 0.68rem;
             }}
 
@@ -491,7 +499,7 @@ def aplicar_css() -> None:
                 }}
 
                 .login-shell {{
-                    margin-top: 1rem;
+                    margin-top: 0.55rem;
                 }}
             }}
         </style>
