@@ -1057,18 +1057,26 @@ def exibir_login_diretoria() -> None:
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-def exibir_dashboard_inicial() -> None:
-    # No dashboard, o conteúdo ocupa toda a largura disponível.
-    # Quando o menu lateral é aberto, o próprio Streamlit reduz a área principal.
-    # Quando o menu é fechado, os cards voltam a aproveitar a tela inteira.
+
+def aplicar_css_dashboard_claro() -> None:
+    '''
+    Estilo interno do dashboard inspirado na referência enviada:
+    fundo claro, cards brancos, sombras leves e destaques em preto/amarelo.
+    A tela de login externa continua escura.
+    '''
     st.markdown(
-        """
+        '''
         <style>
+            [data-testid="stAppViewContainer"] {
+                background:
+                    radial-gradient(circle at 92% 2%, rgba(251,196,16,0.18), transparent 22rem),
+                    linear-gradient(180deg, #f8f8f8 0%, #eef0f3 100%) !important;
+            }
+
             .block-container {
                 max-width: none !important;
                 width: 100% !important;
-                padding-left: 1.8rem !important;
-                padding-right: 1.8rem !important;
+                padding: 1.25rem 1.7rem 2rem 1.7rem !important;
             }
 
             [data-testid="stAppViewBlockContainer"] {
@@ -1076,16 +1084,749 @@ def exibir_dashboard_inicial() -> None:
                 width: 100% !important;
             }
 
-            @media (max-width: 900px) {
+            .dashboard-shell {
+                width: 100%;
+            }
+
+            .dashboard-header {
+                align-items: center;
+                background: #ffffff;
+                border: 1px solid #eceff3;
+                border-radius: 24px;
+                box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
+                display: flex;
+                gap: 1rem;
+                justify-content: space-between;
+                margin-bottom: 1rem;
+                overflow: hidden;
+                padding: 1.05rem 1.2rem;
+                position: relative;
+            }
+
+            .dashboard-header::after {
+                background: #fbc410;
+                bottom: 0;
+                content: "";
+                height: 4px;
+                left: 0;
+                position: absolute;
+                right: 0;
+            }
+
+            .dash-brand {
+                align-items: center;
+                display: flex;
+                gap: 0.85rem;
+            }
+
+            .dash-brand img {
+                height: 58px;
+                object-fit: contain;
+                width: 58px;
+            }
+
+            .dash-brand-kicker {
+                color: #a27800;
+                font-size: 0.66rem;
+                font-weight: 950;
+                letter-spacing: 0.15rem;
+                margin: 0 0 0.22rem 0;
+                text-transform: uppercase;
+            }
+
+            .dash-brand-title {
+                color: #111111;
+                font-size: clamp(1.35rem, 2vw, 2rem);
+                font-weight: 1000;
+                letter-spacing: -0.06rem;
+                line-height: 1;
+                margin: 0;
+            }
+
+            .dash-brand-sub {
+                color: #667085;
+                font-size: 0.78rem;
+                line-height: 1.35;
+                margin: 0.35rem 0 0 0;
+            }
+
+            .dash-side-text {
+                max-width: 490px;
+                text-align: right;
+            }
+
+            .dash-side-title {
+                color: #111111;
+                font-size: 1.08rem;
+                font-weight: 950;
+                letter-spacing: -0.025rem;
+                margin: 0;
+            }
+
+            .dash-side-title strong {
+                color: #a27800;
+            }
+
+            .dash-side-sub {
+                color: #667085;
+                font-size: 0.75rem;
+                line-height: 1.35;
+                margin: 0.3rem 0 0 0;
+            }
+
+            .dashboard-grid-4 {
+                display: grid;
+                gap: 0.9rem;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                margin-bottom: 0.95rem;
+            }
+
+            .dash-kpi {
+                border-radius: 19px;
+                box-shadow: 0 12px 24px rgba(15, 23, 42, 0.10);
+                color: #ffffff;
+                min-height: 124px;
+                overflow: hidden;
+                padding: 0.95rem 1rem;
+                position: relative;
+            }
+
+            .dash-kpi::before {
+                background: rgba(255,255,255,0.12);
+                border-radius: 50%;
+                content: "";
+                height: 115px;
+                position: absolute;
+                right: -36px;
+                top: -45px;
+                width: 115px;
+            }
+
+            .dash-kpi::after {
+                background: rgba(255,255,255,0.08);
+                border-radius: 50%;
+                bottom: -52px;
+                content: "";
+                height: 100px;
+                position: absolute;
+                right: 18px;
+                width: 100px;
+            }
+
+            .kpi-black {
+                background: linear-gradient(135deg, #080808 0%, #2c2c2c 100%);
+            }
+
+            .kpi-yellow {
+                background: linear-gradient(135deg, #e7aa00 0%, #fbc410 100%);
+                color: #151515;
+            }
+
+            .kpi-darkyellow {
+                background: linear-gradient(135deg, #4b3900 0%, #9d7600 100%);
+            }
+
+            .kpi-gray {
+                background: linear-gradient(135deg, #303030 0%, #6b6b6b 100%);
+            }
+
+            .dash-kpi-label {
+                font-size: 0.74rem;
+                font-weight: 850;
+                letter-spacing: 0.02rem;
+                margin: 0;
+                opacity: 0.92;
+            }
+
+            .dash-kpi-value {
+                font-size: 2rem;
+                font-weight: 1000;
+                letter-spacing: -0.08rem;
+                line-height: 1;
+                margin: 0.56rem 0 0 0;
+            }
+
+            .dash-kpi-footer {
+                align-items: center;
+                display: flex;
+                font-size: 0.69rem;
+                font-weight: 800;
+                gap: 0.3rem;
+                margin-top: 0.44rem;
+                opacity: 0.86;
+            }
+
+            .dash-kpi-icon {
+                font-size: 1.25rem;
+                position: absolute;
+                right: 1rem;
+                top: 0.92rem;
+                z-index: 2;
+            }
+
+            .dashboard-grid-main {
+                display: grid;
+                gap: 0.95rem;
+                grid-template-columns: minmax(300px, 0.82fr) minmax(460px, 1.7fr);
+                margin-bottom: 0.95rem;
+            }
+
+            .dash-panel {
+                background: #ffffff;
+                border: 1px solid #eceff3;
+                border-radius: 22px;
+                box-shadow: 0 12px 28px rgba(15, 23, 42, 0.065);
+                min-height: 300px;
+                overflow: hidden;
+                padding: 1.05rem 1.1rem;
+                position: relative;
+            }
+
+            .dash-panel-large {
+                min-height: 300px;
+            }
+
+            .dash-panel-header {
+                align-items: center;
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 0.85rem;
+            }
+
+            .dash-panel-title {
+                color: #202020;
+                font-size: 1rem;
+                font-weight: 950;
+                letter-spacing: -0.025rem;
+                margin: 0;
+            }
+
+            .dash-panel-icon {
+                align-items: center;
+                background: #fff7d6;
+                border-radius: 12px;
+                color: #a27800;
+                display: flex;
+                font-size: 1rem;
+                height: 34px;
+                justify-content: center;
+                width: 34px;
+            }
+
+            .dash-panel-sub {
+                color: #7a8494;
+                font-size: 0.69rem;
+                margin: 0.15rem 0 0 0;
+            }
+
+            .gauge-wrap {
+                align-items: center;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                min-height: 215px;
+            }
+
+            .gauge {
+                background: conic-gradient(
+                    from 270deg,
+                    #fbc410 0deg,
+                    #fbc410 96deg,
+                    #111111 96deg,
+                    #111111 190deg,
+                    #eceff3 190deg,
+                    #eceff3 360deg
+                );
+                border-radius: 50%;
+                height: 176px;
+                position: relative;
+                width: 176px;
+            }
+
+            .gauge::after {
+                background: #ffffff;
+                border-radius: 50%;
+                content: "";
+                inset: 22px;
+                position: absolute;
+            }
+
+            .gauge-center {
+                align-items: center;
+                display: flex;
+                flex-direction: column;
+                inset: 0;
+                justify-content: center;
+                position: absolute;
+                z-index: 2;
+            }
+
+            .gauge-label {
+                color: #7a8494;
+                font-size: 0.72rem;
+                font-weight: 800;
+            }
+
+            .gauge-value {
+                color: #111111;
+                font-size: 2rem;
+                font-weight: 1000;
+                letter-spacing: -0.08rem;
+                line-height: 1;
+                margin-top: 0.25rem;
+            }
+
+            .gauge-note {
+                color: #a27800;
+                font-size: 0.68rem;
+                font-weight: 850;
+                margin-top: 0.62rem;
+            }
+
+            .chart-area {
+                height: 218px;
+                margin-top: 0.25rem;
+                position: relative;
+            }
+
+            .chart-area svg {
+                height: 100%;
+                overflow: visible;
+                width: 100%;
+            }
+
+            .chart-grid-line {
+                stroke: #e6e8ec;
+                stroke-width: 1;
+            }
+
+            .chart-line-yellow {
+                fill: none;
+                stroke: #fbc410;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+                stroke-width: 4;
+            }
+
+            .chart-line-black {
+                fill: none;
+                stroke: #1d1d1d;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+                stroke-width: 3;
+            }
+
+            .chart-dot-yellow {
+                fill: #fbc410;
+                stroke: #ffffff;
+                stroke-width: 3;
+            }
+
+            .chart-dot-black {
+                fill: #1d1d1d;
+                stroke: #ffffff;
+                stroke-width: 3;
+            }
+
+            .chart-legend {
+                align-items: center;
+                color: #667085;
+                display: flex;
+                flex-wrap: wrap;
+                font-size: 0.68rem;
+                font-weight: 800;
+                gap: 0.85rem;
+                margin-bottom: 0.15rem;
+            }
+
+            .legend-item {
+                align-items: center;
+                display: flex;
+                gap: 0.35rem;
+            }
+
+            .legend-dot {
+                border-radius: 50%;
+                height: 8px;
+                width: 8px;
+            }
+
+            .legend-yellow {
+                background: #fbc410;
+            }
+
+            .legend-black {
+                background: #1d1d1d;
+            }
+
+            .axis-labels {
+                color: #8a94a4;
+                display: grid;
+                font-size: 0.61rem;
+                grid-template-columns: repeat(7, 1fr);
+                margin-top: 0.18rem;
+                text-align: center;
+            }
+
+            .bars-wrap {
+                align-items: end;
+                display: grid;
+                gap: 0.85rem;
+                grid-template-columns: repeat(6, minmax(0, 1fr));
+                height: 190px;
+                margin-top: 0.4rem;
+                padding: 0 0.5rem;
+            }
+
+            .bar-group {
+                align-items: center;
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                justify-content: end;
+                min-width: 0;
+            }
+
+            .bar {
+                border-radius: 10px 10px 4px 4px;
+                min-height: 18px;
+                width: min(42px, 66%);
+            }
+
+            .bar-yellow {
+                background: linear-gradient(180deg, #fbc410 0%, #d89e00 100%);
+            }
+
+            .bar-black {
+                background: linear-gradient(180deg, #2f2f2f 0%, #090909 100%);
+            }
+
+            .bar-label {
+                color: #667085;
+                font-size: 0.62rem;
+                font-weight: 800;
+                margin-top: 0.5rem;
+                overflow: hidden;
+                text-align: center;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                width: 100%;
+            }
+
+            .placeholder-pill {
+                background: #fff7d6;
+                border: 1px solid #f3db80;
+                border-radius: 999px;
+                color: #866500;
+                display: inline-flex;
+                font-size: 0.62rem;
+                font-weight: 900;
+                letter-spacing: 0.06rem;
+                padding: 0.32rem 0.52rem;
+                text-transform: uppercase;
+            }
+
+            .dashboard-footer-note {
+                color: #7a8494;
+                font-size: 0.69rem;
+                margin-top: 0.75rem;
+                text-align: right;
+            }
+
+            @media (max-width: 1050px) {
+                .dashboard-grid-4 {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .dashboard-grid-main {
+                    grid-template-columns: 1fr;
+                }
+
+                .dash-side-text {
+                    display: none;
+                }
+            }
+
+            @media (max-width: 620px) {
                 .block-container {
-                    padding-left: 0.9rem !important;
-                    padding-right: 0.9rem !important;
+                    padding: 0.85rem 0.75rem 1.5rem 0.75rem !important;
+                }
+
+                .dashboard-header {
+                    border-radius: 18px;
+                    padding: 0.85rem;
+                }
+
+                .dash-brand img {
+                    height: 46px;
+                    width: 46px;
+                }
+
+                .dash-brand-title {
+                    font-size: 1.18rem;
+                }
+
+                .dashboard-grid-4 {
+                    gap: 0.65rem;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .dash-kpi {
+                    min-height: 106px;
+                    padding: 0.78rem;
+                }
+
+                .dash-kpi-label {
+                    font-size: 0.64rem;
+                }
+
+                .dash-kpi-value {
+                    font-size: 1.55rem;
+                }
+
+                .dash-kpi-footer {
+                    font-size: 0.58rem;
+                }
+
+                .dash-kpi-icon {
+                    font-size: 1rem;
+                    right: 0.75rem;
+                    top: 0.78rem;
+                }
+
+                .dash-panel {
+                    border-radius: 18px;
+                    min-height: 270px;
+                    padding: 0.88rem;
+                }
+
+                .bars-wrap {
+                    gap: 0.45rem;
+                    padding: 0;
+                }
+
+                .bar {
+                    width: min(28px, 74%);
                 }
             }
         </style>
-        """,
+        ''',
         unsafe_allow_html=True,
     )
+
+
+def montar_kpis_dashboard(metricas: list[dict]) -> str:
+    cards = []
+
+    for item in metricas:
+        cards.append(
+            f'''
+            <div class="dash-kpi {item["classe"]}">
+                <div class="dash-kpi-icon">{item["icone"]}</div>
+                <p class="dash-kpi-label">{item["titulo"]}</p>
+                <p class="dash-kpi-value">{item["valor"]}</p>
+                <div class="dash-kpi-footer">
+                    <span>↗</span>
+                    <span>{item["rodape"]}</span>
+                </div>
+            </div>
+            '''
+        )
+
+    return f'<div class="dashboard-grid-4">{"".join(cards)}</div>'
+
+
+def montar_dashboard_visual(
+    logo_b64: str,
+    pagina: str,
+) -> str:
+    if pagina == "📈 Comercial":
+        titulo = "Painel Comercial"
+        subtitulo = "Acompanhamento de alunos, aulas teste e novas matrículas"
+        chamada = "Transformando acompanhamento em <strong>crescimento</strong>"
+        descricao = (
+            "Estrutura visual preparada para receber os dados comerciais "
+            "da academia em tempo real."
+        )
+
+        metricas = [
+            {"titulo": "Alunos ativos", "valor": "—", "rodape": "aguardando integração", "icone": "🥋", "classe": "kpi-black"},
+            {"titulo": "Aulas teste", "valor": "—", "rodape": "aguardando integração", "icone": "🎯", "classe": "kpi-yellow"},
+            {"titulo": "Novas matrículas", "valor": "—", "rodape": "aguardando integração", "icone": "⚡", "classe": "kpi-darkyellow"},
+            {"titulo": "Conversão", "valor": "—", "rodape": "aguardando integração", "icone": "🏆", "classe": "kpi-gray"},
+        ]
+
+        gauge_title = "Conversão comercial"
+        gauge_sub = "Aulas teste convertidas em matrícula"
+        gauge_label = "Taxa de conversão"
+        painel_title = "Aulas teste e novas matrículas"
+        painel_sub = "Comparativo semanal"
+        barras_title = "Desempenho por modalidade"
+        barras_sub = "Estrutura pronta para exibir procura e matrículas"
+        bar_labels = ["Jiu-Jitsu", "Muay Thai", "MMA", "Kids", "Nogi", "Boxe"]
+
+    else:
+        titulo = "Painel da Diretoria"
+        subtitulo = "Visão estratégica para acompanhamento da academia"
+        chamada = "Decisões mais rápidas com <strong>visão clara</strong>"
+        descricao = (
+            "Indicadores estratégicos organizados para facilitar "
+            "o acompanhamento da diretoria."
+        )
+
+        metricas = [
+            {"titulo": "Receita do mês", "valor": "—", "rodape": "aguardando integração", "icone": "💰", "classe": "kpi-black"},
+            {"titulo": "Alunos ativos", "valor": "—", "rodape": "aguardando integração", "icone": "🥋", "classe": "kpi-yellow"},
+            {"titulo": "Ticket médio", "valor": "—", "rodape": "aguardando integração", "icone": "📊", "classe": "kpi-darkyellow"},
+            {"titulo": "Cancelamentos", "valor": "—", "rodape": "aguardando integração", "icone": "⚠️", "classe": "kpi-gray"},
+        ]
+
+        gauge_title = "Retenção de alunos"
+        gauge_sub = "Acompanhamento mensal da permanência"
+        gauge_label = "Taxa de retenção"
+        painel_title = "Receita e matrículas"
+        painel_sub = "Evolução semanal da operação"
+        barras_title = "Resultado por modalidade"
+        barras_sub = "Estrutura pronta para comparar desempenho"
+        bar_labels = ["Jiu-Jitsu", "Muay Thai", "MMA", "Kids", "Nogi", "Boxe"]
+
+    kpis_html = montar_kpis_dashboard(metricas)
+
+    barras = [
+        ("62%", "bar-yellow"),
+        ("78%", "bar-black"),
+        ("47%", "bar-yellow"),
+        ("70%", "bar-black"),
+        ("42%", "bar-yellow"),
+        ("57%", "bar-black"),
+    ]
+
+    barras_html = "".join(
+        [
+            f'''
+            <div class="bar-group">
+                <div class="bar {classe}" style="height:{altura};"></div>
+                <div class="bar-label">{label}</div>
+            </div>
+            '''
+            for label, (altura, classe) in zip(bar_labels, barras)
+        ]
+    )
+
+    return f'''
+    <section class="dashboard-shell">
+        <div class="dashboard-header">
+            <div class="dash-brand">
+                <img src="data:image/png;base64,{logo_b64}" alt="Fight for Life" />
+                <div>
+                    <p class="dash-brand-kicker">Fight for Life • Dashboard</p>
+                    <h1 class="dash-brand-title">{titulo}</h1>
+                    <p class="dash-brand-sub">{subtitulo}</p>
+                </div>
+            </div>
+
+            <div class="dash-side-text">
+                <p class="dash-side-title">{chamada}</p>
+                <p class="dash-side-sub">{descricao}</p>
+            </div>
+        </div>
+
+        {kpis_html}
+
+        <div class="dashboard-grid-main">
+            <article class="dash-panel">
+                <div class="dash-panel-header">
+                    <div>
+                        <h2 class="dash-panel-title">{gauge_title}</h2>
+                        <p class="dash-panel-sub">{gauge_sub}</p>
+                    </div>
+                    <div class="dash-panel-icon">◎</div>
+                </div>
+
+                <div class="gauge-wrap">
+                    <div class="gauge">
+                        <div class="gauge-center">
+                            <span class="gauge-label">{gauge_label}</span>
+                            <strong class="gauge-value">—</strong>
+                        </div>
+                    </div>
+                    <div class="gauge-note">Aguardando integração dos dados</div>
+                </div>
+            </article>
+
+            <article class="dash-panel dash-panel-large">
+                <div class="dash-panel-header">
+                    <div>
+                        <h2 class="dash-panel-title">{painel_title}</h2>
+                        <p class="dash-panel-sub">{painel_sub}</p>
+                    </div>
+                    <span class="placeholder-pill">Layout inicial</span>
+                </div>
+
+                <div class="chart-legend">
+                    <span class="legend-item"><span class="legend-dot legend-yellow"></span>Indicador principal</span>
+                    <span class="legend-item"><span class="legend-dot legend-black"></span>Indicador secundário</span>
+                </div>
+
+                <div class="chart-area">
+                    <svg viewBox="0 0 760 220" preserveAspectRatio="none" aria-label="Estrutura visual do gráfico">
+                        <line x1="0" y1="30" x2="760" y2="30" class="chart-grid-line"/>
+                        <line x1="0" y1="75" x2="760" y2="75" class="chart-grid-line"/>
+                        <line x1="0" y1="120" x2="760" y2="120" class="chart-grid-line"/>
+                        <line x1="0" y1="165" x2="760" y2="165" class="chart-grid-line"/>
+                        <line x1="0" y1="210" x2="760" y2="210" class="chart-grid-line"/>
+
+                        <polyline points="20,164 135,139 250,74 365,115 480,98 595,139 730,69" class="chart-line-yellow"/>
+                        <polyline points="20,184 135,172 250,133 365,126 480,151 595,145 730,112" class="chart-line-black"/>
+
+                        <circle cx="20" cy="164" r="6" class="chart-dot-yellow"/>
+                        <circle cx="135" cy="139" r="6" class="chart-dot-yellow"/>
+                        <circle cx="250" cy="74" r="6" class="chart-dot-yellow"/>
+                        <circle cx="365" cy="115" r="6" class="chart-dot-yellow"/>
+                        <circle cx="480" cy="98" r="6" class="chart-dot-yellow"/>
+                        <circle cx="595" cy="139" r="6" class="chart-dot-yellow"/>
+                        <circle cx="730" cy="69" r="6" class="chart-dot-yellow"/>
+
+                        <circle cx="20" cy="184" r="5" class="chart-dot-black"/>
+                        <circle cx="135" cy="172" r="5" class="chart-dot-black"/>
+                        <circle cx="250" cy="133" r="5" class="chart-dot-black"/>
+                        <circle cx="365" cy="126" r="5" class="chart-dot-black"/>
+                        <circle cx="480" cy="151" r="5" class="chart-dot-black"/>
+                        <circle cx="595" cy="145" r="5" class="chart-dot-black"/>
+                        <circle cx="730" cy="112" r="5" class="chart-dot-black"/>
+                    </svg>
+                </div>
+
+                <div class="axis-labels">
+                    <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span>
+                </div>
+            </article>
+        </div>
+
+        <article class="dash-panel dash-panel-large">
+            <div class="dash-panel-header">
+                <div>
+                    <h2 class="dash-panel-title">{barras_title}</h2>
+                    <p class="dash-panel-sub">{barras_sub}</p>
+                </div>
+                <div class="dash-panel-icon">▥</div>
+            </div>
+
+            <div class="bars-wrap">
+                {barras_html}
+            </div>
+
+            <div class="dashboard-footer-note">
+                Valores demonstrativos apenas para visualização do layout.
+            </div>
+        </article>
+    </section>
+    '''
+
+
+
+def exibir_dashboard_inicial() -> None:
+    aplicar_css_dashboard_claro()
 
     logo_b64 = arquivo_para_base64(LOGO_PATH)
 
@@ -1095,7 +1836,7 @@ def exibir_dashboard_inicial() -> None:
     with st.sidebar:
         if logo_b64:
             st.markdown(
-                f"""
+                f'''
                 <div class="sidebar-brand">
                     <img src="data:image/png;base64,{logo_b64}" alt="Fight for Life" />
                     <div>
@@ -1103,7 +1844,7 @@ def exibir_dashboard_inicial() -> None:
                         <div class="sidebar-brand-sub">Painel interno</div>
                     </div>
                 </div>
-                """,
+                ''',
                 unsafe_allow_html=True,
             )
 
@@ -1131,60 +1872,23 @@ def exibir_dashboard_inicial() -> None:
         exibir_login_diretoria()
         return
 
-    if pagina == "📈 Comercial":
-        titulo = "Comercial"
-        subtitulo = "Visão comercial da academia"
-        metricas = [
-            ("Alunos ativos", "—"),
-            ("Aulas no mês", "—"),
-            ("Aulas teste", "—"),
-            ("Novas matrículas", "—"),
-        ]
-    else:
-        titulo = "Diretoria"
-        subtitulo = "Visão estratégica da academia"
-        metricas = [
-            ("Receita do mês", "—"),
-            ("Alunos ativos", "—"),
-            ("Taxa de conversão", "—"),
-            ("Cancelamentos", "—"),
-        ]
-
     st.markdown(
-        f"""
-        <div class="dash-head">
-            <div>
-                <h1 class="page-title">{titulo}</h1>
-                <p class="page-subtitle">{subtitulo}</p>
-            </div>
-        </div>
-        """,
+        montar_dashboard_visual(
+            logo_b64=logo_b64,
+            pagina=pagina,
+        ),
         unsafe_allow_html=True,
     )
 
-    colunas = st.columns(4)
-
-    for coluna, (titulo_card, valor) in zip(colunas, metricas):
-        with coluna:
-            st.markdown(
-                f"""
-                <div class="metric-card">
-                    <div class="metric-label">{titulo_card}</div>
-                    <div class="metric-value">{valor}</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
     if pagina == "👔 Diretoria":
-        if st.button("Bloquear Diretoria"):
-            st.session_state["diretoria_autenticada"] = False
-            st.rerun()
+        st.markdown("<div style='height:0.7rem'></div>", unsafe_allow_html=True)
 
-    st.info(
-        "O menu lateral já está funcionando. Na próxima etapa serão conectados "
-        "os dados e definidos os indicadores de cada página."
-    )
+        col_esquerda, col_botao = st.columns([5, 1])
+
+        with col_botao:
+            if st.button("Bloquear Diretoria"):
+                st.session_state["diretoria_autenticada"] = False
+                st.rerun()
 
 
 # ============================================================
