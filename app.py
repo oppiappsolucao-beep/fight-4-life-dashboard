@@ -4,7 +4,6 @@ import base64
 import hmac
 import hashlib
 import os
-import textwrap
 from pathlib import Path
 
 import streamlit as st
@@ -1070,8 +1069,9 @@ def aplicar_css_dashboard_claro() -> None:
         <style>
             [data-testid="stAppViewContainer"] {
                 background:
-                    radial-gradient(circle at 92% 2%, rgba(251,196,16,0.18), transparent 22rem),
-                    linear-gradient(180deg, #f8f8f8 0%, #eef0f3 100%) !important;
+                    radial-gradient(circle at 90% 8%, rgba(251,196,16,0.26), transparent 28rem),
+                    radial-gradient(circle at 12% 90%, rgba(251,196,16,0.10), transparent 30rem),
+                    linear-gradient(135deg, #050505 0%, #111111 58%, #fbc410 160%) !important;
             }
 
             .block-container {
@@ -1091,8 +1091,8 @@ def aplicar_css_dashboard_claro() -> None:
 
             .dashboard-header {
                 align-items: center;
-                background: #ffffff;
-                border: 1px solid #eceff3;
+                background: rgba(255,255,255,0.96);
+                border: 1px solid rgba(255,255,255,0.65);
                 border-radius: 24px;
                 box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
                 display: flex;
@@ -1273,8 +1273,8 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .dash-panel {
-                background: #ffffff;
-                border: 1px solid #eceff3;
+                background: rgba(255,255,255,0.96);
+                border: 1px solid rgba(255,255,255,0.65);
                 border-radius: 22px;
                 box-shadow: 0 12px 28px rgba(15, 23, 42, 0.065);
                 min-height: 300px;
@@ -1873,14 +1873,11 @@ def exibir_dashboard_inicial() -> None:
         exibir_login_diretoria()
         return
 
-    st.markdown(
-        textwrap.dedent(
-            montar_dashboard_visual(
-                logo_b64=logo_b64,
-                pagina=pagina,
-            )
-        ).strip(),
-        unsafe_allow_html=True,
+    st.html(
+        montar_dashboard_visual(
+            logo_b64=logo_b64,
+            pagina=pagina,
+        )
     )
 
     if pagina == "👔 Diretoria":
