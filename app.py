@@ -611,45 +611,20 @@ def aplicar_css() -> None:
                 min-height: 48px;
                 padding: 0.68rem 0.72rem;
                 transition: 0.18s ease;
-                width: 100% !important;
+            }}
+
+            [data-testid="stSidebar"] div[role="radiogroup"] label > div:first-child {{
+                flex: 0 0 auto !important;
+            }}
+
+            [data-testid="stSidebar"] div[role="radiogroup"] label p {{
+                white-space: nowrap !important;
             }}
 
             [data-testid="stSidebar"] div[role="radiogroup"] {{
                 width: 100% !important;
             }}
 
-            [data-testid="stSidebar"] div[role="radiogroup"] > label {{
-                box-sizing: border-box !important;
-                max-width: none !important;
-                width: 100% !important;
-            }}
-
-            [data-testid="stSidebar"] [data-testid="stRadio"] {{
-                width: 100% !important;
-            }}
-
-            [data-testid="stSidebar"] [data-testid="stRadio"] > div {{
-                width: 100% !important;
-            }}
-
-            [data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] {{
-                align-items: stretch !important;
-                display: flex !important;
-                flex-direction: column !important;
-                width: 100% !important;
-            }}
-
-            [data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] > label {{
-                box-sizing: border-box !important;
-                display: flex !important;
-                flex: 1 1 auto !important;
-                min-width: 100% !important;
-                width: 100% !important;
-            }}
-
-            [data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] > label > div {{
-                width: 100% !important;
-            }}
 
             [data-testid="stSidebar"] div[role="radiogroup"] label:hover {{
                 background: rgba(251,196,16,0.10);
