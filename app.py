@@ -493,131 +493,131 @@ def aplicar_css() -> None:
 
 
             /* MENU LATERAL DO DASHBOARD */
-            [data-testid="stSidebar"] {
+            [data-testid="stSidebar"] {{
                 background:
                     linear-gradient(180deg, #111111 0%, #080808 100%) !important;
                 border-right: 1px solid rgba(251,196,16,0.22) !important;
                 min-width: 258px !important;
-            }
+            }}
 
-            [data-testid="stSidebar"] > div:first-child {
+            [data-testid="stSidebar"] > div:first-child {{
                 padding-top: 0.8rem !important;
-            }
+            }}
 
-            [data-testid="stSidebar"] [data-testid="stSidebarContent"] {
+            [data-testid="stSidebar"] [data-testid="stSidebarContent"] {{
                 background:
                     linear-gradient(180deg, #111111 0%, #080808 100%) !important;
-            }
+            }}
 
             [data-testid="stSidebar"] h1,
             [data-testid="stSidebar"] h2,
             [data-testid="stSidebar"] h3,
             [data-testid="stSidebar"] p,
             [data-testid="stSidebar"] label,
-            [data-testid="stSidebar"] span {
+            [data-testid="stSidebar"] span {{
                 color: #ffffff !important;
-            }
+            }}
 
-            .sidebar-brand {
+            .sidebar-brand {{
                 align-items: center;
                 display: flex;
                 gap: 0.68rem;
                 margin: 0.15rem 0 1rem 0;
                 padding: 0.45rem 0.15rem 0.85rem 0.15rem;
                 border-bottom: 1px solid rgba(255,255,255,0.10);
-            }
+            }}
 
-            .sidebar-brand img {
+            .sidebar-brand img {{
                 border-radius: 50%;
                 height: 54px;
                 object-fit: contain;
                 width: 54px;
-            }
+            }}
 
-            .sidebar-brand-title {
+            .sidebar-brand-title {{
                 color: #ffffff;
                 font-size: 0.88rem;
                 font-weight: 1000;
                 letter-spacing: 0.08rem;
                 line-height: 1.05;
                 text-transform: uppercase;
-            }
+            }}
 
-            .sidebar-brand-sub {
+            .sidebar-brand-sub {{
                 color: var(--amarelo);
                 font-size: 0.62rem;
                 font-weight: 900;
                 letter-spacing: 0.08rem;
                 margin-top: 0.24rem;
                 text-transform: uppercase;
-            }
+            }}
 
-            [data-testid="stSidebar"] div[role="radiogroup"] {
+            [data-testid="stSidebar"] div[role="radiogroup"] {{
                 gap: 0.42rem !important;
-            }
+            }}
 
-            [data-testid="stSidebar"] div[role="radiogroup"] label {
+            [data-testid="stSidebar"] div[role="radiogroup"] label {{
                 background: rgba(255,255,255,0.035);
                 border: 1px solid rgba(255,255,255,0.08);
                 border-radius: 12px;
                 cursor: pointer;
                 padding: 0.68rem 0.72rem;
                 transition: 0.18s ease;
-            }
+            }}
 
-            [data-testid="stSidebar"] div[role="radiogroup"] label:hover {
+            [data-testid="stSidebar"] div[role="radiogroup"] label:hover {{
                 background: rgba(251,196,16,0.10);
                 border-color: rgba(251,196,16,0.35);
-            }
+            }}
 
-            [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) {
+            [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) {{
                 background: rgba(251,196,16,0.15);
                 border-color: rgba(251,196,16,0.75);
-            }
+            }}
 
-            [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) p {
+            [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) p {{
                 color: var(--amarelo) !important;
                 font-weight: 950 !important;
-            }
+            }}
 
-            [data-testid="stSidebar"] div[role="radiogroup"] label p {
+            [data-testid="stSidebar"] div[role="radiogroup"] label p {{
                 font-size: 0.86rem !important;
                 font-weight: 800 !important;
-            }
+            }}
 
             [data-testid="stSidebarCollapsedControl"] button,
-            [data-testid="collapsedControl"] button {
+            [data-testid="collapsedControl"] button {{
                 background: var(--amarelo) !important;
                 border: 1px solid var(--amarelo) !important;
                 border-radius: 10px !important;
                 color: #000000 !important;
-            }
+            }}
 
-            .sidebar-section-label {
+            .sidebar-section-label {{
                 color: #8e8e8e;
                 font-size: 0.62rem;
                 font-weight: 950;
                 letter-spacing: 0.14rem;
                 margin: 0.3rem 0 0.5rem 0.15rem;
                 text-transform: uppercase;
-            }
+            }}
 
-            .page-title {
+            .page-title {{
                 color: #ffffff;
                 font-size: 1.56rem;
                 font-weight: 1000;
                 letter-spacing: -0.05rem;
                 margin: 0;
-            }
+            }}
 
-            .page-subtitle {
+            .page-subtitle {{
                 color: var(--amarelo);
                 font-size: 0.72rem;
                 font-weight: 950;
                 letter-spacing: 0.10rem;
                 margin: 0.32rem 0 0 0;
                 text-transform: uppercase;
-            }
+            }}
 
             @media (max-width: 900px) {{
                 .block-container {{
