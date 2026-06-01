@@ -1698,6 +1698,44 @@ def aplicar_css_dashboard_claro() -> None:
                 filter: brightness(1.04);
             }
 
+            /* TEXTO PRETO EM TODO O FORMULÁRIO RETRÁTIL */
+            [data-testid="stExpander"],
+            [data-testid="stExpander"] *,
+            [data-testid="stExpander"] p,
+            [data-testid="stExpander"] span,
+            [data-testid="stExpander"] label,
+            [data-testid="stExpander"] div,
+            [data-testid="stExpander"] input,
+            [data-testid="stExpander"] textarea,
+            [data-testid="stExpander"] select {
+                color: #111111 !important;
+            }
+
+            [data-testid="stExpander"] input::placeholder,
+            [data-testid="stExpander"] textarea::placeholder {
+                color: #7a8494 !important;
+                opacity: 1 !important;
+            }
+
+            [data-testid="stExpander"] [data-baseweb="select"] *,
+            [data-testid="stExpander"] [data-baseweb="input"] *,
+            [data-testid="stExpander"] [data-baseweb="textarea"] * {
+                color: #111111 !important;
+            }
+
+            [data-testid="stExpander"] .form-card-intro {
+                color: #5f6875 !important;
+            }
+
+            [data-testid="stExpander"] .form-card-badge {
+                color: #866500 !important;
+            }
+
+            [data-testid="stExpander"] div[data-testid="stFormSubmitButton"] button,
+            [data-testid="stExpander"] div[data-testid="stFormSubmitButton"] button * {
+                color: #111111 !important;
+            }
+
             .chart-streamlit-wrap {
                 background: rgba(255,255,255,0.96);
                 border: 1px solid rgba(255,255,255,0.68);
