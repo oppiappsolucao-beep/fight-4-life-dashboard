@@ -196,6 +196,12 @@ def aplicar_css() -> None:
                 color: var(--amarelo);
             }}
 
+            .hero-divider {{
+                color: var(--amarelo);
+                display: inline-block;
+                margin: 0 0.18rem;
+            }}
+
             .hero-text {{
                 color: #c8c8c8;
                 font-size: 0.95rem;
@@ -532,8 +538,8 @@ def exibir_login() -> None:
             <section class="hero-wrap">
                 <p class="hero-kicker">Fight for Life • Artes marciais</p>
                 <h1 class="hero-title">
-                    DISCIPLINA<br>
-                    FORÇA E<br>
+                    DISCIPLINA <span class="hero-divider">•</span>
+                    FORÇA <span class="hero-divider">•</span>
                     <strong>EVOLUÇÃO</strong>
                 </h1>
                 <p class="hero-text">
