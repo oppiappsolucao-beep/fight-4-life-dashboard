@@ -775,42 +775,68 @@ def aplicar_css() -> None:
             }}
 
             /*
-            MENU LATERAL SEM SUMIR:
-            força a barra e o conteúdo interno a permanecerem visíveis.
+            MENU LATERAL RETRÁTIL:
+            mantém o comportamento nativo do Streamlit, com a setinha
+            para abrir e fechar, mas deixa os controles sempre visíveis.
             */
             [data-testid="stSidebar"] {{
-                display: block !important;
-                left: 0 !important;
-                max-width: 258px !important;
+                background:
+                    linear-gradient(180deg, #111111 0%, #080808 100%) !important;
+                border-right: 1px solid rgba(251,196,16,0.22) !important;
                 min-width: 258px !important;
-                opacity: 1 !important;
-                transform: translateX(0) !important;
-                visibility: visible !important;
                 width: 258px !important;
-                z-index: 999 !important;
             }}
 
             [data-testid="stSidebar"] > div:first-child,
             [data-testid="stSidebar"] [data-testid="stSidebarContent"],
             [data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {{
-                display: block !important;
-                max-width: 258px !important;
                 min-width: 258px !important;
-                opacity: 1 !important;
-                transform: none !important;
-                visibility: visible !important;
                 width: 258px !important;
             }}
 
             [data-testid="stSidebarCollapsedControl"],
             [data-testid="collapsedControl"],
             [data-testid="stSidebarCollapseButton"] {{
-                display: none !important;
+                display: flex !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+                visibility: visible !important;
+                z-index: 999999 !important;
+            }}
+
+            [data-testid="stSidebarCollapsedControl"] button,
+            [data-testid="collapsedControl"] button,
+            [data-testid="stSidebarCollapseButton"] button {{
+                align-items: center !important;
+                background: var(--amarelo) !important;
+                border: 1px solid var(--amarelo) !important;
+                border-radius: 10px !important;
+                color: #000000 !important;
+                display: flex !important;
+                height: 38px !important;
+                justify-content: center !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                width: 38px !important;
+            }}
+
+            [data-testid="stSidebarCollapsedControl"] svg,
+            [data-testid="collapsedControl"] svg,
+            [data-testid="stSidebarCollapseButton"] svg {{
+                color: #000000 !important;
+                fill: #000000 !important;
+                stroke: #000000 !important;
             }}
 
             @media (max-width: 900px) {{
+                [data-testid="stSidebarCollapsedControl"],
+                [data-testid="collapsedControl"] {{
+                    left: 0.65rem !important;
+                    position: fixed !important;
+                    top: 0.65rem !important;
+                }}
+
                 [data-testid="stSidebar"] {{
-                    max-width: min(258px, 78vw) !important;
                     min-width: min(258px, 78vw) !important;
                     width: min(258px, 78vw) !important;
                 }}
@@ -818,7 +844,6 @@ def aplicar_css() -> None:
                 [data-testid="stSidebar"] > div:first-child,
                 [data-testid="stSidebar"] [data-testid="stSidebarContent"],
                 [data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {{
-                    max-width: min(258px, 78vw) !important;
                     min-width: min(258px, 78vw) !important;
                     width: min(258px, 78vw) !important;
                 }}
