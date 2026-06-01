@@ -27,29 +27,32 @@ BRANCO = "#ffffff"
 CINZA_ESCURO = "#111111"
 CINZA_BORDA = "#2a2a2a"
 
-# Fotos externas de exemplo.
-# Depois você pode trocar somente os links pelas fotos oficiais da academia.
+# Fotos oficiais escolhidas para a tela de login.
+# Os arquivos ficam dentro da pasta assets do próprio projeto.
 FOTOS_MODALIDADES = [
     {
         "titulo": "MUAY THAI",
         "subtitulo": "Técnica, intensidade e disciplina",
-        "url": "https://images.pexels.com/photos/7045717/pexels-photo-7045717.jpeg?auto=compress&cs=tinysrgb&w=1400",
+        "arquivo": BASE_DIR / "assets" / "muay_thai.jpg",
+        "posicao": "center 43%",
     },
     {
         "titulo": "JIU-JITSU",
         "subtitulo": "Estratégia dentro e fora do tatame",
-        "url": "https://images.pexels.com/photos/7991676/pexels-photo-7991676.jpeg?auto=compress&cs=tinysrgb&w=1400",
-        "posicao": "center 18%",
+        "arquivo": BASE_DIR / "assets" / "jiu_jitsu.jpg",
+        "posicao": "center 57%",
     },
     {
         "titulo": "JIU-JITSU KIDS",
         "subtitulo": "Confiança e evolução desde cedo",
-        "url": "https://images.pexels.com/photos/8613312/pexels-photo-8613312.jpeg?auto=compress&cs=tinysrgb&w=1400",
+        "arquivo": BASE_DIR / "assets" / "jiu_jitsu_kids.jpg",
+        "posicao": "center 46%",
     },
     {
         "titulo": "MMA",
         "subtitulo": "Preparação completa para novos desafios",
-        "url": "https://images.pexels.com/photos/4761663/pexels-photo-4761663.jpeg?auto=compress&cs=tinysrgb&w=1400",
+        "arquivo": BASE_DIR / "assets" / "mma.jpg",
+        "posicao": "center 42%",
     },
 ]
 
@@ -502,13 +505,15 @@ def montar_cards_modalidades() -> str:
 
     for modalidade in FOTOS_MODALIDADES:
         posicao = modalidade.get("posicao", "center")
+        imagem_b64 = arquivo_para_base64(modalidade["arquivo"])
+        imagem_src = f"data:image/jpeg;base64,{imagem_b64}"
 
         cards.append(
             f"""
             <div
                 class="fight-card"
                 style="
-                    background-image:url('{modalidade["url"]}');
+                    background-image:url('{imagem_src}');
                     background-position:{posicao};
                 "
             >
