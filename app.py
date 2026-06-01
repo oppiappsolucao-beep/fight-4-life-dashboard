@@ -1757,6 +1757,158 @@ def aplicar_css_dashboard_claro() -> None:
                     padding: 0.88rem;
                 }
             }
+
+
+            /* CARDS DE STATUS COMERCIAIS */
+            .status-panel {
+                background: rgba(255,255,255,0.96);
+                border: 1px solid rgba(255,255,255,0.68);
+                border-radius: 22px;
+                box-shadow: 0 12px 28px rgba(15, 23, 42, 0.065);
+                min-height: 355px;
+                padding: 1.05rem 1.1rem;
+            }
+
+            .status-panel-header {
+                align-items: center;
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 0.85rem;
+            }
+
+            .status-panel-title {
+                color: #202020;
+                font-size: 1rem;
+                font-weight: 800;
+                letter-spacing: -0.025rem;
+                margin: 0;
+            }
+
+            .status-panel-sub {
+                color: #7a8494;
+                font-size: 0.69rem;
+                margin: 0.15rem 0 0 0;
+            }
+
+            .status-grid {
+                display: grid;
+                gap: 0.75rem;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .status-card {
+                background: #ffffff;
+                border: 1px solid #e3e7ec;
+                border-radius: 18px;
+                box-shadow: 0 8px 18px rgba(15, 23, 42, 0.055);
+                min-height: 132px;
+                overflow: hidden;
+                padding: 0.80rem 0.78rem 0.72rem 0.78rem;
+                position: relative;
+                transition: 0.18s ease;
+            }
+
+            .status-card:hover {
+                border-color: rgba(251,196,16,0.80);
+                box-shadow: 0 10px 22px rgba(15, 23, 42, 0.09);
+                transform: translateY(-2px);
+            }
+
+            .status-card-top {
+                align-items: center;
+                display: flex;
+                gap: 0.58rem;
+            }
+
+            .status-card-icon {
+                align-items: center;
+                border-radius: 12px;
+                display: flex;
+                flex: 0 0 auto;
+                font-size: 0.86rem;
+                height: 36px;
+                justify-content: center;
+                width: 36px;
+            }
+
+            .status-blue { background:#e9f2ff; color:#2f6fc5; }
+            .status-brown { background:#f4eee8; color:#a06b2e; }
+            .status-red { background:#ffecec; color:#df4545; }
+            .status-teal { background:#e7f7f7; color:#0f7f86; }
+            .status-green { background:#e8f7ef; color:#13975a; }
+            .status-purple { background:#f0eafb; color:#7a4db1; }
+
+            .status-card-name {
+                color: #111111;
+                font-size: 0.72rem;
+                font-weight: 800;
+                line-height: 1.15;
+                margin: 0;
+            }
+
+            .status-card-number {
+                color: #111111;
+                font-size: 1.44rem;
+                font-weight: 800;
+                letter-spacing: -0.07rem;
+                line-height: 1;
+                margin: 0.58rem 0 0 0;
+            }
+
+            .status-card-period {
+                color: #8a94a4;
+                font-size: 0.60rem;
+                font-weight: 600;
+                margin: 0.20rem 0 0 0;
+            }
+
+            .status-card-footer {
+                border-top: 1px solid #edf0f3;
+                color: #6f7884;
+                font-size: 0.61rem;
+                font-weight: 700;
+                margin-top: 0.62rem;
+                padding-top: 0.52rem;
+            }
+
+            @media (max-width: 980px) {
+                .status-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+
+            @media (max-width: 620px) {
+                .status-panel {
+                    border-radius: 18px;
+                    min-height: auto;
+                    padding: 0.88rem;
+                }
+
+                .status-grid {
+                    gap: 0.58rem;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .status-card {
+                    border-radius: 15px;
+                    min-height: 116px;
+                    padding: 0.66rem;
+                }
+
+                .status-card-icon {
+                    border-radius: 10px;
+                    height: 31px;
+                    width: 31px;
+                }
+
+                .status-card-name {
+                    font-size: 0.64rem;
+                }
+
+                .status-card-number {
+                    font-size: 1.25rem;
+                }
+            }
 </style>
         ''',
         unsafe_allow_html=True,
@@ -1977,6 +2129,88 @@ def montar_painel_retencao_diretoria_html() -> str:
     """
 
 
+def montar_cards_status_comercial_html() -> str:
+    status = [
+        {
+            "nome": "Novo Lead",
+            "numero": "—",
+            "icone": "✦",
+            "classe": "status-blue",
+        },
+        {
+            "nome": "Conversando",
+            "numero": "—",
+            "icone": "●",
+            "classe": "status-brown",
+        },
+        {
+            "nome": "Sem Resposta",
+            "numero": "—",
+            "icone": "⚑",
+            "classe": "status-red",
+        },
+        {
+            "nome": "Não tem interesse",
+            "numero": "—",
+            "icone": "⊘",
+            "classe": "status-teal",
+        },
+        {
+            "nome": "Com transferência",
+            "numero": "—",
+            "icone": "✓",
+            "classe": "status-green",
+        },
+        {
+            "nome": "Sem transferência",
+            "numero": "—",
+            "icone": "▣",
+            "classe": "status-purple",
+        },
+    ]
+
+    cards = []
+
+    for item in status:
+        cards.append(
+            f"""
+            <article class="status-card">
+                <div class="status-card-top">
+                    <div class="status-card-icon {item["classe"]}">
+                        {item["icone"]}
+                    </div>
+                    <p class="status-card-name">{item["nome"]}</p>
+                </div>
+
+                <p class="status-card-number">{item["numero"]}</p>
+                <p class="status-card-period">Aguardando integração</p>
+
+                <div class="status-card-footer">
+                    Ver registros
+                </div>
+            </article>
+            """
+        )
+
+    return f"""
+    <section class="status-panel">
+        <div class="status-panel-header">
+            <div>
+                <h2 class="status-panel-title">Acompanhamento comercial</h2>
+                <p class="status-panel-sub">
+                    Distribuição dos leads por etapa de atendimento
+                </p>
+            </div>
+            <span class="placeholder-pill">Status</span>
+        </div>
+
+        <div class="status-grid">
+            {"".join(cards)}
+        </div>
+    </section>
+    """
+
+
 def render_formulario_retratil_comercial() -> None:
     with st.expander("Cadastrar novo aluno", expanded=False):
         st.markdown(
@@ -2127,12 +2361,15 @@ def exibir_dashboard_inicial() -> None:
             st.html(montar_painel_retencao_diretoria_html())
 
     with coluna_direita:
-        st.html(
-            montar_painel_grafico_html(
-                titulo=config["painel_title"],
-                subtitulo=config["painel_sub"],
+        if pagina == "📈 Comercial":
+            st.html(montar_cards_status_comercial_html())
+        else:
+            st.html(
+                montar_painel_grafico_html(
+                    titulo=config["painel_title"],
+                    subtitulo=config["painel_sub"],
+                )
             )
-        )
 
     if pagina == "👔 Diretoria":
         st.markdown("<div style='height:0.7rem'></div>", unsafe_allow_html=True)
