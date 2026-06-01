@@ -68,38 +68,18 @@ def arquivo_para_base64(caminho: Path) -> str:
 
 def carregar_credenciais() -> tuple[str, str]:
     """
-    Busca as credenciais nos Secrets do Streamlit Cloud.
+    Busca as credenciais principais usando chaves diretas nos Secrets.
 
-    Aceita os dois formatos abaixo:
-
-    FORMATO 1:
-    [auth]
-    username = "fight4life"
-    password = "Fight4life2026!"
-
-    FORMATO 2:
-    username = "fight4life"
-    password = "Fight4life2026!"
-
-    Também aceita variáveis de ambiente caso o projeto seja
-    publicado posteriormente em outro servidor.
+    Formato esperado:
+    dashboard_username = "fight4life"
+    dashboard_password = "Fight4life2026!"
     """
     try:
-        # Formato com seção [auth]
-        if "auth" in st.secrets:
-            usuario = str(st.secrets["auth"].get("username", ""))
-            senha = str(st.secrets["auth"].get("password", ""))
-
-            if usuario and senha:
-                return usuario, senha
-
-        # Formato direto, sem seção [auth]
-        usuario = str(st.secrets.get("username", ""))
-        senha = str(st.secrets.get("password", ""))
+        usuario = str(st.secrets["dashboard_username"])
+        senha = str(st.secrets["dashboard_password"])
 
         if usuario and senha:
             return usuario, senha
-
     except Exception:
         pass
 
@@ -128,37 +108,19 @@ def credenciais_validas(usuario_digitado: str, senha_digitada: str) -> bool:
 
 def carregar_credenciais_diretoria() -> tuple[str, str]:
     """
-    Busca as credenciais exclusivas da área Diretoria nos Secrets do Streamlit.
+    Busca as credenciais exclusivas da área Diretoria usando chaves diretas
+    nos Secrets do Streamlit.
 
-    Aceita qualquer um destes formatos:
-
-    FORMATO RECOMENDADO:
-    [diretoria]
-    username = "fight4lifediretoria"
-    password = "Fight4LifeDiretoria!"
-
-    FORMATO ALTERNATIVO:
+    Formato esperado:
     diretoria_username = "fight4lifediretoria"
     diretoria_password = "Fight4LifeDiretoria!"
     """
     try:
-        # Formato recomendado: seção [diretoria]
-        if "diretoria" in st.secrets:
-            secao_diretoria = st.secrets["diretoria"]
-
-            usuario = str(secao_diretoria["username"]) if "username" in secao_diretoria else ""
-            senha = str(secao_diretoria["password"]) if "password" in secao_diretoria else ""
-
-            if usuario and senha:
-                return usuario, senha
-
-        # Formato alternativo: chaves diretas
-        usuario = str(st.secrets["diretoria_username"]) if "diretoria_username" in st.secrets else ""
-        senha = str(st.secrets["diretoria_password"]) if "diretoria_password" in st.secrets else ""
+        usuario = str(st.secrets["diretoria_username"])
+        senha = str(st.secrets["diretoria_password"])
 
         if usuario and senha:
             return usuario, senha
-
     except Exception:
         pass
 
