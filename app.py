@@ -68,18 +68,47 @@ def arquivo_para_base64(caminho: Path) -> str:
 
 def carregar_credenciais() -> tuple[str, str]:
     """
-    Busca as credenciais principais usando chaves diretas nos Secrets.
+    Busca as credenciais principais nos Secrets do Streamlit.
 
-    Formato esperado:
+    Aceita qualquer um destes formatos:
+
+    FORMATO 1:
+    [auth]
+    username = "fight4life"
+    password = "Fight4life2026!"
+
+    FORMATO 2:
+    username = "fight4life"
+    password = "Fight4life2026!"
+
+    FORMATO 3:
     dashboard_username = "fight4life"
     dashboard_password = "Fight4life2026!"
     """
     try:
-        usuario = str(st.secrets["dashboard_username"])
-        senha = str(st.secrets["dashboard_password"])
+        # Formato 1: seção [auth]
+        if "auth" in st.secrets:
+            secao_auth = st.secrets["auth"]
+            usuario = str(secao_auth["username"]) if "username" in secao_auth else ""
+            senha = str(secao_auth["password"]) if "password" in secao_auth else ""
+
+            if usuario and senha:
+                return usuario, senha
+
+        # Formato 2: chaves diretas username/password
+        usuario = str(st.secrets["username"]) if "username" in st.secrets else ""
+        senha = str(st.secrets["password"]) if "password" in st.secrets else ""
 
         if usuario and senha:
             return usuario, senha
+
+        # Formato 3: chaves diretas dashboard_username/dashboard_password
+        usuario = str(st.secrets["dashboard_username"]) if "dashboard_username" in st.secrets else ""
+        senha = str(st.secrets["dashboard_password"]) if "dashboard_password" in st.secrets else ""
+
+        if usuario and senha:
+            return usuario, senha
+
     except Exception:
         pass
 
@@ -108,19 +137,36 @@ def credenciais_validas(usuario_digitado: str, senha_digitada: str) -> bool:
 
 def carregar_credenciais_diretoria() -> tuple[str, str]:
     """
-    Busca as credenciais exclusivas da área Diretoria usando chaves diretas
-    nos Secrets do Streamlit.
+    Busca as credenciais exclusivas da Diretoria nos Secrets do Streamlit.
 
-    Formato esperado:
+    Aceita qualquer um destes formatos:
+
+    FORMATO 1:
+    [diretoria]
+    username = "fight4lifediretoria"
+    password = "Fight4LifeDiretoria!"
+
+    FORMATO 2:
     diretoria_username = "fight4lifediretoria"
     diretoria_password = "Fight4LifeDiretoria!"
     """
     try:
-        usuario = str(st.secrets["diretoria_username"])
-        senha = str(st.secrets["diretoria_password"])
+        # Formato 1: seção [diretoria]
+        if "diretoria" in st.secrets:
+            secao_diretoria = st.secrets["diretoria"]
+            usuario = str(secao_diretoria["username"]) if "username" in secao_diretoria else ""
+            senha = str(secao_diretoria["password"]) if "password" in secao_diretoria else ""
+
+            if usuario and senha:
+                return usuario, senha
+
+        # Formato 2: chaves diretas
+        usuario = str(st.secrets["diretoria_username"]) if "diretoria_username" in st.secrets else ""
+        senha = str(st.secrets["diretoria_password"]) if "diretoria_password" in st.secrets else ""
 
         if usuario and senha:
             return usuario, senha
+
     except Exception:
         pass
 
