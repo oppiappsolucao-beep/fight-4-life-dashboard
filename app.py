@@ -39,6 +39,7 @@ FOTOS_MODALIDADES = [
         "titulo": "JIU-JITSU",
         "subtitulo": "Estratégia dentro e fora do tatame",
         "url": "https://images.pexels.com/photos/7991676/pexels-photo-7991676.jpeg?auto=compress&cs=tinysrgb&w=1400",
+        "posicao": "center 18%",
     },
     {
         "titulo": "JIU-JITSU KIDS",
@@ -500,11 +501,16 @@ def montar_cards_modalidades() -> str:
     cards = []
 
     for modalidade in FOTOS_MODALIDADES:
+        posicao = modalidade.get("posicao", "center")
+
         cards.append(
             f"""
             <div
                 class="fight-card"
-                style="background-image:url('{modalidade["url"]}')"
+                style="
+                    background-image:url('{modalidade["url"]}');
+                    background-position:{posicao};
+                "
             >
                 <div class="fight-card-content">
                     <p class="fight-card-title">{modalidade["titulo"]}</p>
