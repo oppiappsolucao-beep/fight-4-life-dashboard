@@ -4,6 +4,7 @@ import base64
 import hmac
 import hashlib
 import os
+import textwrap
 from pathlib import Path
 
 import streamlit as st
@@ -1873,10 +1874,12 @@ def exibir_dashboard_inicial() -> None:
         return
 
     st.markdown(
-        montar_dashboard_visual(
-            logo_b64=logo_b64,
-            pagina=pagina,
-        ),
+        textwrap.dedent(
+            montar_dashboard_visual(
+                logo_b64=logo_b64,
+                pagina=pagina,
+            )
+        ).strip(),
         unsafe_allow_html=True,
     )
 
