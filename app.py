@@ -271,6 +271,8 @@ def aplicar_css() -> None:
     st.markdown(
         f"""
         <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
             :root {{
                 --preto: {PRETO};
                 --amarelo: {AMARELO};
@@ -305,7 +307,7 @@ def aplicar_css() -> None:
             }}
 
             h1, h2, h3, p, span, label, div {{
-                font-family: Arial, Helvetica, sans-serif;
+                font-family: "Inter", "Segoe UI", Arial, sans-serif;
             }}
 
             .top-strip {{
@@ -318,7 +320,7 @@ def aplicar_css() -> None:
             .top-brand {{
                 color: var(--branco);
                 font-size: 0.78rem;
-                font-weight: 950;
+                font-weight: 800;
                 letter-spacing: 0.22rem;
                 text-transform: uppercase;
             }}
@@ -332,7 +334,7 @@ def aplicar_css() -> None:
                 border-radius: 999px;
                 color: var(--amarelo);
                 font-size: 0.66rem;
-                font-weight: 900;
+                font-weight: 700;
                 letter-spacing: 0.12rem;
                 padding: 0.5rem 0.78rem;
                 text-transform: uppercase;
@@ -345,7 +347,7 @@ def aplicar_css() -> None:
             .hero-kicker {{
                 color: var(--amarelo);
                 font-size: 0.75rem;
-                font-weight: 950;
+                font-weight: 800;
                 letter-spacing: 0.22rem;
                 margin-bottom: 0.45rem;
                 text-transform: uppercase;
@@ -354,7 +356,7 @@ def aplicar_css() -> None:
             .hero-title {{
                 color: var(--branco);
                 font-size: clamp(2.55rem, 5.2vw, 5.65rem);
-                font-weight: 1000;
+                font-weight: 800;
                 letter-spacing: -0.25rem;
                 line-height: 0.89;
                 margin: 0;
@@ -425,7 +427,7 @@ def aplicar_css() -> None:
             .fight-card-title {{
                 color: var(--amarelo);
                 font-size: 0.96rem;
-                font-weight: 1000;
+                font-weight: 800;
                 letter-spacing: -0.035rem;
                 margin: 0;
                 text-transform: uppercase;
@@ -496,7 +498,7 @@ def aplicar_css() -> None:
             .login-title {{
                 color: var(--branco);
                 font-size: 1.08rem;
-                font-weight: 1000;
+                font-weight: 800;
                 letter-spacing: -0.05rem;
                 margin: 0;
                 text-align: center;
@@ -603,7 +605,7 @@ def aplicar_css() -> None:
             .dash-head p {{
                 color: var(--amarelo);
                 font-size: 0.66rem;
-                font-weight: 950;
+                font-weight: 800;
                 letter-spacing: 0.11rem;
                 margin: 0.30rem 0 0 0;
                 text-transform: uppercase;
@@ -620,7 +622,7 @@ def aplicar_css() -> None:
             .metric-label {{
                 color: #a9a9a9;
                 font-size: 0.66rem;
-                font-weight: 950;
+                font-weight: 800;
                 letter-spacing: 0.08rem;
                 text-transform: uppercase;
             }}
@@ -628,7 +630,7 @@ def aplicar_css() -> None:
             .metric-value {{
                 color: var(--amarelo);
                 font-size: 2rem;
-                font-weight: 1000;
+                font-weight: 800;
                 margin-top: 0.7rem;
             }}
 
@@ -678,7 +680,7 @@ def aplicar_css() -> None:
             .sidebar-brand-title {{
                 color: #ffffff;
                 font-size: 0.88rem;
-                font-weight: 1000;
+                font-weight: 800;
                 letter-spacing: 0.08rem;
                 line-height: 1.05;
                 text-transform: uppercase;
@@ -687,7 +689,7 @@ def aplicar_css() -> None:
             .sidebar-brand-sub {{
                 color: var(--amarelo);
                 font-size: 0.62rem;
-                font-weight: 900;
+                font-weight: 700;
                 letter-spacing: 0.08rem;
                 margin-top: 0.24rem;
                 text-transform: uppercase;
@@ -753,7 +755,7 @@ def aplicar_css() -> None:
             .sidebar-section-label {{
                 color: #8e8e8e;
                 font-size: 0.62rem;
-                font-weight: 950;
+                font-weight: 800;
                 letter-spacing: 0.14rem;
                 margin: 0.3rem 0 0.5rem 0.15rem;
                 text-transform: uppercase;
@@ -762,7 +764,7 @@ def aplicar_css() -> None:
             .page-title {{
                 color: #ffffff;
                 font-size: 1.56rem;
-                font-weight: 1000;
+                font-weight: 800;
                 letter-spacing: -0.05rem;
                 margin: 0;
             }}
@@ -770,7 +772,7 @@ def aplicar_css() -> None:
             .page-subtitle {{
                 color: var(--amarelo);
                 font-size: 0.72rem;
-                font-weight: 950;
+                font-weight: 800;
                 letter-spacing: 0.10rem;
                 margin: 0.32rem 0 0 0;
                 text-transform: uppercase;
@@ -797,7 +799,7 @@ def aplicar_css() -> None:
             .diretoria-login-title {{
                 color: #ffffff;
                 font-size: 1.42rem;
-                font-weight: 1000;
+                font-weight: 800;
                 letter-spacing: -0.04rem;
                 margin: 0;
                 text-align: center;
@@ -822,7 +824,7 @@ def aplicar_css() -> None:
                 color: var(--amarelo);
                 display: inline-block;
                 font-size: 0.62rem;
-                font-weight: 950;
+                font-weight: 800;
                 letter-spacing: 0.12rem;
                 margin-bottom: 0.58rem;
                 padding: 0.40rem 0.66rem;
@@ -1067,6 +1069,8 @@ def aplicar_css_dashboard_claro() -> None:
     st.markdown(
         '''
         <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
             [data-testid="stAppViewContainer"] {
                 background:
                     radial-gradient(circle at 90% 8%, rgba(251,196,16,0.26), transparent 28rem),
@@ -1129,7 +1133,7 @@ def aplicar_css_dashboard_claro() -> None:
             .dash-brand-kicker {
                 color: #a27800;
                 font-size: 0.66rem;
-                font-weight: 950;
+                font-weight: 800;
                 letter-spacing: 0.15rem;
                 margin: 0 0 0.22rem 0;
                 text-transform: uppercase;
@@ -1138,7 +1142,7 @@ def aplicar_css_dashboard_claro() -> None:
             .dash-brand-title {
                 color: #111111;
                 font-size: clamp(1.35rem, 2vw, 2rem);
-                font-weight: 1000;
+                font-weight: 800;
                 letter-spacing: -0.06rem;
                 line-height: 1;
                 margin: 0;
@@ -1159,7 +1163,7 @@ def aplicar_css_dashboard_claro() -> None:
             .dash-side-title {
                 color: #111111;
                 font-size: 1.08rem;
-                font-weight: 950;
+                font-weight: 800;
                 letter-spacing: -0.025rem;
                 margin: 0;
             }
@@ -1233,7 +1237,7 @@ def aplicar_css_dashboard_claro() -> None:
 
             .dash-kpi-label {
                 font-size: 0.74rem;
-                font-weight: 850;
+                font-weight: 700;
                 letter-spacing: 0.02rem;
                 margin: 0;
                 opacity: 0.92;
@@ -1241,7 +1245,7 @@ def aplicar_css_dashboard_claro() -> None:
 
             .dash-kpi-value {
                 font-size: 2rem;
-                font-weight: 1000;
+                font-weight: 800;
                 letter-spacing: -0.08rem;
                 line-height: 1;
                 margin: 0.56rem 0 0 0;
@@ -1297,7 +1301,7 @@ def aplicar_css_dashboard_claro() -> None:
             .dash-panel-title {
                 color: #202020;
                 font-size: 1rem;
-                font-weight: 950;
+                font-weight: 800;
                 letter-spacing: -0.025rem;
                 margin: 0;
             }
@@ -1371,7 +1375,7 @@ def aplicar_css_dashboard_claro() -> None:
             .gauge-value {
                 color: #111111;
                 font-size: 2rem;
-                font-weight: 1000;
+                font-weight: 800;
                 letter-spacing: -0.08rem;
                 line-height: 1;
                 margin-top: 0.25rem;
@@ -1380,7 +1384,7 @@ def aplicar_css_dashboard_claro() -> None:
             .gauge-note {
                 color: #a27800;
                 font-size: 0.68rem;
-                font-weight: 850;
+                font-weight: 700;
                 margin-top: 0.62rem;
             }
 
@@ -1521,7 +1525,7 @@ def aplicar_css_dashboard_claro() -> None:
                 color: #866500;
                 display: inline-flex;
                 font-size: 0.62rem;
-                font-weight: 900;
+                font-weight: 700;
                 letter-spacing: 0.06rem;
                 padding: 0.32rem 0.52rem;
                 text-transform: uppercase;
