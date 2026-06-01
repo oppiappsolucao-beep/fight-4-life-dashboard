@@ -2479,6 +2479,65 @@ def aplicar_css_dashboard_claro() -> None:
                     padding-right: 0.72rem !important;
                 }
             }
+
+
+            /* FICHA COMPACTA ABERTA PELO BOTÃO VER NOMES */
+            .st-key-ficha_status_compacta {
+                background: rgba(255,255,255,0.97) !important;
+                border: 1px solid rgba(255,255,255,0.72) !important;
+                border-radius: 18px !important;
+                box-shadow: 0 10px 22px rgba(15, 23, 42, 0.055) !important;
+                margin-top: 0.72rem !important;
+                padding: 0.82rem 0.88rem 0.92rem 0.88rem !important;
+            }
+
+            .st-key-ficha_status_compacta label,
+            .st-key-ficha_status_compacta p,
+            .st-key-ficha_status_compacta span,
+            .st-key-ficha_status_compacta div {
+                color: #111111 !important;
+            }
+
+            .st-key-ficha_status_compacta input,
+            .st-key-ficha_status_compacta textarea,
+            .st-key-ficha_status_compacta [data-baseweb="select"] > div {
+                background: #ffffff !important;
+                border-color: #e1e5ea !important;
+                color: #111111 !important;
+            }
+
+            .st-key-ficha_status_compacta input:disabled,
+            .st-key-ficha_status_compacta textarea:disabled {
+                -webkit-text-fill-color: #111111 !important;
+                color: #111111 !important;
+                opacity: 1 !important;
+            }
+
+            .st-key-ficha_status_compacta div[data-testid="stFormSubmitButton"] button {
+                background: #fbc410 !important;
+                border: 0 !important;
+                border-radius: 10px !important;
+                color: #111111 !important;
+                font-weight: 800 !important;
+                min-height: 40px !important;
+                width: 100% !important;
+            }
+
+            .ficha-status-mini-label {
+                color: #866500 !important;
+                font-size: 0.64rem !important;
+                font-weight: 800 !important;
+                letter-spacing: 0.05rem !important;
+                margin: 0 0 0.42rem 0 !important;
+                text-transform: uppercase !important;
+            }
+
+            @media (max-width: 620px) {
+                .st-key-ficha_status_compacta {
+                    border-radius: 15px !important;
+                    padding: 0.70rem !important;
+                }
+            }
 </style>
         ''',
         unsafe_allow_html=True,
@@ -3090,7 +3149,11 @@ def render_cards_status_comercial_clicaveis() -> None:
                         key=f'acao_{item["botao_key"]}',
                         use_container_width=True,
                     ):
-                        st.session_state["status_card_selecionado"] = item["nome"]
+                        if st.session_state.get("status_card_selecionado") == item["nome"]:
+                            st.session_state["status_card_selecionado"] = ""
+                        else:
+                            st.session_state["status_card_selecionado"] = item["nome"]
+
                         st.rerun()
 
 
@@ -3108,11 +3171,11 @@ def converter_data_texto_para_date(valor: str):
 
 def render_registros_card_clicado() -> None:
     """
-    Ao clicar em "Ver nomes", abre a relação de alunos daquele status.
-    Ao selecionar um nome, exibe a ficha completa preenchida.
+    Exibe somente uma ficha por vez.
 
-    Os dados ficam disponíveis para consulta e o status comercial pode
-    ser alterado dentro da própria ficha.
+    Ao clicar em "Ver nomes", aparece diretamente a lista de alunos
+    daquele card e a ficha preenchida do aluno selecionado.
+    Ao clicar novamente no mesmo botão, a ficha é recolhida.
     """
     cadastros = obter_cadastros_comerciais()
     status_selecionado = st.session_state.get("status_card_selecionado", "")
@@ -3120,18 +3183,15 @@ def render_registros_card_clicado() -> None:
     if not status_selecionado:
         return
 
-    with st.expander(
-        f"Registros em: {status_selecionado}",
-        expanded=True,
-    ):
-        indices_filtrados = [
-            indice
-            for indice, cadastro in enumerate(cadastros)
-            if normalizar_status_comercial(
-                cadastro.get("Status Comercial", "Novo Lead")
-            ) == status_selecionado
-        ]
+    indices_filtrados = [
+        indice
+        for indice, cadastro in enumerate(cadastros)
+        if normalizar_status_comercial(
+            cadastro.get("Status Comercial", "Novo Lead")
+        ) == status_selecionado
+    ]
 
+    with st.container(key="ficha_status_compacta"):
         if not indices_filtrados:
             st.info(f'Nenhum aluno cadastrado em "{status_selecionado}".')
             return
@@ -3144,9 +3204,15 @@ def render_registros_card_clicado() -> None:
             for indice in indices_filtrados
         ]
 
+        st.markdown(
+            '<p class="ficha-status-mini-label">Selecione um aluno</p>',
+            unsafe_allow_html=True,
+        )
+
         aluno_escolhido = st.selectbox(
-            "Selecione o aluno para visualizar",
+            "Aluno",
             options=opcoes_alunos,
+            label_visibility="collapsed",
             key=f"aluno_visualizado_{status_selecionado}",
         )
 
@@ -3156,17 +3222,6 @@ def render_registros_card_clicado() -> None:
 
         status_atual = normalizar_status_comercial(
             cadastro.get("Status Comercial", "Novo Lead")
-        )
-
-        st.markdown(
-            """
-            <div class="form-card-badge">Ficha do aluno</div>
-            <p class="form-card-intro">
-                Consulte os dados cadastrados e altere o status comercial
-                diretamente nesta ficha.
-            </p>
-            """,
-            unsafe_allow_html=True,
         )
 
         with st.form(
