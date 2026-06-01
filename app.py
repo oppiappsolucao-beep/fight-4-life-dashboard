@@ -774,60 +774,53 @@ def aplicar_css() -> None:
                 font-weight: 800 !important;
             }}
 
-            [data-testid="stSidebarCollapsedControl"] button,
-            [data-testid="collapsedControl"] button {{
-                background: var(--amarelo) !important;
-                border: 1px solid var(--amarelo) !important;
-                border-radius: 10px !important;
-                color: #000000 !important;
+            /*
+            MENU LATERAL SEM SUMIR:
+            força a barra e o conteúdo interno a permanecerem visíveis.
+            */
+            [data-testid="stSidebar"] {{
+                display: block !important;
+                left: 0 !important;
+                max-width: 258px !important;
+                min-width: 258px !important;
+                opacity: 1 !important;
+                transform: translateX(0) !important;
+                visibility: visible !important;
+                width: 258px !important;
+                z-index: 999 !important;
+            }}
+
+            [data-testid="stSidebar"] > div:first-child,
+            [data-testid="stSidebar"] [data-testid="stSidebarContent"],
+            [data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {{
+                display: block !important;
+                max-width: 258px !important;
+                min-width: 258px !important;
+                opacity: 1 !important;
+                transform: none !important;
+                visibility: visible !important;
+                width: 258px !important;
             }}
 
             [data-testid="stSidebarCollapsedControl"],
             [data-testid="collapsedControl"],
             [data-testid="stSidebarCollapseButton"] {{
-                display: flex !important;
-                opacity: 1 !important;
-                pointer-events: auto !important;
-                visibility: visible !important;
-                z-index: 999999 !important;
+                display: none !important;
             }}
 
-            [data-testid="stSidebarCollapsedControl"] button,
-            [data-testid="collapsedControl"] button,
-            [data-testid="stSidebarCollapseButton"] button {{
-                align-items: center !important;
-                background: var(--amarelo) !important;
-                border: 1px solid var(--amarelo) !important;
-                border-radius: 10px !important;
-                color: #000000 !important;
-                display: flex !important;
-                height: 38px !important;
-                justify-content: center !important;
-                opacity: 1 !important;
-                visibility: visible !important;
-                width: 38px !important;
-            }}
-
-            [data-testid="stSidebarCollapsedControl"] svg,
-            [data-testid="collapsedControl"] svg,
-            [data-testid="stSidebarCollapseButton"] svg {{
-                color: #000000 !important;
-                fill: #000000 !important;
-                stroke: #000000 !important;
-            }}
-
-            /* Em telas menores, o botão do menu permanece acessível no topo. */
             @media (max-width: 900px) {{
-                [data-testid="stSidebarCollapsedControl"],
-                [data-testid="collapsedControl"] {{
-                    left: 0.65rem !important;
-                    position: fixed !important;
-                    top: 0.65rem !important;
+                [data-testid="stSidebar"] {{
+                    max-width: min(258px, 78vw) !important;
+                    min-width: min(258px, 78vw) !important;
+                    width: min(258px, 78vw) !important;
                 }}
 
-                [data-testid="stSidebar"] {{
-                    min-width: min(278px, 86vw) !important;
-                    width: min(278px, 86vw) !important;
+                [data-testid="stSidebar"] > div:first-child,
+                [data-testid="stSidebar"] [data-testid="stSidebarContent"],
+                [data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {{
+                    max-width: min(258px, 78vw) !important;
+                    min-width: min(258px, 78vw) !important;
+                    width: min(258px, 78vw) !important;
                 }}
             }}
 
