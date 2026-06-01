@@ -2134,6 +2134,7 @@ STATUS_COMERCIAL_OPCOES = [
     "Conversando",
     "Não tem Interesse",
     "Não Responde",
+    "Fechado",
 ]
 
 
@@ -2153,6 +2154,7 @@ def normalizar_status_comercial(status: str) -> str:
     mapa_compatibilidade = {
         "Sem Resposta": "Não Responde",
         "Não tem interesse": "Não tem Interesse",
+        "Fechou": "Fechado",
     }
 
     status = mapa_compatibilidade.get(status, status)
@@ -2205,6 +2207,12 @@ def montar_cards_status_comercial_html() -> str:
             "icone": "⚑",
             "classe": "status-red",
         },
+        {
+            "nome": "Fechado",
+            "numero": contagem["Fechado"],
+            "icone": "✓",
+            "classe": "status-green",
+        },
     ]
 
     cards = []
@@ -2227,7 +2235,7 @@ def montar_cards_status_comercial_html() -> str:
                 <p class="status-card-period">{texto_registros}</p>
 
                 <div class="status-card-footer">
-                    Atualizado automaticamente
+                    Consulte os nomes abaixo
                 </div>
             </article>
             """
@@ -2250,6 +2258,57 @@ def montar_cards_status_comercial_html() -> str:
         </div>
     </section>
     """
+
+
+def render_registros_por_status_comercial() -> None:
+    cadastros = obter_cadastros_comerciais()
+
+    if not cadastros:
+        return
+
+    with st.expander("Ver nomes por status", expanded=False):
+        st.markdown(
+            """
+            <p class="form-card-intro">
+                Escolha um quadro para visualizar os nomes cadastrados nele.
+            </p>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        status_escolhido = st.selectbox(
+            "Status para consultar",
+            options=STATUS_COMERCIAL_OPCOES,
+            key="status_consulta_nomes",
+        )
+
+        registros_filtrados = [
+            cadastro
+            for cadastro in cadastros
+            if normalizar_status_comercial(
+                cadastro.get("Status Comercial", "Novo Lead")
+            ) == status_escolhido
+        ]
+
+        if not registros_filtrados:
+            st.info(f'Nenhum aluno cadastrado em "{status_escolhido}".')
+            return
+
+        st.markdown(
+            f"**{len(registros_filtrados)} registro(s) em {status_escolhido}:**"
+        )
+
+        for indice, cadastro in enumerate(registros_filtrados, start=1):
+            nome = cadastro.get("Nome Completo", "Sem nome")
+            produto = cadastro.get("Produto ou Serviço", "")
+            rede_social = cadastro.get("Rede Social", "")
+
+            complemento = f" • {produto}" if produto else ""
+
+            if rede_social:
+                complemento += f" • {rede_social}"
+
+            st.markdown(f"{indice}. **{nome}**{complemento}")
 
 
 def render_movimentacao_status_comercial() -> None:
@@ -2392,6 +2451,7 @@ def render_formulario_retratil_comercial() -> None:
                 )
                 st.rerun()
 
+    render_registros_por_status_comercial()
     render_movimentacao_status_comercial()
 
 
