@@ -70,18 +70,43 @@ def carregar_credenciais() -> tuple[str, str]:
     """
     Busca as credenciais nos Secrets do Streamlit Cloud.
 
+    Aceita os dois formatos abaixo:
+
+    FORMATO 1:
+    [auth]
+    username = "fight4life"
+    password = "Fight4life2026!"
+
+    FORMATO 2:
+    username = "fight4life"
+    password = "Fight4life2026!"
+
     Também aceita variáveis de ambiente caso o projeto seja
     publicado posteriormente em outro servidor.
     """
     try:
-        usuario = str(st.secrets["auth"]["username"])
-        senha = str(st.secrets["auth"]["password"])
-        return usuario, senha
+        # Formato com seção [auth]
+        if "auth" in st.secrets:
+            usuario = str(st.secrets["auth"].get("username", ""))
+            senha = str(st.secrets["auth"].get("password", ""))
+
+            if usuario and senha:
+                return usuario, senha
+
+        # Formato direto, sem seção [auth]
+        usuario = str(st.secrets.get("username", ""))
+        senha = str(st.secrets.get("password", ""))
+
+        if usuario and senha:
+            return usuario, senha
+
     except Exception:
-        return (
-            os.getenv("DASHBOARD_USERNAME", ""),
-            os.getenv("DASHBOARD_PASSWORD", ""),
-        )
+        pass
+
+    return (
+        os.getenv("DASHBOARD_USERNAME", ""),
+        os.getenv("DASHBOARD_PASSWORD", ""),
+    )
 
 
 def credenciais_validas(usuario_digitado: str, senha_digitada: str) -> bool:
