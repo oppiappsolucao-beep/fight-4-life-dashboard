@@ -126,6 +126,51 @@ def credenciais_validas(usuario_digitado: str, senha_digitada: str) -> bool:
     return usuario_ok and senha_ok
 
 
+def carregar_credenciais_diretoria() -> tuple[str, str]:
+    """
+    Busca as credenciais exclusivas da área Diretoria nos Secrets do Streamlit.
+
+    Formato recomendado:
+    [diretoria]
+    username = "fight4lifediretoria"
+    password = "Fight4LifeDiretoria!"
+    """
+    try:
+        if "diretoria" in st.secrets:
+            usuario = str(st.secrets["diretoria"].get("username", ""))
+            senha = str(st.secrets["diretoria"].get("password", ""))
+
+            if usuario and senha:
+                return usuario, senha
+    except Exception:
+        pass
+
+    return (
+        os.getenv("DIRETORIA_USERNAME", ""),
+        os.getenv("DIRETORIA_PASSWORD", ""),
+    )
+
+
+def credenciais_diretoria_validas(
+    usuario_digitado: str,
+    senha_digitada: str,
+) -> bool:
+    usuario_correto, senha_correta = carregar_credenciais_diretoria()
+
+    if not usuario_correto or not senha_correta:
+        return False
+
+    usuario_ok = hmac.compare_digest(
+        usuario_digitado.strip(),
+        usuario_correto.strip(),
+    )
+    senha_ok = hmac.compare_digest(
+        senha_digitada,
+        senha_correta,
+    )
+    return usuario_ok and senha_ok
+
+
 def aplicar_css() -> None:
     st.markdown(
         f"""
@@ -660,6 +705,53 @@ def aplicar_css() -> None:
                 text-transform: uppercase;
             }}
 
+            .diretoria-login-box {{
+                background:
+                    linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025));
+                border: 1px solid rgba(251,196,16,0.38);
+                border-radius: 22px;
+                box-shadow: 0 24px 60px rgba(0,0,0,0.30);
+                margin: 1.2rem auto 0 auto;
+                max-width: 560px;
+                padding: 1.2rem 1.2rem 0.25rem 1.2rem;
+            }}
+
+            .diretoria-login-title {{
+                color: #ffffff;
+                font-size: 1.42rem;
+                font-weight: 1000;
+                letter-spacing: -0.04rem;
+                margin: 0;
+                text-align: center;
+                text-transform: uppercase;
+            }}
+
+            .diretoria-login-sub {{
+                color: #bdbdbd;
+                font-size: 0.80rem;
+                line-height: 1.45;
+                margin: 0.38rem auto 0.8rem auto;
+                max-width: 420px;
+                text-align: center;
+            }}
+
+            .diretoria-badge {{
+                border: 1px solid rgba(251,196,16,0.50);
+                border-radius: 999px;
+                color: var(--amarelo);
+                display: inline-block;
+                font-size: 0.62rem;
+                font-weight: 950;
+                letter-spacing: 0.12rem;
+                margin-bottom: 0.58rem;
+                padding: 0.40rem 0.66rem;
+                text-transform: uppercase;
+            }}
+
+            .diretoria-badge-wrap {{
+                text-align: center;
+            }}
+
             @media (max-width: 900px) {{
                 .block-container {{
                     padding-left: 0.95rem !important;
@@ -831,6 +923,63 @@ def exibir_login() -> None:
         )
 
 
+def exibir_login_diretoria() -> None:
+    st.markdown(
+        """
+        <div class="dash-head">
+            <div>
+                <h1 class="page-title">Diretoria</h1>
+                <p class="page-subtitle">Acesso restrito</p>
+            </div>
+        </div>
+
+        <div class="diretoria-login-box">
+            <div class="diretoria-badge-wrap">
+                <span class="diretoria-badge">Área protegida</span>
+            </div>
+            <h2 class="diretoria-login-title">Login da Diretoria</h2>
+            <p class="diretoria-login-sub">
+                Digite as credenciais exclusivas da diretoria para visualizar
+                os indicadores estratégicos da academia.
+            </p>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    with st.form("formulario_login_diretoria", clear_on_submit=False):
+        usuario_diretoria = st.text_input(
+            "Usuário da Diretoria",
+            placeholder="Digite o usuário da diretoria",
+            key="usuario_diretoria",
+        )
+        senha_diretoria = st.text_input(
+            "Senha da Diretoria",
+            type="password",
+            placeholder="Digite a senha da diretoria",
+            key="senha_diretoria",
+        )
+        entrar_diretoria = st.form_submit_button("Entrar na Diretoria")
+
+    if entrar_diretoria:
+        usuario_configurado, senha_configurada = carregar_credenciais_diretoria()
+
+        if not usuario_configurado or not senha_configurada:
+            st.error(
+                "As credenciais da Diretoria ainda não foram configuradas "
+                "nos Secrets do Streamlit."
+            )
+        elif credenciais_diretoria_validas(
+            usuario_diretoria,
+            senha_diretoria,
+        ):
+            st.session_state["diretoria_autenticada"] = True
+            st.rerun()
+        else:
+            st.error("Usuário ou senha da Diretoria incorretos.")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
 def exibir_dashboard_inicial() -> None:
     # No dashboard, o conteúdo ocupa toda a largura disponível.
     # Quando o menu lateral é aberto, o próprio Streamlit reduz a área principal.
@@ -863,6 +1012,9 @@ def exibir_dashboard_inicial() -> None:
 
     logo_b64 = arquivo_para_base64(LOGO_PATH)
 
+    if "diretoria_autenticada" not in st.session_state:
+        st.session_state["diretoria_autenticada"] = False
+
     with st.sidebar:
         if logo_b64:
             st.markdown(
@@ -894,8 +1046,13 @@ def exibir_dashboard_inicial() -> None:
 
         if st.button("Sair da conta"):
             st.session_state["autenticado"] = False
+            st.session_state["diretoria_autenticada"] = False
             st.session_state.pop("usuario_logado", None)
             st.rerun()
+
+    if pagina == "👔 Diretoria" and not st.session_state["diretoria_autenticada"]:
+        exibir_login_diretoria()
+        return
 
     if pagina == "📈 Comercial":
         titulo = "Comercial"
@@ -941,6 +1098,11 @@ def exibir_dashboard_inicial() -> None:
                 """,
                 unsafe_allow_html=True,
             )
+
+    if pagina == "👔 Diretoria":
+        if st.button("Bloquear Diretoria"):
+            st.session_state["diretoria_autenticada"] = False
+            st.rerun()
 
     st.info(
         "O menu lateral já está funcionando. Na próxima etapa serão conectados "
