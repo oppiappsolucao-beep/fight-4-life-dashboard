@@ -3109,9 +3109,10 @@ def converter_data_texto_para_date(valor: str):
 def render_registros_card_clicado() -> None:
     """
     Ao clicar em "Ver nomes", abre a relação de alunos daquele status.
-    Ao escolher um nome, exibe um formulário preenchido apenas para
-    visualização. A alteração do status continua sendo feita no menu
-    "Movimentar aluno entre os status".
+    Ao selecionar um nome, exibe a ficha completa preenchida.
+
+    Os dados ficam disponíveis para consulta e o status comercial pode
+    ser alterado dentro da própria ficha.
     """
     cadastros = obter_cadastros_comerciais()
     status_selecionado = st.session_state.get("status_card_selecionado", "")
@@ -3161,68 +3162,96 @@ def render_registros_card_clicado() -> None:
             """
             <div class="form-card-badge">Ficha do aluno</div>
             <p class="form-card-intro">
-                Dados cadastrados para consulta. Para alterar o status,
-                utilize o menu de movimentação logo abaixo.
+                Consulte os dados cadastrados e altere o status comercial
+                diretamente nesta ficha.
             </p>
             """,
             unsafe_allow_html=True,
         )
 
-        st.text_input(
-            "Nome Completo",
-            value=str(cadastro.get("Nome Completo", "")),
-            disabled=True,
-            key=f"visualizar_nome_{indice_real}",
-        )
+        with st.form(
+            f"formulario_visualizar_status_{cadastro.get('IDLead', indice_real)}",
+            clear_on_submit=False,
+        ):
+            st.text_input(
+                "Nome Completo",
+                value=str(cadastro.get("Nome Completo", "")),
+                disabled=True,
+                key=f"visualizar_nome_{indice_real}",
+            )
 
-        st.text_input(
-            "Data de Nascimento",
-            value=str(cadastro.get("Data de Nascimento", "")),
-            disabled=True,
-            key=f"visualizar_data_{indice_real}",
-        )
+            st.text_input(
+                "Data de Nascimento",
+                value=str(cadastro.get("Data de Nascimento", "")),
+                disabled=True,
+                key=f"visualizar_data_{indice_real}",
+            )
 
-        st.text_input(
-            "CPF",
-            value=str(cadastro.get("CPF", "")),
-            disabled=True,
-            key=f"visualizar_cpf_{indice_real}",
-        )
+            st.text_input(
+                "CPF",
+                value=str(cadastro.get("CPF", "")),
+                disabled=True,
+                key=f"visualizar_cpf_{indice_real}",
+            )
 
-        st.text_input(
-            "E-mail",
-            value=str(cadastro.get("E-mail", "")),
-            disabled=True,
-            key=f"visualizar_email_{indice_real}",
-        )
+            st.text_input(
+                "E-mail",
+                value=str(cadastro.get("E-mail", "")),
+                disabled=True,
+                key=f"visualizar_email_{indice_real}",
+            )
 
-        st.text_area(
-            "Endereço",
-            value=str(cadastro.get("Endereço", "")),
-            disabled=True,
-            key=f"visualizar_endereco_{indice_real}",
-        )
+            st.text_area(
+                "Endereço",
+                value=str(cadastro.get("Endereço", "")),
+                disabled=True,
+                key=f"visualizar_endereco_{indice_real}",
+            )
 
-        st.text_input(
-            "Produto ou Serviço escolhido",
-            value=str(cadastro.get("Produto ou Serviço", "")),
-            disabled=True,
-            key=f"visualizar_produto_{indice_real}",
-        )
+            st.text_input(
+                "Produto ou Serviço escolhido",
+                value=str(cadastro.get("Produto ou Serviço", "")),
+                disabled=True,
+                key=f"visualizar_produto_{indice_real}",
+            )
 
-        st.text_input(
-            "Rede Social",
-            value=str(cadastro.get("Rede Social", "")),
-            disabled=True,
-            key=f"visualizar_rede_social_{indice_real}",
-        )
+            st.text_input(
+                "Rede Social",
+                value=str(cadastro.get("Rede Social", "")),
+                disabled=True,
+                key=f"visualizar_rede_social_{indice_real}",
+            )
 
-        st.text_input(
-            "Status comercial",
-            value=status_atual,
-            disabled=True,
-            key=f"visualizar_status_{indice_real}",
-        )
+            novo_status = st.selectbox(
+                "Status comercial",
+                options=STATUS_COMERCIAL_OPCOES,
+                index=STATUS_COMERCIAL_OPCOES.index(status_atual),
+                key=f"visualizar_status_{indice_real}",
+            )
+
+            salvar_status = st.form_submit_button(
+                "Salvar novo status"
+            )
+
+        if salvar_status:
+            try:
+                atualizar_status_lead_planilha(
+                    id_lead=cadastro.get("IDLead", ""),
+                    novo_status=novo_status,
+                )
+            except Exception as erro:
+                st.error(
+                    "Não foi possível atualizar o status na planilha."
+                )
+                st.caption(f"Detalhes técnicos: {erro}")
+                return
+
+            st.session_state["status_card_selecionado"] = novo_status
+            st.success(
+                f'Status de {cadastro.get("Nome Completo", "aluno")} '
+                f'alterado para: {novo_status}.'
+            )
+            st.rerun()
 
 
 def render_movimentacao_status_comercial() -> None:
@@ -3462,7 +3491,6 @@ def exibir_dashboard_inicial() -> None:
         if pagina == "📈 Comercial":
             render_cards_status_comercial_clicaveis()
             render_registros_card_clicado()
-            render_movimentacao_status_comercial()
         else:
             st.html(
                 montar_painel_grafico_html(
