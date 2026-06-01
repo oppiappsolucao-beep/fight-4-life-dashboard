@@ -791,6 +791,35 @@ def exibir_login() -> None:
 
 
 def exibir_dashboard_inicial() -> None:
+    # No dashboard, o conteúdo ocupa toda a largura disponível.
+    # Quando o menu lateral é aberto, o próprio Streamlit reduz a área principal.
+    # Quando o menu é fechado, os cards voltam a aproveitar a tela inteira.
+    st.markdown(
+        """
+        <style>
+            .block-container {
+                max-width: none !important;
+                width: 100% !important;
+                padding-left: 1.8rem !important;
+                padding-right: 1.8rem !important;
+            }
+
+            [data-testid="stAppViewBlockContainer"] {
+                max-width: none !important;
+                width: 100% !important;
+            }
+
+            @media (max-width: 900px) {
+                .block-container {
+                    padding-left: 0.9rem !important;
+                    padding-right: 0.9rem !important;
+                }
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
     logo_b64 = arquivo_para_base64(LOGO_PATH)
 
     with st.sidebar:
