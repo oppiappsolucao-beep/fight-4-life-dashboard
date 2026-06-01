@@ -491,6 +491,134 @@ def aplicar_css() -> None:
                 margin-top: 0.7rem;
             }}
 
+
+            /* MENU LATERAL DO DASHBOARD */
+            [data-testid="stSidebar"] {
+                background:
+                    linear-gradient(180deg, #111111 0%, #080808 100%) !important;
+                border-right: 1px solid rgba(251,196,16,0.22) !important;
+                min-width: 258px !important;
+            }
+
+            [data-testid="stSidebar"] > div:first-child {
+                padding-top: 0.8rem !important;
+            }
+
+            [data-testid="stSidebar"] [data-testid="stSidebarContent"] {
+                background:
+                    linear-gradient(180deg, #111111 0%, #080808 100%) !important;
+            }
+
+            [data-testid="stSidebar"] h1,
+            [data-testid="stSidebar"] h2,
+            [data-testid="stSidebar"] h3,
+            [data-testid="stSidebar"] p,
+            [data-testid="stSidebar"] label,
+            [data-testid="stSidebar"] span {
+                color: #ffffff !important;
+            }
+
+            .sidebar-brand {
+                align-items: center;
+                display: flex;
+                gap: 0.68rem;
+                margin: 0.15rem 0 1rem 0;
+                padding: 0.45rem 0.15rem 0.85rem 0.15rem;
+                border-bottom: 1px solid rgba(255,255,255,0.10);
+            }
+
+            .sidebar-brand img {
+                border-radius: 50%;
+                height: 54px;
+                object-fit: contain;
+                width: 54px;
+            }
+
+            .sidebar-brand-title {
+                color: #ffffff;
+                font-size: 0.88rem;
+                font-weight: 1000;
+                letter-spacing: 0.08rem;
+                line-height: 1.05;
+                text-transform: uppercase;
+            }
+
+            .sidebar-brand-sub {
+                color: var(--amarelo);
+                font-size: 0.62rem;
+                font-weight: 900;
+                letter-spacing: 0.08rem;
+                margin-top: 0.24rem;
+                text-transform: uppercase;
+            }
+
+            [data-testid="stSidebar"] div[role="radiogroup"] {
+                gap: 0.42rem !important;
+            }
+
+            [data-testid="stSidebar"] div[role="radiogroup"] label {
+                background: rgba(255,255,255,0.035);
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: 12px;
+                cursor: pointer;
+                padding: 0.68rem 0.72rem;
+                transition: 0.18s ease;
+            }
+
+            [data-testid="stSidebar"] div[role="radiogroup"] label:hover {
+                background: rgba(251,196,16,0.10);
+                border-color: rgba(251,196,16,0.35);
+            }
+
+            [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) {
+                background: rgba(251,196,16,0.15);
+                border-color: rgba(251,196,16,0.75);
+            }
+
+            [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) p {
+                color: var(--amarelo) !important;
+                font-weight: 950 !important;
+            }
+
+            [data-testid="stSidebar"] div[role="radiogroup"] label p {
+                font-size: 0.86rem !important;
+                font-weight: 800 !important;
+            }
+
+            [data-testid="stSidebarCollapsedControl"] button,
+            [data-testid="collapsedControl"] button {
+                background: var(--amarelo) !important;
+                border: 1px solid var(--amarelo) !important;
+                border-radius: 10px !important;
+                color: #000000 !important;
+            }
+
+            .sidebar-section-label {
+                color: #8e8e8e;
+                font-size: 0.62rem;
+                font-weight: 950;
+                letter-spacing: 0.14rem;
+                margin: 0.3rem 0 0.5rem 0.15rem;
+                text-transform: uppercase;
+            }
+
+            .page-title {
+                color: #ffffff;
+                font-size: 1.56rem;
+                font-weight: 1000;
+                letter-spacing: -0.05rem;
+                margin: 0;
+            }
+
+            .page-subtitle {
+                color: var(--amarelo);
+                font-size: 0.72rem;
+                font-weight: 950;
+                letter-spacing: 0.10rem;
+                margin: 0.32rem 0 0 0;
+                text-transform: uppercase;
+            }
+
             @media (max-width: 900px) {{
                 .block-container {{
                     padding-left: 0.95rem !important;
@@ -663,42 +791,81 @@ def exibir_login() -> None:
 
 
 def exibir_dashboard_inicial() -> None:
-    topo_texto, topo_botao = st.columns([5, 1])
+    logo_b64 = arquivo_para_base64(LOGO_PATH)
 
-    with topo_texto:
-        st.markdown(
-            """
-            <div class="dash-head">
-                <div>
-                    <h1>Dashboard Fight for Life</h1>
-                    <p>Painel inicial • Próxima etapa em construção</p>
+    with st.sidebar:
+        if logo_b64:
+            st.markdown(
+                f"""
+                <div class="sidebar-brand">
+                    <img src="data:image/png;base64,{logo_b64}" alt="Fight for Life" />
+                    <div>
+                        <div class="sidebar-brand-title">Fight for Life</div>
+                        <div class="sidebar-brand-sub">Painel interno</div>
+                    </div>
                 </div>
-            </div>
-            """,
+                """,
+                unsafe_allow_html=True,
+            )
+
+        st.markdown(
+            '<div class="sidebar-section-label">Navegação</div>',
             unsafe_allow_html=True,
         )
 
-    with topo_botao:
-        if st.button("Sair"):
+        pagina = st.radio(
+            "Menu principal",
+            options=["📈 Comercial", "👔 Diretoria"],
+            label_visibility="collapsed",
+            key="menu_principal",
+        )
+
+        st.markdown("<div style='height:0.6rem'></div>", unsafe_allow_html=True)
+
+        if st.button("Sair da conta"):
             st.session_state["autenticado"] = False
             st.session_state.pop("usuario_logado", None)
             st.rerun()
 
-    metricas = [
-        ("Alunos ativos", "—"),
-        ("Aulas no mês", "—"),
-        ("Aulas teste", "—"),
-        ("Novas matrículas", "—"),
-    ]
+    if pagina == "📈 Comercial":
+        titulo = "Comercial"
+        subtitulo = "Visão comercial da academia"
+        metricas = [
+            ("Alunos ativos", "—"),
+            ("Aulas no mês", "—"),
+            ("Aulas teste", "—"),
+            ("Novas matrículas", "—"),
+        ]
+    else:
+        titulo = "Diretoria"
+        subtitulo = "Visão estratégica da academia"
+        metricas = [
+            ("Receita do mês", "—"),
+            ("Alunos ativos", "—"),
+            ("Taxa de conversão", "—"),
+            ("Cancelamentos", "—"),
+        ]
+
+    st.markdown(
+        f"""
+        <div class="dash-head">
+            <div>
+                <h1 class="page-title">{titulo}</h1>
+                <p class="page-subtitle">{subtitulo}</p>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     colunas = st.columns(4)
 
-    for coluna, (titulo, valor) in zip(colunas, metricas):
+    for coluna, (titulo_card, valor) in zip(colunas, metricas):
         with coluna:
             st.markdown(
                 f"""
                 <div class="metric-card">
-                    <div class="metric-label">{titulo}</div>
+                    <div class="metric-label">{titulo_card}</div>
                     <div class="metric-value">{valor}</div>
                 </div>
                 """,
@@ -706,8 +873,8 @@ def exibir_dashboard_inicial() -> None:
             )
 
     st.info(
-        "A tela de login está pronta. Na próxima etapa serão definidas "
-        "as páginas internas e a planilha que alimentará os indicadores."
+        "O menu lateral já está funcionando. Na próxima etapa serão conectados "
+        "os dados e definidos os indicadores de cada página."
     )
 
 
