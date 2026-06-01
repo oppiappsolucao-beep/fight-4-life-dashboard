@@ -4,10 +4,14 @@ import base64
 import hmac
 import hashlib
 import os
+import uuid
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
+import gspread
 import streamlit as st
+from google.oauth2.service_account import Credentials
 
 
 # ============================================================
@@ -28,6 +32,31 @@ AMARELO = "#fbc410"
 BRANCO = "#ffffff"
 CINZA_ESCURO = "#111111"
 CINZA_BORDA = "#2a2a2a"
+
+# ============================================================
+# GOOGLE SHEETS — BASE PERSISTENTE DOS LEADS
+# ============================================================
+SPREADSHEET_ID_PADRAO = "1WLjiRuU5iC_uPXCr9QSh1Yp934KYsse2C7yREDF5cA8"
+WORKSHEET_NAME_PADRAO = "Leads"
+
+COLUNAS_PLANILHA = [
+    "IDLead",
+    "Data Cadastro",
+    "Nome Completo",
+    "Data de Nascimento",
+    "CPF",
+    "E-mail",
+    "Endereço",
+    "Produto ou Serviço",
+    "Rede Social",
+    "Status Comercial",
+    "Última Atualização",
+]
+
+GOOGLE_SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive",
+]
 
 # Fotos oficiais escolhidas para a tela de login.
 # Os arquivos ficam dentro da pasta assets do próprio projeto.
@@ -2590,6 +2619,236 @@ def montar_painel_retencao_diretoria_html() -> str:
     """
 
 
+
+def obter_configuracao_planilha() -> tuple[str, str]:
+    """
+    Usa as configurações dos Secrets quando estiverem disponíveis.
+    Mantém os valores padrão deste projeto como fallback.
+    """
+    spreadsheet_id = SPREADSHEET_ID_PADRAO
+    worksheet_name = WORKSHEET_NAME_PADRAO
+
+    try:
+        if "google_sheets" in st.secrets:
+            config = st.secrets["google_sheets"]
+            spreadsheet_id = str(
+                config.get("spreadsheet_id", spreadsheet_id)
+            ).strip()
+            worksheet_name = str(
+                config.get("worksheet_name", worksheet_name)
+            ).strip()
+    except Exception:
+        pass
+
+    return spreadsheet_id, worksheet_name
+
+
+def obter_info_conta_servico() -> dict:
+    """
+    Lê as credenciais da conta de serviço diretamente dos Secrets.
+    A chave privada pode ser colada como texto multilinha ou com \\n.
+    """
+    if "gcp_service_account" not in st.secrets:
+        raise RuntimeError(
+            "As credenciais [gcp_service_account] não foram encontradas "
+            "nos Secrets do Streamlit."
+        )
+
+    info = dict(st.secrets["gcp_service_account"])
+
+    if "private_key" not in info:
+        raise RuntimeError(
+            'O campo "private_key" não foi encontrado em '
+            "[gcp_service_account]."
+        )
+
+    info["private_key"] = str(info["private_key"]).replace("\\n", "\n")
+
+    return info
+
+
+@st.cache_resource(show_spinner=False)
+def obter_worksheet_leads():
+    """
+    Cria uma conexão reutilizável com a aba Leads.
+    """
+    info = obter_info_conta_servico()
+    credentials = Credentials.from_service_account_info(
+        info,
+        scopes=GOOGLE_SCOPES,
+    )
+
+    cliente = gspread.authorize(credentials)
+    spreadsheet_id, worksheet_name = obter_configuracao_planilha()
+
+    planilha = cliente.open_by_key(spreadsheet_id)
+    worksheet = planilha.worksheet(worksheet_name)
+
+    return worksheet
+
+
+def validar_cabecalho_planilha(valores: list[list[str]]) -> None:
+    """
+    Garante que a linha 1 da aba Leads está exatamente na ordem esperada.
+    """
+    if not valores:
+        worksheet = obter_worksheet_leads()
+        worksheet.update(
+            range_name="A1:K1",
+            values=[COLUNAS_PLANILHA],
+        )
+        return
+
+    cabecalho_atual = [
+        str(valor).strip()
+        for valor in valores[0][: len(COLUNAS_PLANILHA)]
+    ]
+
+    if cabecalho_atual != COLUNAS_PLANILHA:
+        esperado = " | ".join(COLUNAS_PLANILHA)
+        encontrado = " | ".join(cabecalho_atual)
+
+        raise RuntimeError(
+            "A linha 1 da aba Leads não está na ordem esperada. "
+            f"Esperado: {esperado}. Encontrado: {encontrado}."
+        )
+
+
+@st.cache_data(ttl=8, show_spinner=False)
+def carregar_cadastros_planilha() -> list[dict]:
+    """
+    Lê os leads salvos no Google Sheets.
+    O cache reduz chamadas repetidas à API e é limpo após cada alteração.
+    """
+    worksheet = obter_worksheet_leads()
+    valores = worksheet.get_all_values()
+
+    validar_cabecalho_planilha(valores)
+
+    if len(valores) <= 1:
+        return []
+
+    cadastros = []
+
+    for numero_linha, linha in enumerate(valores[1:], start=2):
+        linha_completa = list(linha) + [""] * (
+            len(COLUNAS_PLANILHA) - len(linha)
+        )
+
+        cadastro = {
+            coluna: str(linha_completa[indice]).strip()
+            for indice, coluna in enumerate(COLUNAS_PLANILHA)
+        }
+
+        if not cadastro["IDLead"]:
+            continue
+
+        cadastro["_Linha Planilha"] = numero_linha
+        cadastros.append(cadastro)
+
+    return cadastros
+
+
+def limpar_cache_planilha() -> None:
+    carregar_cadastros_planilha.clear()
+
+
+def obter_data_hora_atual() -> str:
+    """
+    Registra data e hora no fuso de São Paulo.
+    """
+    agora = datetime.now(ZoneInfo("America/Sao_Paulo"))
+    return agora.strftime("%d/%m/%Y %H:%M:%S")
+
+
+def gerar_id_lead() -> str:
+    return f"LEAD-{uuid.uuid4().hex[:10].upper()}"
+
+
+def salvar_novo_lead_planilha(cadastro: dict) -> str:
+    """
+    Cria uma nova linha na planilha e devolve o ID gerado.
+    """
+    worksheet = obter_worksheet_leads()
+    id_lead = gerar_id_lead()
+    agora = obter_data_hora_atual()
+
+    valores = [
+        id_lead,
+        agora,
+        str(cadastro.get("Nome Completo", "")).strip(),
+        str(cadastro.get("Data de Nascimento", "")).strip(),
+        str(cadastro.get("CPF", "")).strip(),
+        str(cadastro.get("E-mail", "")).strip(),
+        str(cadastro.get("Endereço", "")).strip(),
+        str(cadastro.get("Produto ou Serviço", "")).strip(),
+        str(cadastro.get("Rede Social", "")).strip(),
+        normalizar_status_comercial(
+            cadastro.get("Status Comercial", "Novo Lead")
+        ),
+        agora,
+    ]
+
+    worksheet.append_row(
+        valores,
+        value_input_option="USER_ENTERED",
+    )
+
+    limpar_cache_planilha()
+    return id_lead
+
+
+def localizar_linha_por_id(id_lead: str) -> int:
+    """
+    Localiza a linha real da planilha pelo IDLead.
+    """
+    id_lead = str(id_lead or "").strip()
+
+    if not id_lead:
+        raise RuntimeError("O registro selecionado não possui IDLead.")
+
+    worksheet = obter_worksheet_leads()
+    celula = worksheet.find(id_lead, in_column=1)
+
+    if celula is None:
+        raise RuntimeError(
+            f'O lead "{id_lead}" não foi encontrado na planilha.'
+        )
+
+    return int(celula.row)
+
+
+def atualizar_status_lead_planilha(
+    id_lead: str,
+    novo_status: str,
+) -> None:
+    """
+    Atualiza somente o status e a data da última atualização.
+    """
+    worksheet = obter_worksheet_leads()
+    linha = localizar_linha_por_id(id_lead)
+    agora = obter_data_hora_atual()
+
+    worksheet.update(
+        range_name=f"J{linha}:K{linha}",
+        values=[[normalizar_status_comercial(novo_status), agora]],
+        value_input_option="USER_ENTERED",
+    )
+
+    limpar_cache_planilha()
+
+
+def testar_conexao_planilha() -> tuple[bool, str]:
+    """
+    Faz uma leitura simples para exibir um retorno amigável no menu lateral.
+    """
+    try:
+        cadastros = carregar_cadastros_planilha()
+        return True, f"Google Sheets conectado • {len(cadastros)} lead(s)"
+    except Exception as erro:
+        return False, str(erro)
+
+
 STATUS_COMERCIAL_OPCOES = [
     "Novo Lead",
     "Conversando",
@@ -2600,8 +2859,18 @@ STATUS_COMERCIAL_OPCOES = [
 
 
 def obter_cadastros_comerciais() -> list[dict]:
-    st.session_state.setdefault("cadastros_comerciais_temporarios", [])
-    return st.session_state["cadastros_comerciais_temporarios"]
+    """
+    A planilha é a fonte oficial dos leads.
+    """
+    try:
+        return carregar_cadastros_planilha()
+    except Exception as erro:
+        st.error(
+            "Não foi possível acessar a aba Leads do Google Sheets. "
+            "Confira os Secrets e o compartilhamento da planilha."
+        )
+        st.caption(f"Detalhes técnicos: {erro}")
+        return []
 
 
 def normalizar_status_comercial(status: str) -> str:
@@ -2757,8 +3026,9 @@ def converter_data_texto_para_date(valor: str):
 def render_registros_card_clicado() -> None:
     """
     Ao clicar em "Ver nomes", abre a relação de alunos daquele status.
-    Ao escolher um nome, exibe o formulário preenchido para consulta
-    e atualização dos dados.
+    Ao escolher um nome, exibe um formulário preenchido apenas para
+    visualização. A alteração do status continua sendo feita no menu
+    "Movimentar aluno entre os status".
     """
     cadastros = obter_cadastros_comerciais()
     status_selecionado = st.session_state.get("status_card_selecionado", "")
@@ -2804,108 +3074,72 @@ def render_registros_card_clicado() -> None:
             cadastro.get("Status Comercial", "Novo Lead")
         )
 
-        modalidades = [
-            "Muay Thai",
-            "Jiu-Jitsu",
-            "Jiu-Jitsu Infantil",
-            "MMA",
-        ]
-
-        modalidade_atual = str(
-            cadastro.get("Produto ou Serviço", "")
-        ).strip()
-
-        if modalidade_atual not in modalidades:
-            modalidade_atual = modalidades[0]
-
-        data_atual = converter_data_texto_para_date(
-            cadastro.get("Data de Nascimento", "")
+        st.markdown(
+            """
+            <div class="form-card-badge">Ficha do aluno</div>
+            <p class="form-card-intro">
+                Dados cadastrados para consulta. Para alterar o status,
+                utilize o menu de movimentação logo abaixo.
+            </p>
+            """,
+            unsafe_allow_html=True,
         )
 
-        with st.form(
-            f"formulario_editar_aluno_{indice_real}",
-            clear_on_submit=False,
-        ):
-            nome_completo = st.text_input(
-                "Nome Completo",
-                value=str(cadastro.get("Nome Completo", "")),
-                key=f"editar_nome_{indice_real}",
-            )
+        st.text_input(
+            "Nome Completo",
+            value=str(cadastro.get("Nome Completo", "")),
+            disabled=True,
+            key=f"visualizar_nome_{indice_real}",
+        )
 
-            data_nascimento = st.date_input(
-                "Data de Nascimento",
-                value=data_atual,
-                format="DD/MM/YYYY",
-                key=f"editar_data_{indice_real}",
-            )
+        st.text_input(
+            "Data de Nascimento",
+            value=str(cadastro.get("Data de Nascimento", "")),
+            disabled=True,
+            key=f"visualizar_data_{indice_real}",
+        )
 
-            cpf = st.text_input(
-                "CPF",
-                value=str(cadastro.get("CPF", "")),
-                key=f"editar_cpf_{indice_real}",
-            )
+        st.text_input(
+            "CPF",
+            value=str(cadastro.get("CPF", "")),
+            disabled=True,
+            key=f"visualizar_cpf_{indice_real}",
+        )
 
-            email = st.text_input(
-                "E-mail",
-                value=str(cadastro.get("E-mail", "")),
-                key=f"editar_email_{indice_real}",
-            )
+        st.text_input(
+            "E-mail",
+            value=str(cadastro.get("E-mail", "")),
+            disabled=True,
+            key=f"visualizar_email_{indice_real}",
+        )
 
-            endereco = st.text_area(
-                "Endereço",
-                value=str(cadastro.get("Endereço", "")),
-                key=f"editar_endereco_{indice_real}",
-            )
+        st.text_area(
+            "Endereço",
+            value=str(cadastro.get("Endereço", "")),
+            disabled=True,
+            key=f"visualizar_endereco_{indice_real}",
+        )
 
-            produto_servico = st.selectbox(
-                "Produto ou Serviço escolhido",
-                options=modalidades,
-                index=modalidades.index(modalidade_atual),
-                key=f"editar_produto_{indice_real}",
-            )
+        st.text_input(
+            "Produto ou Serviço escolhido",
+            value=str(cadastro.get("Produto ou Serviço", "")),
+            disabled=True,
+            key=f"visualizar_produto_{indice_real}",
+        )
 
-            rede_social = st.text_input(
-                "Rede Social",
-                value=str(cadastro.get("Rede Social", "")),
-                key=f"editar_rede_social_{indice_real}",
-            )
+        st.text_input(
+            "Rede Social",
+            value=str(cadastro.get("Rede Social", "")),
+            disabled=True,
+            key=f"visualizar_rede_social_{indice_real}",
+        )
 
-            status_comercial = st.selectbox(
-                "Status comercial",
-                options=STATUS_COMERCIAL_OPCOES,
-                index=STATUS_COMERCIAL_OPCOES.index(status_atual),
-                key=f"editar_status_{indice_real}",
-            )
-
-            salvar_alteracoes = st.form_submit_button(
-                "Salvar alterações"
-            )
-
-        if salvar_alteracoes:
-            if not nome_completo.strip():
-                st.error("Preencha o nome completo.")
-                return
-
-            cadastro.update(
-                {
-                    "Nome Completo": nome_completo.strip(),
-                    "Data de Nascimento": (
-                        data_nascimento.strftime("%d/%m/%Y")
-                        if data_nascimento
-                        else ""
-                    ),
-                    "CPF": cpf.strip(),
-                    "E-mail": email.strip(),
-                    "Endereço": endereco.strip(),
-                    "Produto ou Serviço": produto_servico,
-                    "Rede Social": rede_social.strip(),
-                    "Status Comercial": status_comercial,
-                }
-            )
-
-            st.session_state["status_card_selecionado"] = status_comercial
-            st.success("Dados do aluno atualizados com sucesso.")
-            st.rerun()
+        st.text_input(
+            "Status comercial",
+            value=status_atual,
+            disabled=True,
+            key=f"visualizar_status_{indice_real}",
+        )
 
 
 def render_movimentacao_status_comercial() -> None:
@@ -2954,10 +3188,23 @@ def render_movimentacao_status_comercial() -> None:
             atualizar_status = st.form_submit_button("Atualizar status")
 
         if atualizar_status:
-            cadastros[indice_selecionado]["Status Comercial"] = novo_status
+            cadastro_selecionado = cadastros[indice_selecionado]
+
+            try:
+                atualizar_status_lead_planilha(
+                    id_lead=cadastro_selecionado.get("IDLead", ""),
+                    novo_status=novo_status,
+                )
+            except Exception as erro:
+                st.error(
+                    "Não foi possível atualizar o status na planilha."
+                )
+                st.caption(f"Detalhes técnicos: {erro}")
+                return
+
             st.session_state["status_card_selecionado"] = novo_status
             st.success(
-                f'Status de {cadastros[indice_selecionado].get("Nome Completo", "aluno")} '
+                f'Status de {cadastro_selecionado.get("Nome Completo", "aluno")} '
                 f'alterado para: {novo_status}.'
             )
             st.rerun()
@@ -2970,7 +3217,7 @@ def render_formulario_retratil_comercial() -> None:
             <div class="form-card-badge">Formulário comercial</div>
             <p class="form-card-intro">
                 Abra o formulário para registrar os dados do novo aluno.
-                A integração com a planilha será adicionada na próxima etapa.
+                Os dados serão salvos automaticamente na planilha da academia.
             </p>
             """,
             unsafe_allow_html=True,
@@ -3027,27 +3274,33 @@ def render_formulario_retratil_comercial() -> None:
             elif not produto_servico:
                 st.error("Selecione o produto ou serviço escolhido.")
             else:
-                cadastros = obter_cadastros_comerciais()
-                cadastros.append(
-                    {
-                        "Nome Completo": nome_completo.strip(),
-                        "Data de Nascimento": (
-                            data_nascimento.strftime("%d/%m/%Y")
-                            if data_nascimento
-                            else ""
-                        ),
-                        "CPF": cpf.strip(),
-                        "E-mail": email.strip(),
-                        "Endereço": endereco.strip(),
-                        "Produto ou Serviço": produto_servico,
-                        "Rede Social": rede_social.strip(),
-                        "Status Comercial": status_comercial,
-                    }
-                )
+                cadastro = {
+                    "Nome Completo": nome_completo.strip(),
+                    "Data de Nascimento": (
+                        data_nascimento.strftime("%d/%m/%Y")
+                        if data_nascimento
+                        else ""
+                    ),
+                    "CPF": cpf.strip(),
+                    "E-mail": email.strip(),
+                    "Endereço": endereco.strip(),
+                    "Produto ou Serviço": produto_servico,
+                    "Rede Social": rede_social.strip(),
+                    "Status Comercial": status_comercial,
+                }
+
+                try:
+                    salvar_novo_lead_planilha(cadastro)
+                except Exception as erro:
+                    st.error(
+                        "Não foi possível salvar o aluno na planilha."
+                    )
+                    st.caption(f"Detalhes técnicos: {erro}")
+                    return
 
                 st.session_state["status_card_selecionado"] = status_comercial
                 st.success(
-                    f'Aluno registrado no status: {status_comercial}.'
+                    f'Aluno salvo na planilha no status: {status_comercial}.'
                 )
                 st.rerun()
 
@@ -3089,6 +3342,10 @@ def exibir_dashboard_inicial() -> None:
         )
 
         st.markdown("<div style='height:0.6rem'></div>", unsafe_allow_html=True)
+
+        if st.button("Atualizar dados da planilha"):
+            limpar_cache_planilha()
+            st.rerun()
 
         if st.button("Sair da conta"):
             st.session_state["autenticado"] = False
