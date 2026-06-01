@@ -221,7 +221,7 @@ def aplicar_css() -> None:
                 background-size: cover;
                 border: 1px solid rgba(255,255,255,0.13);
                 border-radius: 18px;
-                min-height: 188px;
+                min-height: 142px;
                 overflow: hidden;
                 position: relative;
                 transition: 0.22s ease;
@@ -247,14 +247,14 @@ def aplicar_css() -> None:
             .fight-card-content {{
                 bottom: 0;
                 left: 0;
-                padding: 0.95rem;
+                padding: 0.72rem;
                 position: absolute;
                 z-index: 2;
             }}
 
             .fight-card-title {{
                 color: var(--amarelo);
-                font-size: 1.07rem;
+                font-size: 0.96rem;
                 font-weight: 1000;
                 letter-spacing: -0.035rem;
                 margin: 0;
@@ -263,7 +263,7 @@ def aplicar_css() -> None:
 
             .fight-card-sub {{
                 color: var(--branco);
-                font-size: 0.70rem;
+                font-size: 0.66rem;
                 font-weight: 700;
                 line-height: 1.25;
                 margin: 0.22rem 0 0 0;
@@ -424,7 +424,7 @@ def aplicar_css() -> None:
 
             .dash-head p {{
                 color: var(--amarelo);
-                font-size: 0.70rem;
+                font-size: 0.66rem;
                 font-weight: 950;
                 letter-spacing: 0.11rem;
                 margin: 0.30rem 0 0 0;
@@ -441,7 +441,7 @@ def aplicar_css() -> None:
 
             .metric-label {{
                 color: #a9a9a9;
-                font-size: 0.70rem;
+                font-size: 0.66rem;
                 font-weight: 950;
                 letter-spacing: 0.08rem;
                 text-transform: uppercase;
@@ -475,7 +475,7 @@ def aplicar_css() -> None:
                 }}
 
                 .fight-card {{
-                    min-height: 148px;
+                    min-height: 112px;
                 }}
 
                 .fight-card-title {{
