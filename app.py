@@ -5,7 +5,7 @@ import hmac
 import hashlib
 import os
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -21,7 +21,7 @@ st.set_page_config(
     page_title="Fight for Life | Dashboard",
     page_icon="🥋",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -782,6 +782,55 @@ def aplicar_css() -> None:
                 color: #000000 !important;
             }}
 
+            [data-testid="stSidebarCollapsedControl"],
+            [data-testid="collapsedControl"],
+            [data-testid="stSidebarCollapseButton"] {{
+                display: flex !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+                visibility: visible !important;
+                z-index: 999999 !important;
+            }}
+
+            [data-testid="stSidebarCollapsedControl"] button,
+            [data-testid="collapsedControl"] button,
+            [data-testid="stSidebarCollapseButton"] button {{
+                align-items: center !important;
+                background: var(--amarelo) !important;
+                border: 1px solid var(--amarelo) !important;
+                border-radius: 10px !important;
+                color: #000000 !important;
+                display: flex !important;
+                height: 38px !important;
+                justify-content: center !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                width: 38px !important;
+            }}
+
+            [data-testid="stSidebarCollapsedControl"] svg,
+            [data-testid="collapsedControl"] svg,
+            [data-testid="stSidebarCollapseButton"] svg {{
+                color: #000000 !important;
+                fill: #000000 !important;
+                stroke: #000000 !important;
+            }}
+
+            /* Em telas menores, o botão do menu permanece acessível no topo. */
+            @media (max-width: 900px) {{
+                [data-testid="stSidebarCollapsedControl"],
+                [data-testid="collapsedControl"] {{
+                    left: 0.65rem !important;
+                    position: fixed !important;
+                    top: 0.65rem !important;
+                }}
+
+                [data-testid="stSidebar"] {{
+                    min-width: min(278px, 86vw) !important;
+                    width: min(278px, 86vw) !important;
+                }}
+            }}
+
             .sidebar-section-label {{
                 color: #8e8e8e;
                 font-size: 0.62rem;
@@ -1115,8 +1164,14 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             [data-testid="stAppViewBlockContainer"] {
+                box-sizing: border-box !important;
                 max-width: none !important;
+                overflow-x: hidden !important;
                 width: 100% !important;
+            }
+
+            [data-testid="stMain"] {
+                overflow-x: hidden !important;
             }
 
             .dashboard-shell {
@@ -2399,6 +2454,31 @@ def aplicar_css_dashboard_claro() -> None:
                     padding: 0.78rem !important;
                 }
             }
+
+            @media (max-width: 900px) {
+                .dashboard-grid-main {
+                    grid-template-columns: 1fr !important;
+                }
+
+                .dashboard-grid-4 {
+                    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                }
+
+                .dash-side-text {
+                    display: none !important;
+                }
+            }
+
+            @media (max-width: 520px) {
+                .dashboard-grid-4 {
+                    grid-template-columns: 1fr !important;
+                }
+
+                .block-container {
+                    padding-left: 0.72rem !important;
+                    padding-right: 0.72rem !important;
+                }
+            }
 </style>
         ''',
         unsafe_allow_html=True,
@@ -3231,6 +3311,8 @@ def render_formulario_retratil_comercial() -> None:
             data_nascimento = st.date_input(
                 "Data de Nascimento",
                 value=None,
+                min_value=date(1900, 1, 1),
+                max_value=date.today(),
                 format="DD/MM/YYYY",
             )
             cpf = st.text_input(
