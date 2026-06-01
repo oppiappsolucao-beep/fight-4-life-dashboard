@@ -777,15 +777,20 @@ def aplicar_css() -> None:
             }}
 
             .diretoria-login-box {{
+                align-items: center;
                 background:
                     linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025));
                 border: 1px solid rgba(251,196,16,0.38);
                 border-radius: 22px;
                 box-shadow: 0 24px 60px rgba(0,0,0,0.30);
                 box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
                 margin: 1.2rem 0 0 0;
                 max-width: none;
                 padding: 1.2rem 1.2rem 0.25rem 1.2rem;
+                text-align: center;
                 width: 100%;
             }}
 
@@ -797,15 +802,18 @@ def aplicar_css() -> None:
                 margin: 0;
                 text-align: center;
                 text-transform: uppercase;
+                width: 100%;
             }}
 
             .diretoria-login-sub {{
                 color: #bdbdbd;
+                display: block;
                 font-size: 0.80rem;
                 line-height: 1.45;
                 margin: 0.38rem auto 0.8rem auto;
-                max-width: 420px;
+                max-width: 640px;
                 text-align: center;
+                width: 100%;
             }}
 
             .diretoria-badge {{
@@ -823,6 +831,7 @@ def aplicar_css() -> None:
 
             .diretoria-badge-wrap {{
                 text-align: center;
+                width: 100%;
             }}
 
             @media (max-width: 900px) {{
