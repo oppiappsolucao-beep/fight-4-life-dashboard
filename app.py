@@ -1793,7 +1793,7 @@ def aplicar_css_dashboard_claro() -> None:
             .status-grid {
                 display: grid;
                 gap: 0.75rem;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
             .status-card {
@@ -2129,49 +2129,90 @@ def montar_painel_retencao_diretoria_html() -> str:
     """
 
 
+STATUS_COMERCIAL_OPCOES = [
+    "Novo Lead",
+    "Conversando",
+    "Não tem Interesse",
+    "Não Responde",
+]
+
+
+def obter_cadastros_comerciais() -> list[dict]:
+    st.session_state.setdefault("cadastros_comerciais_temporarios", [])
+    return st.session_state["cadastros_comerciais_temporarios"]
+
+
+def normalizar_status_comercial(status: str) -> str:
+    """
+    Garante compatibilidade com cadastros antigos da sessão.
+    Qualquer status que não pertença ao fluxo atual da Fight for Life
+    volta para Novo Lead.
+    """
+    status = str(status or "").strip()
+
+    mapa_compatibilidade = {
+        "Sem Resposta": "Não Responde",
+        "Não tem interesse": "Não tem Interesse",
+    }
+
+    status = mapa_compatibilidade.get(status, status)
+
+    if status not in STATUS_COMERCIAL_OPCOES:
+        return "Novo Lead"
+
+    return status
+
+
+def contar_status_comercial() -> dict[str, int]:
+    contagem = {status: 0 for status in STATUS_COMERCIAL_OPCOES}
+
+    for cadastro in obter_cadastros_comerciais():
+        status_atual = normalizar_status_comercial(
+            cadastro.get("Status Comercial", "Novo Lead")
+        )
+
+        cadastro["Status Comercial"] = status_atual
+        contagem[status_atual] += 1
+
+    return contagem
+
+
 def montar_cards_status_comercial_html() -> str:
+    contagem = contar_status_comercial()
+
     status = [
         {
             "nome": "Novo Lead",
-            "numero": "—",
+            "numero": contagem["Novo Lead"],
             "icone": "✦",
             "classe": "status-blue",
         },
         {
             "nome": "Conversando",
-            "numero": "—",
+            "numero": contagem["Conversando"],
             "icone": "●",
             "classe": "status-brown",
         },
         {
-            "nome": "Sem Resposta",
-            "numero": "—",
-            "icone": "⚑",
-            "classe": "status-red",
-        },
-        {
-            "nome": "Não tem interesse",
-            "numero": "—",
+            "nome": "Não tem Interesse",
+            "numero": contagem["Não tem Interesse"],
             "icone": "⊘",
             "classe": "status-teal",
         },
         {
-            "nome": "Com transferência",
-            "numero": "—",
-            "icone": "✓",
-            "classe": "status-green",
-        },
-        {
-            "nome": "Sem transferência",
-            "numero": "—",
-            "icone": "▣",
-            "classe": "status-purple",
+            "nome": "Não Responde",
+            "numero": contagem["Não Responde"],
+            "icone": "⚑",
+            "classe": "status-red",
         },
     ]
 
     cards = []
 
     for item in status:
+        total = int(item["numero"])
+        texto_registros = "registro nesta sessão" if total == 1 else "registros nesta sessão"
+
         cards.append(
             f"""
             <article class="status-card">
@@ -2182,11 +2223,11 @@ def montar_cards_status_comercial_html() -> str:
                     <p class="status-card-name">{item["nome"]}</p>
                 </div>
 
-                <p class="status-card-number">{item["numero"]}</p>
-                <p class="status-card-period">Aguardando integração</p>
+                <p class="status-card-number">{total}</p>
+                <p class="status-card-period">{texto_registros}</p>
 
                 <div class="status-card-footer">
-                    Ver registros
+                    Atualizado automaticamente
                 </div>
             </article>
             """
@@ -2209,6 +2250,60 @@ def montar_cards_status_comercial_html() -> str:
         </div>
     </section>
     """
+
+
+def render_movimentacao_status_comercial() -> None:
+    cadastros = obter_cadastros_comerciais()
+
+    if not cadastros:
+        return
+
+    with st.expander("Movimentar aluno entre os status", expanded=False):
+        st.markdown(
+            """
+            <p class="form-card-intro">
+                Escolha um aluno já cadastrado e altere o status comercial.
+                Os cards serão atualizados automaticamente.
+            </p>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        opcoes_alunos = [
+            f'{indice + 1} • {cadastro.get("Nome Completo", "Sem nome")} '
+            f'— {normalizar_status_comercial(cadastro.get("Status Comercial", "Novo Lead"))}'
+            for indice, cadastro in enumerate(cadastros)
+        ]
+
+        with st.form("formulario_movimentar_status", clear_on_submit=False):
+            aluno_escolhido = st.selectbox(
+                "Aluno cadastrado",
+                options=opcoes_alunos,
+            )
+
+            indice_selecionado = opcoes_alunos.index(aluno_escolhido)
+            status_atual = normalizar_status_comercial(
+                cadastros[indice_selecionado].get(
+                    "Status Comercial",
+                    "Novo Lead",
+                )
+            )
+
+            novo_status = st.selectbox(
+                "Novo status comercial",
+                options=STATUS_COMERCIAL_OPCOES,
+                index=STATUS_COMERCIAL_OPCOES.index(status_atual),
+            )
+
+            atualizar_status = st.form_submit_button("Atualizar status")
+
+        if atualizar_status:
+            cadastros[indice_selecionado]["Status Comercial"] = novo_status
+            st.success(
+                f'Status de {cadastros[indice_selecionado].get("Nome Completo", "aluno")} '
+                f'alterado para: {novo_status}.'
+            )
+            st.rerun()
 
 
 def render_formulario_retratil_comercial() -> None:
@@ -2260,6 +2355,12 @@ def render_formulario_retratil_comercial() -> None:
                 "Rede Social",
                 placeholder="@usuario ou link do perfil",
             )
+            status_comercial = st.selectbox(
+                "Status comercial",
+                options=STATUS_COMERCIAL_OPCOES,
+                index=0,
+                help="Escolha o quadro em que o aluno deve entrar inicialmente.",
+            )
 
             enviar = st.form_submit_button("Registrar aluno")
 
@@ -2269,8 +2370,8 @@ def render_formulario_retratil_comercial() -> None:
             elif not produto_servico:
                 st.error("Selecione o produto ou serviço escolhido.")
             else:
-                st.session_state.setdefault("cadastros_comerciais_temporarios", [])
-                st.session_state["cadastros_comerciais_temporarios"].append(
+                cadastros = obter_cadastros_comerciais()
+                cadastros.append(
                     {
                         "Nome Completo": nome_completo.strip(),
                         "Data de Nascimento": (
@@ -2283,14 +2384,15 @@ def render_formulario_retratil_comercial() -> None:
                         "Endereço": endereco.strip(),
                         "Produto ou Serviço": produto_servico,
                         "Rede Social": rede_social.strip(),
+                        "Status Comercial": status_comercial,
                     }
                 )
                 st.success(
-                    "Cadastro preenchido com sucesso. "
-                    "Por enquanto, ele ficará salvo apenas durante esta sessão."
+                    f'Aluno registrado no status: {status_comercial}.'
                 )
+                st.rerun()
 
-
+    render_movimentacao_status_comercial()
 
 
 def exibir_dashboard_inicial() -> None:
