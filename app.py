@@ -1738,6 +1738,24 @@ def montar_dashboard_visual(
 
         {kpis_html}
 
+        <article class="dash-panel dash-panel-large" style="margin-bottom:0.95rem;">
+            <div class="dash-panel-header">
+                <div>
+                    <h2 class="dash-panel-title">{barras_title}</h2>
+                    <p class="dash-panel-sub">{barras_sub}</p>
+                </div>
+                <div class="dash-panel-icon">▥</div>
+            </div>
+
+            <div class="bars-wrap">
+                {barras_html}
+            </div>
+
+            <div class="dashboard-footer-note">
+                Valores demonstrativos apenas para visualização do layout.
+            </div>
+        </article>
+
         <div class="dashboard-grid-main">
             <article class="dash-panel">
                 <div class="dash-panel-header">
@@ -1807,24 +1825,6 @@ def montar_dashboard_visual(
                 </div>
             </article>
         </div>
-
-        <article class="dash-panel dash-panel-large">
-            <div class="dash-panel-header">
-                <div>
-                    <h2 class="dash-panel-title">{barras_title}</h2>
-                    <p class="dash-panel-sub">{barras_sub}</p>
-                </div>
-                <div class="dash-panel-icon">▥</div>
-            </div>
-
-            <div class="bars-wrap">
-                {barras_html}
-            </div>
-
-            <div class="dashboard-footer-note">
-                Valores demonstrativos apenas para visualização do layout.
-            </div>
-        </article>
     </section>
     '''
 
