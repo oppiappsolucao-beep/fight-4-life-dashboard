@@ -5,7 +5,6 @@ import hmac
 import hashlib
 import os
 from pathlib import Path
-from urllib.parse import quote, unquote
 
 import streamlit as st
 
@@ -1934,6 +1933,117 @@ def aplicar_css_dashboard_claro() -> None:
                     font-size: 1.25rem;
                 }
             }
+
+
+            /* CARDS CLICÁVEIS NATIVOS DO STREAMLIT */
+            .status-native-header {
+                align-items: center;
+                background: rgba(255,255,255,0.96);
+                border: 1px solid rgba(255,255,255,0.68);
+                border-radius: 22px 22px 0 0;
+                box-shadow: 0 12px 28px rgba(15, 23, 42, 0.065);
+                display: flex;
+                justify-content: space-between;
+                padding: 1.05rem 1.1rem 0.75rem 1.1rem;
+            }
+
+            .status-native-grid-wrap {
+                background: rgba(255,255,255,0.96);
+                border: 1px solid rgba(255,255,255,0.68);
+                border-radius: 0 0 22px 22px;
+                box-shadow: 0 12px 28px rgba(15, 23, 42, 0.065);
+                margin-top: -1px;
+                padding: 0 1rem 1rem 1rem;
+            }
+
+            .status-native-title {
+                color: #202020;
+                font-size: 1rem;
+                font-weight: 800;
+                letter-spacing: -0.025rem;
+                margin: 0;
+            }
+
+            .status-native-sub {
+                color: #7a8494;
+                font-size: 0.69rem;
+                margin: 0.15rem 0 0 0;
+            }
+
+            .st-key-status_card_novo_lead button,
+            .st-key-status_card_conversando button,
+            .st-key-status_card_nao_tem_interesse button,
+            .st-key-status_card_nao_responde button,
+            .st-key-status_card_fechado button {
+                align-items: flex-start !important;
+                background: #ffffff !important;
+                border: 1px solid #e3e7ec !important;
+                border-radius: 18px !important;
+                box-shadow: 0 8px 18px rgba(15, 23, 42, 0.055) !important;
+                color: #111111 !important;
+                display: flex !important;
+                justify-content: flex-start !important;
+                min-height: 118px !important;
+                padding: 0.82rem 0.78rem !important;
+                text-align: left !important;
+                transition: 0.18s ease !important;
+                white-space: pre-line !important;
+                width: 100% !important;
+            }
+
+            .st-key-status_card_novo_lead button:hover,
+            .st-key-status_card_conversando button:hover,
+            .st-key-status_card_nao_tem_interesse button:hover,
+            .st-key-status_card_nao_responde button:hover,
+            .st-key-status_card_fechado button:hover {
+                border-color: rgba(251,196,16,0.90) !important;
+                box-shadow: 0 10px 22px rgba(15, 23, 42, 0.09) !important;
+                transform: translateY(-2px) !important;
+            }
+
+            .st-key-status_card_novo_lead button p,
+            .st-key-status_card_conversando button p,
+            .st-key-status_card_nao_tem_interesse button p,
+            .st-key-status_card_nao_responde button p,
+            .st-key-status_card_fechado button p {
+                color: #111111 !important;
+                font-size: 0.76rem !important;
+                font-weight: 800 !important;
+                line-height: 1.32 !important;
+                text-align: left !important;
+                white-space: pre-line !important;
+            }
+
+            .st-key-status_card_novo_lead_selected button,
+            .st-key-status_card_conversando_selected button,
+            .st-key-status_card_nao_tem_interesse_selected button,
+            .st-key-status_card_nao_responde_selected button,
+            .st-key-status_card_fechado_selected button {
+                border-color: #fbc410 !important;
+                box-shadow: 0 0 0 2px rgba(251,196,16,0.20),
+                            0 10px 22px rgba(15,23,42,0.10) !important;
+            }
+
+            @media (max-width: 620px) {
+                .status-native-header {
+                    border-radius: 18px 18px 0 0;
+                    padding: 0.88rem 0.88rem 0.68rem 0.88rem;
+                }
+
+                .status-native-grid-wrap {
+                    border-radius: 0 0 18px 18px;
+                    padding: 0 0.74rem 0.74rem 0.74rem;
+                }
+
+                .st-key-status_card_novo_lead button,
+                .st-key-status_card_conversando button,
+                .st-key-status_card_nao_tem_interesse button,
+                .st-key-status_card_nao_responde button,
+                .st-key-status_card_fechado button {
+                    min-height: 104px !important;
+                    padding: 0.68rem !important;
+                }
+            }
 </style>
         ''',
         unsafe_allow_html=True,
@@ -2171,8 +2281,7 @@ def obter_cadastros_comerciais() -> list[dict]:
 def normalizar_status_comercial(status: str) -> str:
     """
     Garante compatibilidade com cadastros antigos da sessão.
-    Qualquer status que não pertença ao fluxo atual da Fight for Life
-    volta para Novo Lead.
+    Qualquer status fora do fluxo atual retorna para Novo Lead.
     """
     status = str(status or "").strip()
 
@@ -2190,26 +2299,6 @@ def normalizar_status_comercial(status: str) -> str:
     return status
 
 
-def obter_status_clicado() -> str:
-    """
-    Lê o status selecionado ao clicar em um dos cards.
-    """
-    try:
-        raw_status = st.query_params.get("status_card", "")
-    except Exception:
-        raw_status = ""
-
-    if isinstance(raw_status, list):
-        raw_status = raw_status[0] if raw_status else ""
-
-    status = unquote(str(raw_status or "").strip())
-
-    if status in STATUS_COMERCIAL_OPCOES:
-        st.session_state["status_card_selecionado"] = status
-
-    return st.session_state.get("status_card_selecionado", "")
-
-
 def contar_status_comercial() -> dict[str, int]:
     contagem = {status: 0 for status in STATUS_COMERCIAL_OPCOES}
 
@@ -2224,104 +2313,68 @@ def contar_status_comercial() -> dict[str, int]:
     return contagem
 
 
-def montar_cards_status_comercial_html() -> str:
+def render_cards_status_comercial_clicaveis() -> None:
+    """
+    Usa botões nativos do Streamlit para evitar recarregar a página inteira.
+    Dessa forma, os leads cadastrados na sessão não desaparecem ao clicar.
+    """
     contagem = contar_status_comercial()
-    status_selecionado = obter_status_clicado()
+    status_selecionado = st.session_state.get("status_card_selecionado", "")
 
-    status = [
-        {
-            "nome": "Novo Lead",
-            "numero": contagem["Novo Lead"],
-            "icone": "✦",
-            "classe": "status-blue",
-        },
-        {
-            "nome": "Conversando",
-            "numero": contagem["Conversando"],
-            "icone": "●",
-            "classe": "status-brown",
-        },
-        {
-            "nome": "Não tem Interesse",
-            "numero": contagem["Não tem Interesse"],
-            "icone": "⊘",
-            "classe": "status-teal",
-        },
-        {
-            "nome": "Não Responde",
-            "numero": contagem["Não Responde"],
-            "icone": "⚑",
-            "classe": "status-red",
-        },
-        {
-            "nome": "Fechado",
-            "numero": contagem["Fechado"],
-            "icone": "✓",
-            "classe": "status-green",
-        },
-    ]
-
-    cards = []
-
-    for item in status:
-        total = int(item["numero"])
-        texto_registros = "registro nesta sessão" if total == 1 else "registros nesta sessão"
-        link_status = quote(item["nome"])
-        classe_selecionado = (
-            " status-card-selected"
-            if item["nome"] == status_selecionado
-            else ""
-        )
-
-        cards.append(
-            f"""
-            <a
-                class="status-card-link"
-                href="?status_card={link_status}"
-                target="_self"
-                aria-label="Abrir registros de {item["nome"]}"
-            >
-                <article class="status-card{classe_selecionado}">
-                    <div class="status-card-top">
-                        <div class="status-card-icon {item["classe"]}">
-                            {item["icone"]}
-                        </div>
-                        <p class="status-card-name">{item["nome"]}</p>
-                    </div>
-
-                    <p class="status-card-number">{total}</p>
-                    <p class="status-card-period">{texto_registros}</p>
-
-                    <div class="status-card-footer">
-                        <strong>Clique para ver os nomes</strong>
-                    </div>
-                </article>
-            </a>
-            """
-        )
-
-    return f"""
-    <section class="status-panel">
-        <div class="status-panel-header">
+    st.markdown(
+        """
+        <div class="status-native-header">
             <div>
-                <h2 class="status-panel-title">Acompanhamento comercial</h2>
-                <p class="status-panel-sub">
+                <h2 class="status-native-title">Acompanhamento comercial</h2>
+                <p class="status-native-sub">
                     Clique em um card para visualizar os nomes daquela etapa
                 </p>
             </div>
             <span class="placeholder-pill">Status</span>
         </div>
+        <div class="status-native-grid-wrap">
+        """,
+        unsafe_allow_html=True,
+    )
 
-        <div class="status-grid">
-            {"".join(cards)}
-        </div>
-    </section>
-    """
+    cards = [
+        ("✦", "Novo Lead", "status_card_novo_lead"),
+        ("●", "Conversando", "status_card_conversando"),
+        ("⊘", "Não tem Interesse", "status_card_nao_tem_interesse"),
+        ("⚑", "Não Responde", "status_card_nao_responde"),
+        ("✓", "Fechado", "status_card_fechado"),
+    ]
+
+    linha_1 = st.columns(3, gap="small")
+    linha_2 = st.columns(2, gap="small")
+
+    for coluna, (icone, status, chave_base) in zip(
+        linha_1 + linha_2,
+        cards,
+    ):
+        total = int(contagem[status])
+        texto_registro = "registro" if total == 1 else "registros"
+        chave = (
+            f"{chave_base}_selected"
+            if status == status_selecionado
+            else chave_base
+        )
+
+        with coluna:
+            if st.button(
+                f"{icone}  {status}\n\n{total} {texto_registro}\n\nClique para ver os nomes",
+                key=chave,
+                use_container_width=True,
+            ):
+                st.session_state["status_card_selecionado"] = status
+                st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_registros_card_clicado() -> None:
     cadastros = obter_cadastros_comerciais()
-    status_selecionado = obter_status_clicado()
+    status_selecionado = st.session_state.get("status_card_selecionado", "")
 
     if not status_selecionado:
         return
@@ -2419,12 +2472,6 @@ def render_movimentacao_status_comercial() -> None:
         if atualizar_status:
             cadastros[indice_selecionado]["Status Comercial"] = novo_status
             st.session_state["status_card_selecionado"] = novo_status
-
-            try:
-                st.query_params["status_card"] = novo_status
-            except Exception:
-                pass
-
             st.success(
                 f'Status de {cadastros[indice_selecionado].get("Nome Completo", "aluno")} '
                 f'alterado para: {novo_status}.'
@@ -2515,12 +2562,6 @@ def render_formulario_retratil_comercial() -> None:
                 )
 
                 st.session_state["status_card_selecionado"] = status_comercial
-
-                try:
-                    st.query_params["status_card"] = status_comercial
-                except Exception:
-                    pass
-
                 st.success(
                     f'Aluno registrado no status: {status_comercial}.'
                 )
@@ -2599,7 +2640,7 @@ def exibir_dashboard_inicial() -> None:
 
     with coluna_direita:
         if pagina == "📈 Comercial":
-            st.html(montar_cards_status_comercial_html())
+            render_cards_status_comercial_clicaveis()
         else:
             st.html(
                 montar_painel_grafico_html(
