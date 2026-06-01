@@ -574,7 +574,36 @@ def aplicar_css() -> None:
             }}
 
             [data-testid="stSidebar"] div[role="radiogroup"] > label {{
-                max-width: 100% !important;
+                box-sizing: border-box !important;
+                max-width: none !important;
+                width: 100% !important;
+            }}
+
+            [data-testid="stSidebar"] [data-testid="stRadio"] {{
+                width: 100% !important;
+            }}
+
+            [data-testid="stSidebar"] [data-testid="stRadio"] > div {{
+                width: 100% !important;
+            }}
+
+            [data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] {{
+                align-items: stretch !important;
+                display: flex !important;
+                flex-direction: column !important;
+                width: 100% !important;
+            }}
+
+            [data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] > label {{
+                box-sizing: border-box !important;
+                display: flex !important;
+                flex: 1 1 auto !important;
+                min-width: 100% !important;
+                width: 100% !important;
+            }}
+
+            [data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] > label > div {{
+                width: 100% !important;
             }}
 
             [data-testid="stSidebar"] div[role="radiogroup"] label:hover {{
