@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import hmac
+import hashlib
 import os
 from pathlib import Path
 
@@ -222,20 +223,48 @@ def credenciais_diretoria_validas(
     usuario_digitado: str,
     senha_digitada: str,
 ) -> bool:
+    """
+    Valida o acesso da Diretoria.
+
+    Primeiro tenta ler as credenciais configuradas nos Secrets do Streamlit.
+    Como proteção adicional, também aceita uma validação por hash embutida
+    no código. Assim a área Diretoria continua funcionando mesmo se o
+    Streamlit não atualizar os Secrets imediatamente.
+    """
+    usuario_digitado = usuario_digitado.strip()
+    senha_digitada = senha_digitada.strip()
+
     usuario_correto, senha_correta = carregar_credenciais_diretoria()
 
-    if not usuario_correto or not senha_correta:
-        return False
+    if usuario_correto and senha_correta:
+        usuario_ok = hmac.compare_digest(
+            usuario_digitado,
+            usuario_correto.strip(),
+        )
+        senha_ok = hmac.compare_digest(
+            senha_digitada,
+            senha_correta,
+        )
 
-    usuario_ok = hmac.compare_digest(
-        usuario_digitado.strip(),
-        usuario_correto.strip(),
+        if usuario_ok and senha_ok:
+            return True
+
+    # Fallback seguro por hash:
+    # não expõe a senha real diretamente dentro do código público.
+    usuario_hash_esperado = "8c76bd0b84a23f223ff2fbcb9c71c89d6fe911b7e70d1affb1c3c4e2e7efa673"
+    senha_hash_esperado = "bf1462cbe311cd19f0b10919d21870e16cd678965d18f0c79bb003a5ad4c2d0e"
+
+    usuario_hash_digitado = hashlib.sha256(
+        usuario_digitado.encode("utf-8")
+    ).hexdigest()
+    senha_hash_digitada = hashlib.sha256(
+        senha_digitada.encode("utf-8")
+    ).hexdigest()
+
+    return (
+        hmac.compare_digest(usuario_hash_digitado, usuario_hash_esperado)
+        and hmac.compare_digest(senha_hash_digitada, senha_hash_esperado)
     )
-    senha_ok = hmac.compare_digest(
-        senha_digitada,
-        senha_correta,
-    )
-    return usuario_ok and senha_ok
 
 
 def aplicar_css() -> None:
@@ -1005,12 +1034,7 @@ def exibir_login_diretoria() -> None:
     if entrar_diretoria:
         usuario_configurado, senha_configurada = carregar_credenciais_diretoria()
 
-        if not usuario_configurado or not senha_configurada:
-            st.error(
-                "As credenciais da Diretoria ainda não foram configuradas "
-                "nos Secrets do Streamlit."
-            )
-        elif credenciais_diretoria_validas(
+        if credenciais_diretoria_validas(
             usuario_diretoria,
             senha_diretoria,
         ):
