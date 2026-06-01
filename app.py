@@ -2044,6 +2044,141 @@ def aplicar_css_dashboard_claro() -> None:
                     padding: 0.68rem !important;
                 }
             }
+
+
+            /* ÁREA DOS CARDS CLICÁVEIS - CORREÇÃO VISUAL */
+            .st-key-status_cards_area {
+                background: rgba(255,255,255,0.97) !important;
+                border: 1px solid rgba(255,255,255,0.72) !important;
+                border-radius: 22px !important;
+                box-shadow: 0 12px 28px rgba(15, 23, 42, 0.065) !important;
+                padding: 1rem 1rem 0.85rem 1rem !important;
+            }
+
+            .st-key-status_cards_area .status-native-header {
+                align-items: center;
+                background: transparent !important;
+                border: 0 !important;
+                box-shadow: none !important;
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 0.72rem;
+                padding: 0 !important;
+            }
+
+            .st-key-status_cards_area .status-native-title {
+                color: #202020 !important;
+                font-size: 1rem !important;
+                font-weight: 800 !important;
+                letter-spacing: -0.025rem !important;
+                margin: 0 !important;
+            }
+
+            .st-key-status_cards_area .status-native-sub {
+                color: #7a8494 !important;
+                font-size: 0.69rem !important;
+                margin: 0.15rem 0 0 0 !important;
+            }
+
+            .st-key-status_cards_area [data-testid="stHorizontalBlock"] {
+                gap: 0.65rem !important;
+                margin-bottom: 0.65rem !important;
+            }
+
+            .st-key-status_card_novo_lead_container button,
+            .st-key-status_card_conversando_container button,
+            .st-key-status_card_nao_tem_interesse_container button,
+            .st-key-status_card_nao_responde_container button,
+            .st-key-status_card_fechado_container button,
+            .st-key-status_card_novo_lead_container_selected button,
+            .st-key-status_card_conversando_container_selected button,
+            .st-key-status_card_nao_tem_interesse_container_selected button,
+            .st-key-status_card_nao_responde_container_selected button,
+            .st-key-status_card_fechado_container_selected button {
+                align-items: flex-start !important;
+                background: #ffffff !important;
+                border: 1px solid #e3e7ec !important;
+                border-radius: 16px !important;
+                box-shadow: 0 7px 16px rgba(15, 23, 42, 0.05) !important;
+                color: #111111 !important;
+                display: flex !important;
+                justify-content: flex-start !important;
+                min-height: 116px !important;
+                padding: 0.78rem 0.75rem !important;
+                text-align: left !important;
+                text-transform: none !important;
+                transition: 0.18s ease !important;
+                white-space: pre-line !important;
+                width: 100% !important;
+            }
+
+            .st-key-status_card_novo_lead_container button:hover,
+            .st-key-status_card_conversando_container button:hover,
+            .st-key-status_card_nao_tem_interesse_container button:hover,
+            .st-key-status_card_nao_responde_container button:hover,
+            .st-key-status_card_fechado_container button:hover,
+            .st-key-status_card_novo_lead_container_selected button:hover,
+            .st-key-status_card_conversando_container_selected button:hover,
+            .st-key-status_card_nao_tem_interesse_container_selected button:hover,
+            .st-key-status_card_nao_responde_container_selected button:hover,
+            .st-key-status_card_fechado_container_selected button:hover {
+                background: #fffdf5 !important;
+                border-color: rgba(251,196,16,0.95) !important;
+                box-shadow: 0 10px 22px rgba(15, 23, 42, 0.09) !important;
+                transform: translateY(-2px) !important;
+            }
+
+            .st-key-status_card_novo_lead_container button p,
+            .st-key-status_card_conversando_container button p,
+            .st-key-status_card_nao_tem_interesse_container button p,
+            .st-key-status_card_nao_responde_container button p,
+            .st-key-status_card_fechado_container button p,
+            .st-key-status_card_novo_lead_container_selected button p,
+            .st-key-status_card_conversando_container_selected button p,
+            .st-key-status_card_nao_tem_interesse_container_selected button p,
+            .st-key-status_card_nao_responde_container_selected button p,
+            .st-key-status_card_fechado_container_selected button p {
+                color: #111111 !important;
+                font-size: 0.72rem !important;
+                font-weight: 700 !important;
+                line-height: 1.40 !important;
+                text-align: left !important;
+                text-transform: none !important;
+                white-space: pre-line !important;
+            }
+
+            .st-key-status_card_novo_lead_container_selected button,
+            .st-key-status_card_conversando_container_selected button,
+            .st-key-status_card_nao_tem_interesse_container_selected button,
+            .st-key-status_card_nao_responde_container_selected button,
+            .st-key-status_card_fechado_container_selected button {
+                background: #fffdf5 !important;
+                border-color: #fbc410 !important;
+                box-shadow:
+                    0 0 0 2px rgba(251,196,16,0.20),
+                    0 10px 22px rgba(15,23,42,0.10) !important;
+            }
+
+            @media (max-width: 620px) {
+                .st-key-status_cards_area {
+                    border-radius: 18px !important;
+                    padding: 0.82rem 0.74rem 0.58rem 0.74rem !important;
+                }
+
+                .st-key-status_card_novo_lead_container button,
+                .st-key-status_card_conversando_container button,
+                .st-key-status_card_nao_tem_interesse_container button,
+                .st-key-status_card_nao_responde_container button,
+                .st-key-status_card_fechado_container button,
+                .st-key-status_card_novo_lead_container_selected button,
+                .st-key-status_card_conversando_container_selected button,
+                .st-key-status_card_nao_tem_interesse_container_selected button,
+                .st-key-status_card_nao_responde_container_selected button,
+                .st-key-status_card_fechado_container_selected button {
+                    min-height: 102px !important;
+                    padding: 0.64rem !important;
+                }
+            }
 </style>
         ''',
         unsafe_allow_html=True,
@@ -2315,27 +2450,11 @@ def contar_status_comercial() -> dict[str, int]:
 
 def render_cards_status_comercial_clicaveis() -> None:
     """
-    Usa botões nativos do Streamlit para evitar recarregar a página inteira.
-    Dessa forma, os leads cadastrados na sessão não desaparecem ao clicar.
+    Cards clicáveis com botões nativos do Streamlit.
+    O clique faz apenas rerun interno, mantendo os leads na sessão.
     """
     contagem = contar_status_comercial()
     status_selecionado = st.session_state.get("status_card_selecionado", "")
-
-    st.markdown(
-        """
-        <div class="status-native-header">
-            <div>
-                <h2 class="status-native-title">Acompanhamento comercial</h2>
-                <p class="status-native-sub">
-                    Clique em um card para visualizar os nomes daquela etapa
-                </p>
-            </div>
-            <span class="placeholder-pill">Status</span>
-        </div>
-        <div class="status-native-grid-wrap">
-        """,
-        unsafe_allow_html=True,
-    )
 
     cards = [
         ("✦", "Novo Lead", "status_card_novo_lead"),
@@ -2345,31 +2464,51 @@ def render_cards_status_comercial_clicaveis() -> None:
         ("✓", "Fechado", "status_card_fechado"),
     ]
 
-    linha_1 = st.columns(3, gap="small")
-    linha_2 = st.columns(2, gap="small")
-
-    for coluna, (icone, status, chave_base) in zip(
-        linha_1 + linha_2,
-        cards,
-    ):
-        total = int(contagem[status])
-        texto_registro = "registro" if total == 1 else "registros"
-        chave = (
-            f"{chave_base}_selected"
-            if status == status_selecionado
-            else chave_base
+    with st.container(key="status_cards_area"):
+        st.markdown(
+            """
+            <div class="status-native-header">
+                <div>
+                    <h2 class="status-native-title">Acompanhamento comercial</h2>
+                    <p class="status-native-sub">
+                        Clique em um card para visualizar os nomes daquela etapa
+                    </p>
+                </div>
+                <span class="placeholder-pill">Status</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
-        with coluna:
-            if st.button(
-                f"{icone}  {status}\n\n{total} {texto_registro}\n\nClique para ver os nomes",
-                key=chave,
-                use_container_width=True,
-            ):
-                st.session_state["status_card_selecionado"] = status
-                st.rerun()
+        linha_1 = st.columns(3, gap="small")
+        linha_2 = st.columns(2, gap="small")
 
-    st.markdown("</div>", unsafe_allow_html=True)
+        for coluna, (icone, status, chave_base) in zip(
+            linha_1 + linha_2,
+            cards,
+        ):
+            total = int(contagem[status])
+            texto_registro = "registro" if total == 1 else "registros"
+
+            container_key = (
+                f"{chave_base}_container_selected"
+                if status == status_selecionado
+                else f"{chave_base}_container"
+            )
+
+            with coluna:
+                with st.container(key=container_key):
+                    if st.button(
+                        (
+                            f"{icone}  {status}\n\n"
+                            f"{total} {texto_registro}\n\n"
+                            "Clique para ver os nomes"
+                        ),
+                        key=chave_base,
+                        use_container_width=True,
+                    ):
+                        st.session_state["status_card_selecionado"] = status
+                        st.rerun()
 
 
 def render_registros_card_clicado() -> None:
