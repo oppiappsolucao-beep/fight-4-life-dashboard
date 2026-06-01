@@ -4,6 +4,7 @@ import base64
 import hmac
 import hashlib
 import os
+from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
@@ -2741,7 +2742,24 @@ def render_cards_status_comercial_clicaveis() -> None:
                         st.rerun()
 
 
+def converter_data_texto_para_date(valor: str):
+    valor = str(valor or "").strip()
+
+    if not valor:
+        return None
+
+    try:
+        return datetime.strptime(valor, "%d/%m/%Y").date()
+    except ValueError:
+        return None
+
+
 def render_registros_card_clicado() -> None:
+    """
+    Ao clicar em "Ver nomes", abre a relação de alunos daquele status.
+    Ao escolher um nome, exibe o formulário preenchido para consulta
+    e atualização dos dados.
+    """
     cadastros = obter_cadastros_comerciais()
     status_selecionado = st.session_state.get("status_card_selecionado", "")
 
@@ -2752,45 +2770,142 @@ def render_registros_card_clicado() -> None:
         f"Registros em: {status_selecionado}",
         expanded=True,
     ):
-        registros_filtrados = [
-            cadastro
-            for cadastro in cadastros
+        indices_filtrados = [
+            indice
+            for indice, cadastro in enumerate(cadastros)
             if normalizar_status_comercial(
                 cadastro.get("Status Comercial", "Novo Lead")
             ) == status_selecionado
         ]
 
-        if not registros_filtrados:
+        if not indices_filtrados:
             st.info(f'Nenhum aluno cadastrado em "{status_selecionado}".')
             return
 
-        st.markdown(
-            f"**{len(registros_filtrados)} registro(s) em {status_selecionado}:**"
+        opcoes_alunos = [
+            (
+                f'{cadastros[indice].get("Nome Completo", "Sem nome")} '
+                f'— {cadastros[indice].get("Produto ou Serviço", "Sem modalidade")}'
+            )
+            for indice in indices_filtrados
+        ]
+
+        aluno_escolhido = st.selectbox(
+            "Selecione o aluno para visualizar",
+            options=opcoes_alunos,
+            key=f"aluno_visualizado_{status_selecionado}",
         )
 
-        for indice, cadastro in enumerate(registros_filtrados, start=1):
-            nome = cadastro.get("Nome Completo", "Sem nome")
-            produto = cadastro.get("Produto ou Serviço", "")
-            rede_social = cadastro.get("Rede Social", "")
-            email = cadastro.get("E-mail", "")
-            cpf = cadastro.get("CPF", "")
+        posicao_lista = opcoes_alunos.index(aluno_escolhido)
+        indice_real = indices_filtrados[posicao_lista]
+        cadastro = cadastros[indice_real]
 
-            linhas = [f"**{indice}. {nome}**"]
+        status_atual = normalizar_status_comercial(
+            cadastro.get("Status Comercial", "Novo Lead")
+        )
 
-            if produto:
-                linhas.append(f"Modalidade: {produto}")
+        modalidades = [
+            "Muay Thai",
+            "Jiu-Jitsu",
+            "Jiu-Jitsu Infantil",
+            "MMA",
+        ]
 
-            if rede_social:
-                linhas.append(f"Rede Social: {rede_social}")
+        modalidade_atual = str(
+            cadastro.get("Produto ou Serviço", "")
+        ).strip()
 
-            if email:
-                linhas.append(f"E-mail: {email}")
+        if modalidade_atual not in modalidades:
+            modalidade_atual = modalidades[0]
 
-            if cpf:
-                linhas.append(f"CPF: {cpf}")
+        data_atual = converter_data_texto_para_date(
+            cadastro.get("Data de Nascimento", "")
+        )
 
-            st.markdown("<br>".join(linhas), unsafe_allow_html=True)
-            st.markdown("---")
+        with st.form(
+            f"formulario_editar_aluno_{indice_real}",
+            clear_on_submit=False,
+        ):
+            nome_completo = st.text_input(
+                "Nome Completo",
+                value=str(cadastro.get("Nome Completo", "")),
+                key=f"editar_nome_{indice_real}",
+            )
+
+            data_nascimento = st.date_input(
+                "Data de Nascimento",
+                value=data_atual,
+                format="DD/MM/YYYY",
+                key=f"editar_data_{indice_real}",
+            )
+
+            cpf = st.text_input(
+                "CPF",
+                value=str(cadastro.get("CPF", "")),
+                key=f"editar_cpf_{indice_real}",
+            )
+
+            email = st.text_input(
+                "E-mail",
+                value=str(cadastro.get("E-mail", "")),
+                key=f"editar_email_{indice_real}",
+            )
+
+            endereco = st.text_area(
+                "Endereço",
+                value=str(cadastro.get("Endereço", "")),
+                key=f"editar_endereco_{indice_real}",
+            )
+
+            produto_servico = st.selectbox(
+                "Produto ou Serviço escolhido",
+                options=modalidades,
+                index=modalidades.index(modalidade_atual),
+                key=f"editar_produto_{indice_real}",
+            )
+
+            rede_social = st.text_input(
+                "Rede Social",
+                value=str(cadastro.get("Rede Social", "")),
+                key=f"editar_rede_social_{indice_real}",
+            )
+
+            status_comercial = st.selectbox(
+                "Status comercial",
+                options=STATUS_COMERCIAL_OPCOES,
+                index=STATUS_COMERCIAL_OPCOES.index(status_atual),
+                key=f"editar_status_{indice_real}",
+            )
+
+            salvar_alteracoes = st.form_submit_button(
+                "Salvar alterações"
+            )
+
+        if salvar_alteracoes:
+            if not nome_completo.strip():
+                st.error("Preencha o nome completo.")
+                return
+
+            cadastro.update(
+                {
+                    "Nome Completo": nome_completo.strip(),
+                    "Data de Nascimento": (
+                        data_nascimento.strftime("%d/%m/%Y")
+                        if data_nascimento
+                        else ""
+                    ),
+                    "CPF": cpf.strip(),
+                    "E-mail": email.strip(),
+                    "Endereço": endereco.strip(),
+                    "Produto ou Serviço": produto_servico,
+                    "Rede Social": rede_social.strip(),
+                    "Status Comercial": status_comercial,
+                }
+            )
+
+            st.session_state["status_card_selecionado"] = status_comercial
+            st.success("Dados do aluno atualizados com sucesso.")
+            st.rerun()
 
 
 def render_movimentacao_status_comercial() -> None:
@@ -2936,8 +3051,6 @@ def render_formulario_retratil_comercial() -> None:
                 )
                 st.rerun()
 
-    render_registros_card_clicado()
-    render_movimentacao_status_comercial()
 
 
 def exibir_dashboard_inicial() -> None:
@@ -3010,6 +3123,8 @@ def exibir_dashboard_inicial() -> None:
     with coluna_direita:
         if pagina == "📈 Comercial":
             render_cards_status_comercial_clicaveis()
+            render_registros_card_clicado()
+            render_movimentacao_status_comercial()
         else:
             st.html(
                 montar_painel_grafico_html(
