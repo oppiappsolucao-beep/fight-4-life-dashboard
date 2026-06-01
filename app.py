@@ -2988,7 +2988,10 @@ def contar_status_comercial() -> dict[str, int]:
     return contagem
 
 
+@st.fragment(run_every="10s")
 def render_cards_status_comercial_clicaveis() -> None:
+    limpar_cache_planilha()
+
     """
     Exibe os status com:
     card visual branco + botão separado "Ver nomes".
@@ -3424,10 +3427,6 @@ def exibir_dashboard_inicial() -> None:
         )
 
         st.markdown("<div style='height:0.6rem'></div>", unsafe_allow_html=True)
-
-        if st.button("Atualizar dados da planilha"):
-            limpar_cache_planilha()
-            st.rerun()
 
         if st.button("Sair da conta"):
             st.session_state["autenticado"] = False
