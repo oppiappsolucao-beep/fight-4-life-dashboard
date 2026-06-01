@@ -130,18 +130,35 @@ def carregar_credenciais_diretoria() -> tuple[str, str]:
     """
     Busca as credenciais exclusivas da área Diretoria nos Secrets do Streamlit.
 
-    Formato recomendado:
+    Aceita qualquer um destes formatos:
+
+    FORMATO RECOMENDADO:
     [diretoria]
     username = "fight4lifediretoria"
     password = "Fight4LifeDiretoria!"
+
+    FORMATO ALTERNATIVO:
+    diretoria_username = "fight4lifediretoria"
+    diretoria_password = "Fight4LifeDiretoria!"
     """
     try:
+        # Formato recomendado: seção [diretoria]
         if "diretoria" in st.secrets:
-            usuario = str(st.secrets["diretoria"].get("username", ""))
-            senha = str(st.secrets["diretoria"].get("password", ""))
+            secao_diretoria = st.secrets["diretoria"]
+
+            usuario = str(secao_diretoria["username"]) if "username" in secao_diretoria else ""
+            senha = str(secao_diretoria["password"]) if "password" in secao_diretoria else ""
 
             if usuario and senha:
                 return usuario, senha
+
+        # Formato alternativo: chaves diretas
+        usuario = str(st.secrets["diretoria_username"]) if "diretoria_username" in st.secrets else ""
+        senha = str(st.secrets["diretoria_password"]) if "diretoria_password" in st.secrets else ""
+
+        if usuario and senha:
+            return usuario, senha
+
     except Exception:
         pass
 
