@@ -4,6 +4,8 @@ import base64
 import hmac
 import hashlib
 import os
+import re
+import unicodedata
 import uuid
 from datetime import date, datetime
 from pathlib import Path
@@ -51,7 +53,10 @@ COLUNAS_PLANILHA = [
     "Rede Social",
     "Status Comercial",
     "Última Atualização",
+    "Telefone",
 ]
+
+COLUNAS_PLANILHA_LEGADO = COLUNAS_PLANILHA[:-1]
 
 GOOGLE_SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -2625,6 +2630,83 @@ def aplicar_css_dashboard_claro() -> None:
                 transform: none !important;
                 visibility: visible !important;
             }
+
+
+            /* BARRA DE PESQUISA COMERCIAL */
+            .st-key-busca_comercial_container {
+                background: rgba(255,255,255,0.97) !important;
+                border: 1px solid rgba(255,255,255,0.72) !important;
+                border-radius: 18px !important;
+                box-shadow: 0 10px 22px rgba(15,23,42,0.055) !important;
+                margin-bottom: 0.72rem !important;
+                padding: 0.82rem 0.88rem 0.88rem 0.88rem !important;
+            }
+
+            .busca-comercial-title {
+                color: #202020 !important;
+                font-size: 0.92rem !important;
+                font-weight: 800 !important;
+                letter-spacing: -0.02rem !important;
+                margin: 0 0 0.16rem 0 !important;
+            }
+
+            .busca-comercial-sub {
+                color: #7a8494 !important;
+                font-size: 0.68rem !important;
+                margin: 0 0 0.58rem 0 !important;
+            }
+
+            .busca-status-localizado {
+                background: #fff7d6;
+                border: 1px solid #f3db80;
+                border-radius: 999px;
+                color: #866500 !important;
+                display: inline-flex;
+                font-size: 0.66rem;
+                font-weight: 800;
+                letter-spacing: 0.03rem;
+                margin: 0.18rem 0 0.58rem 0;
+                padding: 0.34rem 0.54rem;
+            }
+
+            .st-key-busca_comercial_container label,
+            .st-key-busca_comercial_container p,
+            .st-key-busca_comercial_container span,
+            .st-key-busca_comercial_container div {
+                color: #111111 !important;
+            }
+
+            .st-key-busca_comercial_container input,
+            .st-key-busca_comercial_container textarea,
+            .st-key-busca_comercial_container [data-baseweb="select"] > div {
+                background: #ffffff !important;
+                border-color: #e1e5ea !important;
+                color: #111111 !important;
+            }
+
+            .st-key-busca_comercial_container input:disabled,
+            .st-key-busca_comercial_container textarea:disabled {
+                -webkit-text-fill-color: #111111 !important;
+                color: #111111 !important;
+                opacity: 1 !important;
+            }
+
+            .st-key-busca_comercial_container div[data-testid="stFormSubmitButton"] button {
+                background: #fbc410 !important;
+                border: 0 !important;
+                border-radius: 10px !important;
+                color: #111111 !important;
+                font-weight: 800 !important;
+                min-height: 40px !important;
+                width: 100% !important;
+            }
+
+            @media (max-width: 620px) {
+                .st-key-busca_comercial_container {
+                    border-radius: 15px !important;
+                    padding: 0.70rem !important;
+                }
+            }
 </style>
         ''',
         unsafe_allow_html=True,
@@ -2913,29 +2995,46 @@ def obter_worksheet_leads():
 
 def validar_cabecalho_planilha(valores: list[list[str]]) -> None:
     """
-    Garante que a linha 1 da aba Leads está exatamente na ordem esperada.
+    Garante que a linha 1 da aba Leads está na ordem esperada.
+
+    Compatibilidade automática:
+    caso a planilha ainda esteja com as 11 colunas antigas, o dashboard
+    cria a coluna Telefone em L1 sem apagar nenhum dado existente.
     """
+    worksheet = obter_worksheet_leads()
+
     if not valores:
-        worksheet = obter_worksheet_leads()
         worksheet.update(
-            range_name="A1:K1",
+            range_name="A1:L1",
             values=[COLUNAS_PLANILHA],
         )
         return
 
-    cabecalho_atual = [
+    cabecalho_existente = [
         str(valor).strip()
-        for valor in valores[0][: len(COLUNAS_PLANILHA)]
+        for valor in valores[0]
     ]
 
-    if cabecalho_atual != COLUNAS_PLANILHA:
-        esperado = " | ".join(COLUNAS_PLANILHA)
-        encontrado = " | ".join(cabecalho_atual)
+    cabecalho_atual = cabecalho_existente[: len(COLUNAS_PLANILHA)]
+    cabecalho_legado = cabecalho_existente[: len(COLUNAS_PLANILHA_LEGADO)]
 
-        raise RuntimeError(
-            "A linha 1 da aba Leads não está na ordem esperada. "
-            f"Esperado: {esperado}. Encontrado: {encontrado}."
+    if cabecalho_atual == COLUNAS_PLANILHA:
+        return
+
+    if cabecalho_legado == COLUNAS_PLANILHA_LEGADO:
+        worksheet.update(
+            range_name="L1",
+            values=[["Telefone"]],
         )
+        return
+
+    esperado = " | ".join(COLUNAS_PLANILHA)
+    encontrado = " | ".join(cabecalho_existente)
+
+    raise RuntimeError(
+        "A linha 1 da aba Leads não está na ordem esperada. "
+        f"Esperado: {esperado}. Encontrado: {encontrado}."
+    )
 
 
 @st.cache_data(ttl=8, show_spinner=False)
@@ -3011,6 +3110,7 @@ def salvar_novo_lead_planilha(cadastro: dict) -> str:
             cadastro.get("Status Comercial", "Novo Lead")
         ),
         agora,
+        str(cadastro.get("Telefone", "")).strip(),
     ]
 
     worksheet.append_row(
@@ -3134,16 +3234,10 @@ def contar_status_comercial() -> dict[str, int]:
 
 @st.fragment(run_every="10s")
 def render_cards_status_comercial_clicaveis() -> None:
+    """
+    Exibe os status em cards e atualiza os totais automaticamente.
+    """
     limpar_cache_planilha()
-
-    """
-    Exibe os status com:
-    card visual branco + botão separado "Ver nomes".
-
-    Os cards visuais usam st.html e os botões usam widgets nativos do
-    Streamlit. Assim não aparecem tags HTML na tela e os leads continuam
-    preservados durante o rerun interno.
-    """
     contagem = contar_status_comercial()
     status_selecionado = st.session_state.get("status_card_selecionado", "")
 
@@ -3254,12 +3348,203 @@ def converter_data_texto_para_date(valor: str):
         return None
 
 
+
+def normalizar_texto_busca(valor: str) -> str:
+    texto = str(valor or "").strip().lower()
+    texto = unicodedata.normalize("NFKD", texto)
+    return "".join(
+        caractere
+        for caractere in texto
+        if not unicodedata.combining(caractere)
+    )
+
+
+def somente_digitos(valor: str) -> str:
+    return re.sub(r"\\D", "", str(valor or ""))
+
+
+def buscar_leads_comerciais(termo: str) -> list[dict]:
+    termo_texto = normalizar_texto_busca(termo)
+    termo_numerico = somente_digitos(termo)
+
+    if not termo_texto:
+        return []
+
+    resultados = []
+
+    for cadastro in obter_cadastros_comerciais():
+        nome = normalizar_texto_busca(cadastro.get("Nome Completo", ""))
+        cpf = somente_digitos(cadastro.get("CPF", ""))
+        telefone = somente_digitos(cadastro.get("Telefone", ""))
+
+        encontrou_nome = termo_texto in nome
+        encontrou_cpf = bool(termo_numerico) and termo_numerico in cpf
+        encontrou_telefone = bool(termo_numerico) and termo_numerico in telefone
+
+        if encontrou_nome or encontrou_cpf or encontrou_telefone:
+            resultados.append(cadastro)
+
+    return resultados
+
+
+def render_ficha_lead_preenchida(
+    cadastro: dict,
+    chave_prefixo: str,
+) -> None:
+    status_atual = normalizar_status_comercial(
+        cadastro.get("Status Comercial", "Novo Lead")
+    )
+    id_lead = str(cadastro.get("IDLead", chave_prefixo)).strip()
+
+    st.markdown(
+        f'<div class="busca-status-localizado">Quadro atual: {status_atual}</div>',
+        unsafe_allow_html=True,
+    )
+
+    with st.form(
+        f"formulario_ficha_{chave_prefixo}_{id_lead}",
+        clear_on_submit=False,
+    ):
+        st.text_input(
+            "Nome Completo",
+            value=str(cadastro.get("Nome Completo", "")),
+            disabled=True,
+            key=f"{chave_prefixo}_nome_{id_lead}",
+        )
+
+        st.text_input(
+            "Data de Nascimento",
+            value=str(cadastro.get("Data de Nascimento", "")),
+            disabled=True,
+            key=f"{chave_prefixo}_data_{id_lead}",
+        )
+
+        st.text_input(
+            "CPF",
+            value=str(cadastro.get("CPF", "")),
+            disabled=True,
+            key=f"{chave_prefixo}_cpf_{id_lead}",
+        )
+
+        st.text_input(
+            "Telefone",
+            value=str(cadastro.get("Telefone", "")),
+            disabled=True,
+            key=f"{chave_prefixo}_telefone_{id_lead}",
+        )
+
+        st.text_input(
+            "E-mail",
+            value=str(cadastro.get("E-mail", "")),
+            disabled=True,
+            key=f"{chave_prefixo}_email_{id_lead}",
+        )
+
+        st.text_area(
+            "Endereço",
+            value=str(cadastro.get("Endereço", "")),
+            disabled=True,
+            key=f"{chave_prefixo}_endereco_{id_lead}",
+        )
+
+        st.text_input(
+            "Produto ou Serviço escolhido",
+            value=str(cadastro.get("Produto ou Serviço", "")),
+            disabled=True,
+            key=f"{chave_prefixo}_produto_{id_lead}",
+        )
+
+        st.text_input(
+            "Rede Social",
+            value=str(cadastro.get("Rede Social", "")),
+            disabled=True,
+            key=f"{chave_prefixo}_rede_{id_lead}",
+        )
+
+        novo_status = st.selectbox(
+            "Status comercial",
+            options=STATUS_COMERCIAL_OPCOES,
+            index=STATUS_COMERCIAL_OPCOES.index(status_atual),
+            key=f"{chave_prefixo}_status_{id_lead}",
+        )
+
+        salvar_status = st.form_submit_button(
+            "Salvar novo status"
+        )
+
+    if salvar_status:
+        try:
+            atualizar_status_lead_planilha(
+                id_lead=id_lead,
+                novo_status=novo_status,
+            )
+        except Exception as erro:
+            st.error("Não foi possível atualizar o status na planilha.")
+            st.caption(f"Detalhes técnicos: {erro}")
+            return
+
+        st.session_state["status_card_selecionado"] = novo_status
+        st.success(
+            f'Status de {cadastro.get("Nome Completo", "aluno")} '
+            f'alterado para: {novo_status}.'
+        )
+        st.rerun()
+
+
+def render_barra_pesquisa_comercial() -> None:
+    with st.container(key="busca_comercial_container"):
+        st.markdown(
+            """
+            <p class="busca-comercial-title">Pesquisar aluno</p>
+            <p class="busca-comercial-sub">
+                Localize rapidamente pelo nome, CPF ou telefone.
+            </p>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        termo = st.text_input(
+            "Pesquisar aluno",
+            placeholder="Digite nome, CPF ou telefone",
+            label_visibility="collapsed",
+            key="pesquisa_aluno_comercial",
+        )
+
+        if not termo.strip():
+            return
+
+        resultados = buscar_leads_comerciais(termo)
+
+        if not resultados:
+            st.info("Nenhum aluno encontrado.")
+            return
+
+        opcoes = [
+            (
+                f'{cadastro.get("Nome Completo", "Sem nome")} '
+                f'— {normalizar_status_comercial(cadastro.get("Status Comercial", "Novo Lead"))}'
+            )
+            for cadastro in resultados
+        ]
+
+        aluno_escolhido = st.selectbox(
+            "Resultado encontrado",
+            options=opcoes,
+            key="resultado_pesquisa_aluno_comercial",
+        )
+
+        cadastro = resultados[opcoes.index(aluno_escolhido)]
+
+        render_ficha_lead_preenchida(
+            cadastro=cadastro,
+            chave_prefixo="busca",
+        )
+
+
+
 def render_registros_card_clicado() -> None:
     """
-    Exibe somente uma ficha por vez.
-
-    Ao clicar em "Ver nomes", aparece diretamente a lista de alunos
-    daquele card e a ficha preenchida do aluno selecionado.
+    Abre somente a ficha do card selecionado.
     Ao clicar novamente no mesmo botão, a ficha é recolhida.
     """
     cadastros = obter_cadastros_comerciais()
@@ -3301,97 +3586,13 @@ def render_registros_card_clicado() -> None:
             key=f"aluno_visualizado_{status_selecionado}",
         )
 
-        posicao_lista = opcoes_alunos.index(aluno_escolhido)
-        indice_real = indices_filtrados[posicao_lista]
+        indice_real = indices_filtrados[opcoes_alunos.index(aluno_escolhido)]
         cadastro = cadastros[indice_real]
 
-        status_atual = normalizar_status_comercial(
-            cadastro.get("Status Comercial", "Novo Lead")
+        render_ficha_lead_preenchida(
+            cadastro=cadastro,
+            chave_prefixo="card",
         )
-
-        with st.form(
-            f"formulario_visualizar_status_{cadastro.get('IDLead', indice_real)}",
-            clear_on_submit=False,
-        ):
-            st.text_input(
-                "Nome Completo",
-                value=str(cadastro.get("Nome Completo", "")),
-                disabled=True,
-                key=f"visualizar_nome_{indice_real}",
-            )
-
-            st.text_input(
-                "Data de Nascimento",
-                value=str(cadastro.get("Data de Nascimento", "")),
-                disabled=True,
-                key=f"visualizar_data_{indice_real}",
-            )
-
-            st.text_input(
-                "CPF",
-                value=str(cadastro.get("CPF", "")),
-                disabled=True,
-                key=f"visualizar_cpf_{indice_real}",
-            )
-
-            st.text_input(
-                "E-mail",
-                value=str(cadastro.get("E-mail", "")),
-                disabled=True,
-                key=f"visualizar_email_{indice_real}",
-            )
-
-            st.text_area(
-                "Endereço",
-                value=str(cadastro.get("Endereço", "")),
-                disabled=True,
-                key=f"visualizar_endereco_{indice_real}",
-            )
-
-            st.text_input(
-                "Produto ou Serviço escolhido",
-                value=str(cadastro.get("Produto ou Serviço", "")),
-                disabled=True,
-                key=f"visualizar_produto_{indice_real}",
-            )
-
-            st.text_input(
-                "Rede Social",
-                value=str(cadastro.get("Rede Social", "")),
-                disabled=True,
-                key=f"visualizar_rede_social_{indice_real}",
-            )
-
-            novo_status = st.selectbox(
-                "Status comercial",
-                options=STATUS_COMERCIAL_OPCOES,
-                index=STATUS_COMERCIAL_OPCOES.index(status_atual),
-                key=f"visualizar_status_{indice_real}",
-            )
-
-            salvar_status = st.form_submit_button(
-                "Salvar novo status"
-            )
-
-        if salvar_status:
-            try:
-                atualizar_status_lead_planilha(
-                    id_lead=cadastro.get("IDLead", ""),
-                    novo_status=novo_status,
-                )
-            except Exception as erro:
-                st.error(
-                    "Não foi possível atualizar o status na planilha."
-                )
-                st.caption(f"Detalhes técnicos: {erro}")
-                return
-
-            st.session_state["status_card_selecionado"] = novo_status
-            st.success(
-                f'Status de {cadastro.get("Nome Completo", "aluno")} '
-                f'alterado para: {novo_status}.'
-            )
-            st.rerun()
 
 
 def render_movimentacao_status_comercial() -> None:
@@ -3491,6 +3692,10 @@ def render_formulario_retratil_comercial() -> None:
                 "CPF",
                 placeholder="000.000.000-00",
             )
+            telefone = st.text_input(
+                "Telefone",
+                placeholder="(00) 00000-0000",
+            )
             email = st.text_input(
                 "E-mail",
                 placeholder="nome@exemplo.com",
@@ -3536,6 +3741,7 @@ def render_formulario_retratil_comercial() -> None:
                         else ""
                     ),
                     "CPF": cpf.strip(),
+                    "Telefone": telefone.strip(),
                     "E-mail": email.strip(),
                     "Endereço": endereco.strip(),
                     "Produto ou Serviço": produto_servico,
@@ -3716,6 +3922,7 @@ def exibir_dashboard_inicial() -> None:
 
     with coluna_direita:
         if pagina == "📈 Comercial":
+            render_barra_pesquisa_comercial()
             render_cards_status_comercial_clicaveis()
             render_registros_card_clicado()
         else:
