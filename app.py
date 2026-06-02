@@ -1580,7 +1580,7 @@ def aplicar_css_dashboard_claro() -> None:
                 align-items: end;
                 display: grid;
                 gap: 0.85rem;
-                grid-template-columns: repeat(6, minmax(0, 1fr));
+                grid-template-columns: repeat(4, minmax(0, 1fr));
                 height: 190px;
                 margin-top: 0.4rem;
                 padding: 0 0.5rem;
@@ -2668,9 +2668,9 @@ def montar_config_dashboard(pagina: str) -> dict:
                 {"titulo": "Novas matrículas", "valor": "—", "rodape": "aguardando integração", "icone": "⚡", "classe": "kpi-darkyellow"},
                 {"titulo": "Conversão", "valor": "—", "rodape": "aguardando integração", "icone": "🏆", "classe": "kpi-gray"},
             ],
-            "barras_title": "Desempenho por modalidade",
+            "barras_title": "Modalidade mais escolhida",
             "barras_sub": "Estrutura pronta para exibir procura e matrículas",
-            "bar_labels": ["Jiu-Jitsu", "Muay Thai", "MMA", "Kids", "Nogi", "Boxe"],
+            "bar_labels": ["Jiu-Jitsu", "Muay Thai", "MMA", "Kids"],
             "painel_title": "Aulas teste e novas matrículas",
             "painel_sub": "Comparativo semanal",
         }
@@ -2709,8 +2709,6 @@ def montar_dashboard_topo_visual(
         ("78%", "bar-black"),
         ("47%", "bar-yellow"),
         ("70%", "bar-black"),
-        ("42%", "bar-yellow"),
-        ("57%", "bar-black"),
     ]
 
     barras_html = "".join(
