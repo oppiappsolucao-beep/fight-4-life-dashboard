@@ -3,10 +3,13 @@ from __future__ import annotations
 import base64
 import hmac
 import hashlib
+import json
 import os
 import re
 import unicodedata
 import uuid
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 from datetime import date, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -14,6 +17,7 @@ from zoneinfo import ZoneInfo
 import gspread
 import streamlit as st
 from google.oauth2.service_account import Credentials
+from gspread.utils import rowcol_to_a1
 
 
 # ============================================================
@@ -54,9 +58,12 @@ COLUNAS_PLANILHA = [
     "Status Comercial",
     "Última Atualização",
     "Telefone",
+    "Token Documento ZapSign",
+    "Link Assinatura ZapSign",
+    "Status Contrato",
+    "Data Envio Contrato",
+    "Erro Envio Contrato",
 ]
-
-COLUNAS_PLANILHA_LEGADO = COLUNAS_PLANILHA[:-1]
 
 GOOGLE_SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -2995,17 +3002,17 @@ def obter_worksheet_leads():
 
 def validar_cabecalho_planilha(valores: list[list[str]]) -> None:
     """
-    Garante que a linha 1 da aba Leads está na ordem esperada.
+    Garante a estrutura da aba Leads sem apagar dados existentes.
 
-    Compatibilidade automática:
-    caso a planilha ainda esteja com as 11 colunas antigas, o dashboard
-    cria a coluna Telefone em L1 sem apagar nenhum dado existente.
+    Quando novas colunas são adicionadas ao dashboard, elas são incluídas
+    automaticamente no final da linha 1 da planilha.
     """
     worksheet = obter_worksheet_leads()
 
     if not valores:
+        ultima_coluna = rowcol_to_a1(1, len(COLUNAS_PLANILHA))
         worksheet.update(
-            range_name="A1:L1",
+            range_name=f"A1:{ultima_coluna}",
             values=[COLUNAS_PLANILHA],
         )
         return
@@ -3015,26 +3022,29 @@ def validar_cabecalho_planilha(valores: list[list[str]]) -> None:
         for valor in valores[0]
     ]
 
-    cabecalho_atual = cabecalho_existente[: len(COLUNAS_PLANILHA)]
-    cabecalho_legado = cabecalho_existente[: len(COLUNAS_PLANILHA_LEGADO)]
+    quantidade_existente = len(cabecalho_existente)
+    prefixo_esperado = COLUNAS_PLANILHA[:quantidade_existente]
 
-    if cabecalho_atual == COLUNAS_PLANILHA:
-        return
+    if cabecalho_existente != prefixo_esperado:
+        esperado = " | ".join(COLUNAS_PLANILHA)
+        encontrado = " | ".join(cabecalho_existente)
 
-    if cabecalho_legado == COLUNAS_PLANILHA_LEGADO:
-        worksheet.update(
-            range_name="L1",
-            values=[["Telefone"]],
+        raise RuntimeError(
+            "A linha 1 da aba Leads não está na ordem esperada. "
+            f"Esperado: {esperado}. Encontrado: {encontrado}."
         )
-        return
 
-    esperado = " | ".join(COLUNAS_PLANILHA)
-    encontrado = " | ".join(cabecalho_existente)
+    if quantidade_existente < len(COLUNAS_PLANILHA):
+        primeira_nova_coluna = quantidade_existente + 1
+        ultima_nova_coluna = len(COLUNAS_PLANILHA)
 
-    raise RuntimeError(
-        "A linha 1 da aba Leads não está na ordem esperada. "
-        f"Esperado: {esperado}. Encontrado: {encontrado}."
-    )
+        inicio = rowcol_to_a1(1, primeira_nova_coluna)
+        fim = rowcol_to_a1(1, ultima_nova_coluna)
+
+        worksheet.update(
+            range_name=f"{inicio}:{fim}",
+            values=[COLUNAS_PLANILHA[quantidade_existente:]],
+        )
 
 
 @st.cache_data(ttl=8, show_spinner=False)
@@ -3111,6 +3121,11 @@ def salvar_novo_lead_planilha(cadastro: dict) -> str:
         ),
         agora,
         str(cadastro.get("Telefone", "")).strip(),
+        "",
+        "",
+        "Não enviado",
+        "",
+        "",
     ]
 
     worksheet.append_row(
@@ -3120,6 +3135,302 @@ def salvar_novo_lead_planilha(cadastro: dict) -> str:
 
     limpar_cache_planilha()
     return id_lead
+
+
+
+def obter_configuracao_zapsign() -> dict:
+    """
+    Lê a configuração da ZapSign nos Secrets do Streamlit.
+
+    Formato esperado:
+    [zapsign]
+    api_token = "..."
+    template_id = "..."
+    base_url = "https://api.zapsign.com.br"
+    """
+    if "zapsign" not in st.secrets:
+        raise RuntimeError(
+            "A seção [zapsign] não foi encontrada nos Secrets do Streamlit."
+        )
+
+    config = st.secrets["zapsign"]
+
+    api_token = str(config.get("api_token", "")).strip()
+    template_id = str(config.get("template_id", "")).strip()
+    base_url = str(
+        config.get("base_url", "https://api.zapsign.com.br")
+    ).strip().rstrip("/")
+
+    if not api_token:
+        raise RuntimeError("O api_token da ZapSign não foi configurado.")
+
+    if not template_id:
+        raise RuntimeError("O template_id da ZapSign não foi configurado.")
+
+    return {
+        "api_token": api_token,
+        "template_id": template_id,
+        "base_url": base_url,
+    }
+
+
+def normalizar_telefone_zapsign(telefone: str) -> str:
+    """
+    Envia somente DDD + número para a ZapSign.
+    O código do Brasil é enviado separadamente como 55.
+    """
+    digitos = somente_digitos(telefone)
+
+    if digitos.startswith("55") and len(digitos) > 11:
+        digitos = digitos[2:]
+
+    return digitos
+
+
+def enviar_post_json_zapsign(
+    endpoint: str,
+    payload: dict,
+) -> dict:
+    config = obter_configuracao_zapsign()
+    url = f'{config["base_url"]}{endpoint}'
+
+    corpo = json.dumps(
+        payload,
+        ensure_ascii=False,
+    ).encode("utf-8")
+
+    requisicao = Request(
+        url=url,
+        data=corpo,
+        headers={
+            "Authorization": f'Bearer {config["api_token"]}',
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+        method="POST",
+    )
+
+    try:
+        with urlopen(requisicao, timeout=35) as resposta:
+            conteudo = resposta.read().decode("utf-8")
+            return json.loads(conteudo) if conteudo else {}
+
+    except HTTPError as erro:
+        detalhe = erro.read().decode("utf-8", errors="replace")
+        detalhe = detalhe[:600]
+
+        raise RuntimeError(
+            f"ZapSign retornou HTTP {erro.code}. Detalhes: {detalhe}"
+        ) from erro
+
+    except URLError as erro:
+        raise RuntimeError(
+            f"Não foi possível acessar a ZapSign: {erro.reason}"
+        ) from erro
+
+
+def criar_contrato_zapsign(
+    cadastro: dict,
+    id_lead: str,
+) -> dict:
+    """
+    Cria o contrato do aluno a partir do modelo DOCX e solicita
+    o envio automático do e-mail com o link de assinatura.
+    """
+    config = obter_configuracao_zapsign()
+
+    nome = str(cadastro.get("Nome Completo", "")).strip()
+    email = str(cadastro.get("E-mail", "")).strip()
+    telefone_original = str(cadastro.get("Telefone", "")).strip()
+    telefone = normalizar_telefone_zapsign(telefone_original)
+
+    if not email:
+        raise RuntimeError(
+            "Preencha o e-mail do aluno para enviar o contrato."
+        )
+
+    payload = {
+        "template_id": config["template_id"],
+        "signer_name": nome,
+        "signer_email": email,
+        "signer_phone_country": "55",
+        "signer_phone_number": telefone,
+        "lang": "pt-br",
+        "send_automatic_email": True,
+        "disable_signer_emails": False,
+        "brand_name": "Fight for Life",
+        "brand_primary_color": "#fbc410",
+        "external_id": id_lead,
+        "folder_path": "/Fight for Life/Contratos/",
+        "custom_message": (
+            f"Olá, {nome}!\\n\\n"
+            "Seu cadastro na Fight for Life foi realizado com sucesso. "
+            "Esta é a próxima etapa da sua matrícula. "
+            "Confira o contrato e conclua sua assinatura digital.\\n\\n"
+            "Fight for Life"
+        ),
+        "signature_order_active": True,
+        "data": [
+            {
+                "de": "{{NOME_COMPLETO}}",
+                "para": nome,
+            },
+            {
+                "de": "{{CPF}}",
+                "para": str(cadastro.get("CPF", "")).strip(),
+            },
+            {
+                "de": "{{DATA_NASCIMENTO}}",
+                "para": str(
+                    cadastro.get("Data de Nascimento", "")
+                ).strip(),
+            },
+            {
+                "de": "{{TELEFONE}}",
+                "para": telefone_original,
+            },
+            {
+                "de": "{{EMAIL}}",
+                "para": email,
+            },
+            {
+                "de": "{{ENDERECO}}",
+                "para": str(cadastro.get("Endereço", "")).strip(),
+            },
+            {
+                "de": "{{MODALIDADE}}",
+                "para": str(
+                    cadastro.get("Produto ou Serviço", "")
+                ).strip(),
+            },
+        ],
+    }
+
+    resposta = enviar_post_json_zapsign(
+        endpoint="/api/v1/models/create-doc/",
+        payload=payload,
+    )
+
+    token_documento = str(resposta.get("token", "")).strip()
+    signatarios = resposta.get("signers", []) or []
+
+    signatario_aluno = None
+
+    for signatario in signatarios:
+        email_signatario = str(signatario.get("email", "")).strip().lower()
+
+        if email_signatario and email_signatario == email.lower():
+            signatario_aluno = signatario
+            break
+
+    if signatario_aluno is None and signatarios:
+        signatario_aluno = signatarios[0]
+
+    signatario_aluno = signatario_aluno or {}
+
+    token_signatario = str(
+        signatario_aluno.get("token", "")
+    ).strip()
+
+    link_assinatura = str(
+        signatario_aluno.get("sign_url", "")
+    ).strip()
+
+    if not link_assinatura and token_signatario:
+        link_assinatura = (
+            f"https://app.zapsign.com.br/verificar/{token_signatario}"
+        )
+
+    if not token_documento:
+        raise RuntimeError(
+            "A ZapSign criou uma resposta sem o token do documento."
+        )
+
+    return {
+        "token_documento": token_documento,
+        "link_assinatura": link_assinatura,
+        "status_contrato": str(
+            resposta.get("status", "pending")
+        ).strip() or "pending",
+    }
+
+
+def atualizar_dados_contrato_planilha(
+    id_lead: str,
+    token_documento: str = "",
+    link_assinatura: str = "",
+    status_contrato: str = "",
+    data_envio: str = "",
+    erro_envio: str = "",
+) -> None:
+    """
+    Salva o resultado da integração ZapSign na mesma linha do aluno.
+    """
+    worksheet = obter_worksheet_leads()
+    linha = localizar_linha_por_id(id_lead)
+
+    indice_inicial = COLUNAS_PLANILHA.index(
+        "Token Documento ZapSign"
+    ) + 1
+
+    indice_final = COLUNAS_PLANILHA.index(
+        "Erro Envio Contrato"
+    ) + 1
+
+    inicio = rowcol_to_a1(linha, indice_inicial)
+    fim = rowcol_to_a1(linha, indice_final)
+
+    worksheet.update(
+        range_name=f"{inicio}:{fim}",
+        values=[[
+            str(token_documento).strip(),
+            str(link_assinatura).strip(),
+            str(status_contrato).strip(),
+            str(data_envio).strip(),
+            str(erro_envio).strip(),
+        ]],
+        value_input_option="USER_ENTERED",
+    )
+
+    limpar_cache_planilha()
+
+
+def enviar_contrato_aluno_zapsign(
+    cadastro: dict,
+    id_lead: str,
+) -> dict:
+    """
+    Executa o envio e registra o resultado na planilha.
+    """
+    data_envio = obter_data_hora_atual()
+
+    try:
+        resultado = criar_contrato_zapsign(
+            cadastro=cadastro,
+            id_lead=id_lead,
+        )
+
+        atualizar_dados_contrato_planilha(
+            id_lead=id_lead,
+            token_documento=resultado["token_documento"],
+            link_assinatura=resultado["link_assinatura"],
+            status_contrato="Aguardando assinatura",
+            data_envio=data_envio,
+            erro_envio="",
+        )
+
+        return resultado
+
+    except Exception as erro:
+        atualizar_dados_contrato_planilha(
+            id_lead=id_lead,
+            status_contrato="Erro no envio",
+            data_envio=data_envio,
+            erro_envio=str(erro)[:700],
+        )
+
+        raise
+
 
 
 def localizar_linha_por_id(id_lead: str) -> int:
@@ -3400,6 +3711,23 @@ def render_ficha_lead_preenchida(
         f'<div class="busca-status-localizado">Quadro atual: {status_atual}</div>',
         unsafe_allow_html=True,
     )
+
+    status_contrato = str(
+        cadastro.get("Status Contrato", "Não enviado")
+    ).strip() or "Não enviado"
+
+    st.caption(f"Contrato digital: {status_contrato}")
+
+    link_assinatura = str(
+        cadastro.get("Link Assinatura ZapSign", "")
+    ).strip()
+
+    if link_assinatura:
+        st.link_button(
+            "Abrir link de assinatura",
+            link_assinatura,
+            use_container_width=True,
+        )
 
     with st.form(
         f"formulario_ficha_{chave_prefixo}_{id_lead}",
@@ -3730,6 +4058,10 @@ def render_formulario_retratil_comercial() -> None:
         if enviar:
             if not nome_completo.strip():
                 st.error("Preencha o nome completo.")
+            elif not email.strip():
+                st.error(
+                    "Preencha o e-mail do aluno para enviar o contrato."
+                )
             elif not produto_servico:
                 st.error("Selecione o produto ou serviço escolhido.")
             else:
@@ -3750,19 +4082,33 @@ def render_formulario_retratil_comercial() -> None:
                 }
 
                 try:
-                    salvar_novo_lead_planilha(cadastro)
+                    id_lead = salvar_novo_lead_planilha(cadastro)
                 except Exception as erro:
                     st.error(
-                        "Não foi possível salvar o aluno na planilha."
+                        "Não foi possível salvar o aluno no banco de dados."
                     )
                     st.caption(f"Detalhes técnicos: {erro}")
                     return
 
+                try:
+                    enviar_contrato_aluno_zapsign(
+                        cadastro=cadastro,
+                        id_lead=id_lead,
+                    )
+
+                    st.success(
+                        "Aluno cadastrado e contrato enviado por e-mail "
+                        "para assinatura digital."
+                    )
+
+                except Exception as erro:
+                    st.warning(
+                        "O aluno foi salvo no banco de dados, mas o contrato "
+                        "não pôde ser enviado pela ZapSign."
+                    )
+                    st.caption(f"Detalhes técnicos: {erro}")
+
                 st.session_state["status_card_selecionado"] = status_comercial
-                st.success(
-                    f'Aluno salvo na planilha no status: {status_comercial}.'
-                )
-                st.rerun()
 
 
 
