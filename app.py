@@ -2611,6 +2611,20 @@ def aplicar_css_dashboard_claro() -> None:
                     top: 0.65rem !important;
                 }
             }
+
+
+            /* GARANTE VISIBILIDADE REAL DO CONTEÚDO DO MENU */
+            [data-testid="stSidebar"] {
+                overflow: visible !important;
+            }
+
+            [data-testid="stSidebar"] > div:first-child,
+            [data-testid="stSidebar"] [data-testid="stSidebarContent"],
+            [data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
+                opacity: 1 !important;
+                transform: none !important;
+                visibility: visible !important;
+            }
 </style>
         ''',
         unsafe_allow_html=True,
@@ -3551,18 +3565,57 @@ def render_formulario_retratil_comercial() -> None:
 
 def render_toggle_menu_lateral() -> None:
     """
-    Controla o menu lateral com uma setinha própria.
-    Não depende mais do botão nativo do Streamlit, que pode desaparecer
-    após reruns e atualizações automáticas.
+    Controla o menu lateral com uma setinha própria e estável.
+
+    Quando aberto, força a barra lateral e todo o conteúdo interno
+    a ficarem visíveis. Quando fechado, oculta completamente a barra
+    para liberar o espaço do dashboard.
     """
     st.session_state.setdefault("menu_lateral_aberto", True)
 
     menu_aberto = bool(st.session_state["menu_lateral_aberto"])
     icone = "‹" if menu_aberto else "›"
 
-    left_position = "222px" if menu_aberto else "12px"
+    if menu_aberto:
+        sidebar_css = """
+            display: block !important;
+            left: 0 !important;
+            max-width: 258px !important;
+            min-width: 258px !important;
+            opacity: 1 !important;
+            transform: translateX(0) !important;
+            visibility: visible !important;
+            width: 258px !important;
+        """
 
-    display_sidebar = "block" if menu_aberto else "none"
+        sidebar_content_css = """
+            display: block !important;
+            max-width: 258px !important;
+            min-width: 258px !important;
+            opacity: 1 !important;
+            transform: none !important;
+            visibility: visible !important;
+            width: 258px !important;
+        """
+
+        left_position = "222px"
+    else:
+        sidebar_css = """
+            display: none !important;
+            max-width: 0 !important;
+            min-width: 0 !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            width: 0 !important;
+        """
+
+        sidebar_content_css = """
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+        """
+
+        left_position = "12px"
 
     st.markdown(
         f"""
@@ -3572,7 +3625,13 @@ def render_toggle_menu_lateral() -> None:
             }}
 
             [data-testid="stSidebar"] {{
-                display: {display_sidebar} !important;
+                {sidebar_css}
+            }}
+
+            [data-testid="stSidebar"] > div:first-child,
+            [data-testid="stSidebar"] [data-testid="stSidebarContent"],
+            [data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {{
+                {sidebar_content_css}
             }}
         </style>
         """,
@@ -3587,7 +3646,6 @@ def render_toggle_menu_lateral() -> None:
         ):
             st.session_state["menu_lateral_aberto"] = not menu_aberto
             st.rerun()
-
 
 
 def exibir_dashboard_inicial() -> None:
