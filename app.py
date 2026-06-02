@@ -2556,6 +2556,61 @@ def aplicar_css_dashboard_claro() -> None:
                     padding: 0.70rem !important;
                 }
             }
+
+
+            /* SETINHA PRÓPRIA DO MENU — SEMPRE VISÍVEL */
+            [data-testid="stSidebarCollapsedControl"],
+            [data-testid="collapsedControl"],
+            [data-testid="stSidebarCollapseButton"] {
+                display: none !important;
+            }
+
+            .st-key-toggle_menu_lateral {
+                left: var(--menu-toggle-left, 222px) !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                position: fixed !important;
+                top: 0.85rem !important;
+                width: 38px !important;
+                z-index: 9999999 !important;
+            }
+
+            .st-key-toggle_menu_lateral button {
+                align-items: center !important;
+                background: #fbc410 !important;
+                border: 1px solid #fbc410 !important;
+                border-radius: 10px !important;
+                box-shadow: 0 8px 18px rgba(0,0,0,0.18) !important;
+                color: #000000 !important;
+                display: flex !important;
+                font-size: 1.15rem !important;
+                font-weight: 900 !important;
+                height: 38px !important;
+                justify-content: center !important;
+                min-height: 38px !important;
+                padding: 0 !important;
+                width: 38px !important;
+            }
+
+            .st-key-toggle_menu_lateral button:hover {
+                background: #ffd234 !important;
+                border-color: #ffd234 !important;
+                transform: translateY(-1px) !important;
+            }
+
+            .st-key-toggle_menu_lateral button p {
+                color: #000000 !important;
+                font-size: 1.15rem !important;
+                font-weight: 900 !important;
+                line-height: 1 !important;
+                margin: 0 !important;
+            }
+
+            @media (max-width: 900px) {
+                .st-key-toggle_menu_lateral {
+                    top: 0.65rem !important;
+                }
+            }
 </style>
         ''',
         unsafe_allow_html=True,
@@ -3493,8 +3548,51 @@ def render_formulario_retratil_comercial() -> None:
 
 
 
+
+def render_toggle_menu_lateral() -> None:
+    """
+    Controla o menu lateral com uma setinha própria.
+    Não depende mais do botão nativo do Streamlit, que pode desaparecer
+    após reruns e atualizações automáticas.
+    """
+    st.session_state.setdefault("menu_lateral_aberto", True)
+
+    menu_aberto = bool(st.session_state["menu_lateral_aberto"])
+    icone = "‹" if menu_aberto else "›"
+
+    left_position = "222px" if menu_aberto else "12px"
+
+    display_sidebar = "block" if menu_aberto else "none"
+
+    st.markdown(
+        f"""
+        <style>
+            :root {{
+                --menu-toggle-left: {left_position};
+            }}
+
+            [data-testid="stSidebar"] {{
+                display: {display_sidebar} !important;
+            }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    with st.container(key="toggle_menu_lateral"):
+        if st.button(
+            icone,
+            key="acao_toggle_menu_lateral",
+            help="Abrir ou fechar menu",
+        ):
+            st.session_state["menu_lateral_aberto"] = not menu_aberto
+            st.rerun()
+
+
+
 def exibir_dashboard_inicial() -> None:
     aplicar_css_dashboard_claro()
+    render_toggle_menu_lateral()
 
     logo_b64 = arquivo_para_base64(LOGO_PATH)
 
