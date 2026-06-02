@@ -3051,7 +3051,14 @@ def validar_cabecalho_planilha(valores: list[list[str]]) -> None:
 def carregar_cadastros_planilha() -> list[dict]:
     """
     Lê os leads salvos no Google Sheets.
-    O cache reduz chamadas repetidas à API e é limpo após cada alteração.
+
+    Quando um novo contato entra pela automação do WhatsApp, a linha pode
+    chegar apenas com o telefone e sem IDLead. Nesse caso, o dashboard:
+    - identifica automaticamente a nova linha;
+    - gera um IDLead;
+    - define o status inicial como Novo Lead;
+    - registra as datas de cadastro e atualização;
+    - passa a exibir o contato nos cards comerciais.
     """
     worksheet = obter_worksheet_leads()
     valores = worksheet.get_all_values()
@@ -3068,13 +3075,47 @@ def carregar_cadastros_planilha() -> list[dict]:
             len(COLUNAS_PLANILHA) - len(linha)
         )
 
+        linha_completa = linha_completa[: len(COLUNAS_PLANILHA)]
+
+        possui_alguma_informacao = any(
+            str(valor).strip()
+            for valor in linha_completa
+        )
+
+        if not possui_alguma_informacao:
+            continue
+
+        id_lead = str(linha_completa[0]).strip()
+
+        if not id_lead:
+            agora = obter_data_hora_atual()
+            id_lead = gerar_id_lead()
+
+            linha_completa[0] = id_lead
+
+            if not str(linha_completa[1]).strip():
+                linha_completa[1] = agora
+
+            if not str(linha_completa[9]).strip():
+                linha_completa[9] = "Novo Lead"
+
+            if not str(linha_completa[10]).strip():
+                linha_completa[10] = agora
+
+            worksheet.update(
+                range_name=f"A{numero_linha}:K{numero_linha}",
+                values=[linha_completa[:11]],
+                value_input_option="USER_ENTERED",
+            )
+
         cadastro = {
             coluna: str(linha_completa[indice]).strip()
             for indice, coluna in enumerate(COLUNAS_PLANILHA)
         }
 
-        if not cadastro["IDLead"]:
-            continue
+        cadastro["Status Comercial"] = normalizar_status_comercial(
+            cadastro.get("Status Comercial", "Novo Lead")
+        )
 
         cadastro["_Linha Planilha"] = numero_linha
         cadastros.append(cadastro)
@@ -3473,6 +3514,43 @@ def atualizar_status_lead_planilha(
     limpar_cache_planilha()
 
 
+def atualizar_cadastro_lead_planilha(
+    id_lead: str,
+    cadastro: dict,
+) -> None:
+    """
+    Atualiza os dados editáveis da ficha do aluno.
+
+    O telefone não é alterado aqui porque ele vem automaticamente
+    do WhatsApp e permanece bloqueado no formulário.
+    """
+    worksheet = obter_worksheet_leads()
+    linha = localizar_linha_por_id(id_lead)
+    agora = obter_data_hora_atual()
+
+    valores = [[
+        str(cadastro.get("Nome Completo", "")).strip(),
+        str(cadastro.get("Data de Nascimento", "")).strip(),
+        str(cadastro.get("CPF", "")).strip(),
+        str(cadastro.get("E-mail", "")).strip(),
+        str(cadastro.get("Endereço", "")).strip(),
+        str(cadastro.get("Produto ou Serviço", "")).strip(),
+        str(cadastro.get("Rede Social", "")).strip(),
+        normalizar_status_comercial(
+            cadastro.get("Status Comercial", "Novo Lead")
+        ),
+        agora,
+    ]]
+
+    worksheet.update(
+        range_name=f"C{linha}:K{linha}",
+        values=valores,
+        value_input_option="USER_ENTERED",
+    )
+
+    limpar_cache_planilha()
+
+
 def testar_conexao_planilha() -> tuple[bool, str]:
     """
     Faz uma leitura simples para exibir um retorno amigável no menu lateral.
@@ -3702,6 +3780,12 @@ def render_ficha_lead_preenchida(
     cadastro: dict,
     chave_prefixo: str,
 ) -> None:
+    """
+    Exibe a ficha completa do lead.
+
+    Todos os dados podem ser complementados ou corrigidos diretamente
+    no dashboard, exceto o telefone, que vem da automação do WhatsApp.
+    """
     status_atual = normalizar_status_comercial(
         cadastro.get("Status Comercial", "Novo Lead")
     )
@@ -3729,28 +3813,42 @@ def render_ficha_lead_preenchida(
             use_container_width=True,
         )
 
+    produtos_disponiveis = [
+        "",
+        "Muay Thai",
+        "Jiu-Jitsu",
+        "Jiu-Jitsu Infantil",
+        "MMA",
+    ]
+
+    produto_atual = str(
+        cadastro.get("Produto ou Serviço", "")
+    ).strip()
+
+    if produto_atual and produto_atual not in produtos_disponiveis:
+        produtos_disponiveis.append(produto_atual)
+
     with st.form(
         f"formulario_ficha_{chave_prefixo}_{id_lead}",
         clear_on_submit=False,
     ):
-        st.text_input(
+        nome_completo = st.text_input(
             "Nome Completo",
             value=str(cadastro.get("Nome Completo", "")),
-            disabled=True,
             key=f"{chave_prefixo}_nome_{id_lead}",
         )
 
-        st.text_input(
+        data_nascimento = st.text_input(
             "Data de Nascimento",
             value=str(cadastro.get("Data de Nascimento", "")),
-            disabled=True,
+            placeholder="DD/MM/AAAA",
             key=f"{chave_prefixo}_data_{id_lead}",
         )
 
-        st.text_input(
+        cpf = st.text_input(
             "CPF",
             value=str(cadastro.get("CPF", "")),
-            disabled=True,
+            placeholder="000.000.000-00",
             key=f"{chave_prefixo}_cpf_{id_lead}",
         )
 
@@ -3758,34 +3856,35 @@ def render_ficha_lead_preenchida(
             "Telefone",
             value=str(cadastro.get("Telefone", "")),
             disabled=True,
+            help="O telefone vem automaticamente do WhatsApp e não pode ser alterado nesta ficha.",
             key=f"{chave_prefixo}_telefone_{id_lead}",
         )
 
-        st.text_input(
+        email = st.text_input(
             "E-mail",
             value=str(cadastro.get("E-mail", "")),
-            disabled=True,
+            placeholder="nome@exemplo.com",
             key=f"{chave_prefixo}_email_{id_lead}",
         )
 
-        st.text_area(
+        endereco = st.text_area(
             "Endereço",
             value=str(cadastro.get("Endereço", "")),
-            disabled=True,
+            placeholder="Digite o endereço completo",
             key=f"{chave_prefixo}_endereco_{id_lead}",
         )
 
-        st.text_input(
+        produto_servico = st.selectbox(
             "Produto ou Serviço escolhido",
-            value=str(cadastro.get("Produto ou Serviço", "")),
-            disabled=True,
+            options=produtos_disponiveis,
+            index=produtos_disponiveis.index(produto_atual),
             key=f"{chave_prefixo}_produto_{id_lead}",
         )
 
-        st.text_input(
+        rede_social = st.text_input(
             "Rede Social",
             value=str(cadastro.get("Rede Social", "")),
-            disabled=True,
+            placeholder="@usuario ou link do perfil",
             key=f"{chave_prefixo}_rede_{id_lead}",
         )
 
@@ -3796,25 +3895,35 @@ def render_ficha_lead_preenchida(
             key=f"{chave_prefixo}_status_{id_lead}",
         )
 
-        salvar_status = st.form_submit_button(
-            "Salvar novo status"
+        salvar_cadastro = st.form_submit_button(
+            "Salvar cadastro"
         )
 
-    if salvar_status:
+    if salvar_cadastro:
+        cadastro_atualizado = {
+            "Nome Completo": nome_completo,
+            "Data de Nascimento": data_nascimento,
+            "CPF": cpf,
+            "E-mail": email,
+            "Endereço": endereco,
+            "Produto ou Serviço": produto_servico,
+            "Rede Social": rede_social,
+            "Status Comercial": novo_status,
+        }
+
         try:
-            atualizar_status_lead_planilha(
+            atualizar_cadastro_lead_planilha(
                 id_lead=id_lead,
-                novo_status=novo_status,
+                cadastro=cadastro_atualizado,
             )
         except Exception as erro:
-            st.error("Não foi possível atualizar o status na planilha.")
+            st.error("Não foi possível atualizar o cadastro no banco de dados.")
             st.caption(f"Detalhes técnicos: {erro}")
             return
 
         st.session_state["status_card_selecionado"] = novo_status
         st.success(
-            f'Status de {cadastro.get("Nome Completo", "aluno")} '
-            f'alterado para: {novo_status}.'
+            f'Cadastro de {nome_completo or "aluno"} atualizado com sucesso.'
         )
         st.rerun()
 
