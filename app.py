@@ -3670,7 +3670,7 @@ def render_formulario_retratil_comercial() -> None:
             <div class="form-card-badge">Formulário comercial</div>
             <p class="form-card-intro">
                 Abra o formulário para registrar os dados do novo aluno.
-                Os dados serão salvos automaticamente na planilha da academia.
+                Os dados serão salvos automaticamente no banco de dados da academia.
             </p>
             """,
             unsafe_allow_html=True,
