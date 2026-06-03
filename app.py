@@ -3047,8 +3047,6 @@ def validar_cabecalho_planilha(valores: list[list[str]]) -> None:
         )
 
 
-@st.cache_data(ttl=8, show_spinner=False)
-
 def normalizar_telefone_lead(valor: str) -> str:
     """
     Normaliza o telefone para comparar leads vindos do WhatsApp.
@@ -3067,6 +3065,7 @@ def normalizar_telefone_lead(valor: str) -> str:
 
 
 
+@st.cache_data(ttl=8, show_spinner=False)
 def carregar_cadastros_planilha() -> list[dict]:
     """
     Lê os leads salvos no Google Sheets.
