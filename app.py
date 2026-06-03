@@ -5992,7 +5992,7 @@ def render_formulario_retratil_comercial(
                 <div class="form-section-block">
                     <p class="form-section-title">Foto do rosto do aluno</p>
                     <p class="form-section-sub">
-                        Tire uma foto na hora ou selecione uma imagem já salva no aparelho.
+                        Selecione uma imagem já salva no aparelho.
                     </p>
                 </div>
                 <p class="foto-rosto-info">
@@ -6003,23 +6003,12 @@ def render_formulario_retratil_comercial(
                 unsafe_allow_html=True,
             )
 
-            coluna_camera, coluna_galeria = st.columns(2)
-
-            with coluna_camera:
-                foto_rosto_camera = st.camera_input(
-                    "Tirar foto do rosto",
-                    key="cadastro_foto_rosto_camera",
-                )
-
-            with coluna_galeria:
-                foto_rosto_upload = st.file_uploader(
-                    "Ou selecionar foto da galeria",
-                    type=["jpg", "jpeg", "png"],
-                    accept_multiple_files=False,
-                    key="cadastro_foto_rosto_upload",
-                )
-
-            foto_rosto = foto_rosto_camera or foto_rosto_upload
+            foto_rosto = st.file_uploader(
+                "Enviar foto do rosto",
+                type=["jpg", "jpeg", "png"],
+                accept_multiple_files=False,
+                key="cadastro_foto_rosto_upload",
+            )
 
             if foto_rosto is not None:
                 st.markdown(
