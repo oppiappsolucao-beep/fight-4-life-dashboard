@@ -3048,17 +3048,39 @@ def validar_cabecalho_planilha(valores: list[list[str]]) -> None:
 
 
 @st.cache_data(ttl=8, show_spinner=False)
+
+def normalizar_telefone_lead(valor: str) -> str:
+    """
+    Normaliza o telefone para comparar leads vindos do WhatsApp.
+
+    Exemplos equivalentes:
+    5511983637594
+    (11) 98363-7594
+    11 98363 7594
+    """
+    digitos = re.sub(r"\D", "", str(valor or ""))
+
+    if digitos.startswith("55") and len(digitos) > 11:
+        digitos = digitos[2:]
+
+    return digitos
+
+
+
 def carregar_cadastros_planilha() -> list[dict]:
     """
     Lê os leads salvos no Google Sheets.
 
     Quando um novo contato entra pela automação do WhatsApp, a linha pode
-    chegar apenas com o telefone e sem IDLead. Nesse caso, o dashboard:
+    chegar somente com o telefone e sem IDLead. Nesse caso, o dashboard:
     - identifica automaticamente a nova linha;
     - gera um IDLead;
     - define o status inicial como Novo Lead;
     - registra as datas de cadastro e atualização;
-    - passa a exibir o contato nos cards comerciais.
+    - exibe apenas um cadastro por telefone.
+
+    Caso o WhatsApp envie novamente o mesmo número, a linha duplicada não
+    entra nos cards e não cria outro lead.
     """
     worksheet = obter_worksheet_leads()
     valores = worksheet.get_all_values()
@@ -3069,6 +3091,7 @@ def carregar_cadastros_planilha() -> list[dict]:
         return []
 
     cadastros = []
+    telefones_vistos = set()
 
     for numero_linha, linha in enumerate(valores[1:], start=2):
         linha_completa = list(linha) + [""] * (
@@ -3083,6 +3106,13 @@ def carregar_cadastros_planilha() -> list[dict]:
         )
 
         if not possui_alguma_informacao:
+            continue
+
+        telefone_normalizado = normalizar_telefone_lead(
+            linha_completa[11]
+        )
+
+        if telefone_normalizado and telefone_normalizado in telefones_vistos:
             continue
 
         id_lead = str(linha_completa[0]).strip()
@@ -3120,6 +3150,9 @@ def carregar_cadastros_planilha() -> list[dict]:
         cadastro["_Linha Planilha"] = numero_linha
         cadastros.append(cadastro)
 
+        if telefone_normalizado:
+            telefones_vistos.add(telefone_normalizado)
+
     return cadastros
 
 
@@ -3139,10 +3172,42 @@ def gerar_id_lead() -> str:
     return f"LEAD-{uuid.uuid4().hex[:10].upper()}"
 
 
+
+def telefone_ja_cadastrado(telefone: str) -> bool:
+    """
+    Verifica se o telefone já existe no banco de dados antes de criar
+    um novo lead manualmente.
+    """
+    telefone_normalizado = normalizar_telefone_lead(telefone)
+
+    if not telefone_normalizado:
+        return False
+
+    for cadastro in carregar_cadastros_planilha():
+        telefone_existente = normalizar_telefone_lead(
+            cadastro.get("Telefone", "")
+        )
+
+        if telefone_existente == telefone_normalizado:
+            return True
+
+    return False
+
+
+
 def salvar_novo_lead_planilha(cadastro: dict) -> str:
     """
     Cria uma nova linha na planilha e devolve o ID gerado.
+
+    Telefones já existentes não são cadastrados novamente.
     """
+    telefone = str(cadastro.get("Telefone", "")).strip()
+
+    if telefone_ja_cadastrado(telefone):
+        raise RuntimeError(
+            "Este telefone já está cadastrado no banco de dados."
+        )
+
     worksheet = obter_worksheet_leads()
     id_lead = gerar_id_lead()
     agora = obter_data_hora_atual()
@@ -3764,7 +3829,7 @@ def buscar_leads_comerciais(termo: str) -> list[dict]:
     for cadastro in obter_cadastros_comerciais():
         nome = normalizar_texto_busca(cadastro.get("Nome Completo", ""))
         cpf = somente_digitos(cadastro.get("CPF", ""))
-        telefone = somente_digitos(cadastro.get("Telefone", ""))
+        telefone = normalizar_telefone_lead(cadastro.get("Telefone", ""))
 
         encontrou_nome = termo_texto in nome
         encontrou_cpf = bool(termo_numerico) and termo_numerico in cpf
