@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import hmac
 import hashlib
+import html
 import json
 import os
 import re
@@ -15,7 +16,6 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import gspread
-import pandas as pd
 import streamlit as st
 from google.oauth2.service_account import Credentials
 from gspread.utils import rowcol_to_a1
@@ -2898,79 +2898,178 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
 
-            /* LISTAGEM DE ALUNOS EM FORMATO DE PLANILHA */
-            .records-sheet-head {
+            /* TABELA COMERCIAL INSPIRADA NA REFERÊNCIA */
+            .commercial-table-head {
                 align-items: center;
-                background: linear-gradient(90deg, #08285f 0%, #0a3478 100%);
-                border-radius: 12px 12px 0 0;
-                color: #ffffff !important;
+                background: #08285f;
+                border-radius: 10px 10px 0 0;
                 display: flex;
                 justify-content: space-between;
-                margin-top: 0.10rem;
-                padding: 0.70rem 0.82rem;
+                margin-top: 0.18rem;
+                padding: 0.62rem 0.72rem;
             }
 
-            .records-sheet-title {
+            .commercial-table-head-title {
                 color: #ffffff !important;
-                font-size: 0.80rem !important;
+                font-size: 0.78rem !important;
                 font-weight: 900 !important;
-                letter-spacing: 0.035rem !important;
+                letter-spacing: 0.045rem !important;
                 margin: 0 !important;
                 text-transform: uppercase !important;
             }
 
-            .records-sheet-sub {
-                color: rgba(255,255,255,0.80) !important;
-                font-size: 0.62rem !important;
-                margin: 0.18rem 0 0 0 !important;
+            .commercial-table-head-sub {
+                color: rgba(255,255,255,0.82) !important;
+                font-size: 0.61rem !important;
+                margin: 0.15rem 0 0 0 !important;
             }
 
-            .records-sheet-count {
-                background: rgba(255,255,255,0.16);
-                border: 1px solid rgba(255,255,255,0.20);
+            .commercial-table-count {
+                background: rgba(255,255,255,0.14);
+                border: 1px solid rgba(255,255,255,0.22);
                 border-radius: 999px;
                 color: #ffffff !important;
-                font-size: 0.62rem !important;
+                font-size: 0.61rem !important;
                 font-weight: 900 !important;
-                padding: 0.36rem 0.56rem;
+                padding: 0.34rem 0.52rem;
                 white-space: nowrap;
             }
 
-            .records-sheet-note {
-                background: #f4f7fb;
-                border-bottom: 1px solid #dbe3ee;
-                border-left: 1px solid #dbe3ee;
-                border-right: 1px solid #dbe3ee;
-                color: #5a6678 !important;
-                font-size: 0.63rem !important;
+            .commercial-table-columns {
+                background: #0b3474;
+                border-top: 1px solid rgba(255,255,255,0.16);
+                color: #ffffff !important;
+                display: grid;
+                font-size: 0.61rem !important;
+                font-weight: 900 !important;
+                gap: 0;
+                grid-template-columns: 0.52fr 2.25fr 1.20fr 1.05fr 2.05fr 1.08fr 0.72fr;
+                letter-spacing: 0.025rem !important;
+                padding: 0.45rem 0.58rem;
+            }
+
+            .commercial-table-columns span {
+                color: #ffffff !important;
+                overflow: hidden;
+                padding-right: 0.35rem;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .commercial-table-help {
+                background: #f5f7fb;
+                border-bottom: 1px solid #dae2ed;
+                border-left: 1px solid #dae2ed;
+                border-right: 1px solid #dae2ed;
+                color: #5d6877 !important;
+                font-size: 0.61rem !important;
                 line-height: 1.40 !important;
                 margin: 0 !important;
-                padding: 0.46rem 0.72rem !important;
+                padding: 0.40rem 0.62rem !important;
             }
 
-            .st-key-ficha_status_compacta [data-testid="stDataFrame"] {
+            .st-key-commercial_table_scroll {
                 background: #ffffff !important;
-                border: 1px solid #dbe3ee !important;
-                border-radius: 0 0 12px 12px !important;
-                box-shadow: 0 8px 18px rgba(15, 23, 42, 0.055) !important;
+                border-bottom: 1px solid #dae2ed !important;
+                border-left: 1px solid #dae2ed !important;
+                border-radius: 0 0 10px 10px !important;
+                border-right: 1px solid #dae2ed !important;
+                margin-bottom: 0.40rem !important;
+                overflow-x: auto !important;
+                padding: 0 !important;
+            }
+
+            .st-key-commercial_table_scroll [data-testid="stVerticalBlock"] {
+                gap: 0 !important;
+            }
+
+            [class*="st-key-lead_table_row_"] {
+                background: #ffffff !important;
+                border-bottom: 1px solid #e3e8ef !important;
+                min-width: 980px !important;
+                padding: 0.04rem 0.48rem !important;
+                transition: 0.16s ease !important;
+            }
+
+            [class*="st-key-lead_table_row_"]:hover {
+                background: #f7faff !important;
+            }
+
+            [class*="st-key-lead_table_row_"] [data-testid="stHorizontalBlock"] {
+                align-items: center !important;
+                gap: 0.25rem !important;
+            }
+
+            .commercial-cell {
+                color: #10213e !important;
+                font-size: 0.64rem !important;
+                line-height: 1.25 !important;
+                margin: 0 !important;
                 overflow: hidden !important;
+                padding: 0.38rem 0.08rem !important;
+                text-overflow: ellipsis !important;
+                white-space: nowrap !important;
             }
 
-            .st-key-ficha_status_compacta [data-testid="stDataFrame"] canvas {
-                border-radius: 0 0 12px 12px !important;
+            .commercial-cell-muted {
+                color: #778396 !important;
             }
 
-            .records-selected-title {
-                color: #111111 !important;
-                font-size: 0.78rem !important;
+            [class*="st-key-editar_lead_"] button {
+                background: #2f6fd1 !important;
+                border: 0 !important;
+                border-radius: 999px !important;
+                color: #ffffff !important;
+                font-size: 0.59rem !important;
                 font-weight: 900 !important;
-                letter-spacing: 0.04rem !important;
-                margin: 0.92rem 0 0.36rem 0 !important;
+                min-height: 26px !important;
+                padding: 0.18rem 0.48rem !important;
+                text-transform: none !important;
+                width: 100% !important;
+            }
+
+            [class*="st-key-editar_lead_"] button:hover {
+                background: #1f5cb9 !important;
+                transform: translateY(-1px) !important;
+            }
+
+            [class*="st-key-fechar_ficha_lead"] button {
+                background: #111111 !important;
+                color: #ffffff !important;
+                max-width: 190px !important;
+            }
+
+            .commercial-selected-head {
+                align-items: center;
+                background: #fff8d9;
+                border: 1px solid #ecd981;
+                border-radius: 10px;
+                display: flex;
+                justify-content: space-between;
+                margin: 0.75rem 0 0.35rem 0;
+                padding: 0.58rem 0.68rem;
+            }
+
+            .commercial-selected-head strong {
+                color: #111111 !important;
+                font-size: 0.72rem !important;
+            }
+
+            .commercial-selected-head span {
+                color: #866500 !important;
+                font-size: 0.62rem !important;
+                font-weight: 900 !important;
                 text-transform: uppercase !important;
             }
 
-            .records-selected-title span {
-                color: #a27800 !important;
+            @media (max-width: 760px) {
+                .commercial-table-columns {
+                    min-width: 980px !important;
+                }
+
+                .commercial-table-head {
+                    border-radius: 8px 8px 0 0 !important;
+                }
             }
 </style>
         ''',
@@ -4814,14 +4913,11 @@ def render_barra_pesquisa_comercial() -> None:
 
 def render_registros_card_clicado() -> None:
     """
-    Exibe somente os leads do card selecionado em uma tabela compacta.
+    Exibe os leads do card selecionado em uma tabela visual compacta.
 
-    A listagem segue a pegada visual de uma planilha:
-    - uma linha por lead;
-    - colunas com os principais dados;
-    - rolagem vertical;
-    - seleção de uma única linha;
-    - formulário completo exibido apenas após o clique.
+    Cada linha possui um botão Editar real do Streamlit. Assim, a abertura
+    da ficha funciona de forma confiável sem depender da seleção interna
+    de uma tabela nativa.
     """
     cadastros = obter_cadastros_comerciais()
     status_selecionado = st.session_state.get("status_card_selecionado", "")
@@ -4844,148 +4940,164 @@ def render_registros_card_clicado() -> None:
 
         st.markdown(
             f"""
-            <div class="records-sheet-head">
+            <div class="commercial-table-head">
                 <div>
-                    <p class="records-sheet-title">{status_selecionado}</p>
-                    <p class="records-sheet-sub">
-                        Selecione uma linha para visualizar e editar o cadastro completo.
+                    <p class="commercial-table-head-title">{html.escape(status_selecionado)}</p>
+                    <p class="commercial-table-head-sub">
+                        Clique em Editar para abrir o cadastro completo do aluno.
                     </p>
                 </div>
-                <span class="records-sheet-count">
+                <span class="commercial-table-count">
                     {len(cadastros_filtrados)} registro(s)
                 </span>
             </div>
-            <p class="records-sheet-note">
-                A tabela mostra somente os dados principais. O telefone vem do WhatsApp
-                e permanece bloqueado para edição.
+            <div class="commercial-table-columns">
+                <span>Linha</span>
+                <span>Nome</span>
+                <span>Telefone</span>
+                <span>CPF</span>
+                <span>E-mail</span>
+                <span>Modalidade</span>
+                <span>Ação</span>
+            </div>
+            <p class="commercial-table-help">
+                A listagem funciona como uma planilha resumida. O telefone vem do WhatsApp
+                e permanece bloqueado na ficha completa.
             </p>
             """,
             unsafe_allow_html=True,
         )
 
-        linhas_tabela = []
-
-        for cadastro in cadastros_filtrados:
-            nome = str(cadastro.get("Nome Completo", "")).strip()
-            telefone = str(cadastro.get("Telefone", "")).strip()
-            cpf = str(cadastro.get("CPF", "")).strip()
-            email = str(cadastro.get("E-mail", "")).strip()
-            modalidade = str(
-                cadastro.get("Produto ou Serviço", "")
-            ).strip()
-            plano = str(cadastro.get("Plano Cliente", "")).strip()
-            pagamento = str(
-                cadastro.get("Forma de Pagamento", "")
-            ).strip()
-
-            linhas_tabela.append(
-                {
-                    "IDLead": str(cadastro.get("IDLead", "")).strip(),
-                    "Linha": cadastro.get("_Linha Planilha", ""),
-                    "Nome": nome or "Lead sem nome",
-                    "Telefone": telefone,
-                    "CPF": cpf,
-                    "E-mail": email,
-                    "Modalidade": modalidade,
-                    "Plano": plano,
-                    "Pagamento": pagamento,
-                }
-            )
-
-        tabela = pd.DataFrame(linhas_tabela)
-
-        evento = st.dataframe(
-            tabela[
-                [
-                    "Linha",
-                    "Nome",
-                    "Telefone",
-                    "CPF",
-                    "E-mail",
-                    "Modalidade",
-                    "Plano",
-                    "Pagamento",
-                ]
-            ],
-            hide_index=True,
-            use_container_width=True,
-            height=min(430, 82 + (len(tabela) * 35)),
-            on_select="rerun",
-            selection_mode="single-row",
-            key=f"tabela_status_{normalizar_texto_busca(status_selecionado)}",
-            column_config={
-                "Linha": st.column_config.NumberColumn(
-                    "Linha",
-                    width="small",
-                    format="%d",
-                ),
-                "Nome": st.column_config.TextColumn(
-                    "Nome",
-                    width="large",
-                ),
-                "Telefone": st.column_config.TextColumn(
-                    "Telefone",
-                    width="medium",
-                ),
-                "CPF": st.column_config.TextColumn(
-                    "CPF",
-                    width="medium",
-                ),
-                "E-mail": st.column_config.TextColumn(
-                    "E-mail",
-                    width="large",
-                ),
-                "Modalidade": st.column_config.TextColumn(
-                    "Modalidade",
-                    width="medium",
-                ),
-                "Plano": st.column_config.TextColumn(
-                    "Plano",
-                    width="large",
-                ),
-                "Pagamento": st.column_config.TextColumn(
-                    "Pagamento",
-                    width="medium",
-                ),
-            },
-        )
-
-        selecao = getattr(evento, "selection", None)
-        linhas_selecionadas = (
-            list(getattr(selecao, "rows", []) or [])
-            if selecao is not None
-            else []
-        )
-
-        if not linhas_selecionadas:
-            st.caption("Clique em uma linha da tabela para abrir o cadastro completo.")
-            return
-
-        indice_selecionado = int(linhas_selecionadas[0])
-
-        if indice_selecionado < 0 or indice_selecionado >= len(
-            cadastros_filtrados
+        with st.container(
+            key="commercial_table_scroll",
+            height=min(410, 54 + (len(cadastros_filtrados) * 43)),
         ):
+            for cadastro in cadastros_filtrados:
+                id_lead = str(cadastro.get("IDLead", "")).strip()
+
+                if not id_lead:
+                    continue
+
+                chave_segura = re.sub(
+                    r"[^a-zA-Z0-9_]+",
+                    "_",
+                    id_lead,
+                )
+
+                nome = (
+                    str(cadastro.get("Nome Completo", "")).strip()
+                    or "Lead sem nome"
+                )
+                telefone = str(cadastro.get("Telefone", "")).strip()
+                cpf = str(cadastro.get("CPF", "")).strip()
+                email = str(cadastro.get("E-mail", "")).strip()
+                modalidade = str(
+                    cadastro.get("Produto ou Serviço", "")
+                ).strip()
+                linha = str(cadastro.get("_Linha Planilha", "")).strip()
+
+                with st.container(key=f"lead_table_row_{chave_segura}"):
+                    (
+                        col_linha,
+                        col_nome,
+                        col_telefone,
+                        col_cpf,
+                        col_email,
+                        col_modalidade,
+                        col_acao,
+                    ) = st.columns(
+                        [0.52, 2.25, 1.20, 1.05, 2.05, 1.08, 0.72],
+                        gap="small",
+                    )
+
+                    with col_linha:
+                        st.markdown(
+                            f'<p class="commercial-cell commercial-cell-muted">{html.escape(linha)}</p>',
+                            unsafe_allow_html=True,
+                        )
+
+                    with col_nome:
+                        st.markdown(
+                            f'<p class="commercial-cell">{html.escape(nome)}</p>',
+                            unsafe_allow_html=True,
+                        )
+
+                    with col_telefone:
+                        st.markdown(
+                            f'<p class="commercial-cell">{html.escape(telefone)}</p>',
+                            unsafe_allow_html=True,
+                        )
+
+                    with col_cpf:
+                        st.markdown(
+                            f'<p class="commercial-cell">{html.escape(cpf)}</p>',
+                            unsafe_allow_html=True,
+                        )
+
+                    with col_email:
+                        st.markdown(
+                            f'<p class="commercial-cell">{html.escape(email)}</p>',
+                            unsafe_allow_html=True,
+                        )
+
+                    with col_modalidade:
+                        st.markdown(
+                            f'<p class="commercial-cell">{html.escape(modalidade)}</p>',
+                            unsafe_allow_html=True,
+                        )
+
+                    with col_acao:
+                        with st.container(key=f"editar_lead_{chave_segura}"):
+                            if st.button(
+                                "Editar",
+                                key=f"acao_editar_lead_{id_lead}",
+                                use_container_width=True,
+                            ):
+                                st.session_state["lead_aberto_id"] = id_lead
+                                st.rerun()
+
+        id_lead_aberto = str(
+            st.session_state.get("lead_aberto_id", "")
+        ).strip()
+
+        cadastro_aberto = next(
+            (
+                cadastro
+                for cadastro in cadastros_filtrados
+                if str(cadastro.get("IDLead", "")).strip() == id_lead_aberto
+            ),
+            None,
+        )
+
+        if cadastro_aberto is None:
+            st.caption("Clique em Editar para abrir o cadastro completo.")
             return
 
-        cadastro = cadastros_filtrados[indice_selecionado]
-
-        nome_selecionado = (
-            str(cadastro.get("Nome Completo", "")).strip()
+        nome_aberto = (
+            str(cadastro_aberto.get("Nome Completo", "")).strip()
             or "Lead sem nome"
         )
 
         st.markdown(
             f"""
-            <p class="records-selected-title">
-                Cadastro selecionado: <span>{nome_selecionado}</span>
-            </p>
+            <div class="commercial-selected-head">
+                <strong>Cadastro selecionado: {html.escape(nome_aberto)}</strong>
+                <span>Ficha editável</span>
+            </div>
             """,
             unsafe_allow_html=True,
         )
 
+        with st.container(key="fechar_ficha_lead"):
+            if st.button(
+                "Fechar cadastro",
+                key="acao_fechar_ficha_lead",
+            ):
+                st.session_state["lead_aberto_id"] = ""
+                st.rerun()
+
         render_ficha_lead_preenchida(
-            cadastro=cadastro,
+            cadastro=cadastro_aberto,
             chave_prefixo="card",
         )
 
