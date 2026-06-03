@@ -3507,6 +3507,37 @@ def aplicar_css_dashboard_claro() -> None:
                 border-color: #fbc410 !important;
                 box-shadow: 0 0 0 2px rgba(251,196,16,0.14) !important;
             }
+
+
+            /* REMOVE A BARRINHA INTERNA DO SELECT */
+            [class*="st-key-inline_row_"] [data-baseweb="select"] input {
+                background: transparent !important;
+                border: 0 !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                height: 0 !important;
+                margin: 0 !important;
+                min-height: 0 !important;
+                opacity: 0 !important;
+                outline: 0 !important;
+                padding: 0 !important;
+                position: absolute !important;
+                width: 0 !important;
+            }
+
+            [class*="st-key-inline_row_"] [data-baseweb="select"] input:focus,
+            [class*="st-key-inline_row_"] [data-baseweb="select"] input:focus-visible {
+                border: 0 !important;
+                box-shadow: none !important;
+                outline: 0 !important;
+            }
+
+            [class*="st-key-inline_row_"] [data-baseweb="select"] > div::before,
+            [class*="st-key-inline_row_"] [data-baseweb="select"] > div::after {
+                border: 0 !important;
+                box-shadow: none !important;
+                content: none !important;
+            }
 </style>
         ''',
         unsafe_allow_html=True,
