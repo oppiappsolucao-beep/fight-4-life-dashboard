@@ -4117,6 +4117,36 @@ def buscar_leads_comerciais(termo: str) -> list[dict]:
     return resultados
 
 
+
+def validar_cadastro_para_envio_contrato(cadastro: dict) -> list[str]:
+    """
+    Retorna os campos obrigatórios que ainda precisam ser preenchidos
+    antes de gerar e enviar o contrato pela ZapSign.
+    """
+    campos_obrigatorios = [
+        ("Nome Completo", "Nome completo"),
+        ("Data de Nascimento", "Data de nascimento"),
+        ("CPF", "CPF"),
+        ("Telefone", "Telefone"),
+        ("E-mail", "E-mail"),
+        ("Rua", "Rua"),
+        ("Bairro", "Bairro"),
+        ("CEP", "CEP"),
+        ("Produto ou Serviço", "Modalidade escolhida"),
+        ("Plano Cliente", "Plano escolhido"),
+        ("Forma de Pagamento", "Forma de pagamento"),
+    ]
+
+    faltantes = []
+
+    for chave, rotulo in campos_obrigatorios:
+        if not str(cadastro.get(chave, "")).strip():
+            faltantes.append(rotulo)
+
+    return faltantes
+
+
+
 def render_ficha_lead_preenchida(
     cadastro: dict,
     chave_prefixo: str,
@@ -4124,13 +4154,18 @@ def render_ficha_lead_preenchida(
     """
     Exibe a ficha completa do lead em seções organizadas.
 
-    Todos os dados podem ser complementados ou corrigidos diretamente
-    no dashboard, exceto o telefone, que vem da automação do WhatsApp.
+    O lead já existe na planilha porque entrou pelo WhatsApp.
+    Ao preencher os dados, o dashboard atualiza exatamente a mesma linha.
+    Nenhuma nova linha é criada ao incluir nome, endereço ou plano.
+
+    O contrato é enviado somente quando o usuário clicar no botão
+    "Finalizar novo cadastro e enviar contrato".
     """
     status_atual = normalizar_status_comercial(
         cadastro.get("Status Comercial", "Novo Lead")
     )
     id_lead = str(cadastro.get("IDLead", chave_prefixo)).strip()
+    telefone_original = str(cadastro.get("Telefone", "")).strip()
 
     st.markdown(
         f'<div class="busca-status-localizado">Quadro atual: {status_atual}</div>',
@@ -4232,7 +4267,7 @@ def render_ficha_lead_preenchida(
         with coluna_telefone:
             st.text_input(
                 "Telefone",
-                value=str(cadastro.get("Telefone", "")),
+                value=telefone_original,
                 disabled=True,
                 help=(
                     "O telefone vem automaticamente do WhatsApp "
@@ -4356,27 +4391,38 @@ def render_ficha_lead_preenchida(
             key=f"{chave_prefixo}_status_{id_lead}",
         )
 
-        salvar_cadastro = st.form_submit_button(
-            "Salvar cadastro"
-        )
+        coluna_salvar, coluna_finalizar = st.columns(2)
 
-    if salvar_cadastro:
-        cadastro_atualizado = {
-            "Nome Completo": nome_completo,
-            "Data de Nascimento": data_nascimento,
-            "CPF": cpf,
-            "E-mail": email,
-            "Rua": rua,
-            "Bairro": bairro,
-            "CEP": cep,
-            "Complemento": complemento,
-            "Produto ou Serviço": modalidade,
-            "Plano Cliente": plano_cliente,
-            "Forma de Pagamento": forma_pagamento,
-            "Rede Social": rede_social,
-            "Status Comercial": novo_status,
-        }
+        with coluna_salvar:
+            salvar_alteracoes = st.form_submit_button(
+                "Salvar alterações",
+                use_container_width=True,
+            )
 
+        with coluna_finalizar:
+            finalizar_cadastro = st.form_submit_button(
+                "Finalizar novo cadastro e enviar contrato",
+                use_container_width=True,
+            )
+
+    cadastro_atualizado = {
+        "Nome Completo": nome_completo,
+        "Data de Nascimento": data_nascimento,
+        "CPF": cpf,
+        "Telefone": telefone_original,
+        "E-mail": email,
+        "Rua": rua,
+        "Bairro": bairro,
+        "CEP": cep,
+        "Complemento": complemento,
+        "Produto ou Serviço": modalidade,
+        "Plano Cliente": plano_cliente,
+        "Forma de Pagamento": forma_pagamento,
+        "Rede Social": rede_social,
+        "Status Comercial": novo_status,
+    }
+
+    if salvar_alteracoes:
         try:
             atualizar_cadastro_lead_planilha(
                 id_lead=id_lead,
@@ -4390,6 +4436,61 @@ def render_ficha_lead_preenchida(
         st.session_state["status_card_selecionado"] = novo_status
         st.success(
             f'Cadastro de {nome_completo or "aluno"} atualizado com sucesso.'
+        )
+        st.rerun()
+
+    if finalizar_cadastro:
+        faltantes = validar_cadastro_para_envio_contrato(
+            cadastro_atualizado
+        )
+
+        if faltantes:
+            st.error(
+                "Preencha os campos obrigatórios antes de enviar o contrato: "
+                + ", ".join(faltantes)
+                + "."
+            )
+            return
+
+        try:
+            atualizar_cadastro_lead_planilha(
+                id_lead=id_lead,
+                cadastro=cadastro_atualizado,
+            )
+        except Exception as erro:
+            st.error("Não foi possível atualizar o cadastro no banco de dados.")
+            st.caption(f"Detalhes técnicos: {erro}")
+            return
+
+        token_documento_existente = str(
+            cadastro.get("Token Documento ZapSign", "")
+        ).strip()
+
+        if token_documento_existente:
+            st.warning(
+                "Este aluno já possui um contrato enviado. "
+                "O cadastro foi atualizado, mas nenhum novo e-mail foi disparado."
+            )
+            st.session_state["status_card_selecionado"] = novo_status
+            return
+
+        try:
+            enviar_contrato_aluno_zapsign(
+                cadastro=cadastro_atualizado,
+                id_lead=id_lead,
+            )
+        except Exception as erro:
+            st.warning(
+                "O cadastro foi atualizado, mas o contrato não pôde ser "
+                "enviado pela ZapSign."
+            )
+            st.caption(f"Detalhes técnicos: {erro}")
+            return
+
+        st.session_state["status_card_selecionado"] = novo_status
+        st.success(
+            "Cadastro finalizado e contrato enviado por e-mail "
+            "para assinatura digital."
         )
         st.rerun()
 
@@ -4981,23 +5082,20 @@ def exibir_dashboard_inicial() -> None:
 
     config = montar_config_dashboard(pagina)
 
-    coluna_esquerda, coluna_direita = st.columns(
-        [0.82, 1.7],
-        gap="medium",
-    )
+    if pagina == "📈 Comercial":
+        render_barra_pesquisa_comercial()
+        render_cards_status_comercial_clicaveis()
+        render_registros_card_clicado()
+    else:
+        coluna_esquerda, coluna_direita = st.columns(
+            [0.82, 1.7],
+            gap="medium",
+        )
 
-    with coluna_esquerda:
-        if pagina == "📈 Comercial":
-            render_formulario_retratil_comercial()
-        else:
+        with coluna_esquerda:
             st.html(montar_painel_retencao_diretoria_html())
 
-    with coluna_direita:
-        if pagina == "📈 Comercial":
-            render_barra_pesquisa_comercial()
-            render_cards_status_comercial_clicaveis()
-            render_registros_card_clicado()
-        else:
+        with coluna_direita:
             st.html(
                 montar_painel_grafico_html(
                     titulo=config["painel_title"],
