@@ -3767,6 +3767,43 @@ def aplicar_css_dashboard_claro() -> None:
                 font-size: 0.62rem !important;
                 margin: 0.16rem 0 0.44rem 0 !important;
             }
+
+
+            /* ÁREA DE FOTO DO ROSTO DO ALUNO */
+            .foto-rosto-info {
+                background: #fffdf5;
+                border: 1px solid #eee1ac;
+                border-left: 4px solid #fbc410;
+                border-radius: 12px;
+                color: #6f6250 !important;
+                font-size: 0.68rem !important;
+                line-height: 1.45 !important;
+                margin: 0.10rem 0 0.52rem 0 !important;
+                padding: 0.62rem 0.72rem !important;
+            }
+
+            .foto-rosto-preview-title {
+                color: #3a414c !important;
+                font-size: 0.68rem !important;
+                font-weight: 900 !important;
+                letter-spacing: 0.045rem !important;
+                margin: 0.28rem 0 0.30rem 0 !important;
+                text-transform: uppercase !important;
+            }
+
+            [data-testid="stCameraInput"] {
+                background: #ffffff !important;
+                border: 1px dashed #d6dbe3 !important;
+                border-radius: 12px !important;
+                padding: 0.42rem !important;
+            }
+
+            [data-testid="stFileUploader"] {
+                background: #ffffff !important;
+                border: 1px dashed #d6dbe3 !important;
+                border-radius: 12px !important;
+                padding: 0.42rem !important;
+            }
 </style>
         ''',
         unsafe_allow_html=True,
@@ -5948,6 +5985,52 @@ def render_formulario_retratil_comercial(
                 rede_social = st.text_input(
                     "Rede Social",
                     placeholder="@usuario ou link do perfil",
+                )
+
+            st.markdown(
+                """
+                <div class="form-section-block">
+                    <p class="form-section-title">Foto do rosto do aluno</p>
+                    <p class="form-section-sub">
+                        Tire uma foto na hora ou selecione uma imagem já salva no aparelho.
+                    </p>
+                </div>
+                <p class="foto-rosto-info">
+                    Use uma foto nítida, com o rosto centralizado e boa iluminação.
+                    Nesta etapa a imagem fica pronta para conferência dentro do cadastro.
+                </p>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            coluna_camera, coluna_galeria = st.columns(2)
+
+            with coluna_camera:
+                foto_rosto_camera = st.camera_input(
+                    "Tirar foto do rosto",
+                    key="cadastro_foto_rosto_camera",
+                )
+
+            with coluna_galeria:
+                foto_rosto_upload = st.file_uploader(
+                    "Ou selecionar foto da galeria",
+                    type=["jpg", "jpeg", "png"],
+                    accept_multiple_files=False,
+                    key="cadastro_foto_rosto_upload",
+                )
+
+            foto_rosto = foto_rosto_camera or foto_rosto_upload
+
+            if foto_rosto is not None:
+                st.markdown(
+                    '<p class="foto-rosto-preview-title">Pré-visualização da foto</p>',
+                    unsafe_allow_html=True,
+                )
+
+                st.image(
+                    foto_rosto,
+                    caption="Foto do rosto selecionada",
+                    width=220,
                 )
 
             st.markdown(
