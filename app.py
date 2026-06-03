@@ -63,6 +63,12 @@ COLUNAS_PLANILHA = [
     "Status Contrato",
     "Data Envio Contrato",
     "Erro Envio Contrato",
+    "Rua",
+    "Bairro",
+    "CEP",
+    "Complemento",
+    "Plano Cliente",
+    "Forma de Pagamento",
 ]
 
 GOOGLE_SCOPES = [
@@ -2714,6 +2720,40 @@ def aplicar_css_dashboard_claro() -> None:
                     padding: 0.70rem !important;
                 }
             }
+
+
+            /* SEÇÕES INTERNAS DO FORMULÁRIO */
+            .form-section-block {
+                background: #fffdf7;
+                border: 1px solid #f2e8bd;
+                border-left: 4px solid #fbc410;
+                border-radius: 14px;
+                margin: 0.85rem 0 0.65rem 0;
+                padding: 0.68rem 0.78rem;
+            }
+
+            .form-section-title {
+                color: #202020 !important;
+                font-size: 0.82rem !important;
+                font-weight: 900 !important;
+                letter-spacing: 0.045rem !important;
+                margin: 0 !important;
+                text-transform: uppercase !important;
+            }
+
+            .form-section-sub {
+                color: #7a8494 !important;
+                font-size: 0.66rem !important;
+                line-height: 1.38 !important;
+                margin: 0.18rem 0 0 0 !important;
+            }
+
+            .st-key-ficha_status_compacta .form-section-block,
+            .st-key-busca_comercial_container .form-section-block {
+                background: #fffdf7 !important;
+                border: 1px solid #f2e8bd !important;
+                border-left: 4px solid #fbc410 !important;
+            }
 </style>
         ''',
         unsafe_allow_html=True,
@@ -3231,6 +3271,12 @@ def salvar_novo_lead_planilha(cadastro: dict) -> str:
         "Não enviado",
         "",
         "",
+        str(cadastro.get("Rua", "")).strip(),
+        str(cadastro.get("Bairro", "")).strip(),
+        str(cadastro.get("CEP", "")).strip(),
+        str(cadastro.get("Complemento", "")).strip(),
+        str(cadastro.get("Plano Cliente", "")).strip(),
+        str(cadastro.get("Forma de Pagamento", "")).strip(),
     ]
 
     worksheet.append_row(
@@ -3401,6 +3447,30 @@ def criar_contrato_zapsign(
             {
                 "de": "{{ENDERECO}}",
                 "para": str(cadastro.get("Endereço", "")).strip(),
+            },
+            {
+                "de": "{{RUA}}",
+                "para": str(cadastro.get("Rua", "")).strip(),
+            },
+            {
+                "de": "{{BAIRRO}}",
+                "para": str(cadastro.get("Bairro", "")).strip(),
+            },
+            {
+                "de": "{{CEP}}",
+                "para": str(cadastro.get("CEP", "")).strip(),
+            },
+            {
+                "de": "{{COMPLEMENTO}}",
+                "para": str(cadastro.get("Complemento", "")).strip(),
+            },
+            {
+                "de": "{{PLANO_CLIENTE}}",
+                "para": str(cadastro.get("Plano Cliente", "")).strip(),
+            },
+            {
+                "de": "{{FORMA_PAGAMENTO}}",
+                "para": str(cadastro.get("Forma de Pagamento", "")).strip(),
             },
             {
                 "de": "{{MODALIDADE}}",
@@ -3592,23 +3662,49 @@ def atualizar_cadastro_lead_planilha(
     linha = localizar_linha_por_id(id_lead)
     agora = obter_data_hora_atual()
 
-    valores = [[
-        str(cadastro.get("Nome Completo", "")).strip(),
-        str(cadastro.get("Data de Nascimento", "")).strip(),
-        str(cadastro.get("CPF", "")).strip(),
-        str(cadastro.get("E-mail", "")).strip(),
-        str(cadastro.get("Endereço", "")).strip(),
-        str(cadastro.get("Produto ou Serviço", "")).strip(),
-        str(cadastro.get("Rede Social", "")).strip(),
-        normalizar_status_comercial(
-            cadastro.get("Status Comercial", "Novo Lead")
-        ),
-        agora,
-    ]]
+    endereco_completo = montar_endereco_completo(
+        rua=cadastro.get("Rua", ""),
+        bairro=cadastro.get("Bairro", ""),
+        cep=cadastro.get("CEP", ""),
+        complemento=cadastro.get("Complemento", ""),
+    )
 
     worksheet.update(
         range_name=f"C{linha}:K{linha}",
-        values=valores,
+        values=[[
+            str(cadastro.get("Nome Completo", "")).strip(),
+            str(cadastro.get("Data de Nascimento", "")).strip(),
+            str(cadastro.get("CPF", "")).strip(),
+            str(cadastro.get("E-mail", "")).strip(),
+            endereco_completo,
+            str(cadastro.get("Produto ou Serviço", "")).strip(),
+            str(cadastro.get("Rede Social", "")).strip(),
+            normalizar_status_comercial(
+                cadastro.get("Status Comercial", "Novo Lead")
+            ),
+            agora,
+        ]],
+        value_input_option="USER_ENTERED",
+    )
+
+    primeira_coluna_adicional = COLUNAS_PLANILHA.index("Rua") + 1
+    ultima_coluna_adicional = COLUNAS_PLANILHA.index(
+        "Forma de Pagamento"
+    ) + 1
+
+    inicio = rowcol_to_a1(linha, primeira_coluna_adicional)
+    fim = rowcol_to_a1(linha, ultima_coluna_adicional)
+
+    worksheet.update(
+        range_name=f"{inicio}:{fim}",
+        values=[[
+            str(cadastro.get("Rua", "")).strip(),
+            str(cadastro.get("Bairro", "")).strip(),
+            str(cadastro.get("CEP", "")).strip(),
+            str(cadastro.get("Complemento", "")).strip(),
+            str(cadastro.get("Plano Cliente", "")).strip(),
+            str(cadastro.get("Forma de Pagamento", "")).strip(),
+        ]],
         value_input_option="USER_ENTERED",
     )
 
@@ -3626,12 +3722,82 @@ def testar_conexao_planilha() -> tuple[bool, str]:
         return False, str(erro)
 
 
+
+def montar_endereco_completo(
+    rua: str,
+    bairro: str,
+    cep: str,
+    complemento: str,
+) -> str:
+    """
+    Monta uma versão consolidada do endereço para manter compatibilidade
+    com o contrato da ZapSign e com registros antigos da planilha.
+    """
+    partes = []
+
+    if str(rua or "").strip():
+        partes.append(str(rua).strip())
+
+    if str(bairro or "").strip():
+        partes.append(f"Bairro: {str(bairro).strip()}")
+
+    if str(cep or "").strip():
+        partes.append(f"CEP: {str(cep).strip()}")
+
+    if str(complemento or "").strip():
+        partes.append(f"Complemento: {str(complemento).strip()}")
+
+    return " | ".join(partes)
+
+
+def garantir_opcao_atual(
+    opcoes: list[str],
+    valor_atual: str,
+) -> list[str]:
+    """
+    Preserva valores antigos da planilha mesmo quando não fazem parte
+    das opções padronizadas atuais.
+    """
+    resultado = list(opcoes)
+    valor_atual = str(valor_atual or "").strip()
+
+    if valor_atual and valor_atual not in resultado:
+        resultado.append(valor_atual)
+
+    return resultado
+
+
+
 STATUS_COMERCIAL_OPCOES = [
     "Novo Lead",
     "Conversando",
     "Não tem Interesse",
     "Não Responde",
     "Fechado",
+]
+
+PLANOS_CLIENTE_OPCOES = [
+    "",
+    "Mensal — R$ 259,00",
+    "Trimestral — R$ 239,00",
+    "Semestral — R$ 219,00 • recorrência 6 meses • contrato fidelidade",
+    "Anual — R$ 199,00 • recorrência 6 meses • contrato fidelidade",
+]
+
+FORMAS_PAGAMENTO_OPCOES = [
+    "",
+    "Dinheiro",
+    "Cartão de Crédito",
+    "Cartão de Crédito Recorrente",
+    "Pix",
+]
+
+MODALIDADES_OPCOES = [
+    "",
+    "Muay Thai",
+    "Jiu-Jitsu",
+    "Jiu-Jitsu Infantil",
+    "MMA",
 ]
 
 
@@ -3845,7 +4011,7 @@ def render_ficha_lead_preenchida(
     chave_prefixo: str,
 ) -> None:
     """
-    Exibe a ficha completa do lead.
+    Exibe a ficha completa do lead em seções organizadas.
 
     Todos os dados podem ser complementados ou corrigidos diretamente
     no dashboard, exceto o telefone, que vem da automação do WhatsApp.
@@ -3877,79 +4043,199 @@ def render_ficha_lead_preenchida(
             use_container_width=True,
         )
 
-    produtos_disponiveis = [
-        "",
-        "Muay Thai",
-        "Jiu-Jitsu",
-        "Jiu-Jitsu Infantil",
-        "MMA",
-    ]
-
     produto_atual = str(
         cadastro.get("Produto ou Serviço", "")
     ).strip()
 
-    if produto_atual and produto_atual not in produtos_disponiveis:
-        produtos_disponiveis.append(produto_atual)
+    plano_atual = str(
+        cadastro.get("Plano Cliente", "")
+    ).strip()
+
+    pagamento_atual = str(
+        cadastro.get("Forma de Pagamento", "")
+    ).strip()
+
+    modalidades = garantir_opcao_atual(
+        MODALIDADES_OPCOES,
+        produto_atual,
+    )
+
+    planos = garantir_opcao_atual(
+        PLANOS_CLIENTE_OPCOES,
+        plano_atual,
+    )
+
+    pagamentos = garantir_opcao_atual(
+        FORMAS_PAGAMENTO_OPCOES,
+        pagamento_atual,
+    )
+
+    rua_atual = str(cadastro.get("Rua", "")).strip()
+
+    if not rua_atual:
+        rua_atual = str(cadastro.get("Endereço", "")).strip()
 
     with st.form(
         f"formulario_ficha_{chave_prefixo}_{id_lead}",
         clear_on_submit=False,
     ):
-        nome_completo = st.text_input(
-            "Nome Completo",
-            value=str(cadastro.get("Nome Completo", "")),
-            key=f"{chave_prefixo}_nome_{id_lead}",
+        st.markdown(
+            """
+            <div class="form-section-block">
+                <p class="form-section-title">Dados do cliente</p>
+                <p class="form-section-sub">
+                    Informações pessoais e meios de contato do aluno.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
-        data_nascimento = st.text_input(
-            "Data de Nascimento",
-            value=str(cadastro.get("Data de Nascimento", "")),
-            placeholder="DD/MM/AAAA",
-            key=f"{chave_prefixo}_data_{id_lead}",
+        coluna_nome, coluna_data = st.columns([1.55, 0.85])
+
+        with coluna_nome:
+            nome_completo = st.text_input(
+                "Nome Completo",
+                value=str(cadastro.get("Nome Completo", "")),
+                key=f"{chave_prefixo}_nome_{id_lead}",
+            )
+
+        with coluna_data:
+            data_nascimento = st.text_input(
+                "Data de Nascimento",
+                value=str(cadastro.get("Data de Nascimento", "")),
+                placeholder="DD/MM/AAAA",
+                key=f"{chave_prefixo}_data_{id_lead}",
+            )
+
+        coluna_cpf, coluna_telefone = st.columns(2)
+
+        with coluna_cpf:
+            cpf = st.text_input(
+                "CPF",
+                value=str(cadastro.get("CPF", "")),
+                placeholder="000.000.000-00",
+                key=f"{chave_prefixo}_cpf_{id_lead}",
+            )
+
+        with coluna_telefone:
+            st.text_input(
+                "Telefone",
+                value=str(cadastro.get("Telefone", "")),
+                disabled=True,
+                help=(
+                    "O telefone vem automaticamente do WhatsApp "
+                    "e não pode ser alterado nesta ficha."
+                ),
+                key=f"{chave_prefixo}_telefone_{id_lead}",
+            )
+
+        coluna_email, coluna_rede = st.columns(2)
+
+        with coluna_email:
+            email = st.text_input(
+                "E-mail",
+                value=str(cadastro.get("E-mail", "")),
+                placeholder="nome@exemplo.com",
+                key=f"{chave_prefixo}_email_{id_lead}",
+            )
+
+        with coluna_rede:
+            rede_social = st.text_input(
+                "Rede Social",
+                value=str(cadastro.get("Rede Social", "")),
+                placeholder="@usuario ou link do perfil",
+                key=f"{chave_prefixo}_rede_{id_lead}",
+            )
+
+        st.markdown(
+            """
+            <div class="form-section-block">
+                <p class="form-section-title">Endereço do cliente</p>
+                <p class="form-section-sub">
+                    Preencha o endereço em campos separados para facilitar
+                    a organização do cadastro.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
-        cpf = st.text_input(
-            "CPF",
-            value=str(cadastro.get("CPF", "")),
-            placeholder="000.000.000-00",
-            key=f"{chave_prefixo}_cpf_{id_lead}",
+        rua = st.text_input(
+            "Rua",
+            value=rua_atual,
+            placeholder="Rua, avenida e número",
+            key=f"{chave_prefixo}_rua_{id_lead}",
         )
 
-        st.text_input(
-            "Telefone",
-            value=str(cadastro.get("Telefone", "")),
-            disabled=True,
-            help="O telefone vem automaticamente do WhatsApp e não pode ser alterado nesta ficha.",
-            key=f"{chave_prefixo}_telefone_{id_lead}",
+        coluna_bairro, coluna_cep = st.columns(2)
+
+        with coluna_bairro:
+            bairro = st.text_input(
+                "Bairro",
+                value=str(cadastro.get("Bairro", "")),
+                placeholder="Digite o bairro",
+                key=f"{chave_prefixo}_bairro_{id_lead}",
+            )
+
+        with coluna_cep:
+            cep = st.text_input(
+                "CEP",
+                value=str(cadastro.get("CEP", "")),
+                placeholder="00000-000",
+                key=f"{chave_prefixo}_cep_{id_lead}",
+            )
+
+        complemento = st.text_input(
+            "Complemento",
+            value=str(cadastro.get("Complemento", "")),
+            placeholder="Apartamento, bloco ou ponto de referência",
+            key=f"{chave_prefixo}_complemento_{id_lead}",
         )
 
-        email = st.text_input(
-            "E-mail",
-            value=str(cadastro.get("E-mail", "")),
-            placeholder="nome@exemplo.com",
-            key=f"{chave_prefixo}_email_{id_lead}",
+        st.markdown(
+            """
+            <div class="form-section-block">
+                <p class="form-section-title">Planos do cliente</p>
+                <p class="form-section-sub">
+                    Escolha a modalidade, o plano comercial e a forma de pagamento.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
-        endereco = st.text_area(
-            "Endereço",
-            value=str(cadastro.get("Endereço", "")),
-            placeholder="Digite o endereço completo",
-            key=f"{chave_prefixo}_endereco_{id_lead}",
-        )
-
-        produto_servico = st.selectbox(
-            "Produto ou Serviço escolhido",
-            options=produtos_disponiveis,
-            index=produtos_disponiveis.index(produto_atual),
+        modalidade = st.selectbox(
+            "Modalidade escolhida",
+            options=modalidades,
+            index=modalidades.index(produto_atual),
             key=f"{chave_prefixo}_produto_{id_lead}",
         )
 
-        rede_social = st.text_input(
-            "Rede Social",
-            value=str(cadastro.get("Rede Social", "")),
-            placeholder="@usuario ou link do perfil",
-            key=f"{chave_prefixo}_rede_{id_lead}",
+        plano_cliente = st.selectbox(
+            "Plano escolhido",
+            options=planos,
+            index=planos.index(plano_atual),
+            key=f"{chave_prefixo}_plano_{id_lead}",
+        )
+
+        forma_pagamento = st.selectbox(
+            "Forma de Pagamento",
+            options=pagamentos,
+            index=pagamentos.index(pagamento_atual),
+            key=f"{chave_prefixo}_pagamento_{id_lead}",
+        )
+
+        st.markdown(
+            """
+            <div class="form-section-block">
+                <p class="form-section-title">Adicionais</p>
+                <p class="form-section-sub">
+                    Atualize o status comercial conforme o andamento do atendimento.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
         novo_status = st.selectbox(
@@ -3969,8 +4255,13 @@ def render_ficha_lead_preenchida(
             "Data de Nascimento": data_nascimento,
             "CPF": cpf,
             "E-mail": email,
-            "Endereço": endereco,
-            "Produto ou Serviço": produto_servico,
+            "Rua": rua,
+            "Bairro": bairro,
+            "CEP": cep,
+            "Complemento": complemento,
+            "Produto ou Serviço": modalidade,
+            "Plano Cliente": plano_cliente,
+            "Forma de Pagamento": forma_pagamento,
             "Rede Social": rede_social,
             "Status Comercial": novo_status,
         }
@@ -3990,7 +4281,6 @@ def render_ficha_lead_preenchida(
             f'Cadastro de {nome_completo or "aluno"} atualizado com sucesso.'
         )
         st.rerun()
-
 
 
 def formatar_rotulo_lead(cadastro: dict) -> str:
@@ -4223,47 +4513,138 @@ def render_formulario_retratil_comercial() -> None:
         )
 
         with st.form("formulario_novo_aluno", clear_on_submit=True):
-            nome_completo = st.text_input(
-                "Nome Completo",
-                placeholder="Digite o nome completo",
+            st.markdown(
+                """
+                <div class="form-section-block">
+                    <p class="form-section-title">Dados do cliente</p>
+                    <p class="form-section-sub">
+                        Informações pessoais e meios de contato do aluno.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
-            data_nascimento = st.date_input(
-                "Data de Nascimento",
-                value=None,
-                min_value=date(1900, 1, 1),
-                max_value=date.today(),
-                format="DD/MM/YYYY",
+
+            coluna_nome, coluna_data = st.columns([1.55, 0.85])
+
+            with coluna_nome:
+                nome_completo = st.text_input(
+                    "Nome Completo",
+                    placeholder="Digite o nome completo",
+                )
+
+            with coluna_data:
+                data_nascimento = st.date_input(
+                    "Data de Nascimento",
+                    value=None,
+                    min_value=date(1900, 1, 1),
+                    max_value=date.today(),
+                    format="DD/MM/YYYY",
+                )
+
+            coluna_cpf, coluna_telefone = st.columns(2)
+
+            with coluna_cpf:
+                cpf = st.text_input(
+                    "CPF",
+                    placeholder="000.000.000-00",
+                )
+
+            with coluna_telefone:
+                telefone = st.text_input(
+                    "Telefone",
+                    placeholder="(00) 00000-0000",
+                )
+
+            coluna_email, coluna_rede = st.columns(2)
+
+            with coluna_email:
+                email = st.text_input(
+                    "E-mail",
+                    placeholder="nome@exemplo.com",
+                )
+
+            with coluna_rede:
+                rede_social = st.text_input(
+                    "Rede Social",
+                    placeholder="@usuario ou link do perfil",
+                )
+
+            st.markdown(
+                """
+                <div class="form-section-block">
+                    <p class="form-section-title">Endereço do cliente</p>
+                    <p class="form-section-sub">
+                        Preencha o endereço em campos separados.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
-            cpf = st.text_input(
-                "CPF",
-                placeholder="000.000.000-00",
+
+            rua = st.text_input(
+                "Rua",
+                placeholder="Rua, avenida e número",
             )
-            telefone = st.text_input(
-                "Telefone",
-                placeholder="(00) 00000-0000",
+
+            coluna_bairro, coluna_cep = st.columns(2)
+
+            with coluna_bairro:
+                bairro = st.text_input(
+                    "Bairro",
+                    placeholder="Digite o bairro",
+                )
+
+            with coluna_cep:
+                cep = st.text_input(
+                    "CEP",
+                    placeholder="00000-000",
+                )
+
+            complemento = st.text_input(
+                "Complemento",
+                placeholder="Apartamento, bloco ou ponto de referência",
             )
-            email = st.text_input(
-                "E-mail",
-                placeholder="nome@exemplo.com",
+
+            st.markdown(
+                """
+                <div class="form-section-block">
+                    <p class="form-section-title">Planos do cliente</p>
+                    <p class="form-section-sub">
+                        Escolha a modalidade, o plano comercial e a forma de pagamento.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
-            endereco = st.text_area(
-                "Endereço",
-                placeholder="Digite o endereço completo",
+
+            modalidade = st.selectbox(
+                "Modalidade escolhida",
+                options=MODALIDADES_OPCOES,
             )
-            produto_servico = st.selectbox(
-                "Produto ou Serviço escolhido",
-                options=[
-                    "",
-                    "Muay Thai",
-                    "Jiu-Jitsu",
-                    "Jiu-Jitsu Infantil",
-                    "MMA",
-                ],
+
+            plano_cliente = st.selectbox(
+                "Plano escolhido",
+                options=PLANOS_CLIENTE_OPCOES,
             )
-            rede_social = st.text_input(
-                "Rede Social",
-                placeholder="@usuario ou link do perfil",
+
+            forma_pagamento = st.selectbox(
+                "Forma de Pagamento",
+                options=FORMAS_PAGAMENTO_OPCOES,
             )
+
+            st.markdown(
+                """
+                <div class="form-section-block">
+                    <p class="form-section-title">Adicionais</p>
+                    <p class="form-section-sub">
+                        Defina o status inicial do atendimento comercial.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
             status_comercial = st.selectbox(
                 "Status comercial",
                 options=STATUS_COMERCIAL_OPCOES,
@@ -4280,9 +4661,20 @@ def render_formulario_retratil_comercial() -> None:
                 st.error(
                     "Preencha o e-mail do aluno para enviar o contrato."
                 )
-            elif not produto_servico:
-                st.error("Selecione o produto ou serviço escolhido.")
+            elif not modalidade:
+                st.error("Selecione a modalidade escolhida.")
+            elif not plano_cliente:
+                st.error("Selecione o plano do cliente.")
+            elif not forma_pagamento:
+                st.error("Selecione a forma de pagamento.")
             else:
+                endereco_completo = montar_endereco_completo(
+                    rua=rua,
+                    bairro=bairro,
+                    cep=cep,
+                    complemento=complemento,
+                )
+
                 cadastro = {
                     "Nome Completo": nome_completo.strip(),
                     "Data de Nascimento": (
@@ -4293,8 +4685,14 @@ def render_formulario_retratil_comercial() -> None:
                     "CPF": cpf.strip(),
                     "Telefone": telefone.strip(),
                     "E-mail": email.strip(),
-                    "Endereço": endereco.strip(),
-                    "Produto ou Serviço": produto_servico,
+                    "Endereço": endereco_completo,
+                    "Rua": rua.strip(),
+                    "Bairro": bairro.strip(),
+                    "CEP": cep.strip(),
+                    "Complemento": complemento.strip(),
+                    "Produto ou Serviço": modalidade,
+                    "Plano Cliente": plano_cliente,
+                    "Forma de Pagamento": forma_pagamento,
                     "Rede Social": rede_social.strip(),
                     "Status Comercial": status_comercial,
                 }
@@ -4327,7 +4725,6 @@ def render_formulario_retratil_comercial() -> None:
                     st.caption(f"Detalhes técnicos: {erro}")
 
                 st.session_state["status_card_selecionado"] = status_comercial
-
 
 
 
