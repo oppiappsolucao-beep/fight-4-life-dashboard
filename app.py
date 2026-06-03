@@ -3615,6 +3615,158 @@ def aplicar_css_dashboard_claro() -> None:
                     font-size: 1.32rem !important;
                 }
             }
+
+
+            /* CONSULTA DE LEADS — SOMENTE NÚMERO E STATUS */
+            .lead-consulta-card {
+                background: #ffffff;
+                border: 1px solid #e4e7ec;
+                border-radius: 16px;
+                box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+                margin-top: 0.22rem;
+                overflow: hidden;
+            }
+
+            .lead-consulta-toolbar {
+                align-items: center;
+                background: #ffffff;
+                display: flex;
+                justify-content: space-between;
+                padding: 0.76rem 0.88rem 0.66rem 0.88rem;
+            }
+
+            .lead-consulta-title {
+                color: #161616 !important;
+                font-size: 0.86rem !important;
+                font-weight: 900 !important;
+                margin: 0 !important;
+            }
+
+            .lead-consulta-sub {
+                color: #7a8494 !important;
+                font-size: 0.63rem !important;
+                margin: 0.18rem 0 0 0 !important;
+            }
+
+            .lead-consulta-count {
+                background: #fff7d6;
+                border: 1px solid #eed16f;
+                border-radius: 999px;
+                color: #7a5b00 !important;
+                font-size: 0.62rem !important;
+                font-weight: 900 !important;
+                padding: 0.34rem 0.56rem;
+                white-space: nowrap;
+            }
+
+            .lead-consulta-columns {
+                background: #111111;
+                border-bottom: 3px solid #fbc410;
+                color: #ffffff !important;
+                display: grid;
+                font-size: 0.62rem !important;
+                font-weight: 900 !important;
+                grid-template-columns: 0.65fr 2.10fr 1.35fr;
+                letter-spacing: 0.035rem !important;
+                padding: 0.50rem 0.72rem;
+                text-transform: uppercase !important;
+            }
+
+            .lead-consulta-columns span {
+                color: #ffffff !important;
+            }
+
+            .lead-consulta-help {
+                background: #fffdf5;
+                border-bottom: 1px solid #eee1ac;
+                border-left: 1px solid #eee1ac;
+                border-right: 1px solid #eee1ac;
+                color: #6f6250 !important;
+                font-size: 0.62rem !important;
+                line-height: 1.42 !important;
+                margin: 0 !important;
+                padding: 0.44rem 0.66rem !important;
+            }
+
+            .st-key-lead_consulta_scroll {
+                background: #ffffff !important;
+                border: 1px solid #e4e7ec !important;
+                border-top: 0 !important;
+                border-radius: 0 0 16px 16px !important;
+                margin-bottom: 0.44rem !important;
+                padding: 0 !important;
+            }
+
+            .st-key-lead_consulta_scroll [data-testid="stVerticalBlock"] {
+                gap: 0 !important;
+            }
+
+            [class*="st-key-lead_consulta_row_"] {
+                background: #ffffff !important;
+                border-bottom: 1px solid #edf0f4 !important;
+                padding: 0.12rem 0.62rem !important;
+            }
+
+            [class*="st-key-lead_consulta_row_even_"] {
+                background: #fbfcfe !important;
+            }
+
+            [class*="st-key-lead_consulta_row_"]:hover {
+                background: #fffaf0 !important;
+            }
+
+            [class*="st-key-lead_consulta_row_"] [data-testid="stHorizontalBlock"] {
+                align-items: center !important;
+                gap: 0.50rem !important;
+            }
+
+            [class*="st-key-lead_consulta_row_"] label {
+                display: none !important;
+            }
+
+            .lead-consulta-line {
+                color: #7a8494 !important;
+                font-size: 0.68rem !important;
+                font-weight: 800 !important;
+                margin: 0 !important;
+                padding: 0.48rem 0 0 0.04rem !important;
+            }
+
+            .lead-consulta-phone {
+                color: #10274f !important;
+                font-size: 0.72rem !important;
+                font-weight: 900 !important;
+                margin: 0 !important;
+                padding: 0.47rem 0 0 0 !important;
+            }
+
+            [class*="st-key-lead_consulta_row_"] [data-baseweb="select"] > div {
+                background: #ffffff !important;
+                border: 1px solid #dde2e8 !important;
+                border-radius: 7px !important;
+                box-shadow: none !important;
+                min-height: 36px !important;
+            }
+
+            [class*="st-key-lead_consulta_row_"] [data-baseweb="select"] input {
+                border: 0 !important;
+                height: 0 !important;
+                min-height: 0 !important;
+                opacity: 0 !important;
+                position: absolute !important;
+                width: 0 !important;
+            }
+
+            [class*="st-key-lead_consulta_row_"] [data-baseweb="select"] > div:focus-within {
+                border-color: #fbc410 !important;
+                box-shadow: 0 0 0 2px rgba(251,196,16,0.14) !important;
+            }
+
+            .lead-consulta-footer {
+                color: #7a8494 !important;
+                font-size: 0.62rem !important;
+                margin: 0.16rem 0 0.44rem 0 !important;
+            }
 </style>
         ''',
         unsafe_allow_html=True,
@@ -5503,24 +5655,50 @@ def salvar_linha_editada_inline(
 
 
 
+
+def atualizar_status_lead_consulta(
+    id_lead: str,
+    chave_widget: str,
+) -> None:
+    """
+    Atualiza imediatamente o status do lead na mesma linha do Google Sheets.
+    """
+    novo_status = normalizar_status_comercial(
+        st.session_state.get(chave_widget, "Novo Lead")
+    )
+
+    atualizar_status_lead_planilha(
+        id_lead=id_lead,
+        novo_status=novo_status,
+    )
+
+    st.session_state["status_card_selecionado"] = novo_status
+    st.session_state["mensagem_status_atualizado"] = (
+        f"Lead movido para: {novo_status}."
+    )
+
+
+
 def render_registros_card_clicado() -> None:
     """
-    Exibe uma planilha editável diretamente na tela.
+    Exibe somente os novos números e o status comercial.
 
-    Os dados são digitados diretamente nas células e atualizados na mesma
-    linha original do banco de dados.
-
-    Ao clicar em "Enviar para o banco de dados", o sistema:
-    - salva todas as linhas exibidas;
-    - identifica quais linhas possuem e-mail;
-    - envia contrato somente para quem possui e-mail;
-    - não reenvia contrato quando já existe token ZapSign salvo.
+    A planilha é usada apenas para consulta dos leads recebidos pelo WhatsApp
+    e movimentação entre os cards. A troca de status é salva automaticamente.
     """
     cadastros = obter_cadastros_comerciais()
     status_selecionado = st.session_state.get("status_card_selecionado", "")
 
     if not status_selecionado:
         return
+
+    mensagem = st.session_state.pop(
+        "mensagem_status_atualizado",
+        "",
+    )
+
+    if mensagem:
+        st.success(mensagem)
 
     cadastros_filtrados = [
         cadastro
@@ -5532,345 +5710,103 @@ def render_registros_card_clicado() -> None:
 
     with st.container(key="ficha_status_compacta"):
         if not cadastros_filtrados:
-            st.info(f'Nenhum aluno cadastrado em "{status_selecionado}".')
+            st.info(f'Nenhum lead cadastrado em "{status_selecionado}".')
             return
 
         st.markdown(
             f"""
-            <div class="inline-sheet-card">
-                <div class="inline-sheet-toolbar">
+            <div class="lead-consulta-card">
+                <div class="lead-consulta-toolbar">
                     <div>
-                        <p class="inline-sheet-toolbar-title">{html.escape(status_selecionado)}</p>
-                        <p class="inline-sheet-toolbar-sub">
-                            Atualize os dados diretamente na linha do aluno.
+                        <p class="lead-consulta-title">{html.escape(status_selecionado)}</p>
+                        <p class="lead-consulta-sub">
+                            Consulte os novos números e movimente cada lead entre as etapas.
                         </p>
                     </div>
-                    <span class="inline-sheet-count">
+                    <span class="lead-consulta-count">
                         {len(cadastros_filtrados)} registro(s)
                     </span>
                 </div>
-                <div class="inline-sheet-columns">
+                <div class="lead-consulta-columns">
                     <span>Linha</span>
-                    <span>Nome</span>
                     <span>Telefone</span>
-                    <span>Nascimento</span>
-                    <span>CPF</span>
-                    <span>E-mail</span>
-                    <span>Modalidade</span>
-                    <span>Plano</span>
-                    <span>Pagamento</span>
-                    <span>Status</span>
+                    <span>Status comercial</span>
                 </div>
             </div>
-            <p class="inline-sheet-help">
-                Clique dentro de qualquer célula branca para digitar.
-                O telefone permanece bloqueado porque vem automaticamente do WhatsApp.
-                Ao enviar, o contrato será disparado somente para os alunos que já tiverem e-mail.
+            <p class="lead-consulta-help">
+                O telefone entra automaticamente pelo WhatsApp.
+                Para movimentar o lead, altere somente o status na própria linha.
+                A atualização é salva automaticamente.
             </p>
             """,
             unsafe_allow_html=True,
         )
 
-        linhas_editadas = []
-
-        with st.form(
-            f"formulario_planilha_inline_{normalizar_texto_busca(status_selecionado)}",
-            clear_on_submit=False,
+        with st.container(
+            key="lead_consulta_scroll",
+            height=min(470, 66 + (len(cadastros_filtrados) * 49)),
         ):
-            with st.container(
-                key="inline_sheet_scroll",
-                height=min(500, 70 + (len(cadastros_filtrados) * 53)),
-            ):
-                for indice, cadastro in enumerate(cadastros_filtrados):
-                    id_lead = str(cadastro.get("IDLead", "")).strip()
+            for indice, cadastro in enumerate(cadastros_filtrados):
+                id_lead = str(cadastro.get("IDLead", "")).strip()
 
-                    if not id_lead:
-                        continue
+                if not id_lead:
+                    continue
 
-                    chave_segura = re.sub(
-                        r"[^a-zA-Z0-9_]+",
-                        "_",
-                        id_lead,
+                chave_segura = re.sub(
+                    r"[^a-zA-Z0-9_]+",
+                    "_",
+                    id_lead,
+                )
+
+                classe_par = "_even" if indice % 2 == 0 else ""
+                status_atual = normalizar_status_comercial(
+                    cadastro.get("Status Comercial", "Novo Lead")
+                )
+                chave_status = f"consulta_status_{chave_segura}"
+
+                with st.container(
+                    key=f"lead_consulta_row{classe_par}_{chave_segura}"
+                ):
+                    col_linha, col_telefone, col_status = st.columns(
+                        [0.65, 2.10, 1.35],
+                        gap="small",
                     )
 
-                    classe_par = "_even" if indice % 2 == 0 else ""
-
-                    modalidade_atual = str(
-                        cadastro.get("Produto ou Serviço", "")
-                    ).strip()
-
-                    plano_atual = str(
-                        cadastro.get("Plano Cliente", "")
-                    ).strip()
-
-                    pagamento_atual = str(
-                        cadastro.get("Forma de Pagamento", "")
-                    ).strip()
-
-                    status_atual = normalizar_status_comercial(
-                        cadastro.get("Status Comercial", "Novo Lead")
-                    )
-
-                    modalidades = garantir_opcao_atual(
-                        MODALIDADES_OPCOES,
-                        modalidade_atual,
-                    )
-
-                    planos = garantir_opcao_atual(
-                        PLANOS_CLIENTE_OPCOES,
-                        plano_atual,
-                    )
-
-                    pagamentos = garantir_opcao_atual(
-                        FORMAS_PAGAMENTO_OPCOES,
-                        pagamento_atual,
-                    )
-
-                    with st.container(
-                        key=f"inline_row{classe_par}_{chave_segura}"
-                    ):
-                        (
-                            col_linha,
-                            col_nome,
-                            col_telefone,
-                            col_nascimento,
-                            col_cpf,
-                            col_email,
-                            col_modalidade,
-                            col_plano,
-                            col_pagamento,
-                            col_status,
-                        ) = st.columns(
-                            [
-                                0.42,
-                                1.68,
-                                1.12,
-                                0.95,
-                                1.05,
-                                1.72,
-                                1.08,
-                                1.48,
-                                1.12,
-                                1.08,
-                            ],
-                            gap="small",
+                    with col_linha:
+                        st.markdown(
+                            f'<p class="lead-consulta-line">{html.escape(str(cadastro.get("_Linha Planilha", "")))}</p>',
+                            unsafe_allow_html=True,
                         )
 
-                        with col_linha:
-                            st.markdown(
-                                f'<p class="inline-sheet-line">{html.escape(str(cadastro.get("_Linha Planilha", "")))}</p>',
-                                unsafe_allow_html=True,
-                            )
+                    with col_telefone:
+                        telefone = str(cadastro.get("Telefone", "")).strip()
+                        st.markdown(
+                            f'<p class="lead-consulta-phone">{html.escape(telefone)}</p>',
+                            unsafe_allow_html=True,
+                        )
 
-                        with col_nome:
-                            nome = st.text_input(
-                                "Nome",
-                                value=str(cadastro.get("Nome Completo", "")),
-                                key=f"inline_nome_{chave_segura}",
-                                label_visibility="collapsed",
-                                placeholder="Nome do aluno",
-                            )
+                    with col_status:
+                        st.selectbox(
+                            "Status comercial",
+                            options=STATUS_COMERCIAL_OPCOES,
+                            index=STATUS_COMERCIAL_OPCOES.index(
+                                status_atual
+                            ),
+                            key=chave_status,
+                            label_visibility="collapsed",
+                            on_change=atualizar_status_lead_consulta,
+                            args=(id_lead, chave_status),
+                        )
 
-                        with col_telefone:
-                            st.text_input(
-                                "Telefone",
-                                value=str(cadastro.get("Telefone", "")),
-                                key=f"inline_telefone_{chave_segura}",
-                                label_visibility="collapsed",
-                                disabled=True,
-                            )
-
-                        with col_nascimento:
-                            nascimento = st.text_input(
-                                "Nascimento",
-                                value=str(
-                                    cadastro.get("Data de Nascimento", "")
-                                ),
-                                key=f"inline_nascimento_{chave_segura}",
-                                label_visibility="collapsed",
-                                placeholder="DD/MM/AAAA",
-                            )
-
-                        with col_cpf:
-                            cpf = st.text_input(
-                                "CPF",
-                                value=str(cadastro.get("CPF", "")),
-                                key=f"inline_cpf_{chave_segura}",
-                                label_visibility="collapsed",
-                                placeholder="000.000.000-00",
-                            )
-
-                        with col_email:
-                            email = st.text_input(
-                                "E-mail",
-                                value=str(cadastro.get("E-mail", "")),
-                                key=f"inline_email_{chave_segura}",
-                                label_visibility="collapsed",
-                                placeholder="nome@exemplo.com",
-                            )
-
-                        with col_modalidade:
-                            modalidade = st.selectbox(
-                                "Modalidade",
-                                options=modalidades,
-                                index=modalidades.index(modalidade_atual),
-                                key=f"inline_modalidade_{chave_segura}",
-                                label_visibility="collapsed",
-                            )
-
-                        with col_plano:
-                            plano = st.selectbox(
-                                "Plano",
-                                options=planos,
-                                index=planos.index(plano_atual),
-                                key=f"inline_plano_{chave_segura}",
-                                label_visibility="collapsed",
-                            )
-
-                        with col_pagamento:
-                            pagamento = st.selectbox(
-                                "Pagamento",
-                                options=pagamentos,
-                                index=pagamentos.index(pagamento_atual),
-                                key=f"inline_pagamento_{chave_segura}",
-                                label_visibility="collapsed",
-                            )
-
-                        with col_status:
-                            status = st.selectbox(
-                                "Status",
-                                options=STATUS_COMERCIAL_OPCOES,
-                                index=STATUS_COMERCIAL_OPCOES.index(
-                                    status_atual
-                                ),
-                                key=f"inline_status_{chave_segura}",
-                                label_visibility="collapsed",
-                            )
-
-                    linhas_editadas.append(
-                        {
-                            "cadastro_original": cadastro,
-                            "dados_editados": {
-                                "Nome Completo": nome,
-                                "Data de Nascimento": nascimento,
-                                "CPF": cpf,
-                                "E-mail": email,
-                                "Produto ou Serviço": modalidade,
-                                "Plano Cliente": plano,
-                                "Forma de Pagamento": pagamento,
-                                "Status Comercial": status,
-                            },
-                        }
-                    )
-
-            st.markdown(
-                """
-                <p class="inline-sheet-footer-note">
-                    O botão abaixo envia as alterações para o banco de dados.
-                    Nenhuma nova linha é criada ao editar os dados.
-                    Contratos são enviados automaticamente somente para os registros
-                    que possuem e-mail e ainda não receberam contrato.
-                </p>
-                """,
-                unsafe_allow_html=True,
-            )
-
-            with st.container(key="inline_sheet_actions"):
-                enviar_banco = st.form_submit_button(
-                    "Enviar para o banco de dados",
-                    use_container_width=True,
-                )
-
-        if not enviar_banco:
-            return
-
-        atualizados = 0
-        contratos_enviados = 0
-        sem_email = 0
-        ja_enviados = 0
-        avisos = []
-
-        for item in linhas_editadas:
-            cadastro_original = item["cadastro_original"]
-            dados_editados = item["dados_editados"]
-
-            try:
-                salvar_linha_editada_inline(
-                    cadastro_original=cadastro_original,
-                    dados_editados=dados_editados,
-                )
-                atualizados += 1
-            except Exception as erro:
-                avisos.append(
-                    f'Não foi possível salvar o lead '
-                    f'{cadastro_original.get("IDLead", "")}: {erro}'
-                )
-                continue
-
-            email_atual = str(
-                dados_editados.get("E-mail", "")
-            ).strip()
-
-            if not email_atual:
-                sem_email += 1
-                continue
-
-            if str(
-                cadastro_original.get("Token Documento ZapSign", "")
-            ).strip():
-                ja_enviados += 1
-                continue
-
-            cadastro_para_contrato = {
-                **cadastro_original,
-                **dados_editados,
-                "Telefone": str(
-                    cadastro_original.get("Telefone", "")
-                ).strip(),
-            }
-
-            try:
-                enviar_contrato_aluno_zapsign(
-                    cadastro=cadastro_para_contrato,
-                    id_lead=str(
-                        cadastro_original.get("IDLead", "")
-                    ).strip(),
-                )
-                contratos_enviados += 1
-            except Exception as erro:
-                avisos.append(
-                    f'Contrato não enviado para '
-                    f'{dados_editados.get("Nome Completo", "lead") or "lead"}: '
-                    f'{erro}'
-                )
-
-        if atualizados:
-            st.success(
-                f"{atualizados} linha(s) enviadas ao banco de dados."
-            )
-
-        if contratos_enviados:
-            st.success(
-                f"{contratos_enviados} contrato(s) enviado(s) por e-mail."
-            )
-
-        if sem_email:
-            st.info(
-                f"{sem_email} registro(s) ficaram salvos sem contrato porque "
-                "ainda não possuem e-mail."
-            )
-
-        if ja_enviados:
-            st.info(
-                f"{ja_enviados} registro(s) já possuíam contrato enviado e "
-                "não receberam um novo disparo."
-            )
-
-        for aviso in avisos:
-            st.warning(aviso)
-
-        limpar_cache_planilha()
-        st.rerun()
+        st.markdown(
+            """
+            <p class="lead-consulta-footer">
+                Não existe botão de envio: a movimentação é gravada automaticamente
+                assim que o status é alterado.
+            </p>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 def render_movimentacao_status_comercial() -> None:
