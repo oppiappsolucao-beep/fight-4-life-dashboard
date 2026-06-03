@@ -2762,6 +2762,139 @@ def aplicar_css_dashboard_claro() -> None:
                 border: 1px solid #f2e8bd !important;
                 border-left: 4px solid #fbc410 !important;
             }
+
+
+            /* FICHA DO ALUNO EM FORMATO DE PLANILHA */
+            .sheet-form-title {
+                align-items: center;
+                background: #111111;
+                border: 1px solid #111111;
+                border-radius: 10px 10px 0 0;
+                color: #ffffff !important;
+                display: flex;
+                font-size: 0.74rem !important;
+                font-weight: 900 !important;
+                justify-content: space-between;
+                letter-spacing: 0.055rem !important;
+                margin: 0.82rem 0 0 0 !important;
+                padding: 0.55rem 0.68rem !important;
+                text-transform: uppercase !important;
+            }
+
+            .sheet-form-title strong {
+                color: #fbc410 !important;
+                font-size: 0.64rem !important;
+                font-weight: 900 !important;
+                letter-spacing: 0.045rem !important;
+            }
+
+            .sheet-form-sub {
+                background: #fff8d9;
+                border-bottom: 1px solid #ecd981;
+                border-left: 1px solid #ecd981;
+                border-right: 1px solid #ecd981;
+                color: #6f5a00 !important;
+                font-size: 0.62rem !important;
+                line-height: 1.35 !important;
+                margin: 0 0 0.28rem 0 !important;
+                padding: 0.36rem 0.68rem !important;
+            }
+
+            .st-key-ficha_status_compacta [data-testid="stForm"],
+            .st-key-busca_comercial_container [data-testid="stForm"] {
+                background: #ffffff !important;
+                border: 1px solid #d9dee5 !important;
+                border-radius: 12px !important;
+                box-shadow: 0 7px 16px rgba(15, 23, 42, 0.045) !important;
+                overflow: hidden !important;
+                padding: 0.62rem !important;
+            }
+
+            .st-key-ficha_status_compacta [data-testid="stHorizontalBlock"],
+            .st-key-busca_comercial_container [data-testid="stHorizontalBlock"] {
+                gap: 0.42rem !important;
+            }
+
+            .st-key-ficha_status_compacta [data-testid="stTextInput"],
+            .st-key-ficha_status_compacta [data-testid="stSelectbox"],
+            .st-key-busca_comercial_container [data-testid="stTextInput"],
+            .st-key-busca_comercial_container [data-testid="stSelectbox"] {
+                margin-bottom: 0.14rem !important;
+            }
+
+            .st-key-ficha_status_compacta label,
+            .st-key-busca_comercial_container label {
+                color: #3a414c !important;
+                font-size: 0.61rem !important;
+                font-weight: 900 !important;
+                letter-spacing: 0.055rem !important;
+                margin-bottom: 0.10rem !important;
+                text-transform: uppercase !important;
+            }
+
+            .st-key-ficha_status_compacta input,
+            .st-key-ficha_status_compacta textarea,
+            .st-key-ficha_status_compacta [data-baseweb="select"] > div,
+            .st-key-busca_comercial_container input,
+            .st-key-busca_comercial_container textarea,
+            .st-key-busca_comercial_container [data-baseweb="select"] > div {
+                background: #ffffff !important;
+                border: 1px solid #d8dde5 !important;
+                border-radius: 5px !important;
+                box-shadow: none !important;
+                color: #111111 !important;
+                min-height: 36px !important;
+            }
+
+            .st-key-ficha_status_compacta input:focus,
+            .st-key-ficha_status_compacta textarea:focus,
+            .st-key-busca_comercial_container input:focus,
+            .st-key-busca_comercial_container textarea:focus {
+                border-color: #fbc410 !important;
+                box-shadow: 0 0 0 2px rgba(251,196,16,0.16) !important;
+            }
+
+            .st-key-ficha_status_compacta input:disabled,
+            .st-key-busca_comercial_container input:disabled {
+                background: #f0f2f5 !important;
+                border-color: #d8dde5 !important;
+                -webkit-text-fill-color: #111111 !important;
+                color: #111111 !important;
+                opacity: 1 !important;
+            }
+
+            .sheet-action-note {
+                background: #f6f7f9;
+                border: 1px dashed #cfd5dd;
+                border-radius: 8px;
+                color: #687282 !important;
+                font-size: 0.62rem !important;
+                line-height: 1.35 !important;
+                margin: 0.42rem 0 0.18rem 0 !important;
+                padding: 0.42rem 0.55rem !important;
+            }
+
+            .st-key-ficha_status_compacta div[data-testid="stFormSubmitButton"] button,
+            .st-key-busca_comercial_container div[data-testid="stFormSubmitButton"] button {
+                border-radius: 6px !important;
+                min-height: 39px !important;
+            }
+
+            @media (max-width: 760px) {
+                .sheet-form-title {
+                    border-radius: 8px 8px 0 0 !important;
+                    font-size: 0.68rem !important;
+                }
+
+                .sheet-form-title strong {
+                    display: none !important;
+                }
+
+                .st-key-ficha_status_compacta [data-testid="stHorizontalBlock"],
+                .st-key-busca_comercial_container [data-testid="stHorizontalBlock"] {
+                    gap: 0.28rem !important;
+                }
+            }
 </style>
         ''',
         unsafe_allow_html=True,
@@ -4152,7 +4285,7 @@ def render_ficha_lead_preenchida(
     chave_prefixo: str,
 ) -> None:
     """
-    Exibe a ficha completa do lead em seções organizadas.
+    Exibe a ficha completa do lead em formato compacto de planilha.
 
     O lead já existe na planilha porque entrou pelo WhatsApp.
     Ao preencher os dados, o dashboard atualiza exatamente a mesma linha.
@@ -4227,26 +4360,27 @@ def render_ficha_lead_preenchida(
     ):
         st.markdown(
             """
-            <div class="form-section-block">
-                <p class="form-section-title">Dados do cliente</p>
-                <p class="form-section-sub">
-                    Informações pessoais e meios de contato do aluno.
-                </p>
-            </div>
+            <p class="sheet-form-title">
+                <span>Dados do cliente</span>
+                <strong>Informações pessoais</strong>
+            </p>
+            <p class="sheet-form-sub">
+                Preencha os dados do aluno. O telefone é captado automaticamente pelo WhatsApp.
+            </p>
             """,
             unsafe_allow_html=True,
         )
 
-        coluna_nome, coluna_data = st.columns([1.55, 0.85])
+        col_nome, col_data, col_cpf = st.columns([1.55, 0.72, 0.92])
 
-        with coluna_nome:
+        with col_nome:
             nome_completo = st.text_input(
                 "Nome Completo",
                 value=str(cadastro.get("Nome Completo", "")),
                 key=f"{chave_prefixo}_nome_{id_lead}",
             )
 
-        with coluna_data:
+        with col_data:
             data_nascimento = st.text_input(
                 "Data de Nascimento",
                 value=str(cadastro.get("Data de Nascimento", "")),
@@ -4254,9 +4388,7 @@ def render_ficha_lead_preenchida(
                 key=f"{chave_prefixo}_data_{id_lead}",
             )
 
-        coluna_cpf, coluna_telefone = st.columns(2)
-
-        with coluna_cpf:
+        with col_cpf:
             cpf = st.text_input(
                 "CPF",
                 value=str(cadastro.get("CPF", "")),
@@ -4264,7 +4396,9 @@ def render_ficha_lead_preenchida(
                 key=f"{chave_prefixo}_cpf_{id_lead}",
             )
 
-        with coluna_telefone:
+        col_telefone, col_email, col_rede = st.columns([0.90, 1.35, 1.05])
+
+        with col_telefone:
             st.text_input(
                 "Telefone",
                 value=telefone_original,
@@ -4276,9 +4410,7 @@ def render_ficha_lead_preenchida(
                 key=f"{chave_prefixo}_telefone_{id_lead}",
             )
 
-        coluna_email, coluna_rede = st.columns(2)
-
-        with coluna_email:
+        with col_email:
             email = st.text_input(
                 "E-mail",
                 value=str(cadastro.get("E-mail", "")),
@@ -4286,45 +4418,46 @@ def render_ficha_lead_preenchida(
                 key=f"{chave_prefixo}_email_{id_lead}",
             )
 
-        with coluna_rede:
+        with col_rede:
             rede_social = st.text_input(
                 "Rede Social",
                 value=str(cadastro.get("Rede Social", "")),
-                placeholder="@usuario ou link do perfil",
+                placeholder="@usuario ou link",
                 key=f"{chave_prefixo}_rede_{id_lead}",
             )
 
         st.markdown(
             """
-            <div class="form-section-block">
-                <p class="form-section-title">Endereço do cliente</p>
-                <p class="form-section-sub">
-                    Preencha o endereço em campos separados para facilitar
-                    a organização do cadastro.
-                </p>
-            </div>
+            <p class="sheet-form-title">
+                <span>Endereço do cliente</span>
+                <strong>Cadastro residencial</strong>
+            </p>
+            <p class="sheet-form-sub">
+                Endereço separado em colunas para facilitar a conferência.
+            </p>
             """,
             unsafe_allow_html=True,
         )
 
-        rua = st.text_input(
-            "Rua",
-            value=rua_atual,
-            placeholder="Rua, avenida e número",
-            key=f"{chave_prefixo}_rua_{id_lead}",
-        )
+        col_rua, col_bairro, col_cep = st.columns([1.58, 0.88, 0.70])
 
-        coluna_bairro, coluna_cep = st.columns(2)
+        with col_rua:
+            rua = st.text_input(
+                "Rua",
+                value=rua_atual,
+                placeholder="Rua, avenida e número",
+                key=f"{chave_prefixo}_rua_{id_lead}",
+            )
 
-        with coluna_bairro:
+        with col_bairro:
             bairro = st.text_input(
                 "Bairro",
                 value=str(cadastro.get("Bairro", "")),
-                placeholder="Digite o bairro",
+                placeholder="Bairro",
                 key=f"{chave_prefixo}_bairro_{id_lead}",
             )
 
-        with coluna_cep:
+        with col_cep:
             cep = st.text_input(
                 "CEP",
                 value=str(cadastro.get("CEP", "")),
@@ -4341,45 +4474,52 @@ def render_ficha_lead_preenchida(
 
         st.markdown(
             """
-            <div class="form-section-block">
-                <p class="form-section-title">Planos do cliente</p>
-                <p class="form-section-sub">
-                    Escolha a modalidade, o plano comercial e a forma de pagamento.
-                </p>
-            </div>
+            <p class="sheet-form-title">
+                <span>Plano do cliente</span>
+                <strong>Configuração comercial</strong>
+            </p>
+            <p class="sheet-form-sub">
+                Escolha modalidade, plano e forma de pagamento.
+            </p>
             """,
             unsafe_allow_html=True,
         )
 
-        modalidade = st.selectbox(
-            "Modalidade escolhida",
-            options=modalidades,
-            index=modalidades.index(produto_atual),
-            key=f"{chave_prefixo}_produto_{id_lead}",
-        )
+        col_modalidade, col_plano, col_pagamento = st.columns([0.92, 1.55, 1.10])
 
-        plano_cliente = st.selectbox(
-            "Plano escolhido",
-            options=planos,
-            index=planos.index(plano_atual),
-            key=f"{chave_prefixo}_plano_{id_lead}",
-        )
+        with col_modalidade:
+            modalidade = st.selectbox(
+                "Modalidade escolhida",
+                options=modalidades,
+                index=modalidades.index(produto_atual),
+                key=f"{chave_prefixo}_produto_{id_lead}",
+            )
 
-        forma_pagamento = st.selectbox(
-            "Forma de Pagamento",
-            options=pagamentos,
-            index=pagamentos.index(pagamento_atual),
-            key=f"{chave_prefixo}_pagamento_{id_lead}",
-        )
+        with col_plano:
+            plano_cliente = st.selectbox(
+                "Plano escolhido",
+                options=planos,
+                index=planos.index(plano_atual),
+                key=f"{chave_prefixo}_plano_{id_lead}",
+            )
+
+        with col_pagamento:
+            forma_pagamento = st.selectbox(
+                "Forma de Pagamento",
+                options=pagamentos,
+                index=pagamentos.index(pagamento_atual),
+                key=f"{chave_prefixo}_pagamento_{id_lead}",
+            )
 
         st.markdown(
             """
-            <div class="form-section-block">
-                <p class="form-section-title">Adicionais</p>
-                <p class="form-section-sub">
-                    Atualize o status comercial conforme o andamento do atendimento.
-                </p>
-            </div>
+            <p class="sheet-form-title">
+                <span>Adicionais</span>
+                <strong>Acompanhamento comercial</strong>
+            </p>
+            <p class="sheet-form-sub">
+                Atualize o quadro do cliente conforme o andamento do atendimento.
+            </p>
             """,
             unsafe_allow_html=True,
         )
@@ -4389,6 +4529,17 @@ def render_ficha_lead_preenchida(
             options=STATUS_COMERCIAL_OPCOES,
             index=STATUS_COMERCIAL_OPCOES.index(status_atual),
             key=f"{chave_prefixo}_status_{id_lead}",
+        )
+
+        st.markdown(
+            """
+            <p class="sheet-action-note">
+                Use <strong>Salvar alterações</strong> para atualizar a mesma linha da planilha.
+                O contrato será enviado somente ao clicar em
+                <strong>Finalizar novo cadastro e enviar contrato</strong>.
+            </p>
+            """,
+            unsafe_allow_html=True,
         )
 
         coluna_salvar, coluna_finalizar = st.columns(2)
