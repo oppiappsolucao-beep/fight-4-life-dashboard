@@ -3992,6 +3992,38 @@ def render_ficha_lead_preenchida(
         st.rerun()
 
 
+
+def formatar_rotulo_lead(cadastro: dict) -> str:
+    """
+    Exibe uma identificação clara e única no seletor.
+
+    Leads vindos do WhatsApp podem chegar inicialmente apenas com telefone.
+    Por isso, o telefone aparece no rótulo e evita que vários registros
+    vazios sejam confundidos com o primeiro cadastro da lista.
+    """
+    nome = str(cadastro.get("Nome Completo", "")).strip()
+    telefone = str(cadastro.get("Telefone", "")).strip()
+    produto = str(cadastro.get("Produto ou Serviço", "")).strip()
+    status = normalizar_status_comercial(
+        cadastro.get("Status Comercial", "Novo Lead")
+    )
+
+    identificacao = nome or "Lead sem nome"
+    telefone_exibido = telefone or "telefone não informado"
+
+    partes = [
+        identificacao,
+        telefone_exibido,
+        status,
+    ]
+
+    if produto:
+        partes.append(produto)
+
+    return " — ".join(partes)
+
+
+
 def render_barra_pesquisa_comercial() -> None:
     with st.container(key="busca_comercial_container"):
         st.markdown(
@@ -4020,21 +4052,28 @@ def render_barra_pesquisa_comercial() -> None:
             st.info("Nenhum aluno encontrado.")
             return
 
-        opcoes = [
-            (
-                f'{cadastro.get("Nome Completo", "Sem nome")} '
-                f'— {normalizar_status_comercial(cadastro.get("Status Comercial", "Novo Lead"))}'
-            )
+        resultados_por_id = {
+            str(cadastro.get("IDLead", "")).strip(): cadastro
             for cadastro in resultados
-        ]
+            if str(cadastro.get("IDLead", "")).strip()
+        }
 
-        aluno_escolhido = st.selectbox(
+        ids_resultados = list(resultados_por_id.keys())
+
+        if not ids_resultados:
+            st.info("Nenhum aluno encontrado.")
+            return
+
+        id_escolhido = st.selectbox(
             "Resultado encontrado",
-            options=opcoes,
+            options=ids_resultados,
+            format_func=lambda id_lead: formatar_rotulo_lead(
+                resultados_por_id[id_lead]
+            ),
             key="resultado_pesquisa_aluno_comercial",
         )
 
-        cadastro = resultados[opcoes.index(aluno_escolhido)]
+        cadastro = resultados_por_id[id_escolhido]
 
         render_ficha_lead_preenchida(
             cadastro=cadastro,
@@ -4067,28 +4106,34 @@ def render_registros_card_clicado() -> None:
             st.info(f'Nenhum aluno cadastrado em "{status_selecionado}".')
             return
 
-        opcoes_alunos = [
-            (
-                f'{cadastros[indice].get("Nome Completo", "Sem nome")} '
-                f'— {cadastros[indice].get("Produto ou Serviço", "Sem modalidade")}'
-            )
+        cadastros_filtrados_por_id = {
+            str(cadastros[indice].get("IDLead", "")).strip(): cadastros[indice]
             for indice in indices_filtrados
-        ]
+            if str(cadastros[indice].get("IDLead", "")).strip()
+        }
+
+        ids_alunos = list(cadastros_filtrados_por_id.keys())
+
+        if not ids_alunos:
+            st.info(f'Nenhum aluno cadastrado em "{status_selecionado}".')
+            return
 
         st.markdown(
             '<p class="ficha-status-mini-label">Selecione um aluno</p>',
             unsafe_allow_html=True,
         )
 
-        aluno_escolhido = st.selectbox(
+        id_escolhido = st.selectbox(
             "Aluno",
-            options=opcoes_alunos,
+            options=ids_alunos,
+            format_func=lambda id_lead: formatar_rotulo_lead(
+                cadastros_filtrados_por_id[id_lead]
+            ),
             label_visibility="collapsed",
             key=f"aluno_visualizado_{status_selecionado}",
         )
 
-        indice_real = indices_filtrados[opcoes_alunos.index(aluno_escolhido)]
-        cadastro = cadastros[indice_real]
+        cadastro = cadastros_filtrados_por_id[id_escolhido]
 
         render_ficha_lead_preenchida(
             cadastro=cadastro,
