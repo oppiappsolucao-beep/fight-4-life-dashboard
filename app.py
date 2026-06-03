@@ -3454,6 +3454,59 @@ def aplicar_css_dashboard_claro() -> None:
                     padding: 0.68rem 0.72rem !important;
                 }
             }
+
+
+            /* CORREÇÃO DOS SELECTS INLINE — UM ÚNICO QUADRINHO */
+            [class*="st-key-inline_row_"] [data-baseweb="select"] {
+                width: 100% !important;
+            }
+
+            [class*="st-key-inline_row_"] [data-baseweb="select"] > div {
+                align-items: center !important;
+                background: #ffffff !important;
+                border: 1px solid #dde2e8 !important;
+                border-radius: 6px !important;
+                box-shadow: none !important;
+                display: flex !important;
+                min-height: 34px !important;
+                overflow: hidden !important;
+                padding: 0 !important;
+            }
+
+            [class*="st-key-inline_row_"] [data-baseweb="select"] > div > div,
+            [class*="st-key-inline_row_"] [data-baseweb="select"] > div > div > div,
+            [class*="st-key-inline_row_"] [data-baseweb="select"] span {
+                background: transparent !important;
+                border: 0 !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+            }
+
+            [class*="st-key-inline_row_"] [data-baseweb="select"] > div > div:first-child {
+                flex: 1 1 auto !important;
+                min-width: 0 !important;
+                padding-left: 0.52rem !important;
+            }
+
+            [class*="st-key-inline_row_"] [data-baseweb="select"] > div > div:last-child {
+                align-items: center !important;
+                border-left: 0 !important;
+                display: flex !important;
+                justify-content: center !important;
+                min-width: 28px !important;
+                padding: 0 0.32rem !important;
+                width: 28px !important;
+            }
+
+            [class*="st-key-inline_row_"] [data-baseweb="select"] svg {
+                color: #5d6877 !important;
+                fill: #5d6877 !important;
+            }
+
+            [class*="st-key-inline_row_"] [data-baseweb="select"] > div:focus-within {
+                border-color: #fbc410 !important;
+                box-shadow: 0 0 0 2px rgba(251,196,16,0.14) !important;
+            }
 </style>
         ''',
         unsafe_allow_html=True,
