@@ -1639,6 +1639,14 @@ def aplicar_css_dashboard_claro() -> None:
                 width: 100%;
             }
 
+            .bar-value {
+                color: #202020;
+                font-size: 0.78rem;
+                font-weight: 900;
+                margin-bottom: 0.34rem;
+                text-align: center;
+            }
+
             .placeholder-pill {
                 background: #fff7d6;
                 border: 1px solid #f3db80;
@@ -2798,7 +2806,7 @@ def montar_config_dashboard(pagina: str) -> dict:
                 {"titulo": "Conversão", "valor": "—", "rodape": "aguardando integração", "icone": "🏆", "classe": "kpi-gray"},
             ],
             "barras_title": "Modalidade mais escolhida",
-            "barras_sub": "Estrutura pronta para exibir procura e matrículas",
+            "barras_sub": "Quantidade de alunos por modalidade escolhida",
             "bar_labels": ["Jiu-Jitsu", "Muay Thai", "MMA", "Kids"],
             "painel_title": "Aulas teste e novas matrículas",
             "painel_sub": "Comparativo semanal",
@@ -2826,6 +2834,97 @@ def montar_config_dashboard(pagina: str) -> dict:
     }
 
 
+
+def normalizar_modalidade_grafico(valor: str) -> str:
+    """
+    Converte variações antigas da planilha para os quatro grupos exibidos
+    no gráfico comercial.
+    """
+    modalidade = normalizar_texto_busca(valor)
+
+    mapa = {
+        "jiu-jitsu": "Jiu-Jitsu",
+        "jiu jitsu": "Jiu-Jitsu",
+        "jiujitsu": "Jiu-Jitsu",
+        "muay thai": "Muay Thai",
+        "muaythai": "Muay Thai",
+        "mma": "MMA",
+        "kids": "Kids",
+        "jiu-jitsu infantil": "Kids",
+        "jiu jitsu infantil": "Kids",
+        "jiujitsu infantil": "Kids",
+    }
+
+    return mapa.get(modalidade, "")
+
+
+def contar_modalidades_comerciais() -> dict[str, int]:
+    """
+    Conta as modalidades escolhidas nos leads do acompanhamento comercial.
+
+    Leads ainda sem modalidade preenchida são ignorados até que o cadastro
+    seja complementado.
+    """
+    contagem = {
+        "Jiu-Jitsu": 0,
+        "Muay Thai": 0,
+        "MMA": 0,
+        "Kids": 0,
+    }
+
+    for cadastro in obter_cadastros_comerciais():
+        modalidade = normalizar_modalidade_grafico(
+            cadastro.get("Produto ou Serviço", "")
+        )
+
+        if modalidade in contagem:
+            contagem[modalidade] += 1
+
+    return contagem
+
+
+def montar_barras_modalidades_comerciais() -> str:
+    """
+    Monta as barras dinamicamente conforme os dados salvos na planilha.
+    """
+    contagem = contar_modalidades_comerciais()
+    maior_valor = max(contagem.values(), default=0)
+
+    classes = {
+        "Jiu-Jitsu": "bar-yellow",
+        "Muay Thai": "bar-black",
+        "MMA": "bar-yellow",
+        "Kids": "bar-black",
+    }
+
+    barras_html = []
+
+    for modalidade in ["Jiu-Jitsu", "Muay Thai", "MMA", "Kids"]:
+        total = contagem[modalidade]
+
+        if maior_valor <= 0:
+            altura = 10
+        else:
+            altura = 18 + round((total / maior_valor) * 132)
+
+        barras_html.append(
+            f"""
+            <div class="bar-group">
+                <div class="bar-value">{total}</div>
+                <div
+                    class="bar {classes[modalidade]}"
+                    style="height:{altura}px;"
+                    title="{modalidade}: {total}"
+                ></div>
+                <div class="bar-label">{modalidade}</div>
+            </div>
+            """
+        )
+
+    return "".join(barras_html)
+
+
+
 def montar_dashboard_topo_visual(
     logo_b64: str,
     pagina: str,
@@ -2833,24 +2932,36 @@ def montar_dashboard_topo_visual(
     config = montar_config_dashboard(pagina)
     kpis_html = montar_kpis_dashboard(config["metricas"])
 
-    barras = [
-        ("62%", "bar-yellow"),
-        ("78%", "bar-black"),
-        ("47%", "bar-yellow"),
-        ("70%", "bar-black"),
-    ]
-
-    barras_html = "".join(
-        [
-            f"""
-            <div class="bar-group">
-                <div class="bar {classe}" style="height:{altura};"></div>
-                <div class="bar-label">{label}</div>
-            </div>
-            """
-            for label, (altura, classe) in zip(config["bar_labels"], barras)
+    if pagina == "📈 Comercial":
+        barras_html = montar_barras_modalidades_comerciais()
+        rodape_barras = (
+            "Atualizado automaticamente conforme as modalidades "
+            "selecionadas nos cadastros comerciais."
+        )
+    else:
+        barras_diretoria = [
+            ("62%", "bar-yellow"),
+            ("78%", "bar-black"),
+            ("47%", "bar-yellow"),
+            ("70%", "bar-black"),
         ]
-    )
+
+        barras_html = "".join(
+            [
+                f"""
+                <div class="bar-group">
+                    <div class="bar {classe}" style="height:{altura};"></div>
+                    <div class="bar-label">{label}</div>
+                </div>
+                """
+                for label, (altura, classe) in zip(
+                    config["bar_labels"],
+                    barras_diretoria,
+                )
+            ]
+        )
+
+        rodape_barras = "Valores demonstrativos apenas para visualização do layout."
 
     return f"""
     <section class="dashboard-shell">
@@ -2886,7 +2997,7 @@ def montar_dashboard_topo_visual(
             </div>
 
             <div class="dashboard-footer-note">
-                Valores demonstrativos apenas para visualização do layout.
+                {rodape_barras}
             </div>
         </article>
     </section>
