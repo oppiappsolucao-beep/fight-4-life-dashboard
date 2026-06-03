@@ -3308,7 +3308,7 @@ def aplicar_css_dashboard_claro() -> None:
                 font-size: 0.61rem !important;
                 font-weight: 900 !important;
                 gap: 0;
-                grid-template-columns: 0.42fr 1.60fr 1.10fr 0.95fr 1.05fr 1.60fr 1.05fr 1.45fr 1.10fr 1.05fr 0.72fr;
+                grid-template-columns: 0.42fr 1.68fr 1.12fr 0.95fr 1.05fr 1.72fr 1.08fr 1.48fr 1.12fr 1.08fr;
                 letter-spacing: 0.024rem !important;
                 min-width: 1550px;
                 padding: 0.50rem 0.62rem;
@@ -4279,6 +4279,9 @@ def criar_contrato_zapsign(
 
     nome = str(cadastro.get("Nome Completo", "")).strip()
     email = str(cadastro.get("E-mail", "")).strip()
+
+    if not nome:
+        nome = "Aluno Fight for Life"
     telefone_original = str(cadastro.get("Telefone", "")).strip()
     telefone = normalizar_telefone_zapsign(telefone_original)
 
@@ -5427,9 +5430,14 @@ def render_registros_card_clicado() -> None:
     """
     Exibe uma planilha editável diretamente na tela.
 
-    Não existe botão Editar em cada linha.
-    Os dados são digitados diretamente nas células e salvos em lote
-    na mesma linha original da planilha Google.
+    Os dados são digitados diretamente nas células e atualizados na mesma
+    linha original do banco de dados.
+
+    Ao clicar em "Enviar para o banco de dados", o sistema:
+    - salva todas as linhas exibidas;
+    - identifica quais linhas possuem e-mail;
+    - envia contrato somente para quem possui e-mail;
+    - não reenvia contrato quando já existe token ZapSign salvo.
     """
     cadastros = obter_cadastros_comerciais()
     status_selecionado = st.session_state.get("status_card_selecionado", "")
@@ -5475,13 +5483,12 @@ def render_registros_card_clicado() -> None:
                     <span>Plano</span>
                     <span>Pagamento</span>
                     <span>Status</span>
-                    <span>Enviar</span>
                 </div>
             </div>
             <p class="inline-sheet-help">
                 Clique dentro de qualquer célula branca para digitar.
                 O telefone permanece bloqueado porque vem automaticamente do WhatsApp.
-                Marque “Enviar” somente quando o cadastro estiver pronto para receber o contrato.
+                Ao enviar, o contrato será disparado somente para os alunos que já tiverem e-mail.
             </p>
             """,
             unsafe_allow_html=True,
@@ -5556,20 +5563,18 @@ def render_registros_card_clicado() -> None:
                             col_plano,
                             col_pagamento,
                             col_status,
-                            col_enviar,
                         ) = st.columns(
                             [
                                 0.42,
-                                1.60,
-                                1.10,
+                                1.68,
+                                1.12,
                                 0.95,
                                 1.05,
-                                1.60,
-                                1.05,
-                                1.45,
-                                1.10,
-                                1.05,
-                                0.72,
+                                1.72,
+                                1.08,
+                                1.48,
+                                1.12,
+                                1.08,
                             ],
                             gap="small",
                         )
@@ -5665,18 +5670,6 @@ def render_registros_card_clicado() -> None:
                                 label_visibility="collapsed",
                             )
 
-                        with col_enviar:
-                            enviar_contrato = st.checkbox(
-                                "Enviar",
-                                value=False,
-                                key=f"inline_enviar_{chave_segura}",
-                                label_visibility="collapsed",
-                                help=(
-                                    "Marque para enviar o contrato por e-mail "
-                                    "após salvar a planilha."
-                                ),
-                            )
-
                     linhas_editadas.append(
                         {
                             "cadastro_original": cadastro,
@@ -5690,32 +5683,34 @@ def render_registros_card_clicado() -> None:
                                 "Forma de Pagamento": pagamento,
                                 "Status Comercial": status,
                             },
-                            "enviar_contrato": enviar_contrato,
                         }
                     )
 
             st.markdown(
                 """
                 <p class="inline-sheet-footer-note">
-                    O botão abaixo atualiza os dados na mesma linha existente.
-                    Nenhum novo cadastro é criado ao editar nome, CPF, e-mail,
-                    modalidade, plano ou status.
+                    O botão abaixo envia as alterações para o banco de dados.
+                    Nenhuma nova linha é criada ao editar os dados.
+                    Contratos são enviados automaticamente somente para os registros
+                    que possuem e-mail e ainda não receberam contrato.
                 </p>
                 """,
                 unsafe_allow_html=True,
             )
 
             with st.container(key="inline_sheet_actions"):
-                salvar_planilha = st.form_submit_button(
-                    "Salvar alterações da planilha",
+                enviar_banco = st.form_submit_button(
+                    "Enviar para o banco de dados",
                     use_container_width=True,
                 )
 
-        if not salvar_planilha:
+        if not enviar_banco:
             return
 
         atualizados = 0
         contratos_enviados = 0
+        sem_email = 0
+        ja_enviados = 0
         avisos = []
 
         for item in linhas_editadas:
@@ -5735,7 +5730,18 @@ def render_registros_card_clicado() -> None:
                 )
                 continue
 
-            if not item["enviar_contrato"]:
+            email_atual = str(
+                dados_editados.get("E-mail", "")
+            ).strip()
+
+            if not email_atual:
+                sem_email += 1
+                continue
+
+            if str(
+                cadastro_original.get("Token Documento ZapSign", "")
+            ).strip():
+                ja_enviados += 1
                 continue
 
             cadastro_para_contrato = {
@@ -5745,29 +5751,6 @@ def render_registros_card_clicado() -> None:
                     cadastro_original.get("Telefone", "")
                 ).strip(),
             }
-
-            faltantes = validar_cadastro_para_envio_contrato(
-                cadastro_para_contrato
-            )
-
-            if faltantes:
-                avisos.append(
-                    f'Contrato não enviado para '
-                    f'{dados_editados.get("Nome Completo", "lead") or "lead"}: '
-                    + ", ".join(faltantes)
-                    + "."
-                )
-                continue
-
-            if str(
-                cadastro_original.get("Token Documento ZapSign", "")
-            ).strip():
-                avisos.append(
-                    f'O aluno '
-                    f'{dados_editados.get("Nome Completo", "lead") or "lead"} '
-                    f'já possui contrato enviado.'
-                )
-                continue
 
             try:
                 enviar_contrato_aluno_zapsign(
@@ -5786,12 +5769,24 @@ def render_registros_card_clicado() -> None:
 
         if atualizados:
             st.success(
-                f"{atualizados} linha(s) atualizada(s) com sucesso."
+                f"{atualizados} linha(s) enviadas ao banco de dados."
             )
 
         if contratos_enviados:
             st.success(
                 f"{contratos_enviados} contrato(s) enviado(s) por e-mail."
+            )
+
+        if sem_email:
+            st.info(
+                f"{sem_email} registro(s) ficaram salvos sem contrato porque "
+                "ainda não possuem e-mail."
+            )
+
+        if ja_enviados:
+            st.info(
+                f"{ja_enviados} registro(s) já possuíam contrato enviado e "
+                "não receberam um novo disparo."
             )
 
         for aviso in avisos:
