@@ -15,6 +15,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import gspread
+import pandas as pd
 import streamlit as st
 from google.oauth2.service_account import Credentials
 from gspread.utils import rowcol_to_a1
@@ -2895,6 +2896,82 @@ def aplicar_css_dashboard_claro() -> None:
                     gap: 0.28rem !important;
                 }
             }
+
+
+            /* LISTAGEM DE ALUNOS EM FORMATO DE PLANILHA */
+            .records-sheet-head {
+                align-items: center;
+                background: linear-gradient(90deg, #08285f 0%, #0a3478 100%);
+                border-radius: 12px 12px 0 0;
+                color: #ffffff !important;
+                display: flex;
+                justify-content: space-between;
+                margin-top: 0.10rem;
+                padding: 0.70rem 0.82rem;
+            }
+
+            .records-sheet-title {
+                color: #ffffff !important;
+                font-size: 0.80rem !important;
+                font-weight: 900 !important;
+                letter-spacing: 0.035rem !important;
+                margin: 0 !important;
+                text-transform: uppercase !important;
+            }
+
+            .records-sheet-sub {
+                color: rgba(255,255,255,0.80) !important;
+                font-size: 0.62rem !important;
+                margin: 0.18rem 0 0 0 !important;
+            }
+
+            .records-sheet-count {
+                background: rgba(255,255,255,0.16);
+                border: 1px solid rgba(255,255,255,0.20);
+                border-radius: 999px;
+                color: #ffffff !important;
+                font-size: 0.62rem !important;
+                font-weight: 900 !important;
+                padding: 0.36rem 0.56rem;
+                white-space: nowrap;
+            }
+
+            .records-sheet-note {
+                background: #f4f7fb;
+                border-bottom: 1px solid #dbe3ee;
+                border-left: 1px solid #dbe3ee;
+                border-right: 1px solid #dbe3ee;
+                color: #5a6678 !important;
+                font-size: 0.63rem !important;
+                line-height: 1.40 !important;
+                margin: 0 !important;
+                padding: 0.46rem 0.72rem !important;
+            }
+
+            .st-key-ficha_status_compacta [data-testid="stDataFrame"] {
+                background: #ffffff !important;
+                border: 1px solid #dbe3ee !important;
+                border-radius: 0 0 12px 12px !important;
+                box-shadow: 0 8px 18px rgba(15, 23, 42, 0.055) !important;
+                overflow: hidden !important;
+            }
+
+            .st-key-ficha_status_compacta [data-testid="stDataFrame"] canvas {
+                border-radius: 0 0 12px 12px !important;
+            }
+
+            .records-selected-title {
+                color: #111111 !important;
+                font-size: 0.78rem !important;
+                font-weight: 900 !important;
+                letter-spacing: 0.04rem !important;
+                margin: 0.92rem 0 0.36rem 0 !important;
+                text-transform: uppercase !important;
+            }
+
+            .records-selected-title span {
+                color: #a27800 !important;
+            }
 </style>
         ''',
         unsafe_allow_html=True,
@@ -4737,8 +4814,14 @@ def render_barra_pesquisa_comercial() -> None:
 
 def render_registros_card_clicado() -> None:
     """
-    Abre somente a ficha do card selecionado.
-    Ao clicar novamente no mesmo botão, a ficha é recolhida.
+    Exibe somente os leads do card selecionado em uma tabela compacta.
+
+    A listagem segue a pegada visual de uma planilha:
+    - uma linha por lead;
+    - colunas com os principais dados;
+    - rolagem vertical;
+    - seleção de uma única linha;
+    - formulário completo exibido apenas após o clique.
     """
     cadastros = obter_cadastros_comerciais()
     status_selecionado = st.session_state.get("status_card_selecionado", "")
@@ -4746,47 +4829,160 @@ def render_registros_card_clicado() -> None:
     if not status_selecionado:
         return
 
-    indices_filtrados = [
-        indice
-        for indice, cadastro in enumerate(cadastros)
+    cadastros_filtrados = [
+        cadastro
+        for cadastro in cadastros
         if normalizar_status_comercial(
             cadastro.get("Status Comercial", "Novo Lead")
         ) == status_selecionado
     ]
 
     with st.container(key="ficha_status_compacta"):
-        if not indices_filtrados:
-            st.info(f'Nenhum aluno cadastrado em "{status_selecionado}".')
-            return
-
-        cadastros_filtrados_por_id = {
-            str(cadastros[indice].get("IDLead", "")).strip(): cadastros[indice]
-            for indice in indices_filtrados
-            if str(cadastros[indice].get("IDLead", "")).strip()
-        }
-
-        ids_alunos = list(cadastros_filtrados_por_id.keys())
-
-        if not ids_alunos:
+        if not cadastros_filtrados:
             st.info(f'Nenhum aluno cadastrado em "{status_selecionado}".')
             return
 
         st.markdown(
-            '<p class="ficha-status-mini-label">Selecione um aluno</p>',
+            f"""
+            <div class="records-sheet-head">
+                <div>
+                    <p class="records-sheet-title">{status_selecionado}</p>
+                    <p class="records-sheet-sub">
+                        Selecione uma linha para visualizar e editar o cadastro completo.
+                    </p>
+                </div>
+                <span class="records-sheet-count">
+                    {len(cadastros_filtrados)} registro(s)
+                </span>
+            </div>
+            <p class="records-sheet-note">
+                A tabela mostra somente os dados principais. O telefone vem do WhatsApp
+                e permanece bloqueado para edição.
+            </p>
+            """,
             unsafe_allow_html=True,
         )
 
-        id_escolhido = st.selectbox(
-            "Aluno",
-            options=ids_alunos,
-            format_func=lambda id_lead: formatar_rotulo_lead(
-                cadastros_filtrados_por_id[id_lead]
-            ),
-            label_visibility="collapsed",
-            key=f"aluno_visualizado_{status_selecionado}",
+        linhas_tabela = []
+
+        for cadastro in cadastros_filtrados:
+            nome = str(cadastro.get("Nome Completo", "")).strip()
+            telefone = str(cadastro.get("Telefone", "")).strip()
+            cpf = str(cadastro.get("CPF", "")).strip()
+            email = str(cadastro.get("E-mail", "")).strip()
+            modalidade = str(
+                cadastro.get("Produto ou Serviço", "")
+            ).strip()
+            plano = str(cadastro.get("Plano Cliente", "")).strip()
+            pagamento = str(
+                cadastro.get("Forma de Pagamento", "")
+            ).strip()
+
+            linhas_tabela.append(
+                {
+                    "IDLead": str(cadastro.get("IDLead", "")).strip(),
+                    "Linha": cadastro.get("_Linha Planilha", ""),
+                    "Nome": nome or "Lead sem nome",
+                    "Telefone": telefone,
+                    "CPF": cpf,
+                    "E-mail": email,
+                    "Modalidade": modalidade,
+                    "Plano": plano,
+                    "Pagamento": pagamento,
+                }
+            )
+
+        tabela = pd.DataFrame(linhas_tabela)
+
+        evento = st.dataframe(
+            tabela[
+                [
+                    "Linha",
+                    "Nome",
+                    "Telefone",
+                    "CPF",
+                    "E-mail",
+                    "Modalidade",
+                    "Plano",
+                    "Pagamento",
+                ]
+            ],
+            hide_index=True,
+            use_container_width=True,
+            height=min(430, 82 + (len(tabela) * 35)),
+            on_select="rerun",
+            selection_mode="single-row",
+            key=f"tabela_status_{normalizar_texto_busca(status_selecionado)}",
+            column_config={
+                "Linha": st.column_config.NumberColumn(
+                    "Linha",
+                    width="small",
+                    format="%d",
+                ),
+                "Nome": st.column_config.TextColumn(
+                    "Nome",
+                    width="large",
+                ),
+                "Telefone": st.column_config.TextColumn(
+                    "Telefone",
+                    width="medium",
+                ),
+                "CPF": st.column_config.TextColumn(
+                    "CPF",
+                    width="medium",
+                ),
+                "E-mail": st.column_config.TextColumn(
+                    "E-mail",
+                    width="large",
+                ),
+                "Modalidade": st.column_config.TextColumn(
+                    "Modalidade",
+                    width="medium",
+                ),
+                "Plano": st.column_config.TextColumn(
+                    "Plano",
+                    width="large",
+                ),
+                "Pagamento": st.column_config.TextColumn(
+                    "Pagamento",
+                    width="medium",
+                ),
+            },
         )
 
-        cadastro = cadastros_filtrados_por_id[id_escolhido]
+        selecao = getattr(evento, "selection", None)
+        linhas_selecionadas = (
+            list(getattr(selecao, "rows", []) or [])
+            if selecao is not None
+            else []
+        )
+
+        if not linhas_selecionadas:
+            st.caption("Clique em uma linha da tabela para abrir o cadastro completo.")
+            return
+
+        indice_selecionado = int(linhas_selecionadas[0])
+
+        if indice_selecionado < 0 or indice_selecionado >= len(
+            cadastros_filtrados
+        ):
+            return
+
+        cadastro = cadastros_filtrados[indice_selecionado]
+
+        nome_selecionado = (
+            str(cadastro.get("Nome Completo", "")).strip()
+            or "Lead sem nome"
+        )
+
+        st.markdown(
+            f"""
+            <p class="records-selected-title">
+                Cadastro selecionado: <span>{nome_selecionado}</span>
+            </p>
+            """,
+            unsafe_allow_html=True,
+        )
 
         render_ficha_lead_preenchida(
             cadastro=cadastro,
