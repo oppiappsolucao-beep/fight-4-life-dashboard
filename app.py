@@ -3538,6 +3538,73 @@ def aplicar_css_dashboard_claro() -> None:
                 box-shadow: none !important;
                 content: none !important;
             }
+
+
+            /* PÁGINA CADASTRO DE ALUNOS */
+            .cadastro-alunos-header {
+                align-items: center;
+                background: rgba(255,255,255,0.97);
+                border: 1px solid rgba(255,255,255,0.74);
+                border-bottom: 4px solid #fbc410;
+                border-radius: 22px;
+                box-shadow: 0 12px 26px rgba(15, 23, 42, 0.07);
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 0.90rem;
+                padding: 1.05rem 1.12rem;
+            }
+
+            .cadastro-alunos-kicker {
+                color: #a27800 !important;
+                font-size: 0.64rem !important;
+                font-weight: 900 !important;
+                letter-spacing: 0.14rem !important;
+                margin: 0 0 0.24rem 0 !important;
+                text-transform: uppercase !important;
+            }
+
+            .cadastro-alunos-title {
+                color: #111111 !important;
+                font-size: 1.62rem !important;
+                font-weight: 900 !important;
+                letter-spacing: -0.055rem !important;
+                line-height: 1 !important;
+                margin: 0 !important;
+            }
+
+            .cadastro-alunos-sub {
+                color: #667085 !important;
+                font-size: 0.74rem !important;
+                line-height: 1.40 !important;
+                margin: 0.38rem 0 0 0 !important;
+                max-width: 720px;
+            }
+
+            .cadastro-alunos-badge {
+                background: #fff7d6;
+                border: 1px solid #eed16f;
+                border-radius: 999px;
+                color: #866500 !important;
+                font-size: 0.62rem !important;
+                font-weight: 900 !important;
+                letter-spacing: 0.06rem !important;
+                padding: 0.42rem 0.62rem;
+                text-transform: uppercase !important;
+                white-space: nowrap;
+            }
+
+            @media (max-width: 760px) {
+                .cadastro-alunos-header {
+                    align-items: flex-start;
+                    flex-direction: column;
+                    gap: 0.70rem;
+                    padding: 0.90rem;
+                }
+
+                .cadastro-alunos-title {
+                    font-size: 1.32rem !important;
+                }
+            }
 </style>
         ''',
         unsafe_allow_html=True,
@@ -5864,8 +5931,10 @@ def render_movimentacao_status_comercial() -> None:
             st.rerun()
 
 
-def render_formulario_retratil_comercial() -> None:
-    with st.expander("Cadastrar novo aluno", expanded=False):
+def render_formulario_retratil_comercial(
+    expanded: bool = False,
+) -> None:
+    with st.expander("Cadastrar novo aluno", expanded=expanded):
         st.markdown(
             """
             <div class="form-card-badge">Formulário comercial</div>
@@ -6093,6 +6162,32 @@ def render_formulario_retratil_comercial() -> None:
 
 
 
+
+def render_cabecalho_cadastro_alunos() -> None:
+    st.markdown(
+        """
+        <section class="cadastro-alunos-header">
+            <div>
+                <p class="cadastro-alunos-kicker">Fight for Life • Cadastro</p>
+                <h1 class="cadastro-alunos-title">Cadastro de alunos</h1>
+                <p class="cadastro-alunos-sub">
+                    Registre um novo aluno, escolha o plano e envie o contrato
+                    digital para assinatura.
+                </p>
+            </div>
+            <div class="cadastro-alunos-badge">Novo cadastro</div>
+        </section>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_pagina_cadastro_alunos() -> None:
+    render_cabecalho_cadastro_alunos()
+    render_formulario_retratil_comercial(expanded=True)
+
+
+
 def render_toggle_menu_lateral() -> None:
     """
     Controla o menu lateral com uma setinha própria e estável.
@@ -6209,7 +6304,11 @@ def exibir_dashboard_inicial() -> None:
 
         pagina = st.radio(
             "Menu principal",
-            options=["📈 Comercial", "👔 Diretoria"],
+            options=[
+                "📈 Comercial",
+                "📝 Cadastro de alunos",
+                "👔 Diretoria",
+            ],
             label_visibility="collapsed",
             key="menu_principal",
         )
@@ -6226,20 +6325,31 @@ def exibir_dashboard_inicial() -> None:
         exibir_login_diretoria()
         return
 
-    st.html(
-        montar_dashboard_topo_visual(
-            logo_b64=logo_b64,
-            pagina=pagina,
-        )
-    )
-
-    config = montar_config_dashboard(pagina)
-
     if pagina == "📈 Comercial":
+        st.html(
+            montar_dashboard_topo_visual(
+                logo_b64=logo_b64,
+                pagina=pagina,
+            )
+        )
+
         render_barra_pesquisa_comercial()
         render_cards_status_comercial_clicaveis()
         render_registros_card_clicado()
+
+    elif pagina == "📝 Cadastro de alunos":
+        render_pagina_cadastro_alunos()
+
     else:
+        st.html(
+            montar_dashboard_topo_visual(
+                logo_b64=logo_b64,
+                pagina=pagina,
+            )
+        )
+
+        config = montar_config_dashboard(pagina)
+
         coluna_esquerda, coluna_direita = st.columns(
             [0.82, 1.7],
             gap="medium",
