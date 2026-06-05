@@ -4046,20 +4046,6 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
 
-            /* ESPAÇAMENTO DOS CAMPOS DO LOGIN DA DIRETORIA */
-            .st-key-login_diretoria_campos div[data-testid="stTextInput"] label {
-                display: block !important;
-                margin-bottom: 0.30rem !important;
-            }
-
-            .st-key-login_diretoria_campos div[data-testid="stTextInput"] {
-                margin-bottom: 0.42rem !important;
-            }
-
-            .st-key-login_diretoria_campos div[data-testid="stFormSubmitButton"] {
-                margin-top: 0.22rem !important;
-            }
-
 
             /* LABELS MANUAIS DO LOGIN DA DIRETORIA */
             .st-key-login_diretoria_campos .diretoria-field-label {
@@ -4081,6 +4067,26 @@ def aplicar_css_dashboard_claro() -> None:
 
             .st-key-login_diretoria_campos div[data-testid="stFormSubmitButton"] {
                 margin-top: 0.92rem !important;
+            }
+
+
+            /* ESCONDE LABELS NATIVOS DUPLICADOS DO STREAMLIT */
+            .st-key-login_diretoria_campos div[data-testid="stTextInput"] > label,
+            .st-key-login_diretoria_campos div[data-testid="stTextInput"] label {
+                display: none !important;
+                height: 0 !important;
+                margin: 0 !important;
+                max-height: 0 !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+                padding: 0 !important;
+                visibility: hidden !important;
+            }
+
+            /* MANTÉM SOMENTE OS LABELS MANUAIS COM O ESPAÇAMENTO CERTO */
+            .st-key-login_diretoria_campos .diretoria-field-label {
+                display: block !important;
+                visibility: visible !important;
             }
 </style>
         ''',
