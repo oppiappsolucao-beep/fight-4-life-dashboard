@@ -3813,6 +3813,222 @@ def aplicar_css_dashboard_claro() -> None:
                 border-radius: 12px !important;
                 padding: 0.42rem !important;
             }
+
+
+            /* DIRETORIA — FATURAMENTO POR MODALIDADE */
+            .diretoria-finance-shell {
+                width: 100%;
+            }
+
+            .diretoria-finance-header {
+                align-items: center;
+                background: rgba(255,255,255,0.97);
+                border: 1px solid rgba(255,255,255,0.72);
+                border-bottom: 4px solid #fbc410;
+                border-radius: 22px;
+                box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 1rem;
+                overflow: hidden;
+                padding: 1.04rem 1.12rem;
+                position: relative;
+            }
+
+            .diretoria-finance-kicker {
+                color: #a27800 !important;
+                font-size: 0.65rem !important;
+                font-weight: 900 !important;
+                letter-spacing: 0.14rem !important;
+                margin: 0 0 0.24rem 0 !important;
+                text-transform: uppercase !important;
+            }
+
+            .diretoria-finance-title {
+                color: #111111 !important;
+                font-size: 1.62rem !important;
+                font-weight: 900 !important;
+                letter-spacing: -0.055rem !important;
+                line-height: 1 !important;
+                margin: 0 !important;
+            }
+
+            .diretoria-finance-sub {
+                color: #667085 !important;
+                font-size: 0.75rem !important;
+                line-height: 1.42 !important;
+                margin: 0.38rem 0 0 0 !important;
+            }
+
+            .diretoria-total-card {
+                background: #111111;
+                border: 1px solid rgba(255,255,255,0.12);
+                border-radius: 16px;
+                box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
+                min-width: 230px;
+                padding: 0.72rem 0.82rem;
+                text-align: right;
+            }
+
+            .diretoria-total-label {
+                color: #fbc410 !important;
+                font-size: 0.60rem !important;
+                font-weight: 900 !important;
+                letter-spacing: 0.10rem !important;
+                margin: 0 !important;
+                text-transform: uppercase !important;
+            }
+
+            .diretoria-total-value {
+                color: #ffffff !important;
+                font-size: 1.50rem !important;
+                font-weight: 900 !important;
+                letter-spacing: -0.055rem !important;
+                line-height: 1 !important;
+                margin: 0.34rem 0 0 0 !important;
+            }
+
+            .diretoria-total-sub {
+                color: rgba(255,255,255,0.70) !important;
+                font-size: 0.61rem !important;
+                margin: 0.28rem 0 0 0 !important;
+            }
+
+            .diretoria-modalidade-grid {
+                display: grid;
+                gap: 0.92rem;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                margin-bottom: 0.92rem;
+            }
+
+            .diretoria-modalidade-card {
+                border-radius: 18px;
+                box-shadow: 0 12px 24px rgba(15, 23, 42, 0.11);
+                min-height: 148px;
+                overflow: hidden;
+                padding: 0.92rem 0.96rem;
+                position: relative;
+            }
+
+            .diretoria-modalidade-card::before {
+                background: rgba(255,255,255,0.13);
+                border-radius: 50%;
+                content: "";
+                height: 112px;
+                position: absolute;
+                right: -34px;
+                top: -38px;
+                width: 112px;
+            }
+
+            .diretoria-modalidade-card::after {
+                background: rgba(255,255,255,0.08);
+                border-radius: 50%;
+                bottom: -48px;
+                content: "";
+                height: 96px;
+                position: absolute;
+                right: 18px;
+                width: 96px;
+            }
+
+            .diretoria-card-black {
+                background: linear-gradient(135deg, #080808 0%, #2d2d2d 100%);
+                color: #ffffff;
+            }
+
+            .diretoria-card-yellow {
+                background: linear-gradient(135deg, #e0a500 0%, #fbc410 100%);
+                color: #171717;
+            }
+
+            .diretoria-card-darkyellow {
+                background: linear-gradient(135deg, #4d3a00 0%, #9d7600 100%);
+                color: #ffffff;
+            }
+
+            .diretoria-card-gray {
+                background: linear-gradient(135deg, #303030 0%, #6b6b6b 100%);
+                color: #ffffff;
+            }
+
+            .diretoria-modalidade-icon {
+                font-size: 1.30rem !important;
+                position: absolute;
+                right: 0.92rem;
+                top: 0.84rem;
+                z-index: 2;
+            }
+
+            .diretoria-modalidade-label {
+                font-size: 0.76rem !important;
+                font-weight: 900 !important;
+                letter-spacing: 0.02rem !important;
+                margin: 0 !important;
+                opacity: 0.94;
+            }
+
+            .diretoria-modalidade-value {
+                font-size: 1.78rem !important;
+                font-weight: 900 !important;
+                letter-spacing: -0.07rem !important;
+                line-height: 1 !important;
+                margin: 0.68rem 0 0 0 !important;
+                position: relative;
+                z-index: 2;
+            }
+
+            .diretoria-modalidade-footer {
+                align-items: center;
+                display: flex;
+                font-size: 0.66rem !important;
+                font-weight: 800 !important;
+                gap: 0.28rem;
+                margin-top: 0.52rem !important;
+                opacity: 0.86;
+                position: relative;
+                z-index: 2;
+            }
+
+            .diretoria-finance-note {
+                background: rgba(255,255,255,0.96);
+                border: 1px solid rgba(255,255,255,0.65);
+                border-radius: 14px;
+                box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+                color: #667085 !important;
+                font-size: 0.68rem !important;
+                line-height: 1.45 !important;
+                margin: 0 !important;
+                padding: 0.62rem 0.72rem !important;
+            }
+
+            @media (max-width: 980px) {
+                .diretoria-modalidade-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .diretoria-finance-header {
+                    align-items: flex-start;
+                    flex-direction: column;
+                    gap: 0.72rem;
+                }
+
+                .diretoria-total-card {
+                    min-width: 0;
+                    text-align: left;
+                    width: 100%;
+                }
+            }
+
+            @media (max-width: 620px) {
+                .diretoria-modalidade-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .diretoria-finance-title {
+                    font-size: 1.34rem !important;
+                }
+            }
 </style>
         ''',
         unsafe_allow_html=True,
@@ -3973,6 +4189,176 @@ def montar_barras_modalidades_comerciais() -> str:
         )
 
     return "".join(barras_html)
+
+
+
+
+def formatar_moeda_brl(valor: float) -> str:
+    """
+    Formata valores no padrão brasileiro.
+    """
+    return (
+        f"R$ {float(valor):,.2f}"
+        .replace(",", "X")
+        .replace(".", ",")
+        .replace("X", ".")
+    )
+
+
+def obter_valor_mensal_plano_cliente(plano: str) -> float:
+    """
+    Retorna o valor mensal do plano escolhido.
+
+    Os valores usados são os mesmos definidos no formulário:
+    - Mensal: R$ 259,00
+    - Trimestral: R$ 239,00 por mês
+    - Semestral: R$ 219,00 por mês
+    - Anual: R$ 199,00 por mês
+    """
+    plano_normalizado = normalizar_texto_busca(plano)
+
+    if "trimestral" in plano_normalizado:
+        return 239.0
+
+    if "semestral" in plano_normalizado:
+        return 219.0
+
+    if "anual" in plano_normalizado:
+        return 199.0
+
+    if "mensal" in plano_normalizado:
+        return 259.0
+
+    return 0.0
+
+
+def calcular_faturamento_modalidades_diretoria() -> dict[str, dict]:
+    """
+    Soma a receita mensal estimada por modalidade.
+
+    Só entram no cálculo os cadastros que possuem:
+    - modalidade reconhecida;
+    - plano preenchido com valor reconhecido.
+    """
+    resultado = {
+        "Jiu-Jitsu": {"valor": 0.0, "alunos": 0},
+        "Muay Thai": {"valor": 0.0, "alunos": 0},
+        "MMA": {"valor": 0.0, "alunos": 0},
+        "Kids": {"valor": 0.0, "alunos": 0},
+    }
+
+    for cadastro in obter_cadastros_comerciais():
+        modalidade = normalizar_modalidade_grafico(
+            cadastro.get("Produto ou Serviço", "")
+        )
+
+        valor_mensal = obter_valor_mensal_plano_cliente(
+            cadastro.get("Plano Cliente", "")
+        )
+
+        if modalidade not in resultado or valor_mensal <= 0:
+            continue
+
+        resultado[modalidade]["valor"] += valor_mensal
+        resultado[modalidade]["alunos"] += 1
+
+    return resultado
+
+
+def montar_painel_diretoria_financeiro_html() -> str:
+    """
+    Monta somente os cards superiores da Diretoria.
+    """
+    faturamento = calcular_faturamento_modalidades_diretoria()
+    total_geral = sum(
+        item["valor"]
+        for item in faturamento.values()
+    )
+    total_alunos = sum(
+        item["alunos"]
+        for item in faturamento.values()
+    )
+
+    configuracao_cards = [
+        {
+            "modalidade": "Jiu-Jitsu",
+            "icone": "🥋",
+            "classe": "diretoria-card-black",
+        },
+        {
+            "modalidade": "Muay Thai",
+            "icone": "🥊",
+            "classe": "diretoria-card-yellow",
+        },
+        {
+            "modalidade": "MMA",
+            "icone": "⚡",
+            "classe": "diretoria-card-darkyellow",
+        },
+        {
+            "modalidade": "Kids",
+            "icone": "⭐",
+            "classe": "diretoria-card-gray",
+        },
+    ]
+
+    cards_html = []
+
+    for item in configuracao_cards:
+        modalidade = item["modalidade"]
+        dados = faturamento[modalidade]
+        quantidade = int(dados["alunos"])
+
+        texto_alunos = (
+            "1 aluno com plano preenchido"
+            if quantidade == 1
+            else f"{quantidade} alunos com plano preenchido"
+        )
+
+        cards_html.append(
+            f"""
+            <article class="diretoria-modalidade-card {item["classe"]}">
+                <div class="diretoria-modalidade-icon">{item["icone"]}</div>
+                <p class="diretoria-modalidade-label">{modalidade}</p>
+                <p class="diretoria-modalidade-value">
+                    {formatar_moeda_brl(dados["valor"])}
+                </p>
+                <div class="diretoria-modalidade-footer">
+                    <span>↗</span>
+                    <span>{texto_alunos}</span>
+                </div>
+            </article>
+            """
+        )
+
+    return f"""
+    <section class="diretoria-finance-shell">
+        <header class="diretoria-finance-header">
+            <div>
+                <p class="diretoria-finance-kicker">Fight for Life • Diretoria</p>
+                <h1 class="diretoria-finance-title">Faturamento por modalidade</h1>
+                <p class="diretoria-finance-sub">
+                    Receita mensal estimada conforme os planos cadastrados para cada aluno.
+                </p>
+            </div>
+
+            <div class="diretoria-total-card">
+                <p class="diretoria-total-label">Receita mensal total</p>
+                <p class="diretoria-total-value">{formatar_moeda_brl(total_geral)}</p>
+                <p class="diretoria-total-sub">{total_alunos} aluno(s) contabilizado(s)</p>
+            </div>
+        </header>
+
+        <div class="diretoria-modalidade-grid">
+            {"".join(cards_html)}
+        </div>
+
+        <p class="diretoria-finance-note">
+            Os valores são atualizados automaticamente a partir dos cadastros concluídos.
+            O cálculo considera o valor mensal do plano selecionado em cada matrícula.
+        </p>
+    </section>
+    """
 
 
 
@@ -6575,30 +6961,11 @@ def exibir_dashboard_inicial() -> None:
         render_pagina_cadastro_alunos()
 
     else:
+        limpar_cache_planilha()
+
         st.html(
-            montar_dashboard_topo_visual(
-                logo_b64=logo_b64,
-                pagina=pagina,
-            )
+            montar_painel_diretoria_financeiro_html()
         )
-
-        config = montar_config_dashboard(pagina)
-
-        coluna_esquerda, coluna_direita = st.columns(
-            [0.82, 1.7],
-            gap="medium",
-        )
-
-        with coluna_esquerda:
-            st.html(montar_painel_retencao_diretoria_html())
-
-        with coluna_direita:
-            st.html(
-                montar_painel_grafico_html(
-                    titulo=config["painel_title"],
-                    subtitulo=config["painel_sub"],
-                )
-            )
 
     if pagina == "👔 Diretoria":
         st.markdown("<div style='height:0.7rem'></div>", unsafe_allow_html=True)
