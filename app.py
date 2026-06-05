@@ -4098,20 +4098,39 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
 
-            /* ESPAÇO REAL ENTRE O TÍTULO E A CAIXA DO LOGIN */
+
+            /* LOGIN DA DIRETORIA — ESPAÇAMENTO DEFINITIVO */
             .st-key-login_diretoria_campos .diretoria-field-label {
+                color: #ffffff !important;
+                display: block !important;
+                font-size: 0.69rem !important;
+                font-weight: 900 !important;
+                letter-spacing: 0.035rem !important;
+                line-height: 1.2 !important;
                 margin: 0 !important;
+                padding: 0 !important;
+                text-transform: uppercase !important;
+                visibility: visible !important;
             }
 
             .st-key-login_diretoria_campos .diretoria-field-label-senha {
-                margin-top: 0.82rem !important;
+                margin-top: 1.05rem !important;
             }
 
             .st-key-login_diretoria_campos .diretoria-field-spacer {
                 display: block !important;
-                height: 0.44rem !important;
-                min-height: 0.44rem !important;
+                height: 0.72rem !important;
+                min-height: 0.72rem !important;
                 width: 100% !important;
+            }
+
+            .st-key-login_diretoria_campos div[data-testid="stTextInput"] {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .st-key-login_diretoria_campos div[data-testid="stFormSubmitButton"] {
+                margin-top: 1.05rem !important;
             }
 </style>
         ''',
