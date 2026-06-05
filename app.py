@@ -4099,7 +4099,12 @@ def aplicar_css_dashboard_claro() -> None:
 
 
 
-            /* LOGIN DA DIRETORIA — ESPAÇAMENTO DEFINITIVO */
+
+            /* LOGIN DA DIRETORIA — POSICIONAMENTO CORRETO */
+            .st-key-login_diretoria_campos {
+                margin-top: 1.15rem !important;
+            }
+
             .st-key-login_diretoria_campos .diretoria-field-label {
                 color: #ffffff !important;
                 display: block !important;
@@ -4119,8 +4124,8 @@ def aplicar_css_dashboard_claro() -> None:
 
             .st-key-login_diretoria_campos .diretoria-field-spacer {
                 display: block !important;
-                height: 0.72rem !important;
-                min-height: 0.72rem !important;
+                height: 0.34rem !important;
+                min-height: 0.34rem !important;
                 width: 100% !important;
             }
 
@@ -4130,7 +4135,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .st-key-login_diretoria_campos div[data-testid="stFormSubmitButton"] {
-                margin-top: 1.05rem !important;
+                margin-top: 0.95rem !important;
             }
 </style>
         ''',
