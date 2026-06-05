@@ -1167,17 +1167,31 @@ def exibir_login_diretoria() -> None:
 
     with st.container(key="login_diretoria_campos"):
         with st.form("formulario_login_diretoria", clear_on_submit=False):
+            st.markdown(
+                '<p class="diretoria-field-label">Usuário da Diretoria</p>',
+                unsafe_allow_html=True,
+            )
+
             usuario_diretoria = st.text_input(
                 "Usuário da Diretoria",
                 placeholder="Digite o usuário da diretoria",
                 key="usuario_diretoria",
+                label_visibility="collapsed",
             )
+
+            st.markdown(
+                '<p class="diretoria-field-label diretoria-field-label-senha">Senha da Diretoria</p>',
+                unsafe_allow_html=True,
+            )
+
             senha_diretoria = st.text_input(
                 "Senha da Diretoria",
                 type="password",
                 placeholder="Digite a senha da diretoria",
                 key="senha_diretoria",
+                label_visibility="collapsed",
             )
+
             entrar_diretoria = st.form_submit_button("Entrar na Diretoria")
 
     if entrar_diretoria:
@@ -4044,6 +4058,29 @@ def aplicar_css_dashboard_claro() -> None:
 
             .st-key-login_diretoria_campos div[data-testid="stFormSubmitButton"] {
                 margin-top: 0.22rem !important;
+            }
+
+
+            /* LABELS MANUAIS DO LOGIN DA DIRETORIA */
+            .st-key-login_diretoria_campos .diretoria-field-label {
+                color: #ffffff !important;
+                font-size: 0.69rem !important;
+                font-weight: 900 !important;
+                letter-spacing: 0.035rem !important;
+                margin: 0 0 0.50rem 0 !important;
+                text-transform: uppercase !important;
+            }
+
+            .st-key-login_diretoria_campos .diretoria-field-label-senha {
+                margin-top: 0.78rem !important;
+            }
+
+            .st-key-login_diretoria_campos div[data-testid="stTextInput"] {
+                margin-bottom: 0 !important;
+            }
+
+            .st-key-login_diretoria_campos div[data-testid="stFormSubmitButton"] {
+                margin-top: 0.92rem !important;
             }
 </style>
         ''',
