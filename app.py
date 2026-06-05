@@ -1168,7 +1168,10 @@ def exibir_login_diretoria() -> None:
     with st.container(key="login_diretoria_campos"):
         with st.form("formulario_login_diretoria", clear_on_submit=False):
             st.markdown(
-                '<p class="diretoria-field-label">Usuário da Diretoria</p>',
+                """
+                <p class="diretoria-field-label">Usuário da Diretoria</p>
+                <div class="diretoria-field-spacer"></div>
+                """,
                 unsafe_allow_html=True,
             )
 
@@ -1180,7 +1183,12 @@ def exibir_login_diretoria() -> None:
             )
 
             st.markdown(
-                '<p class="diretoria-field-label diretoria-field-label-senha">Senha da Diretoria</p>',
+                """
+                <p class="diretoria-field-label diretoria-field-label-senha">
+                    Senha da Diretoria
+                </p>
+                <div class="diretoria-field-spacer"></div>
+                """,
                 unsafe_allow_html=True,
             )
 
@@ -4087,6 +4095,23 @@ def aplicar_css_dashboard_claro() -> None:
             .st-key-login_diretoria_campos .diretoria-field-label {
                 display: block !important;
                 visibility: visible !important;
+            }
+
+
+            /* ESPAÇO REAL ENTRE O TÍTULO E A CAIXA DO LOGIN */
+            .st-key-login_diretoria_campos .diretoria-field-label {
+                margin: 0 !important;
+            }
+
+            .st-key-login_diretoria_campos .diretoria-field-label-senha {
+                margin-top: 0.82rem !important;
+            }
+
+            .st-key-login_diretoria_campos .diretoria-field-spacer {
+                display: block !important;
+                height: 0.44rem !important;
+                min-height: 0.44rem !important;
+                width: 100% !important;
             }
 </style>
         ''',
