@@ -1165,19 +1165,20 @@ def exibir_login_diretoria() -> None:
         unsafe_allow_html=True,
     )
 
-    with st.form("formulario_login_diretoria", clear_on_submit=False):
-        usuario_diretoria = st.text_input(
-            "Usuário da Diretoria",
-            placeholder="Digite o usuário da diretoria",
-            key="usuario_diretoria",
-        )
-        senha_diretoria = st.text_input(
-            "Senha da Diretoria",
-            type="password",
-            placeholder="Digite a senha da diretoria",
-            key="senha_diretoria",
-        )
-        entrar_diretoria = st.form_submit_button("Entrar na Diretoria")
+    with st.container(key="login_diretoria_campos"):
+        with st.form("formulario_login_diretoria", clear_on_submit=False):
+            usuario_diretoria = st.text_input(
+                "Usuário da Diretoria",
+                placeholder="Digite o usuário da diretoria",
+                key="usuario_diretoria",
+            )
+            senha_diretoria = st.text_input(
+                "Senha da Diretoria",
+                type="password",
+                placeholder="Digite a senha da diretoria",
+                key="senha_diretoria",
+            )
+            entrar_diretoria = st.form_submit_button("Entrar na Diretoria")
 
     if entrar_diretoria:
         usuario_configurado, senha_configurada = carregar_credenciais_diretoria()
@@ -4028,6 +4029,21 @@ def aplicar_css_dashboard_claro() -> None:
                 .diretoria-finance-title {
                     font-size: 1.34rem !important;
                 }
+            }
+
+
+            /* ESPAÇAMENTO DOS CAMPOS DO LOGIN DA DIRETORIA */
+            .st-key-login_diretoria_campos div[data-testid="stTextInput"] label {
+                display: block !important;
+                margin-bottom: 0.30rem !important;
+            }
+
+            .st-key-login_diretoria_campos div[data-testid="stTextInput"] {
+                margin-bottom: 0.42rem !important;
+            }
+
+            .st-key-login_diretoria_campos div[data-testid="stFormSubmitButton"] {
+                margin-top: 0.22rem !important;
             }
 </style>
         ''',
