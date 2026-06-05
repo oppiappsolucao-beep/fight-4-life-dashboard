@@ -6087,6 +6087,27 @@ def render_formulario_retratil_comercial(
             unsafe_allow_html=True,
         )
 
+        mensagem_cadastro = st.session_state.pop(
+            "mensagem_cadastro_aluno",
+            "",
+        )
+
+        tipo_mensagem_cadastro = st.session_state.pop(
+            "tipo_mensagem_cadastro_aluno",
+            "success",
+        )
+
+        if mensagem_cadastro:
+            if tipo_mensagem_cadastro == "warning":
+                st.warning(mensagem_cadastro)
+            else:
+                st.success(mensagem_cadastro)
+
+        st.session_state.setdefault(
+            "versao_upload_foto_rosto",
+            0,
+        )
+
         with st.form("formulario_novo_aluno", clear_on_submit=True):
             st.markdown(
                 """
@@ -6165,7 +6186,10 @@ def render_formulario_retratil_comercial(
                 "Enviar foto do rosto",
                 type=["jpg", "jpeg", "png"],
                 accept_multiple_files=False,
-                key="cadastro_foto_rosto_upload",
+                key=(
+                    "cadastro_foto_rosto_upload_"
+                    f'{st.session_state["versao_upload_foto_rosto"]}'
+                ),
             )
 
             if foto_rosto is not None:
@@ -6338,26 +6362,37 @@ def render_formulario_retratil_comercial(
                         id_lead=id_lead,
                     )
 
-                    mensagem_sucesso = (
+                    mensagem_cadastro = (
                         "Aluno cadastrado e contrato enviado por e-mail "
                         "para assinatura digital."
                     )
 
                     if link_foto_rosto:
-                        mensagem_sucesso += (
+                        mensagem_cadastro += (
                             " A foto do rosto também foi salva no Google Drive."
                         )
 
-                    st.success(mensagem_sucesso)
+                    tipo_mensagem = "success"
 
                 except Exception as erro:
-                    st.warning(
+                    mensagem_cadastro = (
                         "O aluno foi salvo no banco de dados, mas o contrato "
-                        "não pôde ser enviado pela ZapSign."
+                        "não pôde ser enviado pela ZapSign. "
+                        f"Detalhes técnicos: {erro}"
                     )
-                    st.caption(f"Detalhes técnicos: {erro}")
+
+                    tipo_mensagem = "warning"
 
                 st.session_state["status_card_selecionado"] = status_comercial
+
+                # Troca a chave do uploader para remover a imagem anterior
+                # somente da tela. O arquivo já enviado permanece no Drive.
+                st.session_state["versao_upload_foto_rosto"] += 1
+
+                st.session_state["mensagem_cadastro_aluno"] = mensagem_cadastro
+                st.session_state["tipo_mensagem_cadastro_aluno"] = tipo_mensagem
+
+                st.rerun()
 
 
 
