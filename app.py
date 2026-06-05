@@ -5,12 +5,14 @@ import hmac
 import hashlib
 import html
 import json
+import mimetypes
 import os
 import re
 import unicodedata
 import uuid
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+from urllib.parse import urlencode
 from datetime import date, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -46,6 +48,12 @@ CINZA_BORDA = "#2a2a2a"
 SPREADSHEET_ID_PADRAO = "1WLjiRuU5iC_uPXCr9QSh1Yp934KYsse2C7yREDF5cA8"
 WORKSHEET_NAME_PADRAO = "Leads"
 
+DRIVE_UPLOAD_WEBAPP_URL_PADRAO = (
+    "https://script.google.com/macros/s/"
+    "AKfycbwEUfOvuG6WSUdMgDNWNjmfkdt5u_DnPM9c7WfmlCyb0qlifvLbzlKjmRDKfgKIk7DNSQ/"
+    "exec"
+)
+
 COLUNAS_PLANILHA = [
     "IDLead",
     "Data Cadastro",
@@ -70,6 +78,7 @@ COLUNAS_PLANILHA = [
     "Complemento",
     "Plano Cliente",
     "Forma de Pagamento",
+    "Foto do Rosto Drive",
 ]
 
 GOOGLE_SCOPES = [
@@ -4365,6 +4374,154 @@ def gerar_id_lead() -> str:
 
 
 
+
+def sanitizar_nome_arquivo_drive(valor: str) -> str:
+    """
+    Limpa o nome do aluno antes de criar o arquivo no Google Drive.
+    """
+    nome = str(valor or "").strip()
+    nome = re.sub(r'[\\/:*?"<>|]+', " ", nome)
+    nome = re.sub(r"\s+", " ", nome).strip()
+
+    if not nome:
+        nome = "Aluno sem nome"
+
+    return nome[:120]
+
+
+def obter_url_upload_foto_drive() -> str:
+    """
+    Permite substituir a URL pelo Streamlit Secrets no futuro.
+    Caso não exista configuração externa, usa a API publicada agora.
+    """
+    try:
+        if "DRIVE_UPLOAD_WEBAPP_URL" in st.secrets:
+            url = str(st.secrets["DRIVE_UPLOAD_WEBAPP_URL"]).strip()
+
+            if url:
+                return url
+    except Exception:
+        pass
+
+    url_ambiente = os.getenv("DRIVE_UPLOAD_WEBAPP_URL", "").strip()
+
+    if url_ambiente:
+        return url_ambiente
+
+    return DRIVE_UPLOAD_WEBAPP_URL_PADRAO
+
+
+def upload_foto_rosto_aluno_drive(
+    foto_rosto,
+    nome_aluno: str,
+) -> str:
+    """
+    Envia a foto do rosto para a API do Google Apps Script.
+
+    O Apps Script salva o arquivo na pasta Fotos Alunos Fight for Life
+    e devolve o link do Google Drive.
+    """
+    if foto_rosto is None:
+        return ""
+
+    upload_url = obter_url_upload_foto_drive()
+
+    if not upload_url:
+        raise RuntimeError(
+            "A URL da API de fotos do Google Drive não foi configurada."
+        )
+
+    nome_original = str(
+        getattr(foto_rosto, "name", "foto_rosto.jpg")
+    ).strip()
+
+    extensao = Path(nome_original).suffix.lower()
+
+    if extensao not in [".png", ".jpg", ".jpeg"]:
+        extensao_detectada = mimetypes.guess_extension(
+            str(getattr(foto_rosto, "type", "") or "")
+        )
+
+        extensao = (
+            extensao_detectada
+            if extensao_detectada in [".png", ".jpg", ".jpeg"]
+            else ".jpg"
+        )
+
+    nome_limpo = sanitizar_nome_arquivo_drive(nome_aluno)
+    timestamp = datetime.now(
+        ZoneInfo("America/Sao_Paulo")
+    ).strftime("%Y%m%d_%H%M%S")
+
+    nome_arquivo = f"{nome_limpo}_{timestamp}{extensao}"
+
+    bytes_foto = foto_rosto.getvalue()
+    foto_base64 = base64.b64encode(bytes_foto).decode("utf-8")
+
+    mime_type = (
+        str(getattr(foto_rosto, "type", "") or "").strip()
+        or mimetypes.guess_type(nome_arquivo)[0]
+        or "image/jpeg"
+    )
+
+    payload = {
+        "filename": nome_arquivo,
+        "mimeType": mime_type,
+        "base64": foto_base64,
+    }
+
+    corpo = urlencode(
+        {
+            "payload": json.dumps(
+                payload,
+                ensure_ascii=False,
+            )
+        }
+    ).encode("utf-8")
+
+    requisicao = Request(
+        url=upload_url,
+        data=corpo,
+        headers={
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json",
+        },
+        method="POST",
+    )
+
+    try:
+        with urlopen(requisicao, timeout=120) as resposta:
+            conteudo = resposta.read().decode("utf-8", errors="replace")
+
+    except HTTPError as erro:
+        detalhe = erro.read().decode("utf-8", errors="replace")
+
+        raise RuntimeError(
+            f"Erro HTTP {erro.code} ao enviar a foto: {detalhe[:700]}"
+        ) from erro
+
+    except URLError as erro:
+        raise RuntimeError(
+            f"Não foi possível acessar a API de fotos: {erro.reason}"
+        ) from erro
+
+    try:
+        dados = json.loads(conteudo)
+    except Exception as erro:
+        raise RuntimeError(
+            "A API de fotos respondeu em um formato inesperado. "
+            f"Resposta recebida: {conteudo[:700]}"
+        ) from erro
+
+    if not dados.get("ok"):
+        raise RuntimeError(
+            f"A API de fotos retornou erro: {dados}"
+        )
+
+    return str(dados.get("url", "")).strip()
+
+
+
 def telefone_ja_cadastrado(telefone: str) -> bool:
     """
     Verifica se o telefone já existe no banco de dados antes de criar
@@ -4430,6 +4587,7 @@ def salvar_novo_lead_planilha(cadastro: dict) -> str:
         str(cadastro.get("Complemento", "")).strip(),
         str(cadastro.get("Plano Cliente", "")).strip(),
         str(cadastro.get("Forma de Pagamento", "")).strip(),
+        str(cadastro.get("Foto do Rosto Drive", "")).strip(),
     ]
 
     worksheet.append_row(
@@ -6127,6 +6285,21 @@ def render_formulario_retratil_comercial(
                     complemento=complemento,
                 )
 
+                link_foto_rosto = ""
+
+                if foto_rosto is not None:
+                    try:
+                        link_foto_rosto = upload_foto_rosto_aluno_drive(
+                            foto_rosto=foto_rosto,
+                            nome_aluno=nome_completo,
+                        )
+                    except Exception as erro:
+                        st.error(
+                            "Não foi possível salvar a foto do rosto no Google Drive."
+                        )
+                        st.caption(f"Detalhes técnicos: {erro}")
+                        return
+
                 cadastro = {
                     "Nome Completo": nome_completo.strip(),
                     "Data de Nascimento": (
@@ -6147,6 +6320,7 @@ def render_formulario_retratil_comercial(
                     "Forma de Pagamento": forma_pagamento,
                     "Rede Social": rede_social.strip(),
                     "Status Comercial": status_comercial,
+                    "Foto do Rosto Drive": link_foto_rosto,
                 }
 
                 try:
@@ -6164,10 +6338,17 @@ def render_formulario_retratil_comercial(
                         id_lead=id_lead,
                     )
 
-                    st.success(
+                    mensagem_sucesso = (
                         "Aluno cadastrado e contrato enviado por e-mail "
                         "para assinatura digital."
                     )
+
+                    if link_foto_rosto:
+                        mensagem_sucesso += (
+                            " A foto do rosto também foi salva no Google Drive."
+                        )
+
+                    st.success(mensagem_sucesso)
 
                 except Exception as erro:
                     st.warning(
