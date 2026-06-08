@@ -4260,6 +4260,52 @@ def aplicar_css_dashboard_claro() -> None:
                     margin: 0.42rem 0 0.44rem 0 !important;
                 }
             }
+
+
+            /* ============================================================
+               MOBILE — LOGIN DA DIRETORIA CENTRALIZADO
+               ============================================================ */
+            @media (max-width: 760px) {
+                .dash-head,
+                .diretoria-login-box,
+                .st-key-login_diretoria_campos {
+                    margin-left: auto !important;
+                    margin-right: auto !important;
+                    max-width: 560px !important;
+                    width: 100% !important;
+                }
+
+                .dash-head {
+                    padding-left: 1rem !important;
+                    padding-right: 1rem !important;
+                }
+
+                .diretoria-login-box {
+                    padding-left: 1rem !important;
+                    padding-right: 1rem !important;
+                }
+
+                .st-key-login_diretoria_campos form {
+                    margin-left: auto !important;
+                    margin-right: auto !important;
+                    max-width: 560px !important;
+                    width: 100% !important;
+                }
+
+                .st-key-login_diretoria_campos div[data-testid="stFormSubmitButton"] {
+                    display: flex !important;
+                    justify-content: center !important;
+                    margin-top: 0.95rem !important;
+                    width: 100% !important;
+                }
+
+                .st-key-login_diretoria_campos div[data-testid="stFormSubmitButton"] button {
+                    margin-left: auto !important;
+                    margin-right: auto !important;
+                    min-width: 210px !important;
+                    width: auto !important;
+                }
+            }
 </style>
         ''',
         unsafe_allow_html=True,
