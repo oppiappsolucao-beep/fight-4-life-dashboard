@@ -5659,7 +5659,6 @@ def contar_status_comercial() -> dict[str, int]:
     return contagem
 
 
-@st.fragment(run_every="10s")
 def render_cards_status_comercial_clicaveis() -> None:
     """
     Exibe os status em cards e atualiza os totais automaticamente.
@@ -7001,6 +7000,35 @@ def render_toggle_menu_lateral() -> None:
             st.rerun()
 
 
+
+def atualizar_pagina_menu_principal() -> None:
+    """
+    Mantém a aba selecionada estável durante os reruns do Streamlit.
+
+    Esse controle separado evita que, principalmente no celular,
+    a página Cadastro de alunos apareça por um instante e volte para
+    outra aba depois de um rerun interno.
+    """
+    pagina_selecionada = str(
+        st.session_state.get(
+            "menu_principal_widget",
+            "📈 Comercial",
+        )
+    )
+
+    paginas_validas = [
+        "📈 Comercial",
+        "📝 Cadastro de alunos",
+        "👔 Diretoria",
+    ]
+
+    if pagina_selecionada not in paginas_validas:
+        pagina_selecionada = "📈 Comercial"
+
+    st.session_state["pagina_atual"] = pagina_selecionada
+
+
+
 def exibir_dashboard_inicial() -> None:
     aplicar_css_dashboard_claro()
     render_toggle_menu_lateral()
@@ -7030,15 +7058,51 @@ def exibir_dashboard_inicial() -> None:
             unsafe_allow_html=True,
         )
 
-        pagina = st.radio(
-            "Menu principal",
-            options=[
+        paginas_menu = [
+            "📈 Comercial",
+            "📝 Cadastro de alunos",
+            "👔 Diretoria",
+        ]
+
+        pagina_salva = str(
+            st.session_state.get(
+                "pagina_atual",
                 "📈 Comercial",
-                "📝 Cadastro de alunos",
-                "👔 Diretoria",
-            ],
+            )
+        )
+
+        if pagina_salva not in paginas_menu:
+            pagina_salva = "📈 Comercial"
+
+        st.session_state.setdefault(
+            "pagina_atual",
+            pagina_salva,
+        )
+
+        st.session_state.setdefault(
+            "menu_principal_widget",
+            pagina_salva,
+        )
+
+        st.radio(
+            "Menu principal",
+            options=paginas_menu,
+            index=paginas_menu.index(
+                st.session_state["menu_principal_widget"]
+            ),
             label_visibility="collapsed",
-            key="menu_principal",
+            key="menu_principal_widget",
+            on_change=atualizar_pagina_menu_principal,
+        )
+
+        pagina = str(
+            st.session_state.get(
+                "pagina_atual",
+                st.session_state.get(
+                    "menu_principal_widget",
+                    "📈 Comercial",
+                ),
+            )
         )
 
         st.markdown("<div style='height:0.6rem'></div>", unsafe_allow_html=True)
@@ -7090,6 +7154,23 @@ def exibir_dashboard_inicial() -> None:
 # EXECUÇÃO
 # ============================================================
 aplicar_css()
+
+if "menu_principal_migrado" not in st.session_state:
+    valor_menu_antigo = st.session_state.pop(
+        "menu_principal",
+        "",
+    )
+
+    if valor_menu_antigo in [
+        "📈 Comercial",
+        "📝 Cadastro de alunos",
+        "👔 Diretoria",
+    ]:
+        st.session_state["pagina_atual"] = valor_menu_antigo
+        st.session_state["menu_principal_widget"] = valor_menu_antigo
+
+    st.session_state["menu_principal_migrado"] = True
+
 
 if "autenticado" not in st.session_state:
     st.session_state["autenticado"] = False
