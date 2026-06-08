@@ -4137,6 +4137,129 @@ def aplicar_css_dashboard_claro() -> None:
             .st-key-login_diretoria_campos div[data-testid="stFormSubmitButton"] {
                 margin-top: 0.95rem !important;
             }
+
+
+            /* ============================================================
+               MOBILE — CONSULTA DE LEADS ORGANIZADA EM CARDS
+               ============================================================ */
+            @media (max-width: 760px) {
+                .lead-consulta-toolbar {
+                    align-items: flex-start !important;
+                    gap: 0.62rem !important;
+                    padding: 0.76rem 0.72rem 0.66rem 0.72rem !important;
+                }
+
+                .lead-consulta-title {
+                    font-size: 0.92rem !important;
+                }
+
+                .lead-consulta-sub {
+                    font-size: 0.67rem !important;
+                    line-height: 1.42 !important;
+                    max-width: 220px !important;
+                }
+
+                .lead-consulta-count {
+                    flex: 0 0 auto !important;
+                    font-size: 0.61rem !important;
+                    padding: 0.34rem 0.48rem !important;
+                }
+
+                /* No celular, o cabeçalho horizontal deixa de ajudar.
+                   Cada registro ganha os próprios rótulos. */
+                .lead-consulta-columns {
+                    display: none !important;
+                }
+
+                .lead-consulta-help {
+                    font-size: 0.67rem !important;
+                    line-height: 1.48 !important;
+                    padding: 0.62rem 0.70rem !important;
+                }
+
+                .st-key-lead_consulta_scroll {
+                    border-radius: 0 0 14px 14px !important;
+                }
+
+                [class*="st-key-lead_consulta_row_"] {
+                    background: #ffffff !important;
+                    border-bottom: 1px solid #e7ebf0 !important;
+                    padding: 0.72rem 0.72rem 0.78rem 0.72rem !important;
+                }
+
+                [class*="st-key-lead_consulta_row_even_"] {
+                    background: #fbfcfe !important;
+                }
+
+                [class*="st-key-lead_consulta_row_"] [data-testid="stHorizontalBlock"] {
+                    align-items: stretch !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    gap: 0.18rem !important;
+                    width: 100% !important;
+                }
+
+                [class*="st-key-lead_consulta_row_"] [data-testid="column"] {
+                    flex: 1 1 auto !important;
+                    min-width: 0 !important;
+                    width: 100% !important;
+                }
+
+                .lead-consulta-line {
+                    color: #8b95a5 !important;
+                    font-size: 0.66rem !important;
+                    font-weight: 900 !important;
+                    letter-spacing: 0.035rem !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    text-transform: uppercase !important;
+                }
+
+                .lead-consulta-line::before {
+                    content: "Linha ";
+                }
+
+                .lead-consulta-phone {
+                    color: #10274f !important;
+                    font-size: 0.82rem !important;
+                    font-weight: 900 !important;
+                    line-height: 1.25 !important;
+                    margin: 0.10rem 0 0.34rem 0 !important;
+                    padding: 0 !important;
+                    word-break: break-word !important;
+                }
+
+                .lead-consulta-phone::before {
+                    color: #7a8494 !important;
+                    content: "Telefone: ";
+                    font-size: 0.65rem !important;
+                    font-weight: 900 !important;
+                    letter-spacing: 0.035rem !important;
+                    text-transform: uppercase !important;
+                }
+
+                [class*="st-key-lead_consulta_row_"] [data-testid="stSelectbox"] {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    width: 100% !important;
+                }
+
+                [class*="st-key-lead_consulta_row_"] [data-baseweb="select"] {
+                    width: 100% !important;
+                }
+
+                [class*="st-key-lead_consulta_row_"] [data-baseweb="select"] > div {
+                    border-radius: 9px !important;
+                    min-height: 42px !important;
+                    width: 100% !important;
+                }
+
+                .lead-consulta-footer {
+                    font-size: 0.67rem !important;
+                    line-height: 1.45 !important;
+                    margin: 0.42rem 0 0.44rem 0 !important;
+                }
+            }
 </style>
         ''',
         unsafe_allow_html=True,
