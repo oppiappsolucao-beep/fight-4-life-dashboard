@@ -4795,32 +4795,13 @@ def montar_painel_retencao_diretoria_html() -> str:
         </div>
     </article>
     """
-
-
-
-def obter_configuracao_planilha() -> tuple[str, str]:
-    """
-    Usa as configurações dos Secrets quando estiverem disponíveis.
-    Mantém os valores padrão deste projeto como fallback.
-    """
-    spreadsheet_id = SPREADSHEET_ID_PADRAO
-    worksheet_name = WORKSHEET_NAME_PADRAO
-
-    try:
-        if "google_sheets" in st.secrets:
-            config = st.secrets["google_sheets"]
-            spreadsheet_id = str(
-                config.get("spreadsheet_id", spreadsheet_id)
-            ).strip()
-            worksheet_name = str(
-                config.get("worksheet_name", worksheet_name)
-            ).strip()
-    except Exception:
-        pass
-
+    def obter_configuracao_planilha() -> tuple[str, str]:
+    spreadsheet_id = os.getenv("SPREADSHEET_ID", SPREADSHEET_ID_PADRAO).strip()
+    worksheet_name = os.getenv("WORKSHEET_NAME", WORKSHEET_NAME_PADRAO).strip()
     return spreadsheet_id, worksheet_name
 
 
+def obter_info_conta_servico() -> dict:
     private_key = os.getenv("GOOGLE_PRIVATE_KEY", "").strip()
 
     if not private_key:
@@ -4841,7 +4822,6 @@ def obter_configuracao_planilha() -> tuple[str, str]:
         "client_x509_cert_url": os.getenv("GOOGLE_CLIENT_X509_CERT_URL", ""),
         "universe_domain": os.getenv("GOOGLE_UNIVERSE_DOMAIN", "googleapis.com"),
     }
-
 
 @st.cache_resource(show_spinner=False)
 def obter_worksheet_leads():
