@@ -1,23 +1,4 @@
-from __future__ import annotations
-
-import base64
-import hmac
-import hashlib
-import html
-import json
-import mimetypes
-import os
-import re
-import unicodedata
-import uuid
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
-from urllib.parse import urlencode
-from datetime import date, datetime
-from pathlib import Path
-from zoneinfo import ZoneInfo
-
-import gspread
+gspread
 import streamlit as st
 from google.oauth2.service_account import Credentials
 from gspread.utils import rowcol_to_a1
@@ -4800,21 +4781,11 @@ def montar_painel_retencao_diretoria_html() -> str:
 
 def obter_configuracao_planilha() -> tuple[str, str]:
     """
-    Lê a configuração da planilha.
-
-    No EasyPanel/Hostinger usa variáveis de ambiente:
-    SPREADSHEET_ID e WORKSHEET_NAME.
-
-    Se existir secrets.toml local, também continua funcionando.
+    Usa as configurações dos Secrets quando estiverem disponíveis.
+    Mantém os valores padrão deste projeto como fallback.
     """
-    spreadsheet_id = os.getenv("SPREADSHEET_ID", "").strip()
-    worksheet_name = os.getenv("WORKSHEET_NAME", "").strip()
-
-    if not spreadsheet_id:
-        spreadsheet_id = SPREADSHEET_ID_PADRAO
-
-    if not worksheet_name:
-        worksheet_name = WORKSHEET_NAME_PADRAO
+    spreadsheet_id = SPREADSHEET_ID_PADRAO
+    worksheet_name = WORKSHEET_NAME_PADRAO
 
     try:
         if "google_sheets" in st.secrets:
@@ -4833,66 +4804,26 @@ def obter_configuracao_planilha() -> tuple[str, str]:
 
 def obter_info_conta_servico() -> dict:
     """
-    Lê as credenciais da conta de serviço.
-
-    Primeiro tenta usar variáveis de ambiente do EasyPanel.
-    Se não encontrar, tenta usar o secrets.toml do Streamlit.
+    Lê as credenciais da conta de serviço diretamente dos Secrets.
+    A chave privada pode ser colada como texto multilinha ou com \\n.
     """
-    info_env = {
-        "type": os.getenv("GOOGLE_TYPE", "service_account"),
-        "project_id": os.getenv("GOOGLE_PROJECT_ID", ""),
-        "private_key_id": os.getenv("GOOGLE_PRIVATE_KEY_ID", ""),
-        "private_key": os.getenv("GOOGLE_PRIVATE_KEY", ""),
-        "client_email": os.getenv("GOOGLE_CLIENT_EMAIL", ""),
-        "client_id": os.getenv("GOOGLE_CLIENT_ID", ""),
-        "auth_uri": os.getenv(
-            "GOOGLE_AUTH_URI",
-            "https://accounts.google.com/o/oauth2/auth",
-        ),
-        "token_uri": os.getenv(
-            "GOOGLE_TOKEN_URI",
-            "https://oauth2.googleapis.com/token",
-        ),
-        "auth_provider_x509_cert_url": os.getenv(
-            "GOOGLE_AUTH_PROVIDER_X509_CERT_URL",
-            "https://www.googleapis.com/oauth2/v1/certs",
-        ),
-        "client_x509_cert_url": os.getenv("GOOGLE_CLIENT_X509_CERT_URL", ""),
-        "universe_domain": os.getenv("GOOGLE_UNIVERSE_DOMAIN", "googleapis.com"),
-    }
-
-    # EasyPanel / Hostinger: usa o .env colado no painel.
-    if info_env["private_key"] and info_env["client_email"]:
-        info_env["private_key"] = str(info_env["private_key"]).replace("\n", "
-")
-        return info_env
-
-    # Fallback: Streamlit Secrets, caso rode local ou no Streamlit Cloud.
-    try:
-        if "gcp_service_account" in st.secrets:
-            info = dict(st.secrets["gcp_service_account"])
-
-            if "private_key" not in info:
-                raise RuntimeError(
-                    'O campo "private_key" não foi encontrado em '
-                    "[gcp_service_account]."
-                )
-
-            info["private_key"] = str(info["private_key"]).replace("\n", "
-")
-            return info
-    except Exception as erro:
+    if "gcp_service_account" not in st.secrets:
         raise RuntimeError(
-            "Não foi possível carregar as credenciais do Google Sheets. "
-            "Confira as variáveis GOOGLE_PRIVATE_KEY e GOOGLE_CLIENT_EMAIL "
-            "no EasyPanel. Detalhes: " + str(erro)
+            "As credenciais [gcp_service_account] não foram encontradas "
+            "nos Secrets do Streamlit."
         )
 
-    raise RuntimeError(
-        "Não foi possível carregar as credenciais do Google Sheets. "
-        "No EasyPanel, confira se existem GOOGLE_PRIVATE_KEY, "
-        "GOOGLE_CLIENT_EMAIL, GOOGLE_PROJECT_ID e as demais variáveis GOOGLE_."
-    )
+    info = dict(st.secrets["gcp_service_account"])
+
+    if "private_key" not in info:
+        raise RuntimeError(
+            'O campo "private_key" não foi encontrado em '
+            "[gcp_service_account]."
+        )
+
+    info["private_key"] = str(info["private_key"]).replace("\\n", "\n")
+
+    return info
 
 
 @st.cache_resource(show_spinner=False)
