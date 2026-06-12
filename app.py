@@ -4795,7 +4795,15 @@ def montar_painel_retencao_diretoria_html() -> str:
         </div>
     </article>
     """
+
+
+
 def obter_configuracao_planilha() -> tuple[str, str]:
+    """
+    Lê a configuração da planilha primeiro pelas variáveis de ambiente
+    do EasyPanel e, se não encontrar, usa os valores padrão do projeto.
+    Não depende de st.secrets.
+    """
     spreadsheet_id = os.getenv("SPREADSHEET_ID", SPREADSHEET_ID_PADRAO).strip()
     worksheet_name = os.getenv("WORKSHEET_NAME", WORKSHEET_NAME_PADRAO).strip()
 
@@ -4810,29 +4818,41 @@ def obter_configuracao_planilha() -> tuple[str, str]:
 
 def obter_info_conta_servico() -> dict:
     """
-    Lê a conta de serviço do Google pelas variáveis de ambiente do EasyPanel.
-
-    O EasyPanel está sendo usado em formato .env, então não dependemos mais
-    do arquivo secrets.toml do Streamlit para conectar no Google Sheets.
+    Lê a conta de serviço diretamente das variáveis de ambiente do EasyPanel.
+    Assim o dashboard não depende de /app/.streamlit/secrets.toml.
     """
     private_key = os.getenv("GOOGLE_PRIVATE_KEY", "").strip()
 
-    if not private_key:
-        raise RuntimeError("GOOGLE_PRIVATE_KEY não encontrada nas variáveis de ambiente do EasyPanel.")
+    # Remove aspas externas caso o EasyPanel mantenha as aspas do .env.
+    if (
+        (private_key.startswith('"') and private_key.endswith('"'))
+        or (private_key.startswith("'") and private_key.endswith("'"))
+    ):
+        private_key = private_key[1:-1]
 
-    # Aceita chave privada colada em uma linha com \n ou com quebras reais.
-    private_key = private_key.strip().strip('"').strip("'")
+    # Converte \n em quebra de linha real, necessário para a chave do Google.
     private_key = private_key.replace("\\n", "\n")
 
-    return {
+    if not private_key:
+        raise RuntimeError(
+            "GOOGLE_PRIVATE_KEY não foi encontrada nas variáveis de ambiente do EasyPanel."
+        )
+
+    info = {
         "type": os.getenv("GOOGLE_TYPE", "service_account").strip() or "service_account",
         "project_id": os.getenv("GOOGLE_PROJECT_ID", "").strip(),
         "private_key_id": os.getenv("GOOGLE_PRIVATE_KEY_ID", "").strip(),
         "private_key": private_key,
         "client_email": os.getenv("GOOGLE_CLIENT_EMAIL", "").strip(),
         "client_id": os.getenv("GOOGLE_CLIENT_ID", "").strip(),
-        "auth_uri": os.getenv("GOOGLE_AUTH_URI", "https://accounts.google.com/o/oauth2/auth").strip(),
-        "token_uri": os.getenv("GOOGLE_TOKEN_URI", "https://oauth2.googleapis.com/token").strip(),
+        "auth_uri": os.getenv(
+            "GOOGLE_AUTH_URI",
+            "https://accounts.google.com/o/oauth2/auth",
+        ).strip(),
+        "token_uri": os.getenv(
+            "GOOGLE_TOKEN_URI",
+            "https://oauth2.googleapis.com/token",
+        ).strip(),
         "auth_provider_x509_cert_url": os.getenv(
             "GOOGLE_AUTH_PROVIDER_X509_CERT_URL",
             "https://www.googleapis.com/oauth2/v1/certs",
@@ -4841,6 +4861,22 @@ def obter_info_conta_servico() -> dict:
         "universe_domain": os.getenv("GOOGLE_UNIVERSE_DOMAIN", "googleapis.com").strip() or "googleapis.com",
     }
 
+    campos_obrigatorios = [
+        "project_id",
+        "private_key_id",
+        "client_email",
+        "client_id",
+        "private_key",
+    ]
+    faltando = [campo for campo in campos_obrigatorios if not info.get(campo)]
+
+    if faltando:
+        raise RuntimeError(
+            "Variáveis de ambiente do Google incompletas no EasyPanel: "
+            + ", ".join(faltando)
+        )
+
+    return info
 
 @st.cache_resource(show_spinner=False)
 def obter_worksheet_leads():
