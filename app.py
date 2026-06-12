@@ -4795,33 +4795,52 @@ def montar_painel_retencao_diretoria_html() -> str:
         </div>
     </article>
     """
-    def obter_configuracao_planilha() -> tuple[str, str]:
+def obter_configuracao_planilha() -> tuple[str, str]:
     spreadsheet_id = os.getenv("SPREADSHEET_ID", SPREADSHEET_ID_PADRAO).strip()
     worksheet_name = os.getenv("WORKSHEET_NAME", WORKSHEET_NAME_PADRAO).strip()
+
+    if not spreadsheet_id:
+        spreadsheet_id = SPREADSHEET_ID_PADRAO
+
+    if not worksheet_name:
+        worksheet_name = WORKSHEET_NAME_PADRAO
+
     return spreadsheet_id, worksheet_name
 
 
 def obter_info_conta_servico() -> dict:
+    """
+    Lê a conta de serviço do Google pelas variáveis de ambiente do EasyPanel.
+
+    O EasyPanel está sendo usado em formato .env, então não dependemos mais
+    do arquivo secrets.toml do Streamlit para conectar no Google Sheets.
+    """
     private_key = os.getenv("GOOGLE_PRIVATE_KEY", "").strip()
 
     if not private_key:
-        raise RuntimeError("GOOGLE_PRIVATE_KEY não encontrada no EasyPanel.")
+        raise RuntimeError("GOOGLE_PRIVATE_KEY não encontrada nas variáveis de ambiente do EasyPanel.")
 
+    # Aceita chave privada colada em uma linha com \n ou com quebras reais.
+    private_key = private_key.strip().strip('"').strip("'")
     private_key = private_key.replace("\\n", "\n")
 
     return {
-        "type": os.getenv("GOOGLE_TYPE", "service_account"),
-        "project_id": os.getenv("GOOGLE_PROJECT_ID", ""),
-        "private_key_id": os.getenv("GOOGLE_PRIVATE_KEY_ID", ""),
+        "type": os.getenv("GOOGLE_TYPE", "service_account").strip() or "service_account",
+        "project_id": os.getenv("GOOGLE_PROJECT_ID", "").strip(),
+        "private_key_id": os.getenv("GOOGLE_PRIVATE_KEY_ID", "").strip(),
         "private_key": private_key,
-        "client_email": os.getenv("GOOGLE_CLIENT_EMAIL", ""),
-        "client_id": os.getenv("GOOGLE_CLIENT_ID", ""),
-        "auth_uri": os.getenv("GOOGLE_AUTH_URI", "https://accounts.google.com/o/oauth2/auth"),
-        "token_uri": os.getenv("GOOGLE_TOKEN_URI", "https://oauth2.googleapis.com/token"),
-        "auth_provider_x509_cert_url": os.getenv("GOOGLE_AUTH_PROVIDER_X509_CERT_URL", "https://www.googleapis.com/oauth2/v1/certs"),
-        "client_x509_cert_url": os.getenv("GOOGLE_CLIENT_X509_CERT_URL", ""),
-        "universe_domain": os.getenv("GOOGLE_UNIVERSE_DOMAIN", "googleapis.com"),
+        "client_email": os.getenv("GOOGLE_CLIENT_EMAIL", "").strip(),
+        "client_id": os.getenv("GOOGLE_CLIENT_ID", "").strip(),
+        "auth_uri": os.getenv("GOOGLE_AUTH_URI", "https://accounts.google.com/o/oauth2/auth").strip(),
+        "token_uri": os.getenv("GOOGLE_TOKEN_URI", "https://oauth2.googleapis.com/token").strip(),
+        "auth_provider_x509_cert_url": os.getenv(
+            "GOOGLE_AUTH_PROVIDER_X509_CERT_URL",
+            "https://www.googleapis.com/oauth2/v1/certs",
+        ).strip(),
+        "client_x509_cert_url": os.getenv("GOOGLE_CLIENT_X509_CERT_URL", "").strip(),
+        "universe_domain": os.getenv("GOOGLE_UNIVERSE_DOMAIN", "googleapis.com").strip() or "googleapis.com",
     }
+
 
 @st.cache_resource(show_spinner=False)
 def obter_worksheet_leads():
