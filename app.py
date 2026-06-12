@@ -24,6 +24,57 @@ from gspread.utils import rowcol_to_a1
 
 
 # ============================================================
+# CARREGAMENTO DE VARIÁVEIS DO EASYPANEL (.env)
+# ============================================================
+def carregar_env_easypanel() -> None:
+    """
+    Garante que variáveis do EasyPanel também funcionem quando ele cria
+    um arquivo .env em vez de exportar diretamente para o ambiente.
+    """
+    possiveis_arquivos = [
+        Path.cwd() / ".env",
+        Path(__file__).resolve().parent / ".env",
+        Path("/app/.env"),
+    ]
+
+    for arquivo_env in possiveis_arquivos:
+        if not arquivo_env.exists():
+            continue
+
+        try:
+            for linha in arquivo_env.read_text(encoding="utf-8").splitlines():
+                linha = linha.strip()
+
+                if not linha or linha.startswith("#") or "=" not in linha:
+                    continue
+
+                chave, valor = linha.split("=", 1)
+                chave = chave.strip()
+                valor = valor.strip()
+
+                if not chave:
+                    continue
+
+                if (
+                    len(valor) >= 2
+                    and valor[0] == valor[-1]
+                    and valor[0] in {"'", '"'}
+                ):
+                    valor = valor[1:-1]
+
+                # Corrige erro comum: GOOGLE_PRIVATE_KEY="=-----BEGIN..."
+                if chave == "GOOGLE_PRIVATE_KEY" and valor.startswith("=-----BEGIN"):
+                    valor = valor[1:]
+
+                os.environ.setdefault(chave, valor)
+        except Exception:
+            pass
+
+
+carregar_env_easypanel()
+
+
+# ============================================================
 # CONFIGURAÇÃO DA PÁGINA
 # ============================================================
 st.set_page_config(
@@ -4795,15 +4846,7 @@ def montar_painel_retencao_diretoria_html() -> str:
         </div>
     </article>
     """
-
-
-
 def obter_configuracao_planilha() -> tuple[str, str]:
-    """
-    Lê a configuração da planilha primeiro pelas variáveis de ambiente
-    do EasyPanel e, se não encontrar, usa os valores padrão do projeto.
-    Não depende de st.secrets.
-    """
     spreadsheet_id = os.getenv("SPREADSHEET_ID", SPREADSHEET_ID_PADRAO).strip()
     worksheet_name = os.getenv("WORKSHEET_NAME", WORKSHEET_NAME_PADRAO).strip()
 
@@ -4817,66 +4860,54 @@ def obter_configuracao_planilha() -> tuple[str, str]:
 
 
 def obter_info_conta_servico() -> dict:
-    """
-    Lê a conta de serviço diretamente das variáveis de ambiente do EasyPanel.
-    Assim o dashboard não depende de /app/.streamlit/secrets.toml.
-    """
     private_key = os.getenv("GOOGLE_PRIVATE_KEY", "").strip()
 
-    # Remove aspas externas caso o EasyPanel mantenha as aspas do .env.
     if (
-        (private_key.startswith('"') and private_key.endswith('"'))
-        or (private_key.startswith("'") and private_key.endswith("'"))
+        len(private_key) >= 2
+        and private_key[0] == private_key[-1]
+        and private_key[0] in {"'", '"'}
     ):
         private_key = private_key[1:-1]
 
-    # Converte \n em quebra de linha real, necessário para a chave do Google.
+    if private_key.startswith("=-----BEGIN"):
+        private_key = private_key[1:]
+
     private_key = private_key.replace("\\n", "\n")
 
     if not private_key:
         raise RuntimeError(
-            "GOOGLE_PRIVATE_KEY não foi encontrada nas variáveis de ambiente do EasyPanel."
+            "GOOGLE_PRIVATE_KEY não foi encontrada. No EasyPanel, ative 'Criar arquivo .env' "
+            "ou cadastre a variável GOOGLE_PRIVATE_KEY no Ambiente."
         )
 
-    info = {
-        "type": os.getenv("GOOGLE_TYPE", "service_account").strip() or "service_account",
-        "project_id": os.getenv("GOOGLE_PROJECT_ID", "").strip(),
-        "private_key_id": os.getenv("GOOGLE_PRIVATE_KEY_ID", "").strip(),
+    if "-----BEGIN PRIVATE KEY-----" not in private_key:
+        raise RuntimeError(
+            "GOOGLE_PRIVATE_KEY foi encontrada, mas está em formato inválido. "
+            "Ela precisa começar com -----BEGIN PRIVATE KEY-----"
+        )
+
+    return {
+        "type": os.getenv("GOOGLE_TYPE", "service_account"),
+        "project_id": os.getenv("GOOGLE_PROJECT_ID", ""),
+        "private_key_id": os.getenv("GOOGLE_PRIVATE_KEY_ID", ""),
         "private_key": private_key,
-        "client_email": os.getenv("GOOGLE_CLIENT_EMAIL", "").strip(),
-        "client_id": os.getenv("GOOGLE_CLIENT_ID", "").strip(),
+        "client_email": os.getenv("GOOGLE_CLIENT_EMAIL", ""),
+        "client_id": os.getenv("GOOGLE_CLIENT_ID", ""),
         "auth_uri": os.getenv(
             "GOOGLE_AUTH_URI",
             "https://accounts.google.com/o/oauth2/auth",
-        ).strip(),
+        ),
         "token_uri": os.getenv(
             "GOOGLE_TOKEN_URI",
             "https://oauth2.googleapis.com/token",
-        ).strip(),
+        ),
         "auth_provider_x509_cert_url": os.getenv(
             "GOOGLE_AUTH_PROVIDER_X509_CERT_URL",
             "https://www.googleapis.com/oauth2/v1/certs",
-        ).strip(),
-        "client_x509_cert_url": os.getenv("GOOGLE_CLIENT_X509_CERT_URL", "").strip(),
-        "universe_domain": os.getenv("GOOGLE_UNIVERSE_DOMAIN", "googleapis.com").strip() or "googleapis.com",
+        ),
+        "client_x509_cert_url": os.getenv("GOOGLE_CLIENT_X509_CERT_URL", ""),
+        "universe_domain": os.getenv("GOOGLE_UNIVERSE_DOMAIN", "googleapis.com"),
     }
-
-    campos_obrigatorios = [
-        "project_id",
-        "private_key_id",
-        "client_email",
-        "client_id",
-        "private_key",
-    ]
-    faltando = [campo for campo in campos_obrigatorios if not info.get(campo)]
-
-    if faltando:
-        raise RuntimeError(
-            "Variáveis de ambiente do Google incompletas no EasyPanel: "
-            + ", ".join(faltando)
-        )
-
-    return info
 
 @st.cache_resource(show_spinner=False)
 def obter_worksheet_leads():
