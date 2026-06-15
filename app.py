@@ -24,68 +24,17 @@ from gspread.utils import rowcol_to_a1
 
 
 # ============================================================
-# CARREGAMENTO DE VARIÁVEIS DO EASYPANEL (.env)
-# ============================================================
-def carregar_env_easypanel() -> None:
-    """
-    Garante que variáveis do EasyPanel também funcionem quando ele cria
-    um arquivo .env em vez de exportar diretamente para o ambiente.
-    """
-    possiveis_arquivos = [
-        Path.cwd() / ".env",
-        Path(__file__).resolve().parent / ".env",
-        Path("/app/.env"),
-    ]
-
-    for arquivo_env in possiveis_arquivos:
-        if not arquivo_env.exists():
-            continue
-
-        try:
-            for linha in arquivo_env.read_text(encoding="utf-8").splitlines():
-                linha = linha.strip()
-
-                if not linha or linha.startswith("#") or "=" not in linha:
-                    continue
-
-                chave, valor = linha.split("=", 1)
-                chave = chave.strip()
-                valor = valor.strip()
-
-                if not chave:
-                    continue
-
-                if (
-                    len(valor) >= 2
-                    and valor[0] == valor[-1]
-                    and valor[0] in {"'", '"'}
-                ):
-                    valor = valor[1:-1]
-
-                # Corrige erro comum: GOOGLE_PRIVATE_KEY="=-----BEGIN..."
-                if chave == "GOOGLE_PRIVATE_KEY" and valor.startswith("=-----BEGIN"):
-                    valor = valor[1:]
-
-                os.environ.setdefault(chave, valor)
-        except Exception:
-            pass
-
-
-carregar_env_easypanel()
-
-
-# ============================================================
 # CONFIGURAÇÃO DA PÁGINA
 # ============================================================
 st.set_page_config(
-    page_title="Fight for Life | Dashboard",
-    page_icon="🥋",
+    page_title="Oppi Tech | Dashboard",
+    page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 BASE_DIR = Path(__file__).resolve().parent
-LOGO_PATH = BASE_DIR / "fight4life.png"
+LOGO_PATH = BASE_DIR / "oppi_logo.png"
 
 PRETO = "#000000"
 AMARELO = "#fbc410"
@@ -184,16 +133,16 @@ def carregar_credenciais() -> tuple[str, str]:
 
     FORMATO 1:
     [auth]
-    username = "fight4life"
-    password = "Fight4life2026!"
+    username = "oppitech"
+    password = "senha_configurada_no_easypanel"
 
     FORMATO 2:
-    username = "fight4life"
-    password = "Fight4life2026!"
+    username = "oppitech"
+    password = "senha_configurada_no_easypanel"
 
     FORMATO 3:
-    dashboard_username = "fight4life"
-    dashboard_password = "Fight4life2026!"
+    dashboard_username = "oppitech"
+    dashboard_password = "senha_configurada_no_easypanel"
     """
     try:
         # Formato 1: seção [auth]
@@ -253,19 +202,19 @@ def carregar_credenciais_diretoria() -> tuple[str, str]:
 
     FORMATO RECOMENDADO E MAIS SIMPLES:
     [auth]
-    username = "fight4life"
-    password = "Fight4life2026!"
-    diretoria_username = "fight4lifediretoria"
-    diretoria_password = "Fight4LifeDiretoria!"
+    username = "oppitech"
+    password = "senha_configurada_no_easypanel"
+    diretoria_username = "oppitechdiretoria"
+    diretoria_password = "senha_configurada_no_easypanel"
 
     FORMATO ALTERNATIVO 1:
     [diretoria]
-    username = "fight4lifediretoria"
-    password = "Fight4LifeDiretoria!"
+    username = "oppitechdiretoria"
+    password = "senha_configurada_no_easypanel"
 
     FORMATO ALTERNATIVO 2:
-    diretoria_username = "fight4lifediretoria"
-    diretoria_password = "Fight4LifeDiretoria!"
+    diretoria_username = "oppitechdiretoria"
+    diretoria_password = "senha_configurada_no_easypanel"
     """
     try:
         # Formato recomendado: credenciais da Diretoria dentro da seção [auth]
@@ -358,22 +307,7 @@ def credenciais_diretoria_validas(
         if usuario_ok and senha_ok:
             return True
 
-    # Fallback seguro por hash:
-    # não expõe a senha real diretamente dentro do código público.
-    usuario_hash_esperado = "8c76bd0b84a23f223ff2fbcb9c71c89d6fe911b7e70d1affb1c3c4e2e7efa673"
-    senha_hash_esperado = "bf1462cbe311cd19f0b10919d21870e16cd678965d18f0c79bb003a5ad4c2d0e"
-
-    usuario_hash_digitado = hashlib.sha256(
-        usuario_digitado.encode("utf-8")
-    ).hexdigest()
-    senha_hash_digitada = hashlib.sha256(
-        senha_digitada.encode("utf-8")
-    ).hexdigest()
-
-    return (
-        hmac.compare_digest(usuario_hash_digitado, usuario_hash_esperado)
-        and hmac.compare_digest(senha_hash_digitada, senha_hash_esperado)
-    )
+    return False
 
 
 def aplicar_css() -> None:
@@ -1093,12 +1027,12 @@ def montar_cards_modalidades() -> str:
 
 
 def exibir_login() -> None:
-    logo_b64 = arquivo_para_base64(LOGO_PATH)
+    logo_b64 = ""
 
     st.markdown(
         """
         <div class="top-strip">
-            <div class="top-brand"><strong>Fight</strong> for Life</div>
+            <div class="top-brand"><strong>Oppi</strong> Tech</div>
             <div class="top-tag">Área interna</div>
         </div>
         """,
@@ -1111,15 +1045,15 @@ def exibir_login() -> None:
         st.markdown(
             f"""
             <section class="hero-wrap">
-                <p class="hero-kicker">Fight for Life • Artes marciais</p>
+                <p class="hero-kicker">Oppi Tech • Dashboard</p>
                 <h1 class="hero-title">
-                    DISCIPLINA <span class="hero-divider">•</span>
-                    FORÇA <span class="hero-divider">•</span>
-                    <strong>EVOLUÇÃO</strong>
+                    GESTÃO <span class="hero-divider">•</span>
+                    PROCESSOS <span class="hero-divider">•</span>
+                    <strong>RESULTADOS</strong>
                 </h1>
                 <p class="hero-text">
-                    Mais do que treino. Um ambiente construído para evolução,
-                    técnica, confiança e superação dentro e fora do tatame.
+                    Tecnologia, organização e dados em um painel interno
+                    preparado para acompanhar a operação em tempo real.
                 </p>
                 {montar_cards_modalidades()}
             </section>
@@ -1136,7 +1070,7 @@ def exibir_login() -> None:
                 <div class="logo-wrap">
                     <img
                         src="data:image/png;base64,{logo_b64}"
-                        alt="Logo Fight for Life"
+                        alt="Logo Oppi Tech"
                     />
                 </div>
                 """,
@@ -1148,7 +1082,7 @@ def exibir_login() -> None:
             <h2 class="login-title">Acesse o dashboard</h2>
             <p class="login-sub">
                 Entre com suas credenciais para visualizar o painel interno
-                da Fight for Life.
+                da Oppi Tech.
             </p>
             """,
             unsafe_allow_html=True,
@@ -1184,7 +1118,7 @@ def exibir_login() -> None:
         st.markdown(
             """
             <p class="login-note">
-                Painel exclusivo para acesso interno da academia.<br>
+                Painel exclusivo para acesso interno.<br>
                 Utilize suas credenciais para continuar.
             </p>
             </div></section>
@@ -3351,7 +3285,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
 
-            /* PLANILHA EDITÁVEL COMERCIAL — ESTILO FIGHT FOR LIFE */
+            /* PLANILHA EDITÁVEL COMERCIAL — ESTILO OPPI TECH */
             .inline-sheet-card {
                 background: #ffffff;
                 border: 1px solid #e2e6ec;
@@ -4663,7 +4597,7 @@ def montar_painel_diretoria_financeiro_html() -> str:
     <section class="diretoria-finance-shell">
         <header class="diretoria-finance-header">
             <div>
-                <p class="diretoria-finance-kicker">Fight for Life • Diretoria</p>
+                <p class="diretoria-finance-kicker">Oppi Tech • Diretoria</p>
                 <h1 class="diretoria-finance-title">Faturamento por modalidade</h1>
                 <p class="diretoria-finance-sub">
                     Receita mensal estimada conforme os planos cadastrados para cada aluno.
@@ -4696,6 +4630,11 @@ def montar_dashboard_topo_visual(
 ) -> str:
     config = montar_config_dashboard(pagina)
     kpis_html = montar_kpis_dashboard(config["metricas"])
+    logo_html = (
+        f'<img src="data:image/png;base64,{logo_b64}" alt="Oppi Tech" />'
+        if logo_b64
+        else ""
+    )
 
     if pagina == "📈 Comercial":
         barras_html = montar_barras_modalidades_comerciais()
@@ -4732,9 +4671,9 @@ def montar_dashboard_topo_visual(
     <section class="dashboard-shell">
         <div class="dashboard-header">
             <div class="dash-brand">
-                <img src="data:image/png;base64,{logo_b64}" alt="Fight for Life" />
+                {logo_html}
                 <div>
-                    <p class="dash-brand-kicker">Fight for Life • Dashboard</p>
+                    <p class="dash-brand-kicker">Oppi Tech • Dashboard</p>
                     <h1 class="dash-brand-title">{config["titulo"]}</h1>
                     <p class="dash-brand-sub">{config["subtitulo"]}</p>
                 </div>
@@ -4846,68 +4785,155 @@ def montar_painel_retencao_diretoria_html() -> str:
         </div>
     </article>
     """
+
+
+
 def obter_configuracao_planilha() -> tuple[str, str]:
-    spreadsheet_id = os.getenv("SPREADSHEET_ID", SPREADSHEET_ID_PADRAO).strip()
-    worksheet_name = os.getenv("WORKSHEET_NAME", WORKSHEET_NAME_PADRAO).strip()
+    """
+    Usa primeiro os Secrets do Streamlit e, no EasyPanel, aceita também
+    variáveis de ambiente.
 
-    if not spreadsheet_id:
-        spreadsheet_id = SPREADSHEET_ID_PADRAO
+    Variáveis aceitas:
+    - SPREADSHEET_ID
+    - WORKSHEET_NAME
+    """
+    spreadsheet_id = SPREADSHEET_ID_PADRAO
+    worksheet_name = WORKSHEET_NAME_PADRAO
 
-    if not worksheet_name:
-        worksheet_name = WORKSHEET_NAME_PADRAO
+    try:
+        if "google_sheets" in st.secrets:
+            config = st.secrets["google_sheets"]
+            spreadsheet_id = str(
+                config.get("spreadsheet_id", spreadsheet_id)
+            ).strip()
+            worksheet_name = str(
+                config.get("worksheet_name", worksheet_name)
+            ).strip()
+    except Exception:
+        pass
+
+    spreadsheet_id = (
+        os.getenv("SPREADSHEET_ID", "").strip()
+        or os.getenv("spreadsheet_id", "").strip()
+        or spreadsheet_id
+    )
+
+    worksheet_name = (
+        os.getenv("WORKSHEET_NAME", "").strip()
+        or os.getenv("worksheet_name", "").strip()
+        or worksheet_name
+    )
 
     return spreadsheet_id, worksheet_name
 
 
+def _obter_env_primeiro(*nomes: str) -> str:
+    """
+    Retorna a primeira variável de ambiente preenchida.
+    """
+    for nome in nomes:
+        valor = os.getenv(nome, "").strip()
+
+        if valor:
+            return valor
+
+    return ""
+
+
 def obter_info_conta_servico() -> dict:
-    private_key = os.getenv("GOOGLE_PRIVATE_KEY", "").strip()
+    """
+    Lê as credenciais da conta de serviço.
 
-    if (
-        len(private_key) >= 2
-        and private_key[0] == private_key[-1]
-        and private_key[0] in {"'", '"'}
-    ):
-        private_key = private_key[1:-1]
+    Ordem de tentativa:
+    1. [gcp_service_account] no secrets.toml do Streamlit;
+    2. GCP_SERVICE_ACCOUNT_B64 no EasyPanel;
+    3. Variáveis GOOGLE_* separadas no EasyPanel.
 
-    if private_key.startswith("=-----BEGIN"):
-        private_key = private_key[1:]
+    A opção GCP_SERVICE_ACCOUNT_B64 é a mais simples para o EasyPanel,
+    porque evita problemas com a chave privada multilinha.
+    """
+    try:
+        if "gcp_service_account" in st.secrets:
+            info = dict(st.secrets["gcp_service_account"])
 
-    private_key = private_key.replace("\\n", "\n")
+            if "private_key" not in info:
+                raise RuntimeError(
+                    'O campo "private_key" não foi encontrado em '
+                    "[gcp_service_account]."
+                )
 
-    if not private_key:
+            info["private_key"] = str(info["private_key"]).replace("\\n", "\n")
+            return info
+    except Exception:
+        pass
+
+    credenciais_b64 = _obter_env_primeiro(
+        "GCP_SERVICE_ACCOUNT_B64",
+        "GOOGLE_SERVICE_ACCOUNT_B64",
+    )
+
+    if credenciais_b64:
+        try:
+            credenciais_b64 = re.sub(r"\\s+", "", credenciais_b64)
+            info = json.loads(
+                base64.b64decode(credenciais_b64).decode("utf-8")
+            )
+        except Exception as erro:
+            raise RuntimeError(
+                "A variável GCP_SERVICE_ACCOUNT_B64 foi encontrada, "
+                "mas não foi possível converter o Base64 para JSON."
+            ) from erro
+
+        if "private_key" not in info:
+            raise RuntimeError(
+                'O JSON da conta de serviço não possui o campo "private_key".'
+            )
+
+        info["private_key"] = str(info["private_key"]).replace("\\n", "\n")
+        return info
+
+    info = {
+        "type": _obter_env_primeiro("GOOGLE_TYPE") or "service_account",
+        "project_id": _obter_env_primeiro("GOOGLE_PROJECT_ID"),
+        "private_key_id": _obter_env_primeiro("GOOGLE_PRIVATE_KEY_ID"),
+        "private_key": _obter_env_primeiro("GOOGLE_PRIVATE_KEY"),
+        "client_email": _obter_env_primeiro("GOOGLE_CLIENT_EMAIL"),
+        "client_id": _obter_env_primeiro("GOOGLE_CLIENT_ID"),
+        "auth_uri": _obter_env_primeiro("GOOGLE_AUTH_URI")
+        or "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": _obter_env_primeiro("GOOGLE_TOKEN_URI")
+        or "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": _obter_env_primeiro(
+            "GOOGLE_AUTH_PROVIDER_X509_CERT_URL"
+        )
+        or "https://www.googleapis.com/oauth2/v1/certs",
+        "client_x509_cert_url": _obter_env_primeiro(
+            "GOOGLE_CLIENT_X509_CERT_URL"
+        ),
+        "universe_domain": _obter_env_primeiro("GOOGLE_UNIVERSE_DOMAIN")
+        or "googleapis.com",
+    }
+
+    if not info["client_email"]:
         raise RuntimeError(
-            "GOOGLE_PRIVATE_KEY não foi encontrada. No EasyPanel, ative 'Criar arquivo .env' "
-            "ou cadastre a variável GOOGLE_PRIVATE_KEY no Ambiente."
+            "As credenciais do Google Sheets não foram encontradas. "
+            "No EasyPanel, configure GCP_SERVICE_ACCOUNT_B64 ou as variáveis GOOGLE_*."
         )
 
-    if "-----BEGIN PRIVATE KEY-----" not in private_key:
+    if not info["private_key"]:
         raise RuntimeError(
-            "GOOGLE_PRIVATE_KEY foi encontrada, mas está em formato inválido. "
-            "Ela precisa começar com -----BEGIN PRIVATE KEY-----"
+            "A variável GOOGLE_PRIVATE_KEY não foi configurada. "
+            "Para evitar erro com múltiplas linhas, prefira usar GCP_SERVICE_ACCOUNT_B64."
         )
+
+    info["private_key"] = str(info["private_key"]).replace("\\n", "\n")
 
     return {
-        "type": os.getenv("GOOGLE_TYPE", "service_account"),
-        "project_id": os.getenv("GOOGLE_PROJECT_ID", ""),
-        "private_key_id": os.getenv("GOOGLE_PRIVATE_KEY_ID", ""),
-        "private_key": private_key,
-        "client_email": os.getenv("GOOGLE_CLIENT_EMAIL", ""),
-        "client_id": os.getenv("GOOGLE_CLIENT_ID", ""),
-        "auth_uri": os.getenv(
-            "GOOGLE_AUTH_URI",
-            "https://accounts.google.com/o/oauth2/auth",
-        ),
-        "token_uri": os.getenv(
-            "GOOGLE_TOKEN_URI",
-            "https://oauth2.googleapis.com/token",
-        ),
-        "auth_provider_x509_cert_url": os.getenv(
-            "GOOGLE_AUTH_PROVIDER_X509_CERT_URL",
-            "https://www.googleapis.com/oauth2/v1/certs",
-        ),
-        "client_x509_cert_url": os.getenv("GOOGLE_CLIENT_X509_CERT_URL", ""),
-        "universe_domain": os.getenv("GOOGLE_UNIVERSE_DOMAIN", "googleapis.com"),
+        chave: valor
+        for chave, valor in info.items()
+        if valor
     }
+
 
 @st.cache_resource(show_spinner=False)
 def obter_worksheet_leads():
@@ -5145,7 +5171,7 @@ def upload_foto_rosto_aluno_drive(
     """
     Envia a foto do rosto para a API do Google Apps Script.
 
-    O Apps Script salva o arquivo na pasta Fotos Alunos Fight for Life
+    O Apps Script salva o arquivo na pasta Fotos Alunos Oppi Tech
     e devolve o link do Google Drive.
     """
     if foto_rosto is None:
@@ -5329,26 +5355,43 @@ def salvar_novo_lead_planilha(cadastro: dict) -> str:
 
 def obter_configuracao_zapsign() -> dict:
     """
-    Lê a configuração da ZapSign nos Secrets do Streamlit.
+    Lê a configuração da ZapSign nos Secrets do Streamlit ou nas variáveis
+    de ambiente do EasyPanel.
 
-    Formato esperado:
-    [zapsign]
-    api_token = "..."
-    template_id = "..."
-    base_url = "https://api.zapsign.com.br"
+    Variáveis aceitas:
+    - ZAPSIGN_API_TOKEN
+    - ZAPSIGN_TEMPLATE_ID
+    - ZAPSIGN_BASE_URL
     """
-    if "zapsign" not in st.secrets:
-        raise RuntimeError(
-            "A seção [zapsign] não foi encontrada nos Secrets do Streamlit."
-        )
+    api_token = ""
+    template_id = ""
+    base_url = "https://api.zapsign.com.br"
 
-    config = st.secrets["zapsign"]
+    try:
+        if "zapsign" in st.secrets:
+            config = st.secrets["zapsign"]
+            api_token = str(config.get("api_token", "")).strip()
+            template_id = str(config.get("template_id", "")).strip()
+            base_url = str(
+                config.get("base_url", base_url)
+            ).strip().rstrip("/")
+    except Exception:
+        pass
 
-    api_token = str(config.get("api_token", "")).strip()
-    template_id = str(config.get("template_id", "")).strip()
-    base_url = str(
-        config.get("base_url", "https://api.zapsign.com.br")
-    ).strip().rstrip("/")
+    api_token = (
+        os.getenv("ZAPSIGN_API_TOKEN", "").strip()
+        or api_token
+    )
+
+    template_id = (
+        os.getenv("ZAPSIGN_TEMPLATE_ID", "").strip()
+        or template_id
+    )
+
+    base_url = (
+        os.getenv("ZAPSIGN_BASE_URL", "").strip()
+        or base_url
+    ).rstrip("/")
 
     if not api_token:
         raise RuntimeError("O api_token da ZapSign não foi configurado.")
@@ -5432,7 +5475,7 @@ def criar_contrato_zapsign(
     email = str(cadastro.get("E-mail", "")).strip()
 
     if not nome:
-        nome = "Aluno Fight for Life"
+        nome = "Aluno sem nome"
     telefone_original = str(cadastro.get("Telefone", "")).strip()
     telefone = normalizar_telefone_zapsign(telefone_original)
 
@@ -5450,16 +5493,16 @@ def criar_contrato_zapsign(
         "lang": "pt-br",
         "send_automatic_email": True,
         "disable_signer_emails": False,
-        "brand_name": "Fight for Life",
+        "brand_name": "Oppi Tech",
         "brand_primary_color": "#fbc410",
         "external_id": id_lead,
-        "folder_path": "/Fight for Life/Contratos/",
+        "folder_path": "/Oppi Tech/Contratos/",
         "custom_message": (
             f"Olá, {nome}!\\n\\n"
-            "Seu cadastro na Fight for Life foi realizado com sucesso. "
+            "Seu cadastro na Oppi Tech foi realizado com sucesso. "
             "Esta é a próxima etapa da sua matrícula. "
             "Confira o contrato e conclua sua assinatura digital.\\n\\n"
-            "Fight for Life"
+            "Oppi Tech"
         ),
         "signature_order_active": True,
         "data": [
@@ -7128,7 +7171,7 @@ def render_cabecalho_cadastro_alunos() -> None:
         """
         <section class="cadastro-alunos-header">
             <div>
-                <p class="cadastro-alunos-kicker">Fight for Life • Cadastro</p>
+                <p class="cadastro-alunos-kicker">Oppi Tech • Cadastro</p>
                 <h1 class="cadastro-alunos-title">Cadastro de alunos</h1>
                 <p class="cadastro-alunos-sub">
                     Registre um novo aluno, escolha o plano e envie o contrato
@@ -7266,25 +7309,23 @@ def exibir_dashboard_inicial() -> None:
     aplicar_css_dashboard_claro()
     render_toggle_menu_lateral()
 
-    logo_b64 = arquivo_para_base64(LOGO_PATH)
+    logo_b64 = ""
 
     if "diretoria_autenticada" not in st.session_state:
         st.session_state["diretoria_autenticada"] = False
 
     with st.sidebar:
-        if logo_b64:
-            st.markdown(
-                f"""
-                <div class="sidebar-brand">
-                    <img src="data:image/png;base64,{logo_b64}" alt="Fight for Life" />
-                    <div>
-                        <div class="sidebar-brand-title">Fight for Life</div>
-                        <div class="sidebar-brand-sub">Painel interno</div>
-                    </div>
+        st.markdown(
+            """
+            <div class="sidebar-brand">
+                <div>
+                    <div class="sidebar-brand-title">Oppi Tech</div>
+                    <div class="sidebar-brand-sub">Painel interno</div>
                 </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
         st.markdown(
             '<div class="sidebar-section-label">Navegação</div>',
