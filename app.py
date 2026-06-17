@@ -1376,7 +1376,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .kpi-red {
-                background: linear-gradient(135deg, #ff1f3d 0%, #ff1f3d 100%);
+                background: linear-gradient(135deg, #ff1f3d 0%, #b3001b 100%);
                 color: #151515;
             }
 
@@ -1652,7 +1652,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .bar-red {
-                background: linear-gradient(180deg, #ff1f3d 0%, #9b00d9 100%);
+                background: linear-gradient(180deg, #ff1f3d 0%, #b3001b 100%);
             }
 
             .bar-black {
@@ -4304,7 +4304,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .kpi-red {
-                background: linear-gradient(135deg, #ff1f3d 0%, #9b00d9 100%) !important;
+                background: linear-gradient(135deg, #ff1f3d 0%, #b3001b 100%) !important;
                 color: #ffffff !important;
             }
 
@@ -4324,7 +4324,7 @@ def aplicar_css_dashboard_claro() -> None:
 
             .dashboard-header::after,
             .login-shell::before {
-                background: linear-gradient(90deg, #ff1f3d 0%, #9b00d9 100%) !important;
+                background: linear-gradient(90deg, #ff1f3d 0%, #b3001b 100%) !important;
             }
 
             div[data-testid="stFormSubmitButton"] button,
@@ -4332,7 +4332,7 @@ def aplicar_css_dashboard_claro() -> None:
             [data-testid="stSidebarCollapsedControl"] button,
             [data-testid="collapsedControl"] button,
             [data-testid="stSidebarCollapseButton"] button {
-                background: linear-gradient(135deg, #ff1f3d 0%, #9b00d9 100%) !important;
+                background: linear-gradient(135deg, #ff1f3d 0%, #b3001b 100%) !important;
                 color: #ffffff !important;
             }
 
@@ -4357,11 +4357,11 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .bar-red {
-                background: linear-gradient(180deg, #ff1f3d 0%, #9b00d9 100%) !important;
+                background: linear-gradient(180deg, #ff1f3d 0%, #b3001b 100%) !important;
             }
 
             .legend-red {
-                background: linear-gradient(135deg, #ff1f3d 0%, #9b00d9 100%) !important;
+                background: linear-gradient(135deg, #ff1f3d 0%, #b3001b 100%) !important;
             }
 
             .chart-line-red {
@@ -4407,7 +4407,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .kpi-red {
-                background: linear-gradient(135deg, #ff1f3d 0%, #9b00d9 100%) !important;
+                background: linear-gradient(135deg, #ff1f3d 0%, #b3001b 100%) !important;
                 color: #ffffff !important;
             }
 
@@ -4426,7 +4426,7 @@ def aplicar_css_dashboard_claro() -> None:
             [data-testid="stSidebarCollapseButton"] button,
             .bar-red,
             .legend-red {
-                background: linear-gradient(135deg, #ff1f3d 0%, #9b00d9 100%) !important;
+                background: linear-gradient(135deg, #ff1f3d 0%, #b3001b 100%) !important;
                 color: #ffffff !important;
             }
 
@@ -4495,7 +4495,7 @@ def aplicar_css_dashboard_claro() -> None:
             .bar-red,
             .legend-red,
             .kpi-red {
-                background: linear-gradient(135deg, #ff1f3d 0%, #9b00d9 100%) !important;
+                background: linear-gradient(135deg, #ff1f3d 0%, #b3001b 100%) !important;
                 color: #ffffff !important;
             }
 
@@ -4558,6 +4558,107 @@ def aplicar_css_dashboard_claro() -> None:
             .js-plotly-plot .plotly .barlayer path[style*="rgb(200, 59, 216)"],
             .js-plotly-plot .plotly .barlayer path[style*="rgb(192, 0, 212)"] {
                 fill: #ff1f3d !important;
+            }
+
+
+            /* CORREÇÃO FINAL — VERMELHO NOS CARDS E BOTÕES */
+            :root {
+                --vermelho-oppi: #ff1f3d;
+                --vermelho-oppi-escuro: #b3001b;
+                --roxo-oppi: #9b00d9;
+            }
+
+            .kpi-red,
+            .dash-kpi.kpi-red {
+                background: linear-gradient(135deg, #ff1f3d 0%, #b3001b 100%) !important;
+                color: #ffffff !important;
+            }
+
+            .kpi-red *,
+            .dash-kpi.kpi-red *,
+            .dash-kpi.kpi-red .dash-kpi-label,
+            .dash-kpi.kpi-red .dash-kpi-value,
+            .dash-kpi.kpi-red .dash-kpi-footer,
+            .dash-kpi.kpi-red .dash-kpi-icon {
+                color: #ffffff !important;
+            }
+
+            .dash-kpi.kpi-red .dash-kpi-icon,
+            .kpi-red .dash-kpi-icon {
+                background: rgba(255,255,255,0.16) !important;
+            }
+
+            div[data-testid="stFormSubmitButton"] button,
+            div[data-testid="stButton"] button,
+            [data-testid="stSidebarCollapsedControl"] button,
+            [data-testid="collapsedControl"] button,
+            [data-testid="stSidebarCollapseButton"] button {
+                background: linear-gradient(135deg, #ff1f3d 0%, #b3001b 100%) !important;
+                border: 1px solid #ff1f3d !important;
+                color: #ffffff !important;
+                box-shadow: none !important;
+            }
+
+            .dashboard-header::after,
+            .login-shell::before {
+                background: linear-gradient(90deg, #ff1f3d 0%, #b3001b 100%) !important;
+            }
+
+            .bar-red,
+            .legend-red {
+                background: linear-gradient(180deg, #ff1f3d 0%, #b3001b 100%) !important;
+                color: #ffffff !important;
+            }
+
+            [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) {
+                background: rgba(255,31,61,0.16) !important;
+                border-color: #ff1f3d !important;
+            }
+
+            [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) p,
+            .top-brand strong,
+            .hero-title strong,
+            .hero-kicker,
+            .top-tag,
+            .metric-value,
+            .page-subtitle,
+            .sidebar-brand-sub,
+            .dash-brand-kicker,
+            .cadastro-alunos-kicker,
+            .diretoria-finance-kicker,
+            .diretoria-badge,
+            .placeholder-pill,
+            .status-card-footer strong {
+                color: #ff1f3d !important;
+            }
+
+            .status-card-selected,
+            .st-key-status_card_novo_lead_container_selected button,
+            .st-key-status_card_conversando_container_selected button,
+            .st-key-status_card_nao_tem_interesse_container_selected button,
+            .st-key-status_card_nao_responde_container_selected button,
+            .st-key-status_card_fechado_container_selected button {
+                border-color: #ff1f3d !important;
+                box-shadow: 0 0 0 2px rgba(255,31,61,0.22),
+                            0 10px 22px rgba(15,23,42,0.10) !important;
+            }
+
+            .status-card:hover {
+                border-color: rgba(255,31,61,0.80) !important;
+            }
+
+            .chart-line-red {
+                stroke: #ff1f3d !important;
+            }
+
+            .chart-dot-red {
+                fill: #ff1f3d !important;
+            }
+
+            .dash-panel-icon,
+            .dash-kpi-icon {
+                background: rgba(255,31,61,0.12) !important;
+                color: #ff1f3d !important;
             }
 
 </style>
@@ -7530,134 +7631,7 @@ def render_toggle_menu_lateral() -> None:
             [data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {{
                 {sidebar_content_css}
             }}
-        
-
-            /* AJUSTE FINAL 2 — TODO ROSA DOS CARDS/BOTÕES VIRA VERMELHO */
-            :root {
-                --vermelho-oppi: #ff1f3d;
-                --vermelho-oppi-escuro: #b3001b;
-                --roxo-oppi: #9b00d9;
-                --roxo-oppi-escuro: #4a005f;
-            }
-
-            /* Cards KPI principais */
-            .kpi-red,
-            .dash-kpi.kpi-red {
-                background: linear-gradient(135deg, #ff1f3d 0%, #b3001b 100%) !important;
-                color: #ffffff !important;
-            }
-
-            .kpi-red *,
-            .dash-kpi.kpi-red *,
-            .dash-kpi.kpi-red .dash-kpi-label,
-            .dash-kpi.kpi-red .dash-kpi-value,
-            .dash-kpi.kpi-red .dash-kpi-footer,
-            .dash-kpi.kpi-red .dash-kpi-icon {
-                color: #ffffff !important;
-            }
-
-            .dash-kpi.kpi-red .dash-kpi-icon,
-            .kpi-red .dash-kpi-icon {
-                background: rgba(255,255,255,0.16) !important;
-            }
-
-            /* Botões gerais */
-            div[data-testid="stFormSubmitButton"] button,
-            div[data-testid="stButton"] button,
-            [data-testid="stSidebarCollapsedControl"] button,
-            [data-testid="collapsedControl"] button,
-            [data-testid="stSidebarCollapseButton"] button {
-                background: linear-gradient(135deg, #ff1f3d 0%, #b3001b 100%) !important;
-                border: 1px solid #ff1f3d !important;
-                color: #ffffff !important;
-                box-shadow: none !important;
-            }
-
-            div[data-testid="stFormSubmitButton"] button:hover,
-            div[data-testid="stButton"] button:hover,
-            [data-testid="stSidebarCollapsedControl"] button:hover,
-            [data-testid="collapsedControl"] button:hover,
-            [data-testid="stSidebarCollapseButton"] button:hover {
-                background: linear-gradient(135deg, #ff334f 0%, #c1001d 100%) !important;
-                border-color: #ff334f !important;
-                color: #ffffff !important;
-            }
-
-            /* Barra fina do header */
-            .dashboard-header::after,
-            .login-shell::before {
-                background: linear-gradient(90deg, #ff1f3d 0%, #b3001b 100%) !important;
-            }
-
-            /* Cards e botões de status */
-            .status-card-footer strong,
-            .top-brand strong,
-            .hero-title strong,
-            .hero-kicker,
-            .top-tag,
-            .metric-value,
-            .page-subtitle,
-            .sidebar-brand-sub,
-            .dash-brand-kicker,
-            .cadastro-alunos-kicker,
-            .diretoria-finance-kicker,
-            .diretoria-badge,
-            .placeholder-pill {
-                color: #ff1f3d !important;
-            }
-
-            .status-card-selected,
-            .st-key-status_card_novo_lead_container_selected button,
-            .st-key-status_card_conversando_container_selected button,
-            .st-key-status_card_nao_tem_interesse_container_selected button,
-            .st-key-status_card_nao_responde_container_selected button,
-            .st-key-status_card_fechado_container_selected button {
-                border-color: #ff1f3d !important;
-                box-shadow: 0 0 0 2px rgba(255,31,61,0.22), 0 10px 22px rgba(15,23,42,0.10) !important;
-            }
-
-            .status-card:hover {
-                border-color: rgba(255,31,61,0.80) !important;
-            }
-
-            /* Menu lateral selecionado */
-            [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) {
-                background: rgba(255,31,61,0.16) !important;
-                border-color: #ff1f3d !important;
-            }
-
-            [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) p {
-                color: #ff1f3d !important;
-            }
-
-            /* Gráfico HTML de barras */
-            .bar-red,
-            .legend-red {
-                background: linear-gradient(180deg, #ff1f3d 0%, #b3001b 100%) !important;
-                color: #ffffff !important;
-            }
-
-            .chart-line-red {
-                stroke: #ff1f3d !important;
-            }
-
-            .chart-dot-red,
-            .js-plotly-plot .plotly .barlayer path[style*="rgb(236, 61, 157)"],
-            .js-plotly-plot .plotly .barlayer path[style*="rgb(200, 59, 216)"],
-            .js-plotly-plot .plotly .barlayer path[style*="rgb(192, 0, 212)"],
-            .js-plotly-plot .plotly .barlayer path[style*="#ec3d9d"],
-            .js-plotly-plot .plotly .barlayer path[style*="#c83bd8"],
-            .js-plotly-plot .plotly .barlayer path[style*="#c000d4"] {
-                fill: #ff1f3d !important;
-            }
-
-            .dash-panel-icon,
-            .dash-kpi-icon {
-                background: rgba(255,31,61,0.12) !important;
-                color: #ff1f3d !important;
-            }
-
-</style>
+        </style>
         """,
         unsafe_allow_html=True,
     )
