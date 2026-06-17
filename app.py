@@ -1284,7 +1284,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .dash-brand-kicker {
-                color: #c83bd8;
+                color: #ff1f3d;
                 font-size: 0.66rem;
                 font-weight: 800;
                 letter-spacing: 0.15rem;
@@ -1322,7 +1322,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .dash-side-title strong {
-                color: #c83bd8;
+                color: #ff1f3d;
             }
 
             .dash-side-sub {
@@ -1376,7 +1376,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .kpi-red {
-                background: linear-gradient(135deg, #c000d4 0%, #ff1f3d 100%);
+                background: linear-gradient(135deg, #ff1f3d 0%, #ff1f3d 100%);
                 color: #151515;
             }
 
@@ -1461,9 +1461,9 @@ def aplicar_css_dashboard_claro() -> None:
 
             .dash-panel-icon {
                 align-items: center;
-                background: #ffe6f5;
+                background: #ffe6ea;
                 border-radius: 12px;
-                color: #c83bd8;
+                color: #ff1f3d;
                 display: flex;
                 font-size: 1rem;
                 height: 34px;
@@ -1535,7 +1535,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .gauge-note {
-                color: #c83bd8;
+                color: #ff1f3d;
                 font-size: 0.68rem;
                 font-weight: 700;
                 margin-top: 0.62rem;
@@ -1680,10 +1680,10 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .placeholder-pill {
-                background: #ffe6f5;
-                border: 1px solid #d877e8;
+                background: #ffe6ea;
+                border: 1px solid #ff6b7c;
                 border-radius: 999px;
-                color: #a800c6;
+                color: #c9001f;
                 display: inline-flex;
                 font-size: 0.62rem;
                 font-weight: 700;
@@ -1814,10 +1814,10 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .form-card-badge {
-                background: #ffe6f5;
-                border: 1px solid #d877e8;
+                background: #ffe6ea;
+                border: 1px solid #ff6b7c;
                 border-radius: 999px;
-                color: #a800c6;
+                color: #c9001f;
                 display: inline-flex;
                 font-size: 0.61rem;
                 font-weight: 800;
@@ -1889,7 +1889,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             [data-testid="stExpander"] .form-card-badge {
-                color: #a800c6 !important;
+                color: #c9001f !important;
             }
 
             [data-testid="stExpander"] div[data-testid="stFormSubmitButton"] button,
@@ -1996,7 +1996,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .status-card-footer strong {
-                color: #a800c6;
+                color: #c9001f;
             }
 
             .status-card-top {
@@ -2017,7 +2017,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .status-blue { background:#e9f2ff; color:#2f6fc5; }
-            .status-brown { background:#f3e8ff; color:#a06b2e; }
+            .status-brown { background:#ffe6ea; color:#a06b2e; }
             .status-red { background:#ffecec; color:#df4545; }
             .status-teal { background:#e7f7f7; color:#0f7f86; }
             .status-green { background:#e8f7ef; color:#13975a; }
@@ -2600,7 +2600,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .ficha-status-mini-label {
-                color: #a800c6 !important;
+                color: #c9001f !important;
                 font-size: 0.64rem !important;
                 font-weight: 800 !important;
                 letter-spacing: 0.05rem !important;
@@ -2710,10 +2710,10 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .busca-status-localizado {
-                background: #ffe6f5;
-                border: 1px solid #d877e8;
+                background: #ffe6ea;
+                border: 1px solid #ff6b7c;
                 border-radius: 999px;
-                color: #a800c6 !important;
+                color: #c9001f !important;
                 display: inline-flex;
                 font-size: 0.66rem;
                 font-weight: 800;
@@ -3087,7 +3087,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .commercial-selected-head span {
-                color: #a800c6 !important;
+                color: #c9001f !important;
                 font-size: 0.62rem !important;
                 font-weight: 900 !important;
                 text-transform: uppercase !important;
@@ -3270,7 +3270,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .friendly-selected-card span {
-                color: #a800c6 !important;
+                color: #c9001f !important;
                 font-size: 0.60rem !important;
                 font-weight: 900 !important;
                 letter-spacing: 0.04rem !important;
@@ -3321,7 +3321,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .inline-sheet-count {
-                background: #ffe6f5;
+                background: #ffe6ea;
                 border: 1px solid #eed16f;
                 border-radius: 999px;
                 color: #7a5b00 !important;
@@ -3586,7 +3586,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .cadastro-alunos-kicker {
-                color: #c83bd8 !important;
+                color: #ff1f3d !important;
                 font-size: 0.64rem !important;
                 font-weight: 900 !important;
                 letter-spacing: 0.14rem !important;
@@ -3612,10 +3612,10 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .cadastro-alunos-badge {
-                background: #ffe6f5;
+                background: #ffe6ea;
                 border: 1px solid #eed16f;
                 border-radius: 999px;
-                color: #a800c6 !important;
+                color: #c9001f !important;
                 font-size: 0.62rem !important;
                 font-weight: 900 !important;
                 letter-spacing: 0.06rem !important;
@@ -3670,7 +3670,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .lead-consulta-count {
-                background: #ffe6f5;
+                background: #ffe6ea;
                 border: 1px solid #eed16f;
                 border-radius: 999px;
                 color: #7a5b00 !important;
@@ -3848,7 +3848,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .diretoria-finance-kicker {
-                color: #c83bd8 !important;
+                color: #ff1f3d !important;
                 font-size: 0.65rem !important;
                 font-weight: 900 !important;
                 letter-spacing: 0.14rem !important;
@@ -4476,6 +4476,88 @@ def aplicar_css_dashboard_claro() -> None:
 
             .status-card:hover {
                 border-color: rgba(255,31,61,0.80) !important;
+            }
+
+
+            /* AJUSTE FINAL — REMOVER ROSA E USAR VERMELHO */
+            :root {
+                --vermelho-oppi: #ff1f3d;
+                --roxo-oppi: #9b00d9;
+            }
+
+            .dashboard-header::after,
+            .login-shell::before,
+            div[data-testid="stFormSubmitButton"] button,
+            div[data-testid="stButton"] button,
+            [data-testid="stSidebarCollapsedControl"] button,
+            [data-testid="collapsedControl"] button,
+            [data-testid="stSidebarCollapseButton"] button,
+            .bar-red,
+            .legend-red,
+            .kpi-red {
+                background: linear-gradient(135deg, #ff1f3d 0%, #9b00d9 100%) !important;
+                color: #ffffff !important;
+            }
+
+            .top-brand strong,
+            .hero-title strong,
+            .hero-kicker,
+            .top-tag,
+            .metric-value,
+            .page-subtitle,
+            .sidebar-brand-sub,
+            .dash-brand-kicker,
+            .cadastro-alunos-kicker,
+            .diretoria-finance-kicker,
+            .diretoria-badge,
+            .placeholder-pill,
+            .status-card-footer strong {
+                color: #ff1f3d !important;
+            }
+
+            [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) {
+                background: rgba(255,31,61,0.16) !important;
+                border-color: #ff1f3d !important;
+            }
+
+            [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) p {
+                color: #ff1f3d !important;
+            }
+
+            .status-card-selected,
+            .st-key-status_card_novo_lead_container_selected button,
+            .st-key-status_card_conversando_container_selected button,
+            .st-key-status_card_nao_tem_interesse_container_selected button,
+            .st-key-status_card_nao_responde_container_selected button,
+            .st-key-status_card_fechado_container_selected button {
+                border-color: #ff1f3d !important;
+                box-shadow: 0 0 0 2px rgba(255,31,61,0.22),
+                            0 10px 22px rgba(15,23,42,0.10) !important;
+            }
+
+            .status-card:hover {
+                border-color: rgba(255,31,61,0.80) !important;
+            }
+
+            .chart-line-red {
+                stroke: #ff1f3d !important;
+            }
+
+            .chart-dot-red {
+                fill: #ff1f3d !important;
+            }
+
+            .dash-panel-icon,
+            .dash-kpi-icon {
+                background: rgba(255,31,61,0.12) !important;
+                color: #ff1f3d !important;
+            }
+
+            /* Plotly SVG: força tons rosados restantes para vermelho */
+            .js-plotly-plot .plotly .barlayer path[style*="rgb(236, 61, 157)"],
+            .js-plotly-plot .plotly .barlayer path[style*="rgb(200, 59, 216)"],
+            .js-plotly-plot .plotly .barlayer path[style*="rgb(192, 0, 212)"] {
+                fill: #ff1f3d !important;
             }
 
 </style>
