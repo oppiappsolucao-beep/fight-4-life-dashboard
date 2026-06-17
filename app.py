@@ -37,7 +37,7 @@ BASE_DIR = Path(__file__).resolve().parent
 LOGO_PATH = BASE_DIR / "oppi_logo.png"
 
 PRETO = "#000000"
-AMARELO = "#ec3d9d"
+AMARELO = "#ff1f3d"
 ROXO = "#9b00d9"
 BRANCO = "#ffffff"
 CINZA_ESCURO = "#111111"
@@ -320,7 +320,7 @@ def aplicar_css() -> None:
             :root {{
                 --preto: {PRETO};
                 --amarelo: {AMARELO};
-                --rosa: #ec3d9d;
+                --vermelho: #ff1f3d;
                 --roxo: #9b00d9;
                 --roxo-escuro: #5b007d;
                 --branco: {BRANCO};
@@ -330,8 +330,8 @@ def aplicar_css() -> None:
 
             html, body, [data-testid="stAppViewContainer"] {{
                 background:
-                    radial-gradient(circle at 12% 20%, rgba(236,61,157,0.11), transparent 22rem),
-                    radial-gradient(circle at 88% 82%, rgba(236,61,157,0.08), transparent 26rem),
+                    radial-gradient(circle at 12% 20%, rgba(255,31,61,0.11), transparent 22rem),
+                    radial-gradient(circle at 88% 82%, rgba(255,31,61,0.08), transparent 26rem),
                     linear-gradient(135deg, #000000 0%, #090909 52%, #000000 100%) !important;
             }}
 
@@ -377,7 +377,7 @@ def aplicar_css() -> None:
             }}
 
             .top-tag {{
-                border: 1px solid rgba(236,61,157,0.46);
+                border: 1px solid rgba(255,31,61,0.46);
                 border-radius: 999px;
                 color: var(--amarelo);
                 font-size: 0.66rem;
@@ -491,7 +491,7 @@ def aplicar_css() -> None:
             .login-shell {{
                 background:
                     linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.035));
-                border: 1px solid rgba(236,61,157,0.42);
+                border: 1px solid rgba(255,31,61,0.42);
                 border-radius: 26px;
                 box-shadow:
                     0 25px 65px rgba(0,0,0,0.50),
@@ -513,7 +513,7 @@ def aplicar_css() -> None:
             }}
 
             .login-shell::after {{
-                background: rgba(236,61,157,0.10);
+                background: rgba(255,31,61,0.10);
                 border-radius: 50%;
                 content: "";
                 height: 210px;
@@ -595,7 +595,7 @@ def aplicar_css() -> None:
 
             div[data-testid="stTextInput"] input:focus {{
                 border-color: var(--amarelo) !important;
-                box-shadow: 0 0 0 3px rgba(236,61,157,0.20) !important;
+                box-shadow: 0 0 0 3px rgba(255,31,61,0.20) !important;
             }}
 
             div[data-testid="stFormSubmitButton"] button,
@@ -686,7 +686,7 @@ def aplicar_css() -> None:
             [data-testid="stSidebar"] {{
                 background:
                     linear-gradient(180deg, #111111 0%, #080808 100%) !important;
-                border-right: 1px solid rgba(236,61,157,0.22) !important;
+                border-right: 1px solid rgba(255,31,61,0.22) !important;
                 min-width: 258px !important;
             }}
 
@@ -782,13 +782,13 @@ def aplicar_css() -> None:
 
 
             [data-testid="stSidebar"] div[role="radiogroup"] label:hover {{
-                background: rgba(236,61,157,0.10);
-                border-color: rgba(236,61,157,0.35);
+                background: rgba(255,31,61,0.10);
+                border-color: rgba(255,31,61,0.35);
             }}
 
             [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) {{
-                background: rgba(236,61,157,0.15);
-                border-color: rgba(236,61,157,0.75);
+                background: rgba(255,31,61,0.15);
+                border-color: rgba(255,31,61,0.75);
             }}
 
             [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) p {{
@@ -809,7 +809,7 @@ def aplicar_css() -> None:
             [data-testid="stSidebar"] {{
                 background:
                     linear-gradient(180deg, #111111 0%, #080808 100%) !important;
-                border-right: 1px solid rgba(236,61,157,0.22) !important;
+                border-right: 1px solid rgba(255,31,61,0.22) !important;
                 min-width: 258px !important;
                 width: 258px !important;
             }}
@@ -906,7 +906,7 @@ def aplicar_css() -> None:
                 align-items: center;
                 background:
                     linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025));
-                border: 1px solid rgba(236,61,157,0.38);
+                border: 1px solid rgba(255,31,61,0.38);
                 border-radius: 22px;
                 box-shadow: 0 24px 60px rgba(0,0,0,0.30);
                 box-sizing: border-box;
@@ -943,7 +943,7 @@ def aplicar_css() -> None:
             }}
 
             .diretoria-badge {{
-                border: 1px solid rgba(236,61,157,0.50);
+                border: 1px solid rgba(255,31,61,0.50);
                 border-radius: 999px;
                 color: var(--amarelo);
                 display: inline-block;
@@ -1220,9 +1220,9 @@ def aplicar_css_dashboard_claro() -> None:
 
             [data-testid="stAppViewContainer"] {
                 background:
-                    radial-gradient(circle at 90% 8%, rgba(236,61,157,0.26), transparent 28rem),
-                    radial-gradient(circle at 12% 90%, rgba(236,61,157,0.10), transparent 30rem),
-                    linear-gradient(135deg, #050505 0%, #111111 58%, #ec3d9d 160%) !important;
+                    radial-gradient(circle at 90% 8%, rgba(255,31,61,0.26), transparent 28rem),
+                    radial-gradient(circle at 12% 90%, rgba(255,31,61,0.10), transparent 30rem),
+                    linear-gradient(135deg, #050505 0%, #111111 58%, #ff1f3d 160%) !important;
             }
 
             .block-container {
@@ -1262,7 +1262,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .dashboard-header::after {
-                background: #ec3d9d;
+                background: #ff1f3d;
                 bottom: 0;
                 content: "";
                 height: 4px;
@@ -1375,8 +1375,8 @@ def aplicar_css_dashboard_claro() -> None:
                 background: linear-gradient(135deg, #080808 0%, #2c2c2c 100%);
             }
 
-            .kpi-pink {
-                background: linear-gradient(135deg, #c000d4 0%, #ec3d9d 100%);
+            .kpi-red {
+                background: linear-gradient(135deg, #c000d4 0%, #ff1f3d 100%);
                 color: #151515;
             }
 
@@ -1488,8 +1488,8 @@ def aplicar_css_dashboard_claro() -> None:
             .gauge {
                 background: conic-gradient(
                     from 270deg,
-                    #ec3d9d 0deg,
-                    #ec3d9d 96deg,
+                    #ff1f3d 0deg,
+                    #ff1f3d 96deg,
                     #111111 96deg,
                     #111111 190deg,
                     #eceff3 190deg,
@@ -1558,9 +1558,9 @@ def aplicar_css_dashboard_claro() -> None:
                 stroke-width: 1;
             }
 
-            .chart-line-pink {
+            .chart-line-red {
                 fill: none;
-                stroke: #ec3d9d;
+                stroke: #ff1f3d;
                 stroke-linecap: round;
                 stroke-linejoin: round;
                 stroke-width: 4;
@@ -1574,8 +1574,8 @@ def aplicar_css_dashboard_claro() -> None:
                 stroke-width: 3;
             }
 
-            .chart-dot-pink {
-                fill: #ec3d9d;
+            .chart-dot-red {
+                fill: #ff1f3d;
                 stroke: #ffffff;
                 stroke-width: 3;
             }
@@ -1609,8 +1609,8 @@ def aplicar_css_dashboard_claro() -> None:
                 width: 8px;
             }
 
-            .legend-pink {
-                background: #ec3d9d;
+            .legend-red {
+                background: #ff1f3d;
             }
 
             .legend-black {
@@ -1651,8 +1651,8 @@ def aplicar_css_dashboard_claro() -> None:
                 width: min(42px, 66%);
             }
 
-            .bar-pink {
-                background: linear-gradient(180deg, #ec3d9d 0%, #9b00d9 100%);
+            .bar-red {
+                background: linear-gradient(180deg, #ff1f3d 0%, #9b00d9 100%);
             }
 
             .bar-black {
@@ -1846,7 +1846,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             [data-testid="stExpander"] div[data-testid="stFormSubmitButton"] button {
-                background: #ec3d9d !important;
+                background: #ff1f3d !important;
                 border: 0 !important;
                 border-radius: 10px !important;
                 color: #111111 !important;
@@ -1970,7 +1970,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .status-card:hover {
-                border-color: rgba(236,61,157,0.80);
+                border-color: rgba(255,31,61,0.80);
                 box-shadow: 0 10px 22px rgba(15, 23, 42, 0.09);
                 transform: translateY(-2px);
             }
@@ -1990,8 +1990,8 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .status-card-selected {
-                border-color: #ec3d9d !important;
-                box-shadow: 0 0 0 2px rgba(236,61,157,0.22),
+                border-color: #ff1f3d !important;
+                box-shadow: 0 0 0 2px rgba(255,31,61,0.22),
                             0 12px 24px rgba(15,23,42,0.10) !important;
             }
 
@@ -2157,7 +2157,7 @@ def aplicar_css_dashboard_claro() -> None:
             .st-key-status_card_nao_tem_interesse button:hover,
             .st-key-status_card_nao_responde button:hover,
             .st-key-status_card_fechado button:hover {
-                border-color: rgba(236,61,157,0.90) !important;
+                border-color: rgba(255,31,61,0.90) !important;
                 box-shadow: 0 10px 22px rgba(15, 23, 42, 0.09) !important;
                 transform: translateY(-2px) !important;
             }
@@ -2180,8 +2180,8 @@ def aplicar_css_dashboard_claro() -> None:
             .st-key-status_card_nao_tem_interesse_selected button,
             .st-key-status_card_nao_responde_selected button,
             .st-key-status_card_fechado_selected button {
-                border-color: #ec3d9d !important;
-                box-shadow: 0 0 0 2px rgba(236,61,157,0.20),
+                border-color: #ff1f3d !important;
+                box-shadow: 0 0 0 2px rgba(255,31,61,0.20),
                             0 10px 22px rgba(15,23,42,0.10) !important;
             }
 
@@ -2284,7 +2284,7 @@ def aplicar_css_dashboard_claro() -> None:
             .st-key-status_card_nao_responde_container_selected button:hover,
             .st-key-status_card_fechado_container_selected button:hover {
                 background: #fffdf5 !important;
-                border-color: rgba(236,61,157,0.95) !important;
+                border-color: rgba(255,31,61,0.95) !important;
                 box-shadow: 0 10px 22px rgba(15, 23, 42, 0.09) !important;
                 transform: translateY(-2px) !important;
             }
@@ -2314,9 +2314,9 @@ def aplicar_css_dashboard_claro() -> None:
             .st-key-status_card_nao_responde_container_selected button,
             .st-key-status_card_fechado_container_selected button {
                 background: #fffdf5 !important;
-                border-color: #ec3d9d !important;
+                border-color: #ff1f3d !important;
                 box-shadow:
-                    0 0 0 2px rgba(236,61,157,0.20),
+                    0 0 0 2px rgba(255,31,61,0.20),
                     0 10px 22px rgba(15,23,42,0.10) !important;
             }
 
@@ -2383,15 +2383,15 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .status-final-card:hover {
-                border-color: rgba(236,61,157,0.90);
+                border-color: rgba(255,31,61,0.90);
                 box-shadow: 0 10px 20px rgba(15,23,42,0.09);
                 transform: translateY(-2px);
             }
 
             .status-final-card-selected {
-                border-color: #ec3d9d !important;
+                border-color: #ff1f3d !important;
                 box-shadow:
-                    0 0 0 2px rgba(236,61,157,0.18),
+                    0 0 0 2px rgba(255,31,61,0.18),
                     0 10px 20px rgba(15,23,42,0.09) !important;
             }
 
@@ -2464,7 +2464,7 @@ def aplicar_css_dashboard_claro() -> None:
             .st-key-btn_status_nao_responde button:hover,
             .st-key-btn_status_fechado button:hover {
                 background: #fffdf5 !important;
-                border-color: #ec3d9d !important;
+                border-color: #ff1f3d !important;
                 color: #111111 !important;
             }
 
@@ -2590,7 +2590,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .st-key-ficha_status_compacta div[data-testid="stFormSubmitButton"] button {
-                background: #ec3d9d !important;
+                background: #ff1f3d !important;
                 border: 0 !important;
                 border-radius: 10px !important;
                 color: #111111 !important;
@@ -2635,8 +2635,8 @@ def aplicar_css_dashboard_claro() -> None:
 
             .st-key-toggle_menu_lateral button {
                 align-items: center !important;
-                background: #ec3d9d !important;
-                border: 1px solid #ec3d9d !important;
+                background: #ff1f3d !important;
+                border: 1px solid #ff1f3d !important;
                 border-radius: 10px !important;
                 box-shadow: 0 8px 18px rgba(0,0,0,0.18) !important;
                 color: #000000 !important;
@@ -2745,7 +2745,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .st-key-busca_comercial_container div[data-testid="stFormSubmitButton"] button {
-                background: #ec3d9d !important;
+                background: #ff1f3d !important;
                 border: 0 !important;
                 border-radius: 10px !important;
                 color: #111111 !important;
@@ -2766,7 +2766,7 @@ def aplicar_css_dashboard_claro() -> None:
             .form-section-block {
                 background: #fffdf7;
                 border: 1px solid #f2e8bd;
-                border-left: 4px solid #ec3d9d;
+                border-left: 4px solid #ff1f3d;
                 border-radius: 14px;
                 margin: 0.85rem 0 0.65rem 0;
                 padding: 0.68rem 0.78rem;
@@ -2792,7 +2792,7 @@ def aplicar_css_dashboard_claro() -> None:
             .st-key-busca_comercial_container .form-section-block {
                 background: #fffdf7 !important;
                 border: 1px solid #f2e8bd !important;
-                border-left: 4px solid #ec3d9d !important;
+                border-left: 4px solid #ff1f3d !important;
             }
 
 
@@ -2814,7 +2814,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .sheet-form-title strong {
-                color: #ec3d9d !important;
+                color: #ff1f3d !important;
                 font-size: 0.64rem !important;
                 font-weight: 900 !important;
                 letter-spacing: 0.045rem !important;
@@ -2882,8 +2882,8 @@ def aplicar_css_dashboard_claro() -> None:
             .st-key-ficha_status_compacta textarea:focus,
             .st-key-busca_comercial_container input:focus,
             .st-key-busca_comercial_container textarea:focus {
-                border-color: #ec3d9d !important;
-                box-shadow: 0 0 0 2px rgba(236,61,157,0.16) !important;
+                border-color: #ff1f3d !important;
+                box-shadow: 0 0 0 2px rgba(255,31,61,0.16) !important;
             }
 
             .st-key-ficha_status_compacta input:disabled,
@@ -3333,7 +3333,7 @@ def aplicar_css_dashboard_claro() -> None:
 
             .inline-sheet-columns {
                 background: #111111;
-                border-bottom: 3px solid #ec3d9d;
+                border-bottom: 3px solid #ff1f3d;
                 color: #ffffff !important;
                 display: grid;
                 font-size: 0.61rem !important;
@@ -3424,8 +3424,8 @@ def aplicar_css_dashboard_claro() -> None:
 
             [class*="st-key-inline_row_"] input:focus,
             [class*="st-key-inline_row_"] [data-baseweb="select"] > div:focus-within {
-                border-color: #ec3d9d !important;
-                box-shadow: 0 0 0 2px rgba(236,61,157,0.14) !important;
+                border-color: #ff1f3d !important;
+                box-shadow: 0 0 0 2px rgba(255,31,61,0.14) !important;
             }
 
             [class*="st-key-inline_row_"] input:disabled {
@@ -3459,8 +3459,8 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .st-key-inline_sheet_actions button {
-                background: #ec3d9d !important;
-                border: 1px solid #ec3d9d !important;
+                background: #ff1f3d !important;
+                border: 1px solid #ff1f3d !important;
                 border-radius: 9px !important;
                 color: #111111 !important;
                 font-size: 0.72rem !important;
@@ -3535,8 +3535,8 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             [class*="st-key-inline_row_"] [data-baseweb="select"] > div:focus-within {
-                border-color: #ec3d9d !important;
-                box-shadow: 0 0 0 2px rgba(236,61,157,0.14) !important;
+                border-color: #ff1f3d !important;
+                box-shadow: 0 0 0 2px rgba(255,31,61,0.14) !important;
             }
 
 
@@ -3576,7 +3576,7 @@ def aplicar_css_dashboard_claro() -> None:
                 align-items: center;
                 background: rgba(255,255,255,0.97);
                 border: 1px solid rgba(255,255,255,0.74);
-                border-bottom: 4px solid #ec3d9d;
+                border-bottom: 4px solid #ff1f3d;
                 border-radius: 22px;
                 box-shadow: 0 12px 26px rgba(15, 23, 42, 0.07);
                 display: flex;
@@ -3682,7 +3682,7 @@ def aplicar_css_dashboard_claro() -> None:
 
             .lead-consulta-columns {
                 background: #111111;
-                border-bottom: 3px solid #ec3d9d;
+                border-bottom: 3px solid #ff1f3d;
                 color: #ffffff !important;
                 display: grid;
                 font-size: 0.62rem !important;
@@ -3779,8 +3779,8 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             [class*="st-key-lead_consulta_row_"] [data-baseweb="select"] > div:focus-within {
-                border-color: #ec3d9d !important;
-                box-shadow: 0 0 0 2px rgba(236,61,157,0.14) !important;
+                border-color: #ff1f3d !important;
+                box-shadow: 0 0 0 2px rgba(255,31,61,0.14) !important;
             }
 
             .lead-consulta-footer {
@@ -3794,7 +3794,7 @@ def aplicar_css_dashboard_claro() -> None:
             .foto-rosto-info {
                 background: #fffdf5;
                 border: 1px solid #eee1ac;
-                border-left: 4px solid #ec3d9d;
+                border-left: 4px solid #ff1f3d;
                 border-radius: 12px;
                 color: #6f6250 !important;
                 font-size: 0.68rem !important;
@@ -3836,7 +3836,7 @@ def aplicar_css_dashboard_claro() -> None:
                 align-items: center;
                 background: rgba(255,255,255,0.97);
                 border: 1px solid rgba(255,255,255,0.72);
-                border-bottom: 4px solid #ec3d9d;
+                border-bottom: 4px solid #ff1f3d;
                 border-radius: 22px;
                 box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
                 display: flex;
@@ -3883,7 +3883,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .diretoria-total-label {
-                color: #ec3d9d !important;
+                color: #ff1f3d !important;
                 font-size: 0.60rem !important;
                 font-weight: 900 !important;
                 letter-spacing: 0.10rem !important;
@@ -3950,7 +3950,7 @@ def aplicar_css_dashboard_claro() -> None:
             }
 
             .diretoria-card-yellow {
-                background: linear-gradient(135deg, #e0a500 0%, #ec3d9d 100%);
+                background: linear-gradient(135deg, #e0a500 0%, #ff1f3d 100%);
                 color: #171717;
             }
 
@@ -4296,15 +4296,15 @@ def aplicar_css_dashboard_claro() -> None:
                 }
             }
 
-            /* PALETA OPPI — ROSA E ROXO */
+            /* PALETA OPPI — VERMELHO E ROXO */
             :root {
-                --rosa-oppi: #ec3d9d;
+                --vermelho-oppi: #ff1f3d;
                 --roxo-oppi: #9b00d9;
                 --roxo-oppi-escuro: #4a005f;
             }
 
-            .kpi-pink {
-                background: linear-gradient(135deg, #ec3d9d 0%, #9b00d9 100%) !important;
+            .kpi-red {
+                background: linear-gradient(135deg, #ff1f3d 0%, #9b00d9 100%) !important;
                 color: #ffffff !important;
             }
 
@@ -4313,9 +4313,9 @@ def aplicar_css_dashboard_claro() -> None:
                 color: #ffffff !important;
             }
 
-            .dash-kpi.kpi-pink .dash-kpi-label,
-            .dash-kpi.kpi-pink .dash-kpi-value,
-            .dash-kpi.kpi-pink .dash-kpi-footer,
+            .dash-kpi.kpi-red .dash-kpi-label,
+            .dash-kpi.kpi-red .dash-kpi-value,
+            .dash-kpi.kpi-red .dash-kpi-footer,
             .dash-kpi.kpi-purple .dash-kpi-label,
             .dash-kpi.kpi-purple .dash-kpi-value,
             .dash-kpi.kpi-purple .dash-kpi-footer {
@@ -4324,7 +4324,7 @@ def aplicar_css_dashboard_claro() -> None:
 
             .dashboard-header::after,
             .login-shell::before {
-                background: linear-gradient(90deg, #ec3d9d 0%, #9b00d9 100%) !important;
+                background: linear-gradient(90deg, #ff1f3d 0%, #9b00d9 100%) !important;
             }
 
             div[data-testid="stFormSubmitButton"] button,
@@ -4332,17 +4332,17 @@ def aplicar_css_dashboard_claro() -> None:
             [data-testid="stSidebarCollapsedControl"] button,
             [data-testid="collapsedControl"] button,
             [data-testid="stSidebarCollapseButton"] button {
-                background: linear-gradient(135deg, #ec3d9d 0%, #9b00d9 100%) !important;
+                background: linear-gradient(135deg, #ff1f3d 0%, #9b00d9 100%) !important;
                 color: #ffffff !important;
             }
 
             [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) {
-                background: rgba(236,61,157,0.16) !important;
+                background: rgba(255,31,61,0.16) !important;
                 border-color: rgba(155,0,217,0.85) !important;
             }
 
             [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) p {
-                color: #ec3d9d !important;
+                color: #ff1f3d !important;
             }
 
             .status-card-selected,
@@ -4351,25 +4351,25 @@ def aplicar_css_dashboard_claro() -> None:
             .st-key-status_card_nao_tem_interesse_container_selected button,
             .st-key-status_card_nao_responde_container_selected button,
             .st-key-status_card_fechado_container_selected button {
-                border-color: #ec3d9d !important;
+                border-color: #ff1f3d !important;
                 box-shadow: 0 0 0 2px rgba(155,0,217,0.20),
                             0 10px 22px rgba(15,23,42,0.10) !important;
             }
 
-            .bar-pink {
-                background: linear-gradient(180deg, #ec3d9d 0%, #9b00d9 100%) !important;
+            .bar-red {
+                background: linear-gradient(180deg, #ff1f3d 0%, #9b00d9 100%) !important;
             }
 
-            .legend-pink {
-                background: linear-gradient(135deg, #ec3d9d 0%, #9b00d9 100%) !important;
+            .legend-red {
+                background: linear-gradient(135deg, #ff1f3d 0%, #9b00d9 100%) !important;
             }
 
-            .chart-line-pink {
-                stroke: #ec3d9d !important;
+            .chart-line-red {
+                stroke: #ff1f3d !important;
             }
 
-            .chart-dot-pink {
-                fill: #ec3d9d !important;
+            .chart-dot-red {
+                fill: #ff1f3d !important;
             }
 
             .metric-value,
@@ -4385,17 +4385,97 @@ def aplicar_css_dashboard_claro() -> None:
             .diretoria-finance-kicker,
             .placeholder-pill,
             .status-card-footer strong {
-                color: #ec3d9d !important;
+                color: #ff1f3d !important;
             }
 
             .dash-kpi-icon,
             .dash-panel-icon {
-                background: rgba(236,61,157,0.12) !important;
+                background: rgba(255,31,61,0.12) !important;
                 color: #9b00d9 !important;
             }
 
             .status-card:hover {
-                border-color: rgba(236,61,157,0.80) !important;
+                border-color: rgba(255,31,61,0.80) !important;
+            }
+
+
+            /* AJUSTE FINAL OPPI — VERMELHO E ROXO */
+            :root {
+                --vermelho-oppi: #ff1f3d;
+                --roxo-oppi: #9b00d9;
+                --roxo-oppi-escuro: #4a005f;
+            }
+
+            .kpi-red {
+                background: linear-gradient(135deg, #ff1f3d 0%, #9b00d9 100%) !important;
+                color: #ffffff !important;
+            }
+
+            .dash-kpi.kpi-red .dash-kpi-label,
+            .dash-kpi.kpi-red .dash-kpi-value,
+            .dash-kpi.kpi-red .dash-kpi-footer {
+                color: #ffffff !important;
+            }
+
+            .dashboard-header::after,
+            .login-shell::before,
+            div[data-testid="stFormSubmitButton"] button,
+            div[data-testid="stButton"] button,
+            [data-testid="stSidebarCollapsedControl"] button,
+            [data-testid="collapsedControl"] button,
+            [data-testid="stSidebarCollapseButton"] button,
+            .bar-red,
+            .legend-red {
+                background: linear-gradient(135deg, #ff1f3d 0%, #9b00d9 100%) !important;
+                color: #ffffff !important;
+            }
+
+            .chart-line-red {
+                stroke: #ff1f3d !important;
+            }
+
+            .chart-dot-red {
+                fill: #ff1f3d !important;
+            }
+
+            .metric-value,
+            .page-subtitle,
+            .sidebar-brand-sub,
+            .hero-kicker,
+            .top-brand strong,
+            .hero-title strong,
+            .top-tag,
+            .diretoria-badge,
+            .dash-brand-kicker,
+            .cadastro-alunos-kicker,
+            .diretoria-finance-kicker,
+            .placeholder-pill,
+            .status-card-footer strong {
+                color: #ff1f3d !important;
+            }
+
+            [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) {
+                background: rgba(255,31,61,0.16) !important;
+                border-color: rgba(155,0,217,0.85) !important;
+            }
+
+            [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) p {
+                color: #ff1f3d !important;
+            }
+
+            .status-card-selected,
+            .st-key-status_card_novo_lead_container_selected button,
+            .st-key-status_card_conversando_container_selected button,
+            .st-key-status_card_nao_tem_interesse_container_selected button,
+            .st-key-status_card_nao_responde_container_selected button,
+            .st-key-status_card_fechado_container_selected button {
+                border-color: #ff1f3d !important;
+                box-shadow: 0 0 0 2px rgba(155,0,217,0.20),
+                            0 10px 22px rgba(15,23,42,0.10) !important;
+            }
+
+            .status-card:hover {
+                border-color: rgba(255,31,61,0.80) !important;
             }
 
 </style>
@@ -4437,7 +4517,7 @@ def montar_config_dashboard(pagina: str) -> dict:
             ),
             "metricas": [
                 {"titulo": "Alunos ativos", "valor": "—", "rodape": "aguardando integração", "icone": "🥋", "classe": "kpi-black"},
-                {"titulo": "Aulas teste", "valor": "—", "rodape": "aguardando integração", "icone": "🎯", "classe": "kpi-pink"},
+                {"titulo": "Aulas teste", "valor": "—", "rodape": "aguardando integração", "icone": "🎯", "classe": "kpi-red"},
                 {"titulo": "Novas matrículas", "valor": "—", "rodape": "aguardando integração", "icone": "⚡", "classe": "kpi-purple"},
                 {"titulo": "Conversão", "valor": "—", "rodape": "aguardando integração", "icone": "🏆", "classe": "kpi-gray"},
             ],
@@ -4458,7 +4538,7 @@ def montar_config_dashboard(pagina: str) -> dict:
         ),
         "metricas": [
             {"titulo": "Receita do mês", "valor": "—", "rodape": "aguardando integração", "icone": "💰", "classe": "kpi-black"},
-            {"titulo": "Alunos ativos", "valor": "—", "rodape": "aguardando integração", "icone": "🥋", "classe": "kpi-pink"},
+            {"titulo": "Alunos ativos", "valor": "—", "rodape": "aguardando integração", "icone": "🥋", "classe": "kpi-red"},
             {"titulo": "Ticket médio", "valor": "—", "rodape": "aguardando integração", "icone": "📊", "classe": "kpi-purple"},
             {"titulo": "Cancelamentos", "valor": "—", "rodape": "aguardando integração", "icone": "⚠️", "classe": "kpi-gray"},
         ],
@@ -4527,9 +4607,9 @@ def montar_barras_modalidades_comerciais() -> str:
     maior_valor = max(contagem.values(), default=0)
 
     classes = {
-        "Jiu-Jitsu": "bar-pink",
+        "Jiu-Jitsu": "bar-red",
         "Muay Thai": "bar-black",
-        "MMA": "bar-pink",
+        "MMA": "bar-red",
         "Kids": "bar-black",
     }
 
@@ -4751,9 +4831,9 @@ def montar_dashboard_topo_visual(
         )
     else:
         barras_diretoria = [
-            ("62%", "bar-pink"),
+            ("62%", "bar-red"),
             ("78%", "bar-black"),
-            ("47%", "bar-pink"),
+            ("47%", "bar-red"),
             ("70%", "bar-black"),
         ]
 
@@ -4830,7 +4910,7 @@ def montar_painel_grafico_html(
         </div>
 
         <div class="chart-legend">
-            <span class="legend-item"><span class="legend-dot legend-pink"></span>Indicador principal</span>
+            <span class="legend-item"><span class="legend-dot legend-red"></span>Indicador principal</span>
             <span class="legend-item"><span class="legend-dot legend-black"></span>Indicador secundário</span>
         </div>
 
@@ -4842,16 +4922,16 @@ def montar_painel_grafico_html(
                 <line x1="0" y1="165" x2="760" y2="165" class="chart-grid-line"/>
                 <line x1="0" y1="210" x2="760" y2="210" class="chart-grid-line"/>
 
-                <polyline points="20,164 135,139 250,74 365,115 480,98 595,139 730,69" class="chart-line-pink"/>
+                <polyline points="20,164 135,139 250,74 365,115 480,98 595,139 730,69" class="chart-line-red"/>
                 <polyline points="20,184 135,172 250,133 365,126 480,151 595,145 730,112" class="chart-line-black"/>
 
-                <circle cx="20" cy="164" r="6" class="chart-dot-pink"/>
-                <circle cx="135" cy="139" r="6" class="chart-dot-pink"/>
-                <circle cx="250" cy="74" r="6" class="chart-dot-pink"/>
-                <circle cx="365" cy="115" r="6" class="chart-dot-pink"/>
-                <circle cx="480" cy="98" r="6" class="chart-dot-pink"/>
-                <circle cx="595" cy="139" r="6" class="chart-dot-pink"/>
-                <circle cx="730" cy="69" r="6" class="chart-dot-pink"/>
+                <circle cx="20" cy="164" r="6" class="chart-dot-red"/>
+                <circle cx="135" cy="139" r="6" class="chart-dot-red"/>
+                <circle cx="250" cy="74" r="6" class="chart-dot-red"/>
+                <circle cx="365" cy="115" r="6" class="chart-dot-red"/>
+                <circle cx="480" cy="98" r="6" class="chart-dot-red"/>
+                <circle cx="595" cy="139" r="6" class="chart-dot-red"/>
+                <circle cx="730" cy="69" r="6" class="chart-dot-red"/>
 
                 <circle cx="20" cy="184" r="5" class="chart-dot-black"/>
                 <circle cx="135" cy="172" r="5" class="chart-dot-black"/>
@@ -5601,7 +5681,7 @@ def criar_contrato_zapsign(
         "send_automatic_email": True,
         "disable_signer_emails": False,
         "brand_name": "Oppi Tech",
-        "brand_primary_color": "#ec3d9d",
+        "brand_primary_color": "#ff1f3d",
         "external_id": id_lead,
         "folder_path": "/Oppi Tech/Contratos/",
         "custom_message": (
