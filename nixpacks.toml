@@ -1,21 +1,25 @@
-# Fallback caso o EasyPanel use Nixpacks em vez do Dockerfile.
-# Preferível no painel: Builder = Dockerfile | Porta = 3000
-providers = ["node"]
+# EasyPanel via Nixpacks: sobe o app Node (API + front no mesmo processo).
+# Mantém Python/Streamlit só para compatibilidade se o Start Command
+# do painel ainda for `streamlit run app.py` (o app.py redireciona para o Node).
+providers = ["node", "python"]
 
 [variables]
 NODE_ENV = "production"
 HOST = "0.0.0.0"
-PORT = "3000"
-WEB_DIST_PATH = "/app/apps/web/dist"
-# Dummy só para o `prisma generate` no build (não é o banco real)
+WEB_DIST_PATH = "apps/web/dist"
 DATABASE_URL = "postgresql://build:build@127.0.0.1:5432/build?schema=public"
 DIRECT_URL = "postgresql://build:build@127.0.0.1:5432/build?schema=public"
 
 [phases.setup]
-nixPkgs = ["nodejs_20", "openssl"]
+nixPkgs = ["nodejs_20", "openssl", "python311"]
+aptPkgs = ["openssl"]
 
 [phases.install]
-cmds = ["npm install"]
+cmds = [
+  "npm ci || npm install",
+  "python -m pip install --upgrade pip",
+  "python -m pip install streamlit==1.41.1"
+]
 
 [phases.build]
 cmds = [
