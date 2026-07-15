@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 export const academyFieldsSchema = z.object({
@@ -106,7 +107,10 @@ export function parseBilling(branding: unknown) {
   };
 }
 
-export function formToBranding(data: AcademyFields, emailLogin: string): BrandingJson {
+export function formToBranding(
+  data: AcademyFields,
+  emailLogin: string,
+): Prisma.InputJsonObject {
   return {
     razaoSocial: data.razaoSocial,
     cnpj: data.cnpj,
