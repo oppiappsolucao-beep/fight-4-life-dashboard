@@ -5,7 +5,6 @@ providers = ["node"]
 NODE_ENV = "production"
 HOST = "0.0.0.0"
 WEB_DIST_PATH = "apps/web/dist"
-# PORT vem do EasyPanel (não fixar aqui — o painel costuma usar 80)
 DATABASE_URL = "postgresql://build:build@127.0.0.1:5432/build?schema=public"
 DIRECT_URL = "postgresql://build:build@127.0.0.1:5432/build?schema=public"
 
@@ -23,5 +22,6 @@ cmds = [
   "npm run build -w @oppi/api"
 ]
 
+# node direto = PID 1 (evita SIGTERM estranho com npm)
 [start]
-cmd = "npm run start -w @oppi/api"
+cmd = "node apps/api/dist/index.js"

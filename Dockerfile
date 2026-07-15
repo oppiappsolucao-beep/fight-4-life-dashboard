@@ -27,4 +27,4 @@ ENV WEB_DIST_PATH=/app/apps/web/dist
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start", "-w", "@oppi/api"]
+CMD ["node", "apps/api/dist/index.js"]
