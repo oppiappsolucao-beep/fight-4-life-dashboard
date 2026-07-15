@@ -1,0 +1,39 @@
+services:
+  # API — Node.js + Fastify + Prisma (Neon PostgreSQL)
+  - type: web
+    name: oppi-api
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run db:generate -w @oppi/api && npm run build -w @oppi/api
+    startCommand: npm run start -w @oppi/api
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: PORT
+        value: "10000"
+      - key: HOST
+        value: 0.0.0.0
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+
+  # Web — React + Vite (site estático)
+  - type: web
+    name: oppi-web
+    runtime: static
+    buildCommand: npm install && npm run build -w @oppi/web
+    staticPublishPath: apps/web/dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_TENANT_SLUG
+        value: oppi-tech
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

@@ -1,0 +1,20 @@
+{
+  "name": "fight-4-life-dashboard",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w @oppi/api\" \"npm run dev -w @oppi/web\"",
+    "dev:api": "npm run dev -w @oppi/api",
+    "dev:web": "npm run dev -w @oppi/web",
+    "build": "npm run build -w @oppi/api && npm run build -w @oppi/web",
+    "db:push": "npm run db:push -w @oppi/api",
+    "db:seed": "npm run db:seed -w @oppi/api",
+    "db:studio": "npm run db:studio -w @oppi/api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

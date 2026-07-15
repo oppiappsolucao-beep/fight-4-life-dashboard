@@ -216,3 +216,18 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Node.js
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+.npm
+.pnpm-store
+
+# Vite
+apps/web/dist/
+
+# Prisma
+apps/api/prisma/*.db
+apps/api/prisma/*.db-journal

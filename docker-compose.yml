@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: oppi-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: oppi
+      POSTGRES_PASSWORD: oppi_dev_123
+      POSTGRES_DB: oppi_dashboard
+    volumes:
+      - oppi_pg_data:/var/lib/postgresql/data
+
+volumes:
+  oppi_pg_data:

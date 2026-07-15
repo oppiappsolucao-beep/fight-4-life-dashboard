@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  ADMIN
+  COMERCIAL
+  DIRETORIA
+  DESENVOLVIMENTO
+  PROPRIETARIO
+}
+
+enum CommercialStatus {
+  NOVO_LEAD
+  CONVERSANDO
+  NAO_TEM_INTERESSE
+  NAO_RESPONDE
+  FECHADO
+}
+
+enum ContractStatus {
+  PENDENTE
+  ENVIADO
+  ASSINADO
+  ERRO
+}
+
+model Tenant {
+  id         String        @id @default(uuid())
+  slug       String        @unique
+  name       String
+  subdomain  String?       @unique
+  branding   Json?
+  active     Boolean       @default(true)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  users      User[]
+  leads      Lead[]
+  config     TenantConfig?
+}
+
+model TenantConfig {
+  id                String  @id @default(uuid())
+  tenantId          String  @unique
+  zapsignToken      String?
+  zapsignTemplateId String?
+  zapsignBaseUrl    String? @default("https://api.zapsign.com.br")
+  planosPrecos      Json?
+  tenant            Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id           String   @id @default(uuid())
+  tenantId     String
+  email        String
+  passwordHash String
+  name         String?
+  role         UserRole @default(COMERCIAL)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, email])
+}
+
+model Lead {
+  id                  String           @id @default(uuid())
+  tenantId            String
+  externalId          String?
+  dataCadastro        DateTime         @default(now())
+  nomeCompleto        String?
+  dataNascimento      String?
+  cpf                 String?
+  email               String?
+  telefone            String?
+  endereco            String?
+  rua                 String?
+  bairro              String?
+  cep                 String?
+  complemento         String?
+  modalidade          String?
+  redeSocial          String?
+  statusComercial     CommercialStatus @default(NOVO_LEAD)
+  ultimaAtualizacao   DateTime         @default(now())
+  planoCliente        String?
+  formaPagamento      String?
+  fotoRostoUrl        String?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  tenant              Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contract            Contract?
+
+  @@index([tenantId, statusComercial])
+  @@index([tenantId, telefone])
+  @@index([tenantId, cpf])
+}
+
+model Contract {
+  id                String         @id @default(uuid())
+  leadId            String         @unique
+  tokenDocumento    String?
+  linkAssinatura    String?
+  status            ContractStatus @default(PENDENTE)
+  dataEnvio         DateTime?
+  erroEnvio         String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  lead              Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
