@@ -1,17 +1,12 @@
 import { FormEvent, useEffect, useState } from "react";
 import { apiFetch } from "../../lib/api";
 import { formatCep, formatCpf, formatPhone } from "../../lib/format";
+import {
+  DEFAULT_OWNER_PLANS,
+  formatPlanCurrency,
+  type PlanItem,
+} from "../../lib/plans";
 
-const MODALIDADES = [
-  "Musculação Livre",
-  "Plano Trimestral",
-  "Plano Semestral",
-  "Plano Anual",
-  "Pilates",
-  "Muay Thai",
-  "Jiu-Jitsu",
-  "MMA",
-];
 const GENEROS = ["Masculino", "Feminino", "Outro", "Prefiro não informar"];
 const FORMAS_PAGAMENTO = ["Dinheiro", "Cartão", "Pix", "Débito"];
 const PARENTESCOS = ["Pai", "Mãe", "Cônjuge", "Irmão(ã)", "Amigo(a)", "Outro"];
@@ -63,9 +58,20 @@ export default function OwnerAlunoEditModal({
   onSaved,
 }: OwnerAlunoEditModalProps) {
   const [form, setForm] = useState<StudentForm | null>(null);
+  const [planos, setPlanos] = useState<PlanItem[]>(DEFAULT_OWNER_PLANS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    apiFetch<{ planos: PlanItem[] }>("/owner/planos")
+      .then((data) => {
+        if (data.planos.length) setPlanos(data.planos);
+      })
+      .catch(() => {
+        // Mantém defaults se a API falhar
+      });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -279,7 +285,15 @@ export default function OwnerAlunoEditModal({
                     value={form.planoModalidade}
                     onChange={(e) => update("planoModalidade", e.target.value)}
                   >
-                    {MODALIDADES.map((item) => <option key={item}>{item}</option>)}
+                    {(planos.some((plan) => plan.nome === form.planoModalidade)
+                      ? planos
+                      : [{ nome: form.planoModalidade, valor: 0 }, ...planos]
+                    ).map((plan) => (
+                      <option key={plan.nome} value={plan.nome}>
+                        {plan.nome}
+                        {plan.valor > 0 ? ` — ${formatPlanCurrency(plan.valor)}` : ""}
+                      </option>
+                    ))}
                   </Select>
                 </Field>
                 <Field label="Data de início">

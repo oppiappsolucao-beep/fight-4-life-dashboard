@@ -1,8 +1,9 @@
 import type { FastifyInstance } from "fastify";
-import { UserRole } from "@prisma/client";
+import { Prisma, UserRole } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
 import { requireAuth, requireRole } from "../../middleware/auth.js";
+import { normalizePlans } from "./plans.js";
 
 const studentCreateSchema = z.object({
   nomeCompleto: z.string().min(1),
@@ -29,6 +30,31 @@ const studentCreateSchema = z.object({
 const studentUpdateSchema = studentCreateSchema.extend({
   active: z.boolean().optional(),
 });
+
+const plansUpdateSchema = z.object({
+  planos: z
+    .array(
+      z.object({
+        nome: z.string().min(1),
+        valor: z.number().min(0),
+      }),
+    )
+    .min(1),
+});
+
+async function getOrCreateTenantPlans(tenantId: string) {
+  const config = await prisma.tenantConfig.upsert({
+    where: { tenantId },
+    update: {},
+    create: {
+      tenantId,
+      planosPrecos: normalizePlans(null) as unknown as Prisma.InputJsonValue,
+    },
+    select: { planosPrecos: true },
+  });
+
+  return normalizePlans(config.planosPrecos);
+}
 
 export async function ownerRoutes(app: FastifyInstance): Promise<void> {
   app.addHook("preHandler", requireAuth);
@@ -232,4 +258,43 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
       return reply.send({ message: "Aluno removido com sucesso." });
     },
   );
+
+  app.get("/owner/planos", async (request, reply) => {
+    const planos = await getOrCreateTenantPlans(request.user.tenantId);
+    return reply.send({ planos });
+  });
+
+  app.put("/owner/planos", async (request, reply) => {
+    const parsed = plansUpdateSchema.safeParse(request.body);
+
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: parsed.error.errors[0]?.message ?? "Dados inválidos.",
+      });
+    }
+
+    const planos = normalizePlans(parsed.data.planos);
+    const names = planos.map((plan) => plan.nome.toLowerCase());
+    if (new Set(names).size !== names.length) {
+      return reply.status(400).send({
+        error: "Existem planos com o mesmo nome.",
+      });
+    }
+
+    await prisma.tenantConfig.upsert({
+      where: { tenantId: request.user.tenantId },
+      update: {
+        planosPrecos: planos as unknown as Prisma.InputJsonValue,
+      },
+      create: {
+        tenantId: request.user.tenantId,
+        planosPrecos: planos as unknown as Prisma.InputJsonValue,
+      },
+    });
+
+    return reply.send({
+      planos,
+      message: "Planos atualizados com sucesso.",
+    });
+  });
 }

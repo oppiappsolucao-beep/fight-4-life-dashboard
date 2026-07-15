@@ -1,20 +1,15 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { formatCep, formatCpf, formatPhone } from "../../lib/format";
 import { apiFetch } from "../../lib/api";
+import {
+  DEFAULT_OWNER_PLANS,
+  formatPlanCurrency,
+  type PlanItem,
+} from "../../lib/plans";
 import OwnerStudentPhotoField from "./OwnerStudentPhotoField";
 
 const GENEROS = ["Masculino", "Feminino", "Outro", "Prefiro não informar"];
-const MODALIDADES = [
-  "Musculação Livre",
-  "Plano Trimestral",
-  "Plano Semestral",
-  "Plano Anual",
-  "Pilates",
-  "Muay Thai",
-  "Jiu-Jitsu",
-  "MMA",
-];
 const FORMAS_PAGAMENTO = ["Dinheiro", "Cartão", "Pix", "Débito"];
 const PARENTESCOS = ["Pai", "Mãe", "Cônjuge", "Irmão(ã)", "Amigo(a)", "Outro"];
 
@@ -52,11 +47,22 @@ function fileToDataUrl(file: File): Promise<string> {
 
 export default function OwnerCadastroAlunoForm() {
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
+  const [planos, setPlanos] = useState<PlanItem[]>(DEFAULT_OWNER_PLANS);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [fotoFile, setFotoFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    apiFetch<{ planos: PlanItem[] }>("/owner/planos")
+      .then((data) => {
+        if (data.planos.length) setPlanos(data.planos);
+      })
+      .catch(() => {
+        // Mantém defaults se a API falhar
+      });
+  }, []);
 
   function updateField<K extends keyof FormData>(field: K, value: FormData[K]) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -289,9 +295,9 @@ export default function OwnerCadastroAlunoForm() {
               onChange={(e) => updateField("planoModalidade", e.target.value)}
             >
               <option value="">Selecione</option>
-              {MODALIDADES.map((m) => (
-                <option key={m} value={m}>
-                  {m}
+              {planos.map((plan) => (
+                <option key={plan.nome} value={plan.nome}>
+                  {plan.nome} — {formatPlanCurrency(plan.valor)}
                 </option>
               ))}
             </Select>

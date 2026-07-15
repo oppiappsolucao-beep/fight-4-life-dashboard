@@ -1,7 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiFetch } from "../../lib/api";
 import { formatCpf, formatPhone } from "../../lib/format";
+import {
+  DEFAULT_OWNER_PLANS,
+  formatPlanCurrency,
+  plansToPriceMap,
+  type PlanItem,
+} from "../../lib/plans";
 import OwnerSectionPage from "./OwnerSectionPage";
 
 interface AlunoRecebivel {
@@ -15,21 +21,6 @@ interface AlunoRecebivel {
   diaVencimento: string;
   formaPagamento: string | null;
   createdAt: string;
-}
-
-const PLANO_VALORES: Record<string, number> = {
-  "Musculação Livre": 149,
-  "Plano Trimestral": 399,
-  "Plano Semestral": 699,
-  "Plano Anual": 1199,
-  Pilates: 199,
-  "Muay Thai": 179,
-  "Jiu-Jitsu": 189,
-  MMA: 199,
-};
-
-function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 function formatDate(iso: string) {
@@ -73,14 +64,24 @@ function getDueStatus(diaVencimento: string): "em_dia" | "vencido" | "hoje" {
 
 export default function OwnerContasReceberPage() {
   const [alunos, setAlunos] = useState<AlunoRecebivel[]>([]);
+  const [planos, setPlanos] = useState<PlanItem[]>(DEFAULT_OWNER_PLANS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const priceMap = useMemo(() => plansToPriceMap(planos), [planos]);
 
   const load = useCallback(() => {
     setLoading(true);
     setError("");
-    apiFetch<{ alunos: AlunoRecebivel[] }>("/owner/alunos")
-      .then((data) => setAlunos(data.alunos))
+
+    Promise.all([
+      apiFetch<{ alunos: AlunoRecebivel[] }>("/owner/alunos"),
+      apiFetch<{ planos: PlanItem[] }>("/owner/planos"),
+    ])
+      .then(([alunosData, planosData]) => {
+        setAlunos(alunosData.alunos);
+        if (planosData.planos.length) setPlanos(planosData.planos);
+      })
       .catch((err) =>
         setError(
           err instanceof Error ? err.message : "Erro ao carregar contas a receber.",
@@ -94,7 +95,7 @@ export default function OwnerContasReceberPage() {
   }, [load]);
 
   const totalPrevisto = alunos.reduce(
-    (sum, aluno) => sum + (PLANO_VALORES[aluno.planoModalidade] ?? 0),
+    (sum, aluno) => sum + (priceMap[aluno.planoModalidade] ?? 0),
     0,
   );
   const vencidos = alunos.filter((a) => getDueStatus(a.diaVencimento) === "vencido").length;
@@ -137,7 +138,7 @@ export default function OwnerContasReceberPage() {
             <SummaryCard label="Alunos ativos" value={String(alunos.length)} />
             <SummaryCard
               label="Receita prevista (mês)"
-              value={formatCurrency(totalPrevisto)}
+              value={formatPlanCurrency(totalPrevisto)}
             />
             <SummaryCard label="Vencidos no mês" value={String(vencidos)} />
             <SummaryCard label="Vencem hoje" value={String(venceHoje)} />
@@ -158,7 +159,7 @@ export default function OwnerContasReceberPage() {
               </thead>
               <tbody>
                 {alunos.map((aluno) => {
-                  const valor = PLANO_VALORES[aluno.planoModalidade];
+                  const valor = priceMap[aluno.planoModalidade];
                   const status = getDueStatus(aluno.diaVencimento);
                   const proximoVenc = getNextDueDate(aluno.diaVencimento);
 
@@ -183,7 +184,7 @@ export default function OwnerContasReceberPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 font-medium text-white">
-                        {valor != null ? formatCurrency(valor) : "—"}
+                        {valor != null ? formatPlanCurrency(valor) : "—"}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-white/75">
                         Dia {parseDueDay(aluno.diaVencimento)}
