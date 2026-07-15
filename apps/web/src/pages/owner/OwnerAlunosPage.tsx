@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiFetch } from "../../lib/api";
 import { formatCpf, formatPhone } from "../../lib/format";
+import OwnerAlunoEditModal from "../../components/owner/OwnerAlunoEditModal";
 import OwnerSectionPage from "./OwnerSectionPage";
 
 interface AlunoListItem {
@@ -26,6 +27,8 @@ export default function OwnerAlunosPage() {
   const [alunos, setAlunos] = useState<AlunoListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -41,6 +44,24 @@ export default function OwnerAlunosPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  async function handleDelete(aluno: AlunoListItem) {
+    const confirmed = window.confirm(
+      `Deseja remover ${aluno.nomeCompleto}? Esta ação não pode ser desfeita.`,
+    );
+    if (!confirmed) return;
+
+    setDeletingId(aluno.id);
+    setError("");
+    try {
+      await apiFetch(`/owner/alunos/${aluno.id}`, { method: "DELETE" });
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao remover aluno.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   return (
     <OwnerSectionPage
@@ -90,6 +111,7 @@ export default function OwnerAlunosPage() {
                 <th className="px-4 py-3 font-medium">Plano</th>
                 <th className="px-4 py-3 font-medium">Início</th>
                 <th className="px-4 py-3 font-medium">Venc.</th>
+                <th className="px-4 py-3 text-right font-medium">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -139,11 +161,38 @@ export default function OwnerAlunosPage() {
                   <td className="px-4 py-3 whitespace-nowrap text-white/70">
                     Dia {aluno.diaVencimento}
                   </td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditingId(aluno.id)}
+                        className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-white/75 transition hover:border-[#e85d6f]/50 hover:text-white"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        disabled={deletingId === aluno.id}
+                        onClick={() => void handleDelete(aluno)}
+                        className="rounded-md border border-red-400/25 px-3 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-500/10 disabled:opacity-50"
+                      >
+                        {deletingId === aluno.id ? "Removendo..." : "Excluir"}
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      ) : null}
+
+      {editingId ? (
+        <OwnerAlunoEditModal
+          alunoId={editingId}
+          onClose={() => setEditingId(null)}
+          onSaved={load}
+        />
       ) : null}
     </OwnerSectionPage>
   );

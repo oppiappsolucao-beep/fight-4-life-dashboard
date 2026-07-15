@@ -23,7 +23,11 @@ const studentCreateSchema = z.object({
   dataInicio: z.string().min(1),
   diaVencimento: z.string().min(1),
   formaPagamento: z.string().optional(),
-  fotoUrl: z.string().optional(),
+  fotoUrl: z.string().nullable().optional(),
+});
+
+const studentUpdateSchema = studentCreateSchema.extend({
+  active: z.boolean().optional(),
 });
 
 export async function ownerRoutes(app: FastifyInstance): Promise<void> {
@@ -119,4 +123,113 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
       message: "Aluno cadastrado com sucesso.",
     });
   });
+
+  app.get<{ Params: { id: string } }>(
+    "/owner/alunos/:id",
+    async (request, reply) => {
+      const aluno = await prisma.student.findFirst({
+        where: {
+          id: request.params.id,
+          tenantId: request.user.tenantId,
+        },
+      });
+
+      if (!aluno) {
+        return reply.status(404).send({ error: "Aluno não encontrado." });
+      }
+
+      return reply.send({ aluno });
+    },
+  );
+
+  app.patch<{ Params: { id: string } }>(
+    "/owner/alunos/:id",
+    async (request, reply) => {
+      const parsed = studentUpdateSchema.safeParse(request.body);
+
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.errors[0]?.message ?? "Dados inválidos.",
+        });
+      }
+
+      const tenantId = request.user.tenantId;
+      const current = await prisma.student.findFirst({
+        where: { id: request.params.id, tenantId },
+        select: { id: true },
+      });
+
+      if (!current) {
+        return reply.status(404).send({ error: "Aluno não encontrado." });
+      }
+
+      const data = parsed.data;
+      const cpfDigits = data.cpf.replace(/\D/g, "");
+      const duplicate = await prisma.student.findFirst({
+        where: {
+          tenantId,
+          cpf: cpfDigits,
+          id: { not: current.id },
+        },
+        select: { id: true },
+      });
+
+      if (duplicate) {
+        return reply.status(409).send({
+          error: "Já existe outro aluno com este CPF.",
+        });
+      }
+
+      const aluno = await prisma.student.update({
+        where: { id: current.id },
+        data: {
+          nomeCompleto: data.nomeCompleto.trim(),
+          cpf: cpfDigits,
+          rg: data.rg || null,
+          dataNascimento: data.dataNascimento,
+          genero: data.genero || null,
+          email: data.email.trim().toLowerCase(),
+          telefone: data.telefone || null,
+          emergenciaNome: data.emergenciaNome || null,
+          emergenciaParentesco: data.emergenciaParentesco || null,
+          emergenciaTelefone: data.emergenciaTelefone || null,
+          rua: data.rua || null,
+          numero: data.numero || null,
+          cep: data.cep || null,
+          cidade: data.cidade || null,
+          planoModalidade: data.planoModalidade,
+          dataInicio: data.dataInicio,
+          diaVencimento: data.diaVencimento,
+          formaPagamento: data.formaPagamento || null,
+          fotoUrl: data.fotoUrl || null,
+          ...(data.active === undefined ? {} : { active: data.active }),
+        },
+      });
+
+      return reply.send({
+        aluno,
+        message: "Aluno atualizado com sucesso.",
+      });
+    },
+  );
+
+  app.delete<{ Params: { id: string } }>(
+    "/owner/alunos/:id",
+    async (request, reply) => {
+      const aluno = await prisma.student.findFirst({
+        where: {
+          id: request.params.id,
+          tenantId: request.user.tenantId,
+        },
+        select: { id: true },
+      });
+
+      if (!aluno) {
+        return reply.status(404).send({ error: "Aluno não encontrado." });
+      }
+
+      await prisma.student.delete({ where: { id: aluno.id } });
+      return reply.send({ message: "Aluno removido com sucesso." });
+    },
+  );
 }
