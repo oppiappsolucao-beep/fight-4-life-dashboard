@@ -14,8 +14,9 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+# Only ignore root Python packaging dirs (not apps/*/src/lib)
+/lib/
+/lib64/
 parts/
 sdist/
 var/
