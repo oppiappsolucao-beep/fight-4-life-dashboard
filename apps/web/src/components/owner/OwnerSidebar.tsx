@@ -7,7 +7,7 @@ const MENU_ITEMS = [
   { to: "/dono/alunos", label: "Alunos", icon: UsersIcon },
   { to: "/dono/cadastro-treino", label: "Cadastro de Treino", icon: DumbbellIcon },
   { to: "/dono/planos", label: "Planos", icon: PlanIcon },
-  { to: "/dono/contas-a-pagar", label: "Contas a Pagar", icon: PaymentIcon },
+  { to: "/dono/contas-a-receber", label: "Contas a Receber", icon: PaymentIcon },
 ];
 
 export default function OwnerSidebar() {

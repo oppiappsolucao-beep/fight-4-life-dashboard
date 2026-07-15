@@ -17,7 +17,7 @@ import OwnerCadastroAlunoPage from "./pages/owner/OwnerCadastroAlunoPage";
 import OwnerAlunosPage from "./pages/owner/OwnerAlunosPage";
 import OwnerCadastroTreinoPage from "./pages/owner/OwnerCadastroTreinoPage";
 import OwnerPlanosPage from "./pages/owner/OwnerPlanosPage";
-import OwnerContasPagarPage from "./pages/owner/OwnerContasPagarPage";
+import OwnerContasReceberPage from "./pages/owner/OwnerContasReceberPage";
 import DevLayout from "./components/dev/DevLayout";
 import DevLoginPage from "./pages/DevLoginPage";
 import DevCadastroAcademiasPage from "./pages/dev/DevCadastroAcademiasPage";
@@ -89,7 +89,8 @@ export default function App() {
         <Route path="dono/alunos" element={<OwnerAlunosPage />} />
         <Route path="dono/cadastro-treino" element={<OwnerCadastroTreinoPage />} />
         <Route path="dono/planos" element={<OwnerPlanosPage />} />
-        <Route path="dono/contas-a-pagar" element={<OwnerContasPagarPage />} />
+        <Route path="dono/contas-a-receber" element={<OwnerContasReceberPage />} />
+        <Route path="dono/contas-a-pagar" element={<Navigate to="/dono/contas-a-receber" replace />} />
       </Route>
 
       <Route element={<DevLayout />}>
