@@ -9,9 +9,12 @@ import { existsSync } from "node:fs";
 import { authRoutes } from "./modules/auth/routes.js";
 import { devRoutes } from "./modules/dev/routes.js";
 
-const PORT = Number(process.env.PORT ?? 3001);
-const HOST = process.env.HOST ?? "0.0.0.0";
-const JWT_SECRET = process.env.JWT_SECRET ?? "dev-secret-change-me";
+// EasyPanel injeta PORT (muitas vezes 80). Não force 3000 no painel —
+// a Porta do serviço deve ser a mesma deste valor.
+const PORT = Number(process.env.PORT || 3000);
+// "" é truthy para ??, mas inválido para listen — usar ||.
+const HOST = process.env.HOST || "0.0.0.0";
+const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 
 const app = Fastify({ logger: true });
 
@@ -43,8 +46,14 @@ if (existsSync(webDist)) {
       reply.code(404).send({ error: "Rota não encontrada" });
       return;
     }
-    reply.sendFile("index.html");
+    return reply.sendFile("index.html");
   });
+} else {
+  // Sem o dist do front, ainda responde na raiz (health check / proxy).
+  app.get("/", async () => ({
+    status: "ok",
+    message: "API no ar. Front estático não encontrado (WEB_DIST_PATH).",
+  }));
 }
 
 try {
