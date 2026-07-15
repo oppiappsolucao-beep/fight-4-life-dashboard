@@ -1,7 +1,5 @@
-# EasyPanel via Nixpacks: sobe o app Node (API + front no mesmo processo).
-# Mantém Python/Streamlit só para compatibilidade se o Start Command
-# do painel ainda for `streamlit run app.py` (o app.py redireciona para o Node).
-providers = ["node", "python"]
+# Deploy Node (API + front) no EasyPanel via Nixpacks.
+providers = ["node"]
 
 [variables]
 NODE_ENV = "production"
@@ -11,15 +9,11 @@ DATABASE_URL = "postgresql://build:build@127.0.0.1:5432/build?schema=public"
 DIRECT_URL = "postgresql://build:build@127.0.0.1:5432/build?schema=public"
 
 [phases.setup]
-nixPkgs = ["nodejs_20", "openssl", "python311"]
+nixPkgs = ["nodejs_20", "openssl"]
 aptPkgs = ["openssl"]
 
 [phases.install]
-cmds = [
-  "npm ci || npm install",
-  "python -m pip install --upgrade pip",
-  "python -m pip install streamlit==1.41.1"
-]
+cmds = ["npm install"]
 
 [phases.build]
 cmds = [

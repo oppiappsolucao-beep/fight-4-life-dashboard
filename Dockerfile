@@ -1,12 +1,11 @@
-# Imagem única: build do front (Vite) + build da API (Fastify).
-# A API também serve o site estático. 1 serviço no EasyPanel.
+# Preferência no EasyPanel: Builder = Dockerfile
+# Se o painel usar Nixpacks, usa o nixpacks.toml
 FROM node:20-slim
 
 RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Dummy só para o `prisma generate` no BUILD (o banco real vem das envs do EasyPanel em runtime)
 ENV DATABASE_URL="postgresql://build:build@127.0.0.1:5432/build?schema=public"
 ENV DIRECT_URL="postgresql://build:build@127.0.0.1:5432/build?schema=public"
 
