@@ -9,11 +9,11 @@ import { existsSync } from "node:fs";
 import { authRoutes } from "./modules/auth/routes.js";
 import { devRoutes } from "./modules/dev/routes.js";
 
-// EasyPanel injeta PORT (muitas vezes 80). Não force 3000 no painel —
-// a Porta do serviço deve ser a mesma deste valor.
-const PORT = Number(process.env.PORT || 3000);
-// "" é truthy para ??, mas inválido para listen — usar ||.
-const HOST = process.env.HOST || "0.0.0.0";
+// EasyPanel injeta PORT (muitas vezes 80). A Porta do serviço no painel
+// deve ser a mesma deste valor.
+const PORT = Number(process.env.PORT || 80);
+// Sempre IPv4: bind em [::] quebra o proxy do EasyPanel ("Service is not reachable").
+const HOST = "0.0.0.0";
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 
 const app = Fastify({ logger: true });
