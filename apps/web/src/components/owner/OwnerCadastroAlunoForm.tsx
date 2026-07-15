@@ -1,5 +1,7 @@
 import { FormEvent, useState } from "react";
+import { Link } from "react-router-dom";
 import { formatCep, formatCpf, formatPhone } from "../../lib/format";
+import { apiFetch } from "../../lib/api";
 import OwnerStudentPhotoField from "./OwnerStudentPhotoField";
 
 const GENEROS = ["Masculino", "Feminino", "Outro", "Prefiro não informar"];
@@ -39,10 +41,19 @@ const INITIAL_FORM = {
 
 type FormData = typeof INITIAL_FORM;
 
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Falha ao ler a foto."));
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function OwnerCadastroAlunoForm() {
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
-  const [, setFotoFile] = useState<File | null>(null);
+  const [fotoFile, setFotoFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -62,7 +73,7 @@ export default function OwnerCadastroAlunoForm() {
   }
 
   function handlePhotoChange(preview: string | null, file?: File) {
-    if (fotoPreview) URL.revokeObjectURL(fotoPreview);
+    if (fotoPreview?.startsWith("blob:")) URL.revokeObjectURL(fotoPreview);
     setFotoPreview(preview);
     setFotoFile(file ?? null);
     setSuccess(false);
@@ -92,14 +103,34 @@ export default function OwnerCadastroAlunoForm() {
     }
 
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setLoading(false);
-    setSuccess(true);
+    try {
+      let fotoUrl: string | undefined;
+      if (fotoFile) {
+        fotoUrl = await fileToDataUrl(fotoFile);
+      } else if (fotoPreview?.startsWith("data:")) {
+        fotoUrl = fotoPreview;
+      }
+
+      await apiFetch("/owner/alunos", {
+        method: "POST",
+        body: JSON.stringify({ ...form, fotoUrl }),
+      });
+
+      setSuccess(true);
+      setForm(INITIAL_FORM);
+      if (fotoPreview?.startsWith("blob:")) URL.revokeObjectURL(fotoPreview);
+      setFotoPreview(null);
+      setFotoFile(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao cadastrar aluno.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleClear() {
     setForm(INITIAL_FORM);
-    if (fotoPreview) URL.revokeObjectURL(fotoPreview);
+    if (fotoPreview?.startsWith("blob:")) URL.revokeObjectURL(fotoPreview);
     setFotoPreview(null);
     setFotoFile(null);
     setSuccess(false);
@@ -313,7 +344,10 @@ export default function OwnerCadastroAlunoForm() {
 
       {success && (
         <div className="rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
-          Aluno cadastrado com sucesso!
+          Aluno cadastrado com sucesso!{" "}
+          <Link to="/dono/alunos" className="font-semibold underline">
+            Ver na lista de alunos
+          </Link>
         </div>
       )}
 

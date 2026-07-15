@@ -1,0 +1,122 @@
+import type { FastifyInstance } from "fastify";
+import { UserRole } from "@prisma/client";
+import { z } from "zod";
+import { prisma } from "../../lib/prisma.js";
+import { requireAuth, requireRole } from "../../middleware/auth.js";
+
+const studentCreateSchema = z.object({
+  nomeCompleto: z.string().min(1),
+  cpf: z.string().min(1),
+  rg: z.string().optional(),
+  dataNascimento: z.string().min(1),
+  genero: z.string().optional(),
+  email: z.string().email(),
+  telefone: z.string().optional(),
+  emergenciaNome: z.string().optional(),
+  emergenciaParentesco: z.string().optional(),
+  emergenciaTelefone: z.string().optional(),
+  rua: z.string().optional(),
+  numero: z.string().optional(),
+  cep: z.string().optional(),
+  cidade: z.string().optional(),
+  planoModalidade: z.string().min(1),
+  dataInicio: z.string().min(1),
+  diaVencimento: z.string().min(1),
+  formaPagamento: z.string().optional(),
+  fotoUrl: z.string().optional(),
+});
+
+export async function ownerRoutes(app: FastifyInstance): Promise<void> {
+  app.addHook("preHandler", requireAuth);
+  app.addHook(
+    "preHandler",
+    requireRole(
+      UserRole.PROPRIETARIO,
+      UserRole.DESENVOLVIMENTO,
+      UserRole.ADMIN,
+      UserRole.DIRETORIA,
+    ),
+  );
+
+  app.get("/owner/alunos", async (request, reply) => {
+    const tenantId = request.user.tenantId;
+
+    const alunos = await prisma.student.findMany({
+      where: { tenantId, active: true },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        nomeCompleto: true,
+        cpf: true,
+        email: true,
+        telefone: true,
+        planoModalidade: true,
+        dataInicio: true,
+        diaVencimento: true,
+        formaPagamento: true,
+        fotoUrl: true,
+        createdAt: true,
+      },
+    });
+
+    return reply.send({ alunos });
+  });
+
+  app.post("/owner/alunos", async (request, reply) => {
+    const parsed = studentCreateSchema.safeParse(request.body);
+
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: parsed.error.errors[0]?.message ?? "Dados inválidos.",
+      });
+    }
+
+    const tenantId = request.user.tenantId;
+    const data = parsed.data;
+    const cpfDigits = data.cpf.replace(/\D/g, "");
+
+    const existing = await prisma.student.findFirst({
+      where: { tenantId, cpf: cpfDigits },
+      select: { id: true },
+    });
+
+    if (existing) {
+      return reply.status(409).send({ error: "Já existe um aluno com este CPF." });
+    }
+
+    const aluno = await prisma.student.create({
+      data: {
+        tenantId,
+        nomeCompleto: data.nomeCompleto.trim(),
+        cpf: cpfDigits,
+        rg: data.rg || null,
+        dataNascimento: data.dataNascimento,
+        genero: data.genero || null,
+        email: data.email.trim().toLowerCase(),
+        telefone: data.telefone || null,
+        emergenciaNome: data.emergenciaNome || null,
+        emergenciaParentesco: data.emergenciaParentesco || null,
+        emergenciaTelefone: data.emergenciaTelefone || null,
+        rua: data.rua || null,
+        numero: data.numero || null,
+        cep: data.cep || null,
+        cidade: data.cidade || null,
+        planoModalidade: data.planoModalidade,
+        dataInicio: data.dataInicio,
+        diaVencimento: data.diaVencimento,
+        formaPagamento: data.formaPagamento || null,
+        fotoUrl: data.fotoUrl || null,
+      },
+    });
+
+    return reply.status(201).send({
+      aluno: {
+        id: aluno.id,
+        nomeCompleto: aluno.nomeCompleto,
+        cpf: aluno.cpf,
+        email: aluno.email,
+      },
+      message: "Aluno cadastrado com sucesso.",
+    });
+  });
+}

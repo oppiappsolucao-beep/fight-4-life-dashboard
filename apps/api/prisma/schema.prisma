@@ -42,7 +42,40 @@ model Tenant {
   updatedAt  DateTime      @updatedAt
   users      User[]
   leads      Lead[]
+  students   Student[]
   config     TenantConfig?
+}
+
+model Student {
+  id                   String   @id @default(uuid())
+  tenantId             String
+  nomeCompleto         String
+  cpf                  String
+  rg                   String?
+  dataNascimento       String
+  genero               String?
+  email                String
+  telefone             String?
+  emergenciaNome       String?
+  emergenciaParentesco String?
+  emergenciaTelefone   String?
+  rua                  String?
+  numero               String?
+  cep                  String?
+  cidade               String?
+  planoModalidade      String
+  dataInicio           String
+  diaVencimento        String
+  formaPagamento       String?
+  fotoUrl              String?
+  active               Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  tenant               Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, cpf])
+  @@index([tenantId, email])
+  @@index([tenantId, active])
 }
 
 model TenantConfig {
