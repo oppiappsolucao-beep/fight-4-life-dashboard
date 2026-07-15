@@ -1,0 +1,28 @@
+# Fallback caso o EasyPanel use Nixpacks em vez do Dockerfile.
+# Preferível no painel: Builder = Dockerfile | Porta = 3000
+providers = ["node"]
+
+[variables]
+NODE_ENV = "production"
+HOST = "0.0.0.0"
+PORT = "3000"
+WEB_DIST_PATH = "/app/apps/web/dist"
+# Dummy só para o `prisma generate` no build (não é o banco real)
+DATABASE_URL = "postgresql://build:build@127.0.0.1:5432/build?schema=public"
+DIRECT_URL = "postgresql://build:build@127.0.0.1:5432/build?schema=public"
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "openssl"]
+
+[phases.install]
+cmds = ["npm install"]
+
+[phases.build]
+cmds = [
+  "npm run db:generate -w @oppi/api",
+  "npm run build -w @oppi/web",
+  "npm run build -w @oppi/api"
+]
+
+[start]
+cmd = "npm run start -w @oppi/api"
