@@ -42,7 +42,7 @@ type FormData = typeof INITIAL_FORM;
 export default function OwnerCadastroAlunoForm() {
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
-  const [fotoFile, setFotoFile] = useState<File | null>(null);
+  const [, setFotoFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
