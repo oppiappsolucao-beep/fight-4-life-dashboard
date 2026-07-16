@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { canAccessDev, canAccessOwner } from "../../lib/access";
+import DashboardShell from "../DashboardShell";
 import OwnerSidebar from "./OwnerSidebar";
 
 const GYM_BG = "/hero-gym.png?v=3";
 
 export default function OwnerLayout() {
   const { isAuthenticated, loading, user } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   if (loading) {
     return (
@@ -29,7 +32,7 @@ export default function OwnerLayout() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-screen overflow-x-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${GYM_BG})` }}
@@ -37,12 +40,17 @@ export default function OwnerLayout() {
       <div className="absolute inset-0 bg-black/65" />
       <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/40 to-black/55" />
 
-      <div className="relative z-10 flex min-h-screen items-stretch">
-        <OwnerSidebar />
-        <main className="min-h-screen flex-1 overflow-auto">
-          <Outlet />
-        </main>
-      </div>
+      <DashboardShell
+        title="Dono"
+        menuOpen={menuOpen}
+        onOpenMenu={() => setMenuOpen(true)}
+        onCloseMenu={() => setMenuOpen(false)}
+        sidebar={
+          <OwnerSidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
+        }
+      >
+        <Outlet />
+      </DashboardShell>
     </div>
   );
 }

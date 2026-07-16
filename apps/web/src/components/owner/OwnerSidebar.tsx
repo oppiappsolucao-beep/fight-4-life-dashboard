@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import OppiLogo from "../OppiLogo";
+import { sidebarShellClass } from "../DashboardShell";
 
 const MENU_ITEMS = [
   { to: "/dono/cadastro-aluno", label: "Cadastro Aluno", icon: UserPlusIcon },
@@ -10,37 +11,54 @@ const MENU_ITEMS = [
   { to: "/dono/contas-a-receber", label: "Contas a Receber", icon: PaymentIcon },
 ];
 
-export default function OwnerSidebar() {
+interface OwnerSidebarProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export default function OwnerSidebar({ open, onClose }: OwnerSidebarProps) {
   const navigate = useNavigate();
   const { user, tenant, logout } = useAuth();
 
   function handleLogout() {
     logout();
+    onClose();
     navigate("/dono/login");
   }
 
   return (
-    <aside className="sticky top-0 flex h-screen min-h-screen w-[280px] shrink-0 flex-col border-r border-white/10 bg-black/45 backdrop-blur-md">
-      <div className="border-b border-white/10 px-5 py-5">
-        <OppiLogo size="sm" />
-        <p className="mt-3 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#e85d6f]">
-          Dono da Academia
-        </p>
-        {tenant?.name && (
-          <p className="mt-1 truncate text-sm font-medium text-white/90">
-            {tenant.name}
+    <aside className={sidebarShellClass(open)}>
+      <div className="flex items-start justify-between gap-3 border-b border-white/10 px-5 py-5">
+        <div className="min-w-0">
+          <OppiLogo size="sm" />
+          <p className="mt-3 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#e85d6f]">
+            Dono da Academia
           </p>
-        )}
-        {user?.name && (
-          <p className="mt-0.5 truncate text-xs text-white/50">{user.name}</p>
-        )}
+          {tenant?.name && (
+            <p className="mt-1 truncate text-sm font-medium text-white/90">
+              {tenant.name}
+            </p>
+          )}
+          {user?.name && (
+            <p className="mt-0.5 truncate text-xs text-white/50">{user.name}</p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Fechar menu"
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/15 text-white/70 md:hidden"
+        >
+          ×
+        </button>
       </div>
 
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {MENU_ITEMS.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
+            onClick={onClose}
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
                 isActive
@@ -50,7 +68,7 @@ export default function OwnerSidebar() {
             }
           >
             <Icon />
-            {label}
+            <span className="min-w-0 break-words">{label}</span>
           </NavLink>
         ))}
       </nav>
@@ -58,6 +76,7 @@ export default function OwnerSidebar() {
       <div className="space-y-2 border-t border-white/10 p-4">
         <NavLink
           to="/"
+          onClick={onClose}
           className="block w-full rounded-lg border border-white/15 px-3 py-2 text-center text-xs font-medium text-white/60 transition hover:border-[#e85d6f]/40 hover:text-white"
         >
           Área do aluno

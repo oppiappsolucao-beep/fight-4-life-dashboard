@@ -397,8 +397,8 @@ function FormSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-white/10 bg-white/[0.05] p-5 backdrop-blur-sm md:p-6">
-      <h2 className="mb-5 border-b border-white/10 pb-3 text-[0.8rem] font-bold uppercase tracking-wide text-white">
+    <section className="rounded-xl border border-white/10 bg-white/[0.05] p-4 backdrop-blur-sm sm:p-5 md:p-6">
+      <h2 className="mb-5 break-words border-b border-white/10 pb-3 text-[0.8rem] font-bold uppercase tracking-wide text-white">
         {title}
       </h2>
       {children}
