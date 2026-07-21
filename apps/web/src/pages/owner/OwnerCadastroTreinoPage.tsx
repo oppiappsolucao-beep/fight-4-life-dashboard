@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "../../lib/api";
 import {
   MEIO_TREINO_REGIONS,

@@ -63,9 +63,9 @@ const modalityListInclude = {
   },
   scheduleSlots: {
     where: { active: true },
-    orderBy: [{ weekday: "asc" as const }, { startTime: "asc" as const }],
+    orderBy: [{ weekday: "asc" }, { startTime: "asc" }],
   },
-} as const;
+};
 
 async function saveModalitySchedule(
   tenantId: string,
