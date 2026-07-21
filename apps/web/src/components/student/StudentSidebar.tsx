@@ -1,6 +1,7 @@
-import { NavLink, useNavigate, Link } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import OppiLogo from "../OppiLogo";
 import { sidebarShellClass } from "../DashboardShell";
+import { clearStudentSession, getStudentSession } from "../../lib/studentSession";
 
 const MENU_ITEMS = [
   { to: "/treino", label: "Treino", icon: DumbbellIcon },
@@ -19,11 +20,11 @@ interface StudentSidebarProps {
 
 export default function StudentSidebar({ open, onClose }: StudentSidebarProps) {
   const navigate = useNavigate();
-  const identifier = sessionStorage.getItem("studentIdentifier");
+  const session = getStudentSession();
+  const displayName = session?.nomeCompleto ?? session?.identifier;
 
   function handleLogout() {
-    sessionStorage.removeItem("studentIdentifier");
-    sessionStorage.removeItem("studentLoginType");
+    clearStudentSession();
     onClose();
     navigate("/");
   }
@@ -36,9 +37,9 @@ export default function StudentSidebar({ open, onClose }: StudentSidebarProps) {
           <p className="mt-3 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-white/50">
             Área do aluno
           </p>
-          {identifier && (
+          {displayName && (
             <p className="mt-1 truncate text-sm font-medium text-white/90">
-              {identifier}
+              {displayName}
             </p>
           )}
         </div>
@@ -72,14 +73,7 @@ export default function StudentSidebar({ open, onClose }: StudentSidebarProps) {
         ))}
       </nav>
 
-      <div className="space-y-2 border-t border-white/10 p-4">
-        <Link
-          to="/dono/login"
-          onClick={onClose}
-          className="block w-full rounded-lg border border-white/15 px-3 py-2 text-center text-xs font-medium text-white/60 transition hover:border-[#e85d6f]/40 hover:text-white"
-        >
-          Dono da Academia
-        </Link>
+      <div className="border-t border-white/10 p-4">
         <button
           type="button"
           onClick={handleLogout}

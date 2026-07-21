@@ -2,12 +2,9 @@ import { useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import DashboardShell from "../DashboardShell";
 import StudentSidebar from "./StudentSidebar";
+import { hasStudentSession } from "../../lib/studentSession";
 
 const GYM_BG = "/hero-gym.png?v=2";
-
-function hasStudentSession(): boolean {
-  return Boolean(sessionStorage.getItem("studentIdentifier"));
-}
 
 export default function StudentLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
