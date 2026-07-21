@@ -39,6 +39,7 @@ export async function apiFetch<T>(
   if (!response.ok) {
     const message =
       (typeof data.error === "string" ? data.error : undefined) ??
+      (typeof data.message === "string" ? data.message : undefined) ??
       (response.status === 500 || response.status === 503
         ? "Servidor indisponível. Verifique se o banco Neon está configurado."
         : `Erro na requisição (${response.status}).`);

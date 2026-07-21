@@ -9,6 +9,7 @@ import {
   serializeWorkout,
   workoutInclude,
 } from "./workouts.js";
+import { ensureExerciseCatalog } from "../../lib/exercise-catalog.js";
 
 const studentCreateSchema = z.object({
   nomeCompleto: z.string().min(1),
@@ -303,23 +304,33 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
     });
   });
 
-  app.get("/owner/exercises", async (_request, reply) => {
-    const exercises = await prisma.exercise.findMany({
-      where: { active: true },
-      orderBy: [{ muscleGroup: "asc" }, { name: "asc" }],
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        muscleGroup: true,
-        equipment: true,
-        instructions: true,
-        imageUrl: true,
-        gifUrl: true,
-      },
-    });
+  app.get("/owner/exercises", async (request, reply) => {
+    try {
+      await ensureExerciseCatalog();
 
-    return reply.send({ exercises });
+      const exercises = await prisma.exercise.findMany({
+        where: { active: true },
+        orderBy: [{ muscleGroup: "asc" }, { name: "asc" }],
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          muscleGroup: true,
+          equipment: true,
+          instructions: true,
+          imageUrl: true,
+          gifUrl: true,
+        },
+      });
+
+      return reply.send({ exercises });
+    } catch (error) {
+      request.log.error(error);
+      return reply.status(503).send({
+        error:
+          "Catálogo de exercícios indisponível. Aguarde o deploy da API ou contate o suporte.",
+      });
+    }
   });
 
   app.get<{ Params: { id: string } }>(

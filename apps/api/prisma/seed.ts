@@ -1,7 +1,7 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaClient, UserRole } from "@prisma/client";
-import { seedExercises } from "./seed-exercises.js";
+import { ensureExerciseCatalog } from "../src/lib/exercise-catalog.js";
 
 const prisma = new PrismaClient();
 
@@ -104,7 +104,7 @@ async function main() {
     });
   }
 
-  const exerciseCount = await seedExercises(prisma);
+  const exerciseCount = await ensureExerciseCatalog();
 
   console.log("Seed concluído.");
   console.log(`Tenant: ${tenant.name} (${tenant.slug})`);

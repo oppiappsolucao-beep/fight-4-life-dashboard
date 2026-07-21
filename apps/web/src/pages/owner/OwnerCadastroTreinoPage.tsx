@@ -66,20 +66,43 @@ export default function OwnerCadastroTreinoPage() {
   const loadBase = useCallback(() => {
     setLoading(true);
     setError("");
-    Promise.all([
+
+    Promise.allSettled([
       apiFetch<{ alunos: AlunoOption[] }>("/owner/alunos"),
       apiFetch<{ exercises: ExerciseCatalogItem[] }>("/owner/exercises"),
     ])
-      .then(([alunosData, exercisesData]) => {
-        setAlunos(alunosData.alunos);
-        setCatalog(exercisesData.exercises);
-        if (alunosData.alunos.length > 0) {
-          setSelectedStudentId((current) => current || alunosData.alunos[0].id);
+      .then(([alunosResult, exercisesResult]) => {
+        if (alunosResult.status === "fulfilled") {
+          setAlunos(alunosResult.value.alunos);
+          if (alunosResult.value.alunos.length > 0) {
+            setSelectedStudentId((current) => current || alunosResult.value.alunos[0].id);
+          }
+        }
+
+        if (exercisesResult.status === "fulfilled") {
+          setCatalog(exercisesResult.value.exercises);
+        }
+
+        const failures: string[] = [];
+        if (alunosResult.status === "rejected") {
+          failures.push(
+            alunosResult.reason instanceof Error
+              ? alunosResult.reason.message
+              : "Erro ao carregar alunos.",
+          );
+        }
+        if (exercisesResult.status === "rejected") {
+          failures.push(
+            exercisesResult.reason instanceof Error
+              ? exercisesResult.reason.message
+              : "Erro ao carregar catálogo de exercícios.",
+          );
+        }
+
+        if (failures.length > 0) {
+          setError(failures.join(" "));
         }
       })
-      .catch((err) =>
-        setError(err instanceof Error ? err.message : "Erro ao carregar dados."),
-      )
       .finally(() => setLoading(false));
   }, []);
 

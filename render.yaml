@@ -5,7 +5,7 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: npm install && npm run db:generate -w @oppi/api && npm run build -w @oppi/api
+    buildCommand: npm install && npm run db:generate -w @oppi/api && npm run db:push -w @oppi/api && npm run build -w @oppi/api
     startCommand: npm run start -w @oppi/api
     healthCheckPath: /health
     envVars:

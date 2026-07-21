@@ -10,6 +10,7 @@ import { authRoutes } from "./modules/auth/routes.js";
 import { devRoutes } from "./modules/dev/routes.js";
 import { ownerRoutes } from "./modules/owner/routes.js";
 import { studentRoutes } from "./modules/student/routes.js";
+import { bootstrapDatabase } from "./lib/bootstrap.js";
 
 // EasyPanel injeta PORT (muitas vezes 80). A Porta do serviço no painel
 // deve ser a mesma deste valor.
@@ -19,6 +20,8 @@ const HOST = "0.0.0.0";
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 
 const app = Fastify({ logger: true, bodyLimit: 5 * 1024 * 1024 });
+
+await bootstrapDatabase();
 
 await app.register(cors, {
   origin: true,
