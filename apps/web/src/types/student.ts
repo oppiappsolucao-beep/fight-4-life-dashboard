@@ -7,6 +7,7 @@ export interface StudentGoalMetric {
   meta: number;
   unidade: string;
   status: "ativo" | "em_breve";
+  direction?: "up" | "down";
 }
 
 export interface StudentOverview {
