@@ -70,6 +70,8 @@ export interface ProfessorLessonItem {
   title: string;
   description: string | null;
   classDate: string;
+  startTime: string | null;
+  endTime: string | null;
   videoUrl: string;
   thumbnailUrl: string | null;
   active: boolean;

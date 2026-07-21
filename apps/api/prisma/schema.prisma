@@ -331,6 +331,8 @@ model ProfessorLesson {
   title        String
   description  String?
   classDate    DateTime @db.Date
+  startTime    String?
+  endTime      String?
   videoUrl     String
   thumbnailUrl String?
   active       Boolean  @default(true)

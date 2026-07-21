@@ -20,6 +20,7 @@ import { requireStudent } from "../../middleware/student.js";
 import {
   modalityScheduleSchema,
   modalityTemplateSchema,
+  ownerLessonCreateSchema,
   professorCreateSchema,
   professorLessonActiveSchema,
   professorLessonSchema,
@@ -786,6 +787,85 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
       });
     },
   );
+
+  app.get<{ Querystring: { modalityId?: string; classDate?: string; professorId?: string } }>(
+    "/owner/aulas",
+    async (request, reply) => {
+      const tenantId = request.user.tenantId;
+      const { modalityId, classDate, professorId } = request.query;
+
+      const aulas = await prisma.professorLesson.findMany({
+        where: {
+          tenantId,
+          ...(modalityId ? { modalityId } : {}),
+          ...(professorId ? { professorId } : {}),
+          ...(classDate ? { classDate: parseClassDate(classDate) } : {}),
+        },
+        orderBy: [{ classDate: "desc" }, { createdAt: "desc" }],
+        include: lessonInclude,
+      });
+
+      return reply.send({ aulas: aulas.map(serializeProfessorLesson) });
+    },
+  );
+
+  app.post("/owner/aulas", async (request, reply) => {
+    const parsed = ownerLessonCreateSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: parsed.error.errors[0]?.message ?? "Dados inválidos.",
+      });
+    }
+
+    const tenantId = request.user.tenantId;
+    const data = parsed.data;
+
+    if (!isAllowedVideoUrl(data.videoUrl)) {
+      return reply.status(400).send({ error: "URL ou upload de vídeo inválido." });
+    }
+
+    const professor = await prisma.user.findFirst({
+      where: {
+        id: data.professorId,
+        tenantId,
+        active: true,
+        role: { in: [UserRole.PROFESSOR, UserRole.PROPRIETARIO] },
+      },
+    });
+
+    if (!professor) {
+      return reply.status(404).send({ error: "Professor não encontrado." });
+    }
+
+    const allowed = await assertProfessorAccess(professor.id, tenantId, data.modalityId);
+    if (!allowed) {
+      return reply.status(400).send({
+        error: "Este professor não está liberado para a modalidade selecionada.",
+      });
+    }
+
+    const lesson = await prisma.professorLesson.create({
+      data: {
+        tenantId,
+        modalityId: data.modalityId,
+        professorId: professor.id,
+        title: data.title.trim(),
+        description: data.description?.trim() || null,
+        classDate: parseClassDate(data.classDate),
+        startTime: data.startTime ?? null,
+        endTime: data.endTime ?? null,
+        videoUrl: data.videoUrl,
+        thumbnailUrl: data.thumbnailUrl?.trim() || null,
+        active: true,
+      },
+      include: lessonInclude,
+    });
+
+    return reply.send({
+      aula: serializeProfessorLesson(lesson),
+      message: "Aula publicada para a modalidade.",
+    });
+  });
 }
 
 export async function registerProfessorRoutes(app: FastifyInstance): Promise<void> {
@@ -858,6 +938,8 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
         title: data.title.trim(),
         description: data.description?.trim() || null,
         classDate: parseClassDate(data.classDate),
+        startTime: data.startTime ?? null,
+        endTime: data.endTime ?? null,
         videoUrl: data.videoUrl,
         thumbnailUrl: data.thumbnailUrl?.trim() || null,
         active: true,

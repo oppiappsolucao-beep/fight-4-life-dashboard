@@ -17,7 +17,8 @@ import type {
   WorkoutExerciseDraft,
   WorkoutSummary,
 } from "../../types/workout";
-import type { ModalityItem } from "../../types/modality";
+import type { ModalityItem, ProfessorItem } from "../../types/modality";
+import OwnerLessonCadastroPanel from "../../components/owner/OwnerLessonCadastroPanel";
 import OwnerSectionPage from "./OwnerSectionPage";
 
 interface AlunoOption {
@@ -57,6 +58,7 @@ export default function OwnerCadastroTreinoPage() {
   const [alunos, setAlunos] = useState<AlunoOption[]>([]);
   const [catalog, setCatalog] = useState<ExerciseCatalogItem[]>([]);
   const [modalidades, setModalidades] = useState<ModalityItem[]>([]);
+  const [professores, setProfessores] = useState<ProfessorItem[]>([]);
   const [selectedModalityId, setSelectedModalityId] = useState("");
   const [savedTreinos, setSavedTreinos] = useState<WorkoutSummary[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState("");
@@ -110,6 +112,11 @@ export default function OwnerCadastroTreinoPage() {
 
   const selectedStudent = alunos.find((item) => item.id === selectedStudentId);
   const groupedDrafts = useMemo(() => groupExercisesByPhase(drafts), [drafts]);
+  const selectedModality = useMemo(
+    () => modalidades.find((item) => item.id === selectedModalityId),
+    [modalidades, selectedModalityId],
+  );
+  const isMusculacao = selectedModality?.contentType === "EXERCISE_CATALOG";
 
   const loadBase = useCallback(() => {
     setLoading(true);
@@ -118,8 +125,9 @@ export default function OwnerCadastroTreinoPage() {
       apiFetch<{ alunos: AlunoOption[] }>("/owner/alunos"),
       apiFetch<{ exercises: ExerciseCatalogItem[] }>("/owner/exercises"),
       apiFetch<{ modalidades: ModalityItem[] }>("/owner/modalidades"),
+      apiFetch<{ professores: ProfessorItem[] }>("/owner/professores"),
     ])
-      .then(([alunosResult, exercisesResult, modalidadesResult]) => {
+      .then(([alunosResult, exercisesResult, modalidadesResult, professoresResult]) => {
         if (alunosResult.status === "fulfilled") {
           setAlunos(alunosResult.value.alunos);
           if (alunosResult.value.alunos.length > 0) {
@@ -135,6 +143,9 @@ export default function OwnerCadastroTreinoPage() {
           if (activeModalities.length > 0) {
             setSelectedModalityId((current) => current || activeModalities[0].id);
           }
+        }
+        if (professoresResult.status === "fulfilled") {
+          setProfessores(professoresResult.value.professores);
         }
         const failures: string[] = [];
         if (alunosResult.status === "rejected") {
@@ -356,12 +367,25 @@ export default function OwnerCadastroTreinoPage() {
   return (
     <OwnerSectionPage
       title="Cadastro de Treino"
-      description="Monte a ficha por data e modalidade. Escolha a disciplina ofertada pela academia antes de publicar o treino."
+      description={
+        isMusculacao
+          ? "Monte a ficha por data e modalidade. Escolha a disciplina ofertada pela academia antes de publicar o treino."
+          : "Cadastre a aula em vídeo do dia com professor, horário, descrição do movimento e upload."
+      }
     >
       {loading ? (
         <div className="rounded-xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
           Carregando alunos e exercícios...
         </div>
+      ) : !isMusculacao ? (
+        <OwnerLessonCadastroPanel
+          modalidades={modalidades}
+          selectedModalityId={selectedModalityId}
+          onModalityChange={setSelectedModalityId}
+          classDate={workoutDate}
+          onClassDateChange={setWorkoutDate}
+          professores={professores}
+        />
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
           {error ? (

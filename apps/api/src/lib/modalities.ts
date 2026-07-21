@@ -246,6 +246,8 @@ export function serializeProfessorLesson(
     title: lesson.title,
     description: lesson.description,
     classDate: formatClassDate(lesson.classDate),
+    startTime: lesson.startTime,
+    endTime: lesson.endTime,
     videoUrl: lesson.videoUrl,
     thumbnailUrl: lesson.thumbnailUrl,
     active: lesson.active,

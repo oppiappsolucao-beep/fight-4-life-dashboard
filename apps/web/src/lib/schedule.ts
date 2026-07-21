@@ -37,6 +37,11 @@ export function scheduleSlotsEqual(a: ScheduleSlot, b: ScheduleSlot): boolean {
   return scheduleSlotKey(a) === scheduleSlotKey(b);
 }
 
+export function weekdayFromDateInput(value: string): number {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day).getDay();
+}
+
 export function timeToMinutes(value: string): number {
   const [hours, minutes] = value.split(":").map(Number);
   return hours * 60 + minutes;
