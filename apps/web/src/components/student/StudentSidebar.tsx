@@ -4,6 +4,7 @@ import { sidebarShellClass } from "../DashboardShell";
 import { clearStudentSession, getStudentSession } from "../../lib/studentSession";
 
 const MENU_ITEMS = [
+  { to: "/inicio", label: "Visão Geral", icon: HomeIcon },
   { to: "/treino", label: "Treino", icon: DumbbellIcon },
   { to: "/pagamentos", label: "Pagamentos", icon: PaymentIcon },
   { to: "/frequencia", label: "Frequência", icon: CalendarIcon },
@@ -83,6 +84,14 @@ export default function StudentSidebar({ open, onClose }: StudentSidebarProps) {
         </button>
       </div>
     </aside>
+  );
+}
+
+function HomeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z" />
+    </svg>
   );
 }
 

@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import StudentLayout from "./components/student/StudentLayout";
 import StudentLoginPage from "./pages/StudentLoginPage";
+import StudentVisaoGeralPage from "./pages/student/StudentVisaoGeralPage";
 import StudentTreinoPage from "./pages/student/StudentTreinoPage";
 import StudentPagamentosPage from "./pages/student/StudentPagamentosPage";
 import StudentFrequenciaPage from "./pages/student/StudentFrequenciaPage";
@@ -40,6 +41,7 @@ export default function App() {
       <Route path="/" element={<StudentLoginPage />} />
 
       <Route element={<StudentLayout />}>
+        <Route path="inicio" element={<StudentVisaoGeralPage />} />
         <Route path="treino" element={<StudentTreinoPage />} />
         <Route path="pagamentos" element={<StudentPagamentosPage />} />
         <Route path="frequencia" element={<StudentFrequenciaPage />} />
@@ -54,7 +56,7 @@ export default function App() {
       <Route path="/dev/login" element={<DevLoginPage />} />
       <Route path="/login" element={<Navigate to="/dono/login" replace />} />
       <Route path="/aluno/login" element={<Navigate to="/" replace />} />
-      <Route path="/aluno/*" element={<Navigate to="/treino" replace />} />
+      <Route path="/aluno/*" element={<Navigate to="/inicio" replace />} />
 
       <Route
         path="/horarios"

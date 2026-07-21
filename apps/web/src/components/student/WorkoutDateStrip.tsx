@@ -1,7 +1,9 @@
 import {
+  formatWorkoutDateLabel,
   formatWorkoutDay,
   formatWorkoutMonthShort,
   formatWorkoutWeekdayShort,
+  getWeekRange,
   getWorkoutCompletionStatus,
   isTodayWorkoutDate,
   type WorkoutCompletionStatus,
@@ -21,6 +23,8 @@ export default function WorkoutDateStrip({
   completionByDate,
   onSelect,
 }: WorkoutDateStripProps) {
+  const week = getWeekRange();
+
   return (
     <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-3 backdrop-blur-md sm:p-4">
       <div className="mb-3 flex items-center justify-between gap-3 px-1">
@@ -29,8 +33,8 @@ export default function WorkoutDateStrip({
             Seus treinos
           </p>
           <p className="m-0 mt-1 text-sm text-white/70">
-            {treinos.length} data{treinos.length === 1 ? "" : "s"} disponíve
-            {treinos.length === 1 ? "l" : "is"}
+            {treinos.length} data{treinos.length === 1 ? "" : "s"} • semana{" "}
+            {formatWorkoutDateLabel(week.start)} a {formatWorkoutDateLabel(week.end)}
           </p>
         </div>
         <div className="hidden items-center gap-3 text-[0.65rem] text-white/45 sm:flex">
@@ -40,7 +44,7 @@ export default function WorkoutDateStrip({
         </div>
       </div>
 
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {treinos.map((item) => {
           const selected = item.workoutDate === selectedDate;
           const status = completionByDate[item.workoutDate] ?? "pending";

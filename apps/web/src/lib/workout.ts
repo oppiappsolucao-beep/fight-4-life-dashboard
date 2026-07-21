@@ -133,6 +133,58 @@ export function getWorkoutCompletionStatus(
   return "partial";
 }
 
+export function sortWorkoutsAscending<T extends { workoutDate: string }>(items: T[]): T[] {
+  return [...items].sort((a, b) => a.workoutDate.localeCompare(b.workoutDate));
+}
+
+export function pickDefaultWorkoutDate<T extends { workoutDate: string }>(items: T[]): string {
+  if (items.length === 0) return "";
+
+  const sorted = sortWorkoutsAscending(items);
+  const today = todayDateInputValue();
+
+  if (sorted.some((item) => item.workoutDate === today)) {
+    return today;
+  }
+
+  const upcoming = sorted.find((item) => item.workoutDate >= today);
+  return upcoming?.workoutDate ?? sorted[sorted.length - 1].workoutDate;
+}
+
+export function getWeekRange(reference = new Date()): { start: string; end: string } {
+  const date = new Date(reference);
+  date.setHours(12, 0, 0, 0);
+
+  const day = date.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+
+  const start = new Date(date);
+  start.setDate(date.getDate() + diffToMonday);
+
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+
+  return {
+    start: formatWorkoutDateIso(start),
+    end: formatWorkoutDateIso(end),
+  };
+}
+
+export function formatWorkoutDateIso(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function isWorkoutDateInRange(
+  workoutDate: string,
+  start: string,
+  end: string,
+): boolean {
+  return workoutDate >= start && workoutDate <= end;
+}
+
 export function groupExercisesByPhase<T extends { phase: WorkoutPhase; order: number }>(
   exercises: T[],
 ): Record<WorkoutPhase, T[]> {

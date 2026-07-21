@@ -95,7 +95,7 @@ export default function StudentLoginPage() {
       loginType,
       tenantSlug: data.tenant.slug,
     });
-    navigate("/treino");
+    navigate("/inicio");
   }
 
   async function handleIdentify(event: FormEvent) {

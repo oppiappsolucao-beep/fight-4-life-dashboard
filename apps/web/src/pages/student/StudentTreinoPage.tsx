@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import WorkoutDateStrip, {
   readStoredCompletionStatus,
 } from "../../components/student/WorkoutDateStrip";
@@ -12,6 +13,8 @@ import {
   getWorkoutCompletionStatus,
   groupExercisesByPhase,
   groupMeioExercisesByRegion,
+  pickDefaultWorkoutDate,
+  sortWorkoutsAscending,
   workoutDoneStorageKey,
   type WorkoutCompletionStatus,
   type WorkoutPhase,
@@ -49,6 +52,8 @@ function saveDoneMap(
 
 export default function StudentTreinoPage() {
   const session = getStudentSession();
+  const [searchParams] = useSearchParams();
+  const requestedDate = searchParams.get("date") ?? "";
   const [treinos, setTreinos] = useState<WorkoutSummary[]>([]);
   const [selectedDate, setSelectedDate] = useState("");
   const [activePhase, setActivePhase] = useState<WorkoutPhase>("INICIO");
@@ -136,19 +141,23 @@ export default function StudentTreinoPage() {
     setError("");
     apiFetch<{ treinos: WorkoutSummary[] }>("/student/treinos", {}, session.id)
       .then((data) => {
-        setTreinos(data.treinos);
+        const sorted = sortWorkoutsAscending(data.treinos);
+        setTreinos(sorted);
         setSelectedDate((current) => {
-          if (current && data.treinos.some((item) => item.workoutDate === current)) {
+          if (requestedDate && sorted.some((item) => item.workoutDate === requestedDate)) {
+            return requestedDate;
+          }
+          if (current && sorted.some((item) => item.workoutDate === current)) {
             return current;
           }
-          return data.treinos[0]?.workoutDate ?? "";
+          return pickDefaultWorkoutDate(sorted);
         });
       })
       .catch((err) =>
         setError(err instanceof Error ? err.message : "Erro ao carregar treinos."),
       )
       .finally(() => setLoading(false));
-  }, [session?.id]);
+  }, [session?.id, requestedDate]);
 
   const loadTreino = useCallback(
     (date: string) => {
@@ -187,6 +196,13 @@ export default function StudentTreinoPage() {
       setTreino(null);
     }
   }, [selectedDate, loadTreino]);
+
+  useEffect(() => {
+    if (!requestedDate || treinos.length === 0) return;
+    if (treinos.some((item) => item.workoutDate === requestedDate)) {
+      setSelectedDate(requestedDate);
+    }
+  }, [requestedDate, treinos]);
 
   useEffect(() => {
     if (!groupedExercises) return;

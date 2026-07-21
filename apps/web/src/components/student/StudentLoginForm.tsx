@@ -78,7 +78,7 @@ export default function StudentLoginForm() {
         loginType: tab,
         tenantSlug: data.tenant.slug,
       });
-      navigate("/treino");
+      navigate("/inicio");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar.");
     } finally {
