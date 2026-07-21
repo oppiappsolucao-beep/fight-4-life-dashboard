@@ -6,6 +6,7 @@ import { clearStudentSession, getStudentSession } from "../../lib/studentSession
 const MENU_ITEMS = [
   { to: "/inicio", label: "Visão Geral", icon: HomeIcon },
   { to: "/treino", label: "Treino", icon: DumbbellIcon },
+  { to: "/galeria", label: "Galeria", icon: VideoIcon },
   { to: "/pagamentos", label: "Pagamentos", icon: PaymentIcon },
   { to: "/frequencia", label: "Frequência", icon: CalendarIcon },
   { to: "/atendimento", label: "Atendimento", icon: SupportIcon },
@@ -99,6 +100,15 @@ function DumbbellIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <path d="M4 10v4M7 8v8M17 8v8M20 10v4M7 12h10" />
+    </svg>
+  );
+}
+
+function VideoIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <rect x="3" y="6" width="13" height="12" rx="2" />
+      <path d="m16 10 5-3v10l-5-3" />
     </svg>
   );
 }

@@ -14,6 +14,7 @@ enum UserRole {
   DIRETORIA
   DESENVOLVIMENTO
   PROPRIETARIO
+  PROFESSOR
 }
 
 enum CommercialStatus {
@@ -51,6 +52,11 @@ enum ExerciseBodyRegion {
   GERAL
 }
 
+enum ModalityContentType {
+  EXERCISE_CATALOG
+  VIDEO_GALLERY
+}
+
 model Tenant {
   id         String        @id @default(uuid())
   slug       String        @unique
@@ -65,6 +71,9 @@ model Tenant {
   students   Student[]
   config     TenantConfig?
   workouts   StudentWorkout[]
+  modalities Modality[]
+  lessons    ProfessorLesson[]
+  attendances LessonAttendance[]
 }
 
 model Student {
@@ -94,6 +103,7 @@ model Student {
   updatedAt            DateTime @updatedAt
   tenant               Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   workouts             StudentWorkout[]
+  lessonAttendances    LessonAttendance[]
 
   @@unique([tenantId, cpf])
   @@index([tenantId, email])
@@ -121,6 +131,9 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  professorModalities ProfessorModality[]
+  lessons             ProfessorLesson[]
 
   @@unique([tenantId, email])
 }
@@ -224,4 +237,89 @@ model StudentWorkoutExercise {
 
   @@unique([studentWorkoutId, phase, order])
   @@index([studentWorkoutId, phase])
+}
+
+model ModalityTemplate {
+  id          String              @id @default(uuid())
+  name        String
+  slug        String              @unique
+  contentType ModalityContentType @default(VIDEO_GALLERY)
+  description String?
+  active      Boolean             @default(true)
+  sortOrder   Int                 @default(0)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  modalities  Modality[]
+}
+
+model Modality {
+  id          String              @id @default(uuid())
+  tenantId    String
+  templateId  String?
+  name        String
+  slug        String
+  contentType ModalityContentType @default(VIDEO_GALLERY)
+  description String?
+  linkedPlans String[]            @default([])
+  active      Boolean             @default(true)
+  sortOrder   Int                 @default(0)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  template    ModalityTemplate?   @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  lessons     ProfessorLesson[]
+  professors  ProfessorModality[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, active])
+}
+
+model ProfessorModality {
+  id         String   @id @default(uuid())
+  tenantId   String
+  userId     String
+  modalityId String
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  modality   Modality @relation(fields: [modalityId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, modalityId])
+  @@index([tenantId, userId])
+}
+
+model ProfessorLesson {
+  id           String   @id @default(uuid())
+  tenantId     String
+  modalityId   String
+  professorId  String
+  title        String
+  description  String?
+  classDate    DateTime @db.Date
+  videoUrl     String
+  thumbnailUrl String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  modality     Modality @relation(fields: [modalityId], references: [id], onDelete: Cascade)
+  professor    User     @relation(fields: [professorId], references: [id], onDelete: Cascade)
+  attendances  LessonAttendance[]
+
+  @@index([tenantId, modalityId, classDate])
+  @@index([professorId, classDate])
+}
+
+model LessonAttendance {
+  id        String          @id @default(uuid())
+  tenantId  String
+  lessonId  String
+  studentId String
+  markedAt  DateTime        @default(now())
+  tenant    Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  lesson    ProfessorLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  student   Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonId, studentId])
+  @@index([tenantId, studentId])
 }

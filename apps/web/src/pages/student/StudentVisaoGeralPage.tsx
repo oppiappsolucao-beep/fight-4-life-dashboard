@@ -200,6 +200,7 @@ export default function StudentVisaoGeralPage() {
 
           <section className="grid gap-3 sm:grid-cols-3">
             <QuickLink to="/treino" label="Treino" />
+            <QuickLink to="/galeria" label="Galeria" />
             <QuickLink to="/pagamentos" label="Pagamentos" />
             <QuickLink to="/termo-saude" label="Termo de Saúde" />
           </section>

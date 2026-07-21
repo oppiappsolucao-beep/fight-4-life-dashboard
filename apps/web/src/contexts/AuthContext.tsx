@@ -16,6 +16,7 @@ interface AuthContextValue {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   ownerLogin: (email: string, password: string) => Promise<void>;
+  professorLogin: (email: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -61,6 +62,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setTenant(data.tenant);
   }, []);
 
+  const professorLogin = useCallback(async (email: string, password: string) => {
+    const data = await apiFetch<LoginResponse>("/auth/professor-login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+
+    persistSession(data);
+    setUser(data.user);
+    setTenant(data.tenant);
+  }, []);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -90,10 +102,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       login,
       ownerLogin,
+      professorLogin,
       logout,
       isAuthenticated: Boolean(user),
     }),
-    [user, tenant, loading, login, ownerLogin, logout],
+    [user, tenant, loading, login, ownerLogin, professorLogin, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

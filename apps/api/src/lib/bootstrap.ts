@@ -3,6 +3,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { prisma } from "./prisma.js";
 import { ensureExerciseCatalog } from "./exercise-catalog.js";
+import { ensureModalityTemplates } from "./modalities.js";
 
 function getApiRoot(): string {
   // .../src/lib ou .../dist/lib → raiz apps/api
@@ -77,5 +78,12 @@ export async function bootstrapDatabase(): Promise<void> {
     }
   } catch (error) {
     console.error("[bootstrap] Falha ao carregar exercícios:", error);
+  }
+
+  try {
+    const templateCount = await ensureModalityTemplates();
+    console.log(`[modalities] Templates sincronizados: ${templateCount}.`);
+  } catch (error) {
+    console.error("[bootstrap] Falha ao carregar templates de modalidade:", error);
   }
 }

@@ -1,0 +1,98 @@
+export type ModalityContentType = "EXERCISE_CATALOG" | "VIDEO_GALLERY";
+
+export interface ModalityTemplate {
+  id: string;
+  name: string;
+  slug: string;
+  contentType: ModalityContentType;
+  description: string | null;
+  active: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ModalityItem {
+  id: string;
+  templateId: string | null;
+  name: string;
+  slug: string;
+  contentType: ModalityContentType;
+  description: string | null;
+  linkedPlans: string[];
+  active: boolean;
+  sortOrder: number;
+  lessonCount: number;
+  professorCount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProfessorItem {
+  id: string;
+  email: string;
+  name: string | null;
+  role: string;
+  active: boolean;
+  modalityIds: string[];
+}
+
+export interface ProfessorLessonItem {
+  id: string;
+  modalityId: string;
+  professorId: string;
+  title: string;
+  description: string | null;
+  classDate: string;
+  videoUrl: string;
+  thumbnailUrl: string | null;
+  active: boolean;
+  attendanceCount: number;
+  modality: { id: string; name: string; slug: string } | null;
+  professor: { id: string; name: string | null; email: string } | null;
+  createdAt: string;
+  updatedAt: string;
+  presencaMarcada?: boolean;
+}
+
+export interface StudentGalleryResponse {
+  planoModalidade: string;
+  modalidadeAtual: ModalityItem | null;
+  modalidadeSelecionada: ModalityItem | null;
+  modalidades: ModalityItem[];
+  aulas: ProfessorLessonItem[];
+}
+
+export interface StudentFrequencyResponse {
+  planoModalidade: string;
+  aulasDisponiveis: ProfessorLessonItem[];
+  historico: Array<{
+    id: string;
+    markedAt: string;
+    aula: ProfessorLessonItem;
+  }>;
+  totalPresencas: number;
+}
+
+export function contentTypeLabel(contentType: ModalityContentType): string {
+  return contentType === "EXERCISE_CATALOG" ? "Catálogo de treinos" : "Galeria de vídeos";
+}
+
+/** Compatível com player de vídeo existente */
+export interface LessonVideoCardItem {
+  id: string;
+  title: string;
+  description: string | null;
+  videoUrl: string;
+  thumbnailUrl: string | null;
+}
+
+export function lessonToVideoCard(lesson: ProfessorLessonItem): LessonVideoCardItem {
+  return {
+    id: lesson.id,
+    title: lesson.title,
+    description: lesson.description,
+    videoUrl: lesson.videoUrl,
+    thumbnailUrl: lesson.thumbnailUrl,
+  };
+}

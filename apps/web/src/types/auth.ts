@@ -3,7 +3,8 @@ export type UserRole =
   | "COMERCIAL"
   | "DIRETORIA"
   | "DESENVOLVIMENTO"
-  | "PROPRIETARIO";
+  | "PROPRIETARIO"
+  | "PROFESSOR";
 
 export interface AuthUser {
   id: string;

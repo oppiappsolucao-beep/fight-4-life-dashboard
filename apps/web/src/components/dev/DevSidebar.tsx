@@ -6,6 +6,7 @@ import { sidebarShellClass } from "../DashboardShell";
 const MENU_ITEMS = [
   { to: "/dev/visao-geral", label: "Visão Geral", icon: HomeIcon },
   { to: "/dev/cadastro-academias", label: "Cadastro de Academias", icon: BuildingIcon },
+  { to: "/dev/modalidades", label: "Modalidades", icon: ModalityIcon },
   { to: "/dev/donos-academias", label: "Donos de Academias", icon: OwnersIcon },
   { to: "/dev/contas-a-receber", label: "Contas a Receber", icon: ReceivableIcon },
 ];
@@ -103,6 +104,17 @@ function BuildingIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <path d="M4 20V6l8-4 8 4v14H4Z" />
       <path d="M9 20v-6h6v6M9 10h.01M15 10h.01" />
+    </svg>
+  );
+}
+
+function ModalityIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <rect x="3" y="4" width="7" height="7" rx="1.5" />
+      <rect x="14" y="4" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
     </svg>
   );
 }

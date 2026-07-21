@@ -26,6 +26,13 @@ import DevVisaoGeralPage from "./pages/dev/DevVisaoGeralPage";
 import DevCadastroAcademiasPage from "./pages/dev/DevCadastroAcademiasPage";
 import DevDonosAcademiasPage from "./pages/dev/DevDonosAcademiasPage";
 import DevContasReceberPage from "./pages/dev/DevContasReceberPage";
+import DevModalidadesPage from "./pages/dev/DevModalidadesPage";
+import OwnerModalidadesPage from "./pages/owner/OwnerModalidadesPage";
+import OwnerProfessoresPage from "./pages/owner/OwnerProfessoresPage";
+import ProfessorLayout from "./components/professor/ProfessorLayout";
+import ProfessorLoginPage from "./pages/ProfessorLoginPage";
+import ProfessorAulasPage from "./pages/professor/ProfessorAulasPage";
+import StudentGaleriaPage from "./pages/student/StudentGaleriaPage";
 
 export default function App() {
   const { loading } = useAuth();
@@ -45,6 +52,7 @@ export default function App() {
       <Route element={<StudentLayout />}>
         <Route path="inicio" element={<StudentVisaoGeralPage />} />
         <Route path="treino" element={<StudentTreinoPage />} />
+        <Route path="galeria" element={<StudentGaleriaPage />} />
         <Route path="pagamentos" element={<StudentPagamentosPage />} />
         <Route path="frequencia" element={<StudentFrequenciaPage />} />
         <Route path="atendimento" element={<StudentAtendimentoPage />} />
@@ -56,6 +64,7 @@ export default function App() {
       <Route path="/home" element={<HomePage />} />
       <Route path="/dono/login" element={<OwnerLoginPage />} />
       <Route path="/dev/login" element={<DevLoginPage />} />
+      <Route path="/professor/login" element={<ProfessorLoginPage />} />
       <Route path="/login" element={<Navigate to="/dono/login" replace />} />
       <Route path="/aluno/login" element={<Navigate to="/" replace />} />
       <Route path="/aluno/*" element={<Navigate to="/inicio" replace />} />
@@ -93,6 +102,8 @@ export default function App() {
         <Route path="dono/cadastro-aluno" element={<OwnerCadastroAlunoPage />} />
         <Route path="dono/alunos" element={<OwnerAlunosPage />} />
         <Route path="dono/cadastro-treino" element={<OwnerCadastroTreinoPage />} />
+        <Route path="dono/modalidades" element={<OwnerModalidadesPage />} />
+        <Route path="dono/professores" element={<OwnerProfessoresPage />} />
         <Route path="dono/planos" element={<OwnerPlanosPage />} />
         <Route path="dono/contas-a-receber" element={<OwnerContasReceberPage />} />
         <Route path="dono/contas-a-pagar" element={<Navigate to="/dono/contas-a-receber" replace />} />
@@ -102,7 +113,12 @@ export default function App() {
         <Route path="dev/visao-geral" element={<DevVisaoGeralPage />} />
         <Route path="dev/cadastro-academias" element={<DevCadastroAcademiasPage />} />
         <Route path="dev/donos-academias" element={<DevDonosAcademiasPage />} />
+        <Route path="dev/modalidades" element={<DevModalidadesPage />} />
         <Route path="dev/contas-a-receber" element={<DevContasReceberPage />} />
+      </Route>
+
+      <Route element={<ProfessorLayout />}>
+        <Route path="professor/aulas" element={<ProfessorAulasPage />} />
       </Route>
 
       <Route path="/dashboard" element={<Navigate to="/dono/visao-geral" replace />} />

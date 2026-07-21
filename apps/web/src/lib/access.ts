@@ -9,3 +9,7 @@ export function canAccessDev(role: UserRole): boolean {
 export function canAccessOwner(role: UserRole): boolean {
   return role === "PROPRIETARIO" || canAccessDev(role);
 }
+
+export function canAccessProfessor(role: UserRole): boolean {
+  return role === "PROFESSOR" || role === "PROPRIETARIO" || canAccessDev(role);
+}

@@ -26,6 +26,7 @@ import {
 
 import { getPlatformPlanValue } from "./billing.js";
 import { DEV_NEW_ACADEMIES_GOAL, percentValue } from "../../lib/goals.js";
+import { registerDevModalityRoutes } from "../modalities/routes.js";
 
 
 
@@ -730,5 +731,6 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
 
   );
 
+  await registerDevModalityRoutes(app);
 }
 

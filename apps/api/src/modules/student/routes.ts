@@ -26,6 +26,7 @@ import {
   workoutInclude,
 } from "../owner/workouts.js";
 import { saveStudentWorkoutSchema, saveWorkoutProgressSchema } from "./workouts.js";
+import { registerStudentModalityRoutes } from "../modalities/routes.js";
 
 async function getTenantPlans(tenantId: string) {
   const config = await prisma.tenantConfig.findUnique({
@@ -563,4 +564,6 @@ export async function studentRoutes(app: FastifyInstance): Promise<void> {
       }
     },
   );
+
+  await registerStudentModalityRoutes(app);
 }

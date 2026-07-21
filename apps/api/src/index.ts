@@ -10,6 +10,7 @@ import { authRoutes } from "./modules/auth/routes.js";
 import { devRoutes } from "./modules/dev/routes.js";
 import { ownerRoutes } from "./modules/owner/routes.js";
 import { studentRoutes } from "./modules/student/routes.js";
+import { registerProfessorRoutes } from "./modules/modalities/routes.js";
 import { bootstrapDatabase } from "./lib/bootstrap.js";
 
 // EasyPanel injeta PORT (muitas vezes 80). A Porta do serviço no painel
@@ -19,7 +20,7 @@ const PORT = Number(process.env.PORT || 80);
 const HOST = "0.0.0.0";
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 
-const app = Fastify({ logger: true, bodyLimit: 5 * 1024 * 1024 });
+const app = Fastify({ logger: true, bodyLimit: 25 * 1024 * 1024 });
 
 await bootstrapDatabase();
 
@@ -38,6 +39,9 @@ await app.register(authRoutes, { prefix: "/api" });
 await app.register(devRoutes, { prefix: "/api" });
 await app.register(ownerRoutes, { prefix: "/api" });
 await app.register(studentRoutes, { prefix: "/api" });
+await app.register(async (apiScope) => {
+  await registerProfessorRoutes(apiScope);
+}, { prefix: "/api" });
 
 // Em produção, servimos o front (Vite build) pelo mesmo servidor/domínio.
 const currentDir = dirname(fileURLToPath(import.meta.url));

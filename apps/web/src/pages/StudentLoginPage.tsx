@@ -8,7 +8,7 @@ import { formatCpf } from "../lib/format";
 import { clearStudentSession, setStudentSession } from "../lib/studentSession";
 
 type LoginStep = "identify" | "password";
-type ProfileType = "student" | "owner" | "dev";
+type ProfileType = "student" | "owner" | "dev" | "professor";
 
 interface LookupResponse {
   type: ProfileType;
@@ -39,6 +39,7 @@ const PROFILE_LABELS: Record<ProfileType, string> = {
   student: "Área do Aluno",
   owner: "Dono da Academia",
   dev: "Desenvolvimento",
+  professor: "Professor",
 };
 
 function looksLikeEmailInput(value: string): boolean {
@@ -53,7 +54,7 @@ function formatIdentifierInput(value: string): string {
 }
 
 export default function StudentLoginPage() {
-  const { login, ownerLogin, logout } = useAuth();
+  const { login, ownerLogin, professorLogin, logout } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState<LoginStep>("identify");
   const [profile, setProfile] = useState<LookupResponse | null>(null);
@@ -164,6 +165,12 @@ export default function StudentLoginPage() {
         return;
       }
 
+      if (profile.type === "professor") {
+        await professorLogin(profile.email, password);
+        navigate("/professor/aulas");
+        return;
+      }
+
       if (profile.tenant?.slug) {
         setTenantSlug(profile.tenant.slug);
       }
@@ -182,7 +189,9 @@ export default function StudentLoginPage() {
       ? "Informe CPF ou e-mail — reconhecemos seu perfil automaticamente"
       : profile?.type === "owner"
         ? `Entre na ${profile.tenant?.name ?? "sua academia"}`
-        : profile?.email
+        : profile?.type === "professor"
+          ? `Professor • ${profile.tenant?.name ?? "academia"}`
+          : profile?.email
           ? `${PROFILE_LABELS[profile.type]} • ${profile.email}`
           : "Digite sua senha para continuar";
 

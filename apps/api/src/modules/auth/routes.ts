@@ -243,6 +243,33 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
           },
         });
       }
+
+      const professor = await prisma.user.findFirst({
+        where: {
+          email,
+          role: UserRole.PROFESSOR,
+          active: true,
+          tenant: { active: true },
+          professorModalities: { some: { active: true } },
+        },
+        select: {
+          name: true,
+          email: true,
+          tenant: { select: { slug: true, name: true } },
+        },
+      });
+
+      if (professor) {
+        return reply.send({
+          type: "professor",
+          name: professor.name,
+          email: professor.email,
+          tenant: {
+            slug: professor.tenant.slug,
+            name: professor.tenant.name,
+          },
+        });
+      }
     }
 
     const student = await findActiveStudent(rawIdentifier);
@@ -395,6 +422,81 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
         role: matchedOwner.role,
       },
       tenant: matchedOwner.tenant,
+    });
+  });
+
+  app.post("/auth/professor-login", async (request, reply) => {
+    const parsed = loginSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: parsed.error.errors[0]?.message ?? "Dados inválidos.",
+      });
+    }
+
+    const { email, password } = parsed.data;
+    const normalizedEmail = email.toLowerCase();
+
+    const candidates = await prisma.user.findMany({
+      where: {
+        email: normalizedEmail,
+        active: true,
+        OR: [
+          { role: UserRole.PROFESSOR },
+          {
+            role: UserRole.PROPRIETARIO,
+            professorModalities: { some: { active: true } },
+          },
+        ],
+      },
+      include: {
+        tenant: { select: { id: true, slug: true, name: true, active: true } },
+        professorModalities: { where: { active: true }, select: { id: true } },
+      },
+    });
+
+    if (candidates.length === 0) {
+      return reply.status(401).send({ error: "E-mail ou senha incorretos." });
+    }
+
+    let matched: (typeof candidates)[number] | null = null;
+    for (const user of candidates) {
+      const valid = await bcrypt.compare(password, user.passwordHash);
+      if (valid && user.professorModalities.length > 0) {
+        matched = user;
+        break;
+      }
+    }
+
+    if (!matched) {
+      return reply.status(401).send({ error: "E-mail ou senha incorretos." });
+    }
+
+    if (!matched.tenant.active) {
+      return reply.status(403).send({
+        error: "Acesso bloqueado. Entre em contato com a academia.",
+      });
+    }
+
+    const token = app.jwt.sign(
+      {
+        sub: matched.id,
+        tenantId: matched.tenant.id,
+        email: matched.email,
+        role: matched.role,
+        name: matched.name,
+      },
+      { expiresIn: "8h" },
+    );
+
+    return reply.send({
+      token,
+      user: {
+        id: matched.id,
+        email: matched.email,
+        name: matched.name,
+        role: matched.role,
+      },
+      tenant: matched.tenant,
     });
   });
 }

@@ -8,6 +8,8 @@ const MENU_ITEMS = [
   { to: "/dono/cadastro-aluno", label: "Cadastro Aluno", icon: UserPlusIcon },
   { to: "/dono/alunos", label: "Alunos", icon: UsersIcon },
   { to: "/dono/cadastro-treino", label: "Cadastro de Treino", icon: DumbbellIcon },
+  { to: "/dono/modalidades", label: "Modalidades", icon: ModalityIcon },
+  { to: "/dono/professores", label: "Professores", icon: UsersIcon },
   { to: "/dono/planos", label: "Planos", icon: PlanIcon },
   { to: "/dono/contas-a-receber", label: "Contas a Receber", icon: PaymentIcon },
 ];
@@ -133,6 +135,17 @@ function PlanIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <rect x="4" y="4" width="16" height="16" rx="2" />
       <path d="M8 9h8M8 13h5" />
+    </svg>
+  );
+}
+
+function ModalityIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <rect x="3" y="4" width="7" height="7" rx="1.5" />
+      <rect x="14" y="4" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
     </svg>
   );
 }
