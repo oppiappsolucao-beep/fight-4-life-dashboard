@@ -5,8 +5,10 @@ import { prisma } from "../../lib/prisma.js";
 import { requireAuth, requireRole } from "../../middleware/auth.js";
 import { normalizePlans } from "./plans.js";
 import {
+  parseWorkoutDate,
   saveStudentWorkoutSchema,
   serializeWorkout,
+  serializeWorkoutSummary,
   workoutInclude,
 } from "./workouts.js";
 import { ensureExerciseCatalog } from "../../lib/exercise-catalog.js";
@@ -334,6 +336,45 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.get<{ Params: { id: string } }>(
+    "/owner/alunos/:id/treinos",
+    async (request, reply) => {
+      const student = await prisma.student.findFirst({
+        where: {
+          id: request.params.id,
+          tenantId: request.user.tenantId,
+          active: true,
+        },
+        select: { id: true, nomeCompleto: true },
+      });
+
+      if (!student) {
+        return reply.status(404).send({ error: "Aluno não encontrado." });
+      }
+
+      const treinos = await prisma.studentWorkout.findMany({
+        where: {
+          studentId: student.id,
+          tenantId: request.user.tenantId,
+          active: true,
+        },
+        orderBy: { workoutDate: "desc" },
+        select: {
+          id: true,
+          title: true,
+          workoutDate: true,
+          updatedAt: true,
+          _count: { select: { exercises: true } },
+        },
+      });
+
+      return reply.send({
+        aluno: student,
+        treinos: treinos.map(serializeWorkoutSummary),
+      });
+    },
+  );
+
+  app.get<{ Params: { id: string }; Querystring: { date?: string } }>(
     "/owner/alunos/:id/treino",
     async (request, reply) => {
       const student = await prisma.student.findFirst({
@@ -349,19 +390,38 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
         return reply.status(404).send({ error: "Aluno não encontrado." });
       }
 
-      const treino = await prisma.studentWorkout.findFirst({
-        where: {
-          studentId: student.id,
-          tenantId: request.user.tenantId,
-          active: true,
-        },
-        include: workoutInclude,
-        orderBy: { updatedAt: "desc" },
-      });
+      const dateParam = request.query.date;
+      let treino;
+
+      if (dateParam) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+          return reply.status(400).send({ error: "Data inválida. Use AAAA-MM-DD." });
+        }
+
+        treino = await prisma.studentWorkout.findUnique({
+          where: {
+            studentId_workoutDate: {
+              studentId: student.id,
+              workoutDate: parseWorkoutDate(dateParam),
+            },
+          },
+          include: workoutInclude,
+        });
+      } else {
+        treino = await prisma.studentWorkout.findFirst({
+          where: {
+            studentId: student.id,
+            tenantId: request.user.tenantId,
+            active: true,
+          },
+          include: workoutInclude,
+          orderBy: { workoutDate: "desc" },
+        });
+      }
 
       return reply.send({
         aluno: student,
-        treino: treino ? serializeWorkout(treino) : null,
+        treino: treino && treino.active ? serializeWorkout(treino) : null,
       });
     },
   );
@@ -391,6 +451,7 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
       }
 
       const data = parsed.data;
+      const workoutDate = parseWorkoutDate(data.workoutDate);
       const exerciseIds = data.exercises.map((item) => item.exerciseId);
       const validCount = await prisma.exercise.count({
         where: { id: { in: exerciseIds }, active: true },
@@ -403,14 +464,44 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
       }
 
       const treino = await prisma.$transaction(async (tx) => {
-        await tx.studentWorkout.updateMany({
+        const existing = await tx.studentWorkout.findUnique({
           where: {
-            studentId: student.id,
-            tenantId: request.user.tenantId,
-            active: true,
+            studentId_workoutDate: {
+              studentId: student.id,
+              workoutDate,
+            },
           },
-          data: { active: false },
+          select: { id: true },
         });
+
+        if (existing) {
+          await tx.studentWorkoutExercise.deleteMany({
+            where: { studentWorkoutId: existing.id },
+          });
+
+          return tx.studentWorkout.update({
+            where: { id: existing.id },
+            data: {
+              title: data.title.trim(),
+              notes: data.notes?.trim() || null,
+              assignedBy: request.user.sub,
+              active: true,
+              exercises: {
+                create: data.exercises.map((item) => ({
+                  exerciseId: item.exerciseId,
+                  phase: item.phase,
+                  order: item.order,
+                  sets: item.sets,
+                  reps: item.reps,
+                  load: item.load?.trim() || null,
+                  restSeconds: item.restSeconds ?? 60,
+                  notes: item.notes?.trim() || null,
+                })),
+              },
+            },
+            include: workoutInclude,
+          });
+        }
 
         return tx.studentWorkout.create({
           data: {
@@ -418,10 +509,12 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
             studentId: student.id,
             title: data.title.trim(),
             notes: data.notes?.trim() || null,
+            workoutDate,
             assignedBy: request.user.sub,
             exercises: {
               create: data.exercises.map((item) => ({
                 exerciseId: item.exerciseId,
+                phase: item.phase,
                 order: item.order,
                 sets: item.sets,
                 reps: item.reps,

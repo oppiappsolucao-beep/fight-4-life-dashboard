@@ -1,7 +1,11 @@
+import { WorkoutPhase } from "@prisma/client";
 import { z } from "zod";
+
+export const workoutPhaseSchema = z.enum(["INICIO", "MEIO", "FIM"]);
 
 export const workoutExerciseInputSchema = z.object({
   exerciseId: z.string().uuid(),
+  phase: workoutPhaseSchema,
   order: z.number().int().min(1),
   sets: z.number().int().min(1).default(3),
   reps: z.string().min(1).default("12"),
@@ -12,17 +16,36 @@ export const workoutExerciseInputSchema = z.object({
 
 export const saveStudentWorkoutSchema = z.object({
   title: z.string().min(1, "Informe um título para o treino."),
+  workoutDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe a data no formato AAAA-MM-DD."),
   notes: z.string().optional(),
   exercises: z.array(workoutExerciseInputSchema).min(1, "Adicione ao menos um exercício."),
 });
+
+const PHASE_ORDER: WorkoutPhase[] = [
+  WorkoutPhase.INICIO,
+  WorkoutPhase.MEIO,
+  WorkoutPhase.FIM,
+];
+
+export function parseWorkoutDate(value: string): Date {
+  return new Date(`${value}T12:00:00.000Z`);
+}
+
+export function formatWorkoutDate(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
 
 export function serializeWorkout(workout: {
   id: string;
   title: string;
   notes: string | null;
+  workoutDate: Date;
   updatedAt: Date;
   exercises: Array<{
     id: string;
+    phase: WorkoutPhase;
     order: number;
     sets: number;
     reps: string;
@@ -41,24 +64,32 @@ export function serializeWorkout(workout: {
     };
   }>;
 }) {
+  const exercises = workout.exercises
+    .slice()
+    .sort((a, b) => {
+      const phaseDiff = PHASE_ORDER.indexOf(a.phase) - PHASE_ORDER.indexOf(b.phase);
+      if (phaseDiff !== 0) return phaseDiff;
+      return a.order - b.order;
+    })
+    .map((item) => ({
+      id: item.id,
+      phase: item.phase,
+      order: item.order,
+      sets: item.sets,
+      reps: item.reps,
+      load: item.load,
+      restSeconds: item.restSeconds,
+      notes: item.notes,
+      exercise: item.exercise,
+    }));
+
   return {
     id: workout.id,
     title: workout.title,
     notes: workout.notes,
+    workoutDate: formatWorkoutDate(workout.workoutDate),
     updatedAt: workout.updatedAt.toISOString(),
-    exercises: workout.exercises
-      .slice()
-      .sort((a, b) => a.order - b.order)
-      .map((item) => ({
-        id: item.id,
-        order: item.order,
-        sets: item.sets,
-        reps: item.reps,
-        load: item.load,
-        restSeconds: item.restSeconds,
-        notes: item.notes,
-        exercise: item.exercise,
-      })),
+    exercises,
   };
 }
 
@@ -80,3 +111,19 @@ export const workoutInclude = {
     },
   },
 } as const;
+
+export function serializeWorkoutSummary(workout: {
+  id: string;
+  title: string;
+  workoutDate: Date;
+  updatedAt: Date;
+  _count?: { exercises: number };
+}) {
+  return {
+    id: workout.id,
+    title: workout.title,
+    workoutDate: formatWorkoutDate(workout.workoutDate),
+    updatedAt: workout.updatedAt.toISOString(),
+    exerciseCount: workout._count?.exercises ?? 0,
+  };
+}

@@ -31,6 +31,12 @@ enum ContractStatus {
   ERRO
 }
 
+enum WorkoutPhase {
+  INICIO
+  MEIO
+  FIM
+}
+
 model Tenant {
   id         String        @id @default(uuid())
   slug       String        @unique
@@ -165,27 +171,30 @@ model Exercise {
 }
 
 model StudentWorkout {
-  id         String                   @id @default(uuid())
-  tenantId   String
-  studentId  String
-  title      String
-  notes      String?
-  active     Boolean                  @default(true)
-  assignedBy String?
-  createdAt  DateTime                 @default(now())
-  updatedAt  DateTime                 @updatedAt
-  tenant     Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  student    Student                  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  exercises  StudentWorkoutExercise[]
+  id          String                   @id @default(uuid())
+  tenantId    String
+  studentId   String
+  title       String
+  notes       String?
+  workoutDate DateTime                 @db.Date
+  active      Boolean                  @default(true)
+  assignedBy  String?
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+  tenant      Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  student     Student                  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  exercises   StudentWorkoutExercise[]
 
-  @@index([tenantId, studentId, active])
-  @@index([studentId, active])
+  @@unique([studentId, workoutDate])
+  @@index([tenantId, studentId])
+  @@index([studentId, workoutDate])
 }
 
 model StudentWorkoutExercise {
   id               String         @id @default(uuid())
   studentWorkoutId String
   exerciseId       String
+  phase            WorkoutPhase   @default(MEIO)
   order            Int
   sets             Int            @default(3)
   reps             String         @default("12")
@@ -195,6 +204,6 @@ model StudentWorkoutExercise {
   workout          StudentWorkout @relation(fields: [studentWorkoutId], references: [id], onDelete: Cascade)
   exercise         Exercise       @relation(fields: [exerciseId], references: [id])
 
-  @@unique([studentWorkoutId, order])
-  @@index([studentWorkoutId])
+  @@unique([studentWorkoutId, phase, order])
+  @@index([studentWorkoutId, phase])
 }

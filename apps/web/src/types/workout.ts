@@ -1,3 +1,5 @@
+import type { WorkoutPhase } from "../lib/workout";
+
 export interface ExerciseCatalogItem {
   id: string;
   slug: string;
@@ -11,6 +13,7 @@ export interface ExerciseCatalogItem {
 
 export interface WorkoutExerciseItem {
   id?: string;
+  phase: WorkoutPhase;
   order: number;
   sets: number;
   reps: string;
@@ -24,12 +27,22 @@ export interface StudentWorkout {
   id: string;
   title: string;
   notes: string | null;
+  workoutDate: string;
   updatedAt: string;
   exercises: WorkoutExerciseItem[];
 }
 
+export interface WorkoutSummary {
+  id: string;
+  title: string;
+  workoutDate: string;
+  updatedAt: string;
+  exerciseCount: number;
+}
+
 export interface WorkoutExerciseDraft {
   exerciseId: string;
+  phase: WorkoutPhase;
   order: number;
   sets: number;
   reps: string;
