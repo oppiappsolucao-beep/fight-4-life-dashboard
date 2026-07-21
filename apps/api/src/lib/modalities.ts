@@ -206,6 +206,18 @@ export function serializeProfessor(
   user: Pick<User, "id" | "email" | "name" | "role" | "active">,
   modalityIds: string[],
   schedules?: Array<{ modalityId: string; slots: ReturnType<typeof serializeScheduleSlot>[] }>,
+  extras?: {
+    modalityStats?: Array<{
+      modalityId: string;
+      modalityName: string;
+      assignmentActive: boolean;
+      studentCount: number;
+      lessonCount: number;
+      activeLessonCount: number;
+      attendanceCount: number;
+    }>;
+    recentLessons?: ReturnType<typeof serializeProfessorLesson>[];
+  },
 ) {
   return {
     id: user.id,
@@ -215,6 +227,8 @@ export function serializeProfessor(
     active: user.active,
     modalityIds,
     schedules: schedules ?? [],
+    modalityStats: extras?.modalityStats ?? [],
+    recentLessons: extras?.recentLessons ?? [],
   };
 }
 

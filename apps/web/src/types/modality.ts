@@ -41,6 +41,16 @@ export interface ProfessorModalitySchedule {
   slots: ScheduleSlot[];
 }
 
+export interface ProfessorModalityStats {
+  modalityId: string;
+  modalityName: string;
+  assignmentActive: boolean;
+  studentCount: number;
+  lessonCount: number;
+  activeLessonCount: number;
+  attendanceCount: number;
+}
+
 export interface ProfessorItem {
   id: string;
   email: string;
@@ -49,6 +59,8 @@ export interface ProfessorItem {
   active: boolean;
   modalityIds: string[];
   schedules: ProfessorModalitySchedule[];
+  modalityStats?: ProfessorModalityStats[];
+  recentLessons?: ProfessorLessonItem[];
 }
 
 export interface ProfessorLessonItem {

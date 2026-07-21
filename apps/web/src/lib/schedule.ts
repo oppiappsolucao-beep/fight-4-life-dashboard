@@ -29,6 +29,14 @@ export function emptyScheduleSlot(weekday = 1): ScheduleSlot {
   return { weekday, startTime: "08:00", endTime: "09:00" };
 }
 
+export function scheduleSlotKey(slot: ScheduleSlot): string {
+  return `${slot.weekday}-${slot.startTime}-${slot.endTime}`;
+}
+
+export function scheduleSlotsEqual(a: ScheduleSlot, b: ScheduleSlot): boolean {
+  return scheduleSlotKey(a) === scheduleSlotKey(b);
+}
+
 export function timeToMinutes(value: string): number {
   const [hours, minutes] = value.split(":").map(Number);
   return hours * 60 + minutes;

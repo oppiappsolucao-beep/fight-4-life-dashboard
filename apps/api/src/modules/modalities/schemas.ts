@@ -58,8 +58,20 @@ export const professorUpdateSchema = z.object({
   name: z.string().min(1).optional(),
   active: z.boolean().optional(),
   modalityIds: z.array(z.string().uuid()).optional(),
+  modalityUpdates: z
+    .array(
+      z.object({
+        modalityId: z.string().uuid(),
+        active: z.boolean(),
+      }),
+    )
+    .optional(),
   password: z.string().min(6).optional(),
   schedules: z.array(professorModalityScheduleSchema).optional(),
+});
+
+export const professorLessonActiveSchema = z.object({
+  active: z.boolean(),
 });
 
 export const professorLessonSchema = z.object({

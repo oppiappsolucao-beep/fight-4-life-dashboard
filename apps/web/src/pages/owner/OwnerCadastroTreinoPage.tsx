@@ -117,7 +117,7 @@ export default function OwnerCadastroTreinoPage() {
     Promise.allSettled([
       apiFetch<{ alunos: AlunoOption[] }>("/owner/alunos"),
       apiFetch<{ exercises: ExerciseCatalogItem[] }>("/owner/exercises"),
-      apiFetch<{ modalidades: ModalityItem[] }>("/owner/minhas-modalidades"),
+      apiFetch<{ modalidades: ModalityItem[] }>("/owner/modalidades"),
     ])
       .then(([alunosResult, exercisesResult, modalidadesResult]) => {
         if (alunosResult.status === "fulfilled") {
@@ -130,11 +130,10 @@ export default function OwnerCadastroTreinoPage() {
           setCatalog(exercisesResult.value.exercises);
         }
         if (modalidadesResult.status === "fulfilled") {
-          setModalidades(modalidadesResult.value.modalidades);
-          if (modalidadesResult.value.modalidades.length > 0) {
-            setSelectedModalityId(
-              (current) => current || modalidadesResult.value.modalidades[0].id,
-            );
+          const activeModalities = modalidadesResult.value.modalidades.filter((item) => item.active);
+          setModalidades(activeModalities);
+          if (activeModalities.length > 0) {
+            setSelectedModalityId((current) => current || activeModalities[0].id);
           }
         }
         const failures: string[] = [];
@@ -357,7 +356,7 @@ export default function OwnerCadastroTreinoPage() {
   return (
     <OwnerSectionPage
       title="Cadastro de Treino"
-      description="Monte a ficha por data e modalidade. Escolha a disciplina liberada para você antes de publicar o treino."
+      description="Monte a ficha por data e modalidade. Escolha a disciplina ofertada pela academia antes de publicar o treino."
     >
       {loading ? (
         <div className="rounded-xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
@@ -404,7 +403,7 @@ export default function OwnerCadastroTreinoPage() {
                 required
               >
                 {modalidades.length === 0 ? (
-                  <option value="">Libere modalidades em Professores</option>
+                  <option value="">Ative modalidades em Modalidades</option>
                 ) : (
                   modalidades.map((modality) => (
                     <option key={modality.id} value={modality.id} className="bg-zinc-900">

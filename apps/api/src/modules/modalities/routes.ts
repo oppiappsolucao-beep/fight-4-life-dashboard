@@ -21,6 +21,7 @@ import {
   modalityScheduleSchema,
   modalityTemplateSchema,
   professorCreateSchema,
+  professorLessonActiveSchema,
   professorLessonSchema,
   professorSelfSchema,
   professorUpdateSchema,
@@ -34,6 +35,86 @@ const lessonInclude = {
   professor: { select: { id: true, name: true, email: true } },
   _count: { select: { attendances: true } },
 } as const;
+
+async function buildProfessorStats(
+  tenantId: string,
+  userId: string,
+  modalityIds: string[],
+) {
+  if (modalityIds.length === 0) return [];
+
+  const [modalities, students, lessons, assignments] = await Promise.all([
+    prisma.modality.findMany({
+      where: { tenantId, id: { in: modalityIds } },
+      select: { id: true, name: true, linkedPlans: true },
+    }),
+    prisma.student.findMany({
+      where: { tenantId, active: true },
+      select: { planoModalidade: true },
+    }),
+    prisma.professorLesson.findMany({
+      where: { tenantId, professorId: userId, modalityId: { in: modalityIds } },
+      select: {
+        modalityId: true,
+        active: true,
+        _count: { select: { attendances: true } },
+      },
+    }),
+    prisma.professorModality.findMany({
+      where: { tenantId, userId, modalityId: { in: modalityIds } },
+      select: { modalityId: true, active: true },
+    }),
+  ]);
+
+  return modalities.map((modality) => {
+    const modalityLessons = lessons.filter((lesson) => lesson.modalityId === modality.id);
+    const assignment = assignments.find((item) => item.modalityId === modality.id);
+    const studentCount = students.filter((student) =>
+      modalityMatchesPlan(modality, student.planoModalidade),
+    ).length;
+
+    return {
+      modalityId: modality.id,
+      modalityName: modality.name,
+      assignmentActive: assignment?.active ?? false,
+      studentCount,
+      lessonCount: modalityLessons.length,
+      activeLessonCount: modalityLessons.filter((lesson) => lesson.active).length,
+      attendanceCount: modalityLessons.reduce(
+        (total, lesson) => total + lesson._count.attendances,
+        0,
+      ),
+    };
+  });
+}
+
+async function serializeProfessorDetails(
+  user: {
+    id: string;
+    email: string;
+    name: string | null;
+    role: UserRole;
+    active: boolean;
+  },
+  tenantId: string,
+  modalityIds: string[],
+) {
+  const [professorSchedules, modalityStats, recentLessons] = await Promise.all([
+    getProfessorSchedules(user.id, tenantId),
+    buildProfessorStats(tenantId, user.id, modalityIds),
+    prisma.professorLesson.findMany({
+      where: { tenantId, professorId: user.id },
+      orderBy: [{ classDate: "desc" }, { createdAt: "desc" }],
+      take: 8,
+      include: lessonInclude,
+    }),
+  ]);
+
+  return serializeProfessor(user, modalityIds, professorSchedules, {
+    modalityStats,
+    recentLessons: recentLessons.map(serializeProfessorLesson),
+  });
+}
 
 async function getProfessorModalityIds(userId: string, tenantId: string): Promise<string[]> {
   const rows = await prisma.professorModality.findMany({
@@ -420,10 +501,9 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
   app.get("/owner/professores", async (request, reply) => {
     const tenantId = request.user.tenantId;
     const assignments = await prisma.professorModality.findMany({
-      where: { tenantId, active: true },
+      where: { tenantId },
       include: {
         user: { select: { id: true, email: true, name: true, role: true, active: true } },
-        modality: { select: { id: true, name: true } },
       },
     });
 
@@ -434,13 +514,15 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
 
     for (const row of assignments) {
       const current = grouped.get(row.userId) ?? { user: row.user, modalityIds: [] };
-      current.modalityIds.push(row.modalityId);
+      if (!current.modalityIds.includes(row.modalityId)) {
+        current.modalityIds.push(row.modalityId);
+      }
       grouped.set(row.userId, current);
     }
 
     const professores = await Promise.all(
-      Array.from(grouped.values()).map(async (item) =>
-        serializeProfessor(item.user, item.modalityIds, await getProfessorSchedules(item.user.id, tenantId)),
+      Array.from(grouped.values()).map((item) =>
+        serializeProfessorDetails(item.user, tenantId, item.modalityIds),
       ),
     );
 
@@ -518,10 +600,8 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
       await saveProfessorSchedules(tenantId, professor.id, schedules);
     }
 
-    const professorSchedules = await getProfessorSchedules(professor.id, tenantId);
-
     return reply.send({
-      professor: serializeProfessor(professor, data.modalityIds, professorSchedules),
+      professor: await serializeProfessorDetails(professor, tenantId, data.modalityIds),
       message: "Professor cadastrado e modalidades liberadas.",
     });
   });
@@ -567,9 +647,8 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
     }
 
     const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
-    const professorSchedules = await getProfessorSchedules(userId, tenantId);
     return reply.send({
-      professor: serializeProfessor(user, data.modalityIds, professorSchedules),
+      professor: await serializeProfessorDetails(user, tenantId, data.modalityIds),
       message: "Seu acesso de professor foi liberado.",
     });
   });
@@ -634,18 +713,76 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
         });
       }
 
+      if (data.modalityUpdates?.length) {
+        for (const update of data.modalityUpdates) {
+          await prisma.professorModality.updateMany({
+            where: {
+              tenantId,
+              userId: professor.id,
+              modalityId: update.modalityId,
+            },
+            data: { active: update.active },
+          });
+        }
+      }
+
       if (data.schedules) {
         const modalityIds =
-          data.modalityIds ?? (await getProfessorModalityIds(professor.id, tenantId));
+          data.modalityIds ??
+          (
+            await prisma.professorModality.findMany({
+              where: { tenantId, userId: professor.id },
+              select: { modalityId: true },
+            })
+          ).map((item) => item.modalityId);
         const schedules = data.schedules.filter((entry) => modalityIds.includes(entry.modalityId));
         await saveProfessorSchedules(tenantId, professor.id, schedules);
       }
 
-      const modalityIds = await getProfessorModalityIds(professor.id, tenantId);
-      const professorSchedules = await getProfessorSchedules(professor.id, tenantId);
+      const allModalityIds = (
+        await prisma.professorModality.findMany({
+          where: { tenantId, userId: professor.id },
+          select: { modalityId: true },
+        })
+      ).map((item) => item.modalityId);
+
       return reply.send({
-        professor: serializeProfessor(updated, modalityIds, professorSchedules),
+        professor: await serializeProfessorDetails(updated, tenantId, allModalityIds),
         message: "Professor atualizado.",
+      });
+    },
+  );
+
+  app.patch<{ Params: { professorId: string; lessonId: string } }>(
+    "/owner/professores/:professorId/aulas/:lessonId",
+    async (request, reply) => {
+      const parsed = professorLessonActiveSchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.errors[0]?.message ?? "Dados inválidos.",
+        });
+      }
+
+      const tenantId = request.user.tenantId;
+      const lesson = await prisma.professorLesson.findFirst({
+        where: {
+          id: request.params.lessonId,
+          tenantId,
+          professorId: request.params.professorId,
+        },
+      });
+
+      if (!lesson) {
+        return reply.status(404).send({ error: "Aula não encontrada." });
+      }
+
+      await prisma.professorLesson.update({
+        where: { id: lesson.id },
+        data: { active: parsed.data.active },
+      });
+
+      return reply.send({
+        message: parsed.data.active ? "Aula liberada para os alunos." : "Aula bloqueada.",
       });
     },
   );
