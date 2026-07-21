@@ -36,6 +36,8 @@ export interface StudentWorkout {
   workoutDate: string;
   updatedAt: string;
   source: WorkoutSource;
+  modalityId?: string | null;
+  modality?: { id: string; name: string; slug: string } | null;
   exercises: WorkoutExerciseItem[];
 }
 

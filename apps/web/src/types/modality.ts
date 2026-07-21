@@ -24,8 +24,21 @@ export interface ModalityItem {
   sortOrder: number;
   lessonCount: number;
   professorCount?: number;
+  scheduleSlots?: ScheduleSlot[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ScheduleSlot {
+  id?: string;
+  weekday: number;
+  startTime: string;
+  endTime: string;
+}
+
+export interface ProfessorModalitySchedule {
+  modalityId: string;
+  slots: ScheduleSlot[];
 }
 
 export interface ProfessorItem {
@@ -35,6 +48,7 @@ export interface ProfessorItem {
   role: string;
   active: boolean;
   modalityIds: string[];
+  schedules: ProfessorModalitySchedule[];
 }
 
 export interface ProfessorLessonItem {

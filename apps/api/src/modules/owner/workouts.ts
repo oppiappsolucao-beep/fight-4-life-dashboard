@@ -19,6 +19,7 @@ export const saveStudentWorkoutSchema = z.object({
   workoutDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe a data no formato AAAA-MM-DD."),
+  modalityId: z.string().uuid("Selecione a modalidade do treino.").optional(),
   notes: z.string().optional(),
   exercises: z.array(workoutExerciseInputSchema).min(1, "Adicione ao menos um exercício."),
 });
@@ -44,6 +45,8 @@ export function serializeWorkout(workout: {
   workoutDate: Date;
   updatedAt: Date;
   source?: WorkoutSource;
+  modalityId?: string | null;
+  modality?: { id: string; name: string; slug: string } | null;
   exercises: Array<{
     id: string;
     phase: WorkoutPhase;
@@ -95,11 +98,18 @@ export function serializeWorkout(workout: {
     workoutDate: formatWorkoutDate(workout.workoutDate),
     updatedAt: workout.updatedAt.toISOString(),
     source: workout.source ?? WorkoutSource.OWNER,
+    modalityId: workout.modalityId ?? null,
+    modality: workout.modality
+      ? { id: workout.modality.id, name: workout.modality.name, slug: workout.modality.slug }
+      : null,
     exercises,
   };
 }
 
 export const workoutInclude = {
+  modality: {
+    select: { id: true, name: true, slug: true },
+  },
   exercises: {
     include: {
       exercise: {

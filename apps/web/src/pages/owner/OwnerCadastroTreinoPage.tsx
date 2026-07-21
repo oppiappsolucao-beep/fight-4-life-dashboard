@@ -17,6 +17,7 @@ import type {
   WorkoutExerciseDraft,
   WorkoutSummary,
 } from "../../types/workout";
+import type { ModalityItem } from "../../types/modality";
 import OwnerSectionPage from "./OwnerSectionPage";
 
 interface AlunoOption {
@@ -55,6 +56,8 @@ function reindexPhase(drafts: WorkoutExerciseDraft[], phase: WorkoutPhase) {
 export default function OwnerCadastroTreinoPage() {
   const [alunos, setAlunos] = useState<AlunoOption[]>([]);
   const [catalog, setCatalog] = useState<ExerciseCatalogItem[]>([]);
+  const [modalidades, setModalidades] = useState<ModalityItem[]>([]);
+  const [selectedModalityId, setSelectedModalityId] = useState("");
   const [savedTreinos, setSavedTreinos] = useState<WorkoutSummary[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [workoutDate, setWorkoutDate] = useState(todayDateInputValue());
@@ -114,8 +117,9 @@ export default function OwnerCadastroTreinoPage() {
     Promise.allSettled([
       apiFetch<{ alunos: AlunoOption[] }>("/owner/alunos"),
       apiFetch<{ exercises: ExerciseCatalogItem[] }>("/owner/exercises"),
+      apiFetch<{ modalidades: ModalityItem[] }>("/owner/minhas-modalidades"),
     ])
-      .then(([alunosResult, exercisesResult]) => {
+      .then(([alunosResult, exercisesResult, modalidadesResult]) => {
         if (alunosResult.status === "fulfilled") {
           setAlunos(alunosResult.value.alunos);
           if (alunosResult.value.alunos.length > 0) {
@@ -124,6 +128,14 @@ export default function OwnerCadastroTreinoPage() {
         }
         if (exercisesResult.status === "fulfilled") {
           setCatalog(exercisesResult.value.exercises);
+        }
+        if (modalidadesResult.status === "fulfilled") {
+          setModalidades(modalidadesResult.value.modalidades);
+          if (modalidadesResult.value.modalidades.length > 0) {
+            setSelectedModalityId(
+              (current) => current || modalidadesResult.value.modalidades[0].id,
+            );
+          }
         }
         const failures: string[] = [];
         if (alunosResult.status === "rejected") {
@@ -138,6 +150,13 @@ export default function OwnerCadastroTreinoPage() {
             exercisesResult.reason instanceof Error
               ? exercisesResult.reason.message
               : "Erro ao carregar catálogo.",
+          );
+        }
+        if (modalidadesResult.status === "rejected") {
+          failures.push(
+            modalidadesResult.reason instanceof Error
+              ? modalidadesResult.reason.message
+              : "Erro ao carregar modalidades.",
           );
         }
         if (failures.length > 0) setError(failures.join(" "));
@@ -168,6 +187,9 @@ export default function OwnerCadastroTreinoPage() {
           setDrafts([]);
           setDraftMeta({});
           return;
+        }
+        if (data.treino.modalityId) {
+          setSelectedModalityId(data.treino.modalityId);
         }
         setTitle(data.treino.title);
         setNotes(data.treino.notes ?? "");
@@ -295,6 +317,10 @@ export default function OwnerCadastroTreinoPage() {
       setError("Selecione um aluno.");
       return;
     }
+    if (!selectedModalityId) {
+      setError("Selecione a modalidade do treino.");
+      return;
+    }
     if (drafts.length === 0) {
       setError("Adicione ao menos um exercício ao treino.");
       return;
@@ -312,6 +338,7 @@ export default function OwnerCadastroTreinoPage() {
           body: JSON.stringify({
             title: title.trim(),
             workoutDate,
+            modalityId: selectedModalityId,
             notes: notes.trim() || undefined,
             exercises: drafts,
           }),
@@ -330,7 +357,7 @@ export default function OwnerCadastroTreinoPage() {
   return (
     <OwnerSectionPage
       title="Cadastro de Treino"
-      description="Monte a ficha por data com começo, meio e fim. O aluno escolhe a data na aba Treino."
+      description="Monte a ficha por data e modalidade. Escolha a disciplina liberada para você antes de publicar o treino."
     >
       {loading ? (
         <div className="rounded-xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
@@ -349,7 +376,7 @@ export default function OwnerCadastroTreinoPage() {
             </div>
           ) : null}
 
-          <section className="grid gap-4 rounded-xl border border-white/10 bg-white/[0.04] p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5">
+          <section className="grid gap-4 rounded-xl border border-white/10 bg-white/[0.04] p-4 sm:grid-cols-2 lg:grid-cols-5 sm:p-5">
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-white/50">
                 Aluno
@@ -364,6 +391,27 @@ export default function OwnerCadastroTreinoPage() {
                     {aluno.nomeCompleto}
                   </option>
                 ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-white/50">
+                Modalidade
+              </label>
+              <select
+                value={selectedModalityId}
+                onChange={(event) => setSelectedModalityId(event.target.value)}
+                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#e85d6f]/60"
+                required
+              >
+                {modalidades.length === 0 ? (
+                  <option value="">Libere modalidades em Professores</option>
+                ) : (
+                  modalidades.map((modality) => (
+                    <option key={modality.id} value={modality.id} className="bg-zinc-900">
+                      {modality.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
             <div>
@@ -389,7 +437,7 @@ export default function OwnerCadastroTreinoPage() {
                 required
               />
             </div>
-            <div className="sm:col-span-2 lg:col-span-4">
+            <div className="sm:col-span-2 lg:col-span-5">
               <button
                 type="button"
                 onClick={() => setNotesOpen((current) => !current)}

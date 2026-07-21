@@ -592,6 +592,24 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
 
       const data = parsed.data;
       const workoutDate = parseWorkoutDate(data.workoutDate);
+
+      if (!data.modalityId) {
+        return reply.status(400).send({ error: "Selecione a modalidade do treino." });
+      }
+
+      const modality = await prisma.modality.findFirst({
+        where: {
+          id: data.modalityId,
+          tenantId: request.user.tenantId,
+          active: true,
+        },
+        select: { id: true },
+      });
+
+      if (!modality) {
+        return reply.status(400).send({ error: "Modalidade inválida ou inativa." });
+      }
+
       const exerciseIds = data.exercises.map((item) => item.exerciseId);
       const validCount = await prisma.exercise.count({
         where: { id: { in: exerciseIds }, active: true },
@@ -624,6 +642,7 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
             data: {
               title: data.title.trim(),
               notes: data.notes?.trim() || null,
+              modalityId: data.modalityId,
               assignedBy: request.user.sub,
               source: "OWNER",
               active: true,
@@ -648,6 +667,7 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
           data: {
             tenantId: request.user.tenantId,
             studentId: student.id,
+            modalityId: data.modalityId,
             title: data.title.trim(),
             notes: data.notes?.trim() || null,
             workoutDate,

@@ -134,6 +134,7 @@ model User {
 
   professorModalities ProfessorModality[]
   lessons             ProfessorLesson[]
+  professorScheduleSlots ProfessorScheduleSlot[]
 
   @@unique([tenantId, email])
 }
@@ -203,6 +204,7 @@ model StudentWorkout {
   id          String                   @id @default(uuid())
   tenantId    String
   studentId   String
+  modalityId  String?
   title       String
   notes       String?
   workoutDate DateTime                 @default(now()) @db.Date
@@ -213,11 +215,41 @@ model StudentWorkout {
   updatedAt   DateTime                 @updatedAt
   tenant      Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   student     Student                  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  modality    Modality?                @relation(fields: [modalityId], references: [id], onDelete: SetNull)
   exercises   StudentWorkoutExercise[]
 
   @@unique([studentId, workoutDate])
   @@index([tenantId, studentId])
   @@index([studentId, workoutDate])
+  @@index([modalityId])
+}
+
+model ModalityScheduleSlot {
+  id         String   @id @default(uuid())
+  tenantId   String
+  modalityId String
+  weekday    Int
+  startTime  String
+  endTime    String
+  active     Boolean  @default(true)
+  modality   Modality @relation(fields: [modalityId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, modalityId, weekday])
+}
+
+model ProfessorScheduleSlot {
+  id         String   @id @default(uuid())
+  tenantId   String
+  userId     String
+  modalityId String
+  weekday    Int
+  startTime  String
+  endTime    String
+  active     Boolean  @default(true)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  modality   Modality @relation(fields: [modalityId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, userId, modalityId, weekday])
 }
 
 model StudentWorkoutExercise {
@@ -269,6 +301,9 @@ model Modality {
   template    ModalityTemplate?   @relation(fields: [templateId], references: [id], onDelete: SetNull)
   lessons     ProfessorLesson[]
   professors  ProfessorModality[]
+  scheduleSlots ModalityScheduleSlot[]
+  professorScheduleSlots ProfessorScheduleSlot[]
+  workouts    StudentWorkout[]
 
   @@unique([tenantId, slug])
   @@index([tenantId, active])

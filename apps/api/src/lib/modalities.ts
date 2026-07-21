@@ -1,11 +1,13 @@
 import type {
   Modality,
   ModalityContentType,
+  ModalityScheduleSlot,
   ModalityTemplate,
   ProfessorLesson,
   User,
 } from "@prisma/client";
 import { prisma } from "./prisma.js";
+import { serializeScheduleSlot } from "./schedules.js";
 
 export interface ModalityTemplateSeed {
   name: string;
@@ -175,7 +177,10 @@ export function serializeModalityTemplate(template: ModalityTemplate) {
 }
 
 export function serializeModality(
-  modality: Modality & { _count?: { lessons: number; professors?: number } },
+  modality: Modality & {
+    _count?: { lessons: number; professors?: number };
+    scheduleSlots?: ModalityScheduleSlot[];
+  },
 ) {
   return {
     id: modality.id,
@@ -189,6 +194,9 @@ export function serializeModality(
     sortOrder: modality.sortOrder,
     lessonCount: modality._count?.lessons ?? 0,
     professorCount: modality._count?.professors ?? 0,
+    scheduleSlots: (modality.scheduleSlots ?? [])
+      .filter((slot) => slot.active)
+      .map(serializeScheduleSlot),
     createdAt: modality.createdAt.toISOString(),
     updatedAt: modality.updatedAt.toISOString(),
   };
@@ -197,6 +205,7 @@ export function serializeModality(
 export function serializeProfessor(
   user: Pick<User, "id" | "email" | "name" | "role" | "active">,
   modalityIds: string[],
+  schedules?: Array<{ modalityId: string; slots: ReturnType<typeof serializeScheduleSlot>[] }>,
 ) {
   return {
     id: user.id,
@@ -205,6 +214,7 @@ export function serializeProfessor(
     role: user.role,
     active: user.active,
     modalityIds,
+    schedules: schedules ?? [],
   };
 }
 
