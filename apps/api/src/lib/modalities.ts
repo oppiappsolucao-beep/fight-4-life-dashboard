@@ -75,12 +75,28 @@ export function normalizePlanName(value: string): string {
   return value.trim().toLowerCase();
 }
 
+export function planGrantsAllModalities(planName: string): boolean {
+  const normalizedPlan = normalizePlanName(planName);
+  if (!normalizedPlan) return false;
+
+  return (
+    normalizedPlan.includes("master") ||
+    normalizedPlan.includes("premium") ||
+    normalizedPlan.includes("acesso total") ||
+    normalizedPlan.includes("all access")
+  );
+}
+
 export function modalityMatchesPlan(
   modality: Pick<Modality, "name" | "linkedPlans">,
   planName: string,
 ): boolean {
   const normalizedPlan = normalizePlanName(planName);
   if (!normalizedPlan) return false;
+
+  if (planGrantsAllModalities(planName)) {
+    return true;
+  }
 
   if (modality.linkedPlans.some((plan) => normalizePlanName(plan) === normalizedPlan)) {
     return true;

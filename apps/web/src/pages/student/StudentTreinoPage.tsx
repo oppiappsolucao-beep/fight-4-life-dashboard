@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import StudentLessonTreinoFlow from "../../components/student/StudentLessonTreinoFlow";
 import StudentTreinoBuilder from "../../components/student/StudentTreinoBuilder";
 import WorkoutDateStrip from "../../components/student/WorkoutDateStrip";
 import WorkoutExerciseCard from "../../components/student/WorkoutExerciseCard";
@@ -21,6 +22,7 @@ import {
   type WorkoutCompletionStatus,
   type WorkoutPhase,
 } from "../../lib/workout";
+import type { ModalityItem } from "../../types/modality";
 import type { StudentWorkout, WorkoutExerciseItem, WorkoutSummary } from "../../types/workout";
 import StudentSectionPage from "./StudentSectionPage";
 
@@ -42,6 +44,10 @@ export default function StudentTreinoPage() {
   const saveTimerRef = useRef<number | null>(null);
 
   const [treinos, setTreinos] = useState<WorkoutSummary[]>([]);
+  const [accessModalidades, setAccessModalidades] = useState<ModalityItem[]>([]);
+  const [planoModalidade, setPlanoModalidade] = useState("");
+  const [selectedModalityId, setSelectedModalityId] = useState("");
+  const [contextLoading, setContextLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(todayDateInputValue());
   const [activePhase, setActivePhase] = useState<WorkoutPhase>("INICIO");
   const [mode, setMode] = useState<PageMode>("execute");
@@ -101,6 +107,42 @@ export default function StudentTreinoPage() {
   const activeMeioGroups =
     activePhase === "MEIO" ? groupMeioExercisesByRegion(activePhaseItems) : null;
   const canEditTreino = !treino || treino.source === "STUDENT";
+
+  const selectedModality = useMemo(
+    () => accessModalidades.find((item) => item.id === selectedModalityId),
+    [accessModalidades, selectedModalityId],
+  );
+  const isMusculacao = selectedModality?.contentType === "EXERCISE_CATALOG";
+
+  const loadContext = useCallback(() => {
+    if (!session?.id) {
+      setContextLoading(false);
+      setError("Faça login novamente para ver seu treino.");
+      return;
+    }
+
+    setContextLoading(true);
+    apiFetch<{ planoModalidade: string; modalidades: ModalityItem[] }>(
+      "/student/treino-modalidades",
+      {},
+      session.id,
+    )
+      .then((data) => {
+        setPlanoModalidade(data.planoModalidade);
+        setAccessModalidades(data.modalidades);
+        setSelectedModalityId((current) => {
+          if (current && data.modalidades.some((item) => item.id === current)) return current;
+          const musculacao =
+            data.modalidades.find((item) => item.contentType === "EXERCISE_CATALOG") ??
+            data.modalidades[0];
+          return musculacao?.id ?? "";
+        });
+      })
+      .catch((err) =>
+        setError(err instanceof Error ? err.message : "Erro ao carregar modalidades."),
+      )
+      .finally(() => setContextLoading(false));
+  }, [session?.id]);
 
   const loadDates = useCallback(() => {
     if (!session?.id) {
@@ -227,14 +269,20 @@ export default function StudentTreinoPage() {
   );
 
   useEffect(() => {
-    loadDates();
-  }, [loadDates]);
+    loadContext();
+  }, [loadContext]);
 
   useEffect(() => {
-    if (selectedDate) {
+    if (isMusculacao) {
+      loadDates();
+    }
+  }, [isMusculacao, loadDates]);
+
+  useEffect(() => {
+    if (isMusculacao && selectedDate) {
       loadTreino(selectedDate);
     }
-  }, [selectedDate, loadTreino]);
+  }, [isMusculacao, selectedDate, loadTreino]);
 
   useEffect(() => {
     if (!groupedExercises) return;
@@ -314,18 +362,59 @@ export default function StudentTreinoPage() {
   return (
     <StudentSectionPage
       title="Treino"
-      description="Monte seu treino, escolha a data e marque série por série durante a execução."
+      description={
+        isMusculacao
+          ? "Monte seu treino, escolha a data e marque série por série durante a execução."
+          : "Escolha a modalidade do seu plano, a data e o horário para assistir à aula do professor."
+      }
     >
-      {loading ? (
+      {contextLoading ? (
         <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
-          Carregando treinos...
+          Carregando...
         </div>
-      ) : error && !treino && mode === "execute" && treinos.length === 0 ? (
-        <div className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-          {error}
+      ) : accessModalidades.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/50">
+          Nenhuma modalidade liberada no seu plano ({planoModalidade || "—"}).
         </div>
       ) : (
         <div className="space-y-4 pb-8">
+          {accessModalidades.length > 1 ? (
+            <section className="flex flex-wrap gap-2">
+              {accessModalidades.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setSelectedModalityId(item.id)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                    selectedModalityId === item.id
+                      ? "bg-[#e85d6f] text-white"
+                      : "border border-white/15 text-white/70"
+                  }`}
+                >
+                  {item.name}
+                </button>
+              ))}
+            </section>
+          ) : null}
+
+          {!isMusculacao && selectedModality ? (
+            <StudentLessonTreinoFlow
+              modalityId={selectedModality.id}
+              modalityName={selectedModality.name}
+              planoModalidade={planoModalidade}
+            />
+          ) : (
+            <>
+              {loading ? (
+                <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+                  Carregando treinos...
+                </div>
+              ) : error && !treino && mode === "execute" && treinos.length === 0 ? (
+                <div className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                  {error}
+                </div>
+              ) : (
+                <div className="space-y-4">
           <WorkoutDateStrip
             treinos={treinos}
             selectedDate={selectedDate}
@@ -458,6 +547,10 @@ export default function StudentTreinoPage() {
                   activePhaseItems.map((item) => renderExerciseCard(item))
                 )}
               </section>
+            </>
+          )}
+                </div>
+              )}
             </>
           )}
         </div>

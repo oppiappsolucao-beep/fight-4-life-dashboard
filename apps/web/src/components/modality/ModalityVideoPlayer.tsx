@@ -3,9 +3,17 @@ import type { LessonVideoCardItem } from "../../types/modality";
 
 interface ModalityVideoPlayerProps {
   video: LessonVideoCardItem;
+  professorName?: string | null;
+  classDate?: string;
+  timeLabel?: string;
 }
 
-export default function ModalityVideoPlayer({ video }: ModalityVideoPlayerProps) {
+export default function ModalityVideoPlayer({
+  video,
+  professorName,
+  classDate,
+  timeLabel,
+}: ModalityVideoPlayerProps) {
   const parsed = parseVideoEmbed(video.videoUrl);
 
   return (
@@ -38,7 +46,16 @@ export default function ModalityVideoPlayer({ video }: ModalityVideoPlayerProps)
         )}
       </div>
       <div className="p-4 sm:p-5">
-        <h3 className="m-0 text-lg font-semibold text-white">{video.title}</h3>
+        {professorName || classDate || timeLabel ? (
+          <p className="m-0 text-xs text-white/45">
+            {professorName ? `Professor: ${professorName}` : null}
+            {professorName && (classDate || timeLabel) ? " • " : null}
+            {classDate ? classDate : null}
+            {classDate && timeLabel ? " • " : null}
+            {timeLabel ? timeLabel : null}
+          </p>
+        ) : null}
+        <h3 className="m-0 mt-2 text-lg font-semibold text-white">{video.title}</h3>
         {video.description ? (
           <p className="m-0 mt-2 text-sm leading-relaxed text-white/65">{video.description}</p>
         ) : null}

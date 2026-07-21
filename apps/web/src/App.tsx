@@ -32,7 +32,6 @@ import OwnerProfessoresPage from "./pages/owner/OwnerProfessoresPage";
 import ProfessorLayout from "./components/professor/ProfessorLayout";
 import ProfessorLoginPage from "./pages/ProfessorLoginPage";
 import ProfessorAulasPage from "./pages/professor/ProfessorAulasPage";
-import StudentGaleriaPage from "./pages/student/StudentGaleriaPage";
 
 export default function App() {
   const { loading } = useAuth();
@@ -52,7 +51,7 @@ export default function App() {
       <Route element={<StudentLayout />}>
         <Route path="inicio" element={<StudentVisaoGeralPage />} />
         <Route path="treino" element={<StudentTreinoPage />} />
-        <Route path="galeria" element={<StudentGaleriaPage />} />
+        <Route path="galeria" element={<Navigate to="/treino" replace />} />
         <Route path="pagamentos" element={<StudentPagamentosPage />} />
         <Route path="frequencia" element={<StudentFrequenciaPage />} />
         <Route path="atendimento" element={<StudentAtendimentoPage />} />

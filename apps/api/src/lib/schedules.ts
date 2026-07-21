@@ -48,3 +48,8 @@ export function serializeScheduleSlot(slot: {
     endTime: slot.endTime,
   };
 }
+
+export function weekdayFromDateInput(value: string): number {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+}

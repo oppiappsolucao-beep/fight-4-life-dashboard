@@ -91,6 +91,22 @@ export interface StudentGalleryResponse {
   aulas: ProfessorLessonItem[];
 }
 
+export interface StudentLessonSlotOption {
+  startTime: string;
+  endTime: string;
+  label: string;
+  professorName: string | null;
+  lesson: ProfessorLessonItem | null;
+}
+
+export interface StudentTreinoAulasResponse {
+  planoModalidade: string;
+  modality: ModalityItem;
+  classDate: string;
+  weekday: number;
+  horarios: StudentLessonSlotOption[];
+}
+
 export interface StudentFrequencyResponse {
   planoModalidade: string;
   aulasDisponiveis: ProfessorLessonItem[];
