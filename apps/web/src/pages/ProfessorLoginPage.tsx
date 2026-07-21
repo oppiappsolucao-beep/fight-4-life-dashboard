@@ -1,10 +1,10 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import OppiLogo from "../../components/OppiLogo";
-import HeroBackground from "../../components/HeroBackground";
-import { useAuth } from "../../contexts/AuthContext";
-import { canAccessProfessor } from "../../lib/access";
-import { clearStudentSession } from "../../lib/studentSession";
+import OppiLogo from "../components/OppiLogo";
+import HeroBackground from "../components/HeroBackground";
+import { useAuth } from "../contexts/AuthContext";
+import { canAccessProfessor } from "../lib/access";
+import { clearStudentSession } from "../lib/studentSession";
 
 export default function ProfessorLoginPage() {
   const { professorLogin, logout, isAuthenticated, user } = useAuth();

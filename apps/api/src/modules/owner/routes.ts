@@ -19,11 +19,7 @@ import {
   workoutInclude,
 } from "./workouts.js";
 import { ensureExerciseCatalog } from "../../lib/exercise-catalog.js";
-import {
-  registerDevModalityRoutes,
-  registerOwnerModalityRoutes,
-  registerStudentModalityRoutes,
-} from "../modalities/routes.js";
+import { registerOwnerModalityRoutes } from "../modalities/routes.js";
 
 const studentCreateSchema = z.object({
   nomeCompleto: z.string().min(1),
