@@ -85,6 +85,54 @@ export function formatWorkoutDateLabel(value: string): string {
   return `${day}/${month}/${year}`;
 }
 
+export function formatWorkoutWeekdayShort(value: string): string {
+  const date = new Date(`${value}T12:00:00.000Z`);
+  const weekday = date.toLocaleDateString("pt-BR", { weekday: "short", timeZone: "UTC" });
+  return weekday.replace(".", "").slice(0, 3);
+}
+
+export function formatWorkoutDay(value: string): string {
+  return value.split("-")[2] ?? "";
+}
+
+export function formatWorkoutMonthShort(value: string): string {
+  const month = Number(value.split("-")[1]);
+  const names = [
+    "Jan",
+    "Fev",
+    "Mar",
+    "Abr",
+    "Mai",
+    "Jun",
+    "Jul",
+    "Ago",
+    "Set",
+    "Out",
+    "Nov",
+    "Dez",
+  ];
+  return names[month - 1] ?? "";
+}
+
+export function isTodayWorkoutDate(value: string): boolean {
+  return value === todayDateInputValue();
+}
+
+export function workoutDoneStorageKey(studentId: string, workoutDate: string): string {
+  return `f4l-student-workout-done:${studentId}:${workoutDate}`;
+}
+
+export type WorkoutCompletionStatus = "done" | "partial" | "pending";
+
+export function getWorkoutCompletionStatus(
+  total: number,
+  done: number,
+): WorkoutCompletionStatus {
+  if (total <= 0 || done <= 0) return "pending";
+  if (done >= total) return "done";
+  return "partial";
+}
+
 export function groupExercisesByPhase<T extends { phase: WorkoutPhase; order: number }>(
   exercises: T[],
 ): Record<WorkoutPhase, T[]> {

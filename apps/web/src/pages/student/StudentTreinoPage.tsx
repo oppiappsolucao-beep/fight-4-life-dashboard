@@ -1,13 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import WorkoutDateStrip, {
+  readStoredCompletionStatus,
+} from "../../components/student/WorkoutDateStrip";
+import WorkoutExerciseCard from "../../components/student/WorkoutExerciseCard";
 import { apiFetch } from "../../lib/api";
 import { getStudentSession } from "../../lib/studentSession";
 import {
   WORKOUT_PHASES,
-  bodyRegionLabel,
   countPhaseExercises,
   formatWorkoutDateLabel,
+  getWorkoutCompletionStatus,
   groupExercisesByPhase,
   groupMeioExercisesByRegion,
+  workoutDoneStorageKey,
+  type WorkoutCompletionStatus,
   type WorkoutPhase,
 } from "../../lib/workout";
 import type { StudentWorkout, WorkoutExerciseItem, WorkoutSummary } from "../../types/workout";
@@ -17,10 +23,35 @@ function exerciseKey(item: WorkoutExerciseItem): string {
   return item.id ?? `${item.phase}-${item.order}-${item.exercise.id}`;
 }
 
+function loadDoneMap(studentId: string, workoutDate: string): Record<string, boolean> {
+  if (typeof window === "undefined") return {};
+
+  try {
+    const raw = window.localStorage.getItem(workoutDoneStorageKey(studentId, workoutDate));
+    if (!raw) return {};
+    return JSON.parse(raw) as Record<string, boolean>;
+  } catch {
+    return {};
+  }
+}
+
+function saveDoneMap(
+  studentId: string,
+  workoutDate: string,
+  doneMap: Record<string, boolean>,
+): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(
+    workoutDoneStorageKey(studentId, workoutDate),
+    JSON.stringify(doneMap),
+  );
+}
+
 export default function StudentTreinoPage() {
   const session = getStudentSession();
   const [treinos, setTreinos] = useState<WorkoutSummary[]>([]);
   const [selectedDate, setSelectedDate] = useState("");
+  const [activePhase, setActivePhase] = useState<WorkoutPhase>("INICIO");
   const [treino, setTreino] = useState<StudentWorkout | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingTreino, setLoadingTreino] = useState(false);
@@ -38,7 +69,7 @@ export default function StudentTreinoPage() {
   );
 
   const phaseProgress = useMemo(() => {
-    if (!treino || !groupedExercises) return null;
+    if (!groupedExercises) return null;
 
     const progress: Record<WorkoutPhase, { done: number; total: number }> = {
       INICIO: { done: 0, total: 0 },
@@ -55,11 +86,44 @@ export default function StudentTreinoPage() {
     }
 
     return progress;
-  }, [treino, groupedExercises, doneMap]);
+  }, [groupedExercises, doneMap]);
 
   const completedCount = treino
     ? treino.exercises.filter((item) => doneMap[exerciseKey(item)]).length
     : 0;
+
+  const completionPercent = treino
+    ? Math.round((completedCount / treino.exercises.length) * 100)
+    : 0;
+
+  const completionStatus = getWorkoutCompletionStatus(
+    treino?.exercises.length ?? 0,
+    completedCount,
+  );
+
+  const completionByDate = useMemo(() => {
+    if (!session?.id) return {} as Record<string, WorkoutCompletionStatus>;
+
+    return Object.fromEntries(
+      treinos.map((item) => {
+        if (item.workoutDate === selectedDate && treino) {
+          return [
+            item.workoutDate,
+            getWorkoutCompletionStatus(treino.exercises.length, completedCount),
+          ];
+        }
+
+        return [
+          item.workoutDate,
+          readStoredCompletionStatus(session.id, item.workoutDate, item.exerciseCount),
+        ];
+      }),
+    );
+  }, [session?.id, treinos, selectedDate, treino, completedCount]);
+
+  const activePhaseItems = groupedExercises?.[activePhase] ?? [];
+  const activeMeioGroups =
+    activePhase === "MEIO" ? groupMeioExercisesByRegion(activePhaseItems) : null;
 
   const loadDates = useCallback(() => {
     if (!session?.id) {
@@ -102,7 +166,7 @@ export default function StudentTreinoPage() {
       )
         .then((data) => {
           setTreino(data.treino);
-          setDoneMap({});
+          setDoneMap(loadDoneMap(session.id, date));
         })
         .catch((err) =>
           setError(err instanceof Error ? err.message : "Erro ao carregar treino."),
@@ -124,6 +188,22 @@ export default function StudentTreinoPage() {
     }
   }, [selectedDate, loadTreino]);
 
+  useEffect(() => {
+    if (!groupedExercises) return;
+
+    const firstPhaseWithItems = WORKOUT_PHASES.find(
+      (phase) => groupedExercises[phase.id].length > 0,
+    );
+    if (firstPhaseWithItems) {
+      setActivePhase(firstPhaseWithItems.id);
+    }
+  }, [selectedDate, groupedExercises]);
+
+  useEffect(() => {
+    if (!session?.id || !selectedDate) return;
+    saveDoneMap(session.id, selectedDate, doneMap);
+  }, [session?.id, selectedDate, doneMap]);
+
   function toggleDone(key: string) {
     setDoneMap((current) => ({ ...current, [key]: !current[key] }));
   }
@@ -131,152 +211,140 @@ export default function StudentTreinoPage() {
   return (
     <StudentSectionPage
       title="Treino"
-      description="Escolha a data e execute sua ficha em começo, meio (superior, inferior ou cardio) e fim."
+      description="Selecione a data e execute sua ficha por etapas."
     >
       {loading ? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
-          Carregando datas...
+        <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+          Carregando treinos...
         </div>
       ) : error && treinos.length === 0 ? (
-        <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <div className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           {error}
         </div>
       ) : treinos.length === 0 ? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.05] p-10 text-center backdrop-blur-sm">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center backdrop-blur-sm">
           <p className="text-sm text-white/50">
             Nenhum treino publicado ainda. Fale com a recepção ou seu professor.
           </p>
         </div>
       ) : (
-        <div className="space-y-5">
-          <div className="rounded-xl border border-white/10 bg-white/[0.05] p-4 backdrop-blur-sm sm:p-5">
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-white/50">
-              Data do treino
-            </label>
-            <select
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#e85d6f]/60 sm:max-w-md"
-            >
-              {treinos.map((item) => (
-                <option key={item.id} value={item.workoutDate} className="bg-zinc-900">
-                  {formatWorkoutDateLabel(item.workoutDate)} — {item.title} ({item.exerciseCount}{" "}
-                  exercícios)
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="space-y-4 pb-8 sm:space-y-5">
+          <WorkoutDateStrip
+            treinos={treinos}
+            selectedDate={selectedDate}
+            completionByDate={completionByDate}
+            onSelect={setSelectedDate}
+          />
 
           {loadingTreino ? (
-            <div className="rounded-xl border border-white/10 bg-white/[0.05] p-8 text-center text-sm text-white/50">
-              Carregando treino...
+            <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+              Carregando ficha...
             </div>
           ) : !treino ? (
-            <div className="rounded-xl border border-white/10 bg-white/[0.05] p-8 text-center text-sm text-white/50">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
               Nenhum treino encontrado para esta data.
             </div>
           ) : (
             <>
-              <div className="rounded-xl border border-white/10 bg-white/[0.05] p-5 backdrop-blur-sm">
-                <p className="m-0 text-xs uppercase tracking-wide text-white/45">
-                  {formatWorkoutDateLabel(treino.workoutDate)}
-                </p>
-                <h2 className="m-0 mt-1 text-lg font-semibold text-white">{treino.title}</h2>
-                {treino.notes ? (
-                  <p className="mt-2 text-sm leading-relaxed text-white/60">{treino.notes}</p>
-                ) : null}
-                <p className="mt-3 text-xs text-white/40">
-                  {completedCount}/{treino.exercises.length} exercícios concluídos
-                </p>
-              </div>
+              <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#e85d6f]/20 via-black/30 to-black/40 p-4 sm:p-5">
+                <div className="flex items-start gap-4">
+                  <ProgressRing percent={completionPercent} status={completionStatus} />
+                  <div className="min-w-0 flex-1">
+                    <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
+                      {formatWorkoutDateLabel(treino.workoutDate)}
+                    </p>
+                    <h2 className="m-0 mt-1 truncate text-xl font-semibold text-white sm:text-2xl">
+                      {treino.title}
+                    </h2>
+                    <p className="m-0 mt-2 text-sm text-white/60">
+                      {completedCount}/{treino.exercises.length} exercícios •{" "}
+                      {completionStatus === "done"
+                        ? "Treino concluído"
+                        : completionStatus === "partial"
+                          ? "Em andamento"
+                          : "Pronto para começar"}
+                    </p>
+                    {treino.notes ? (
+                      <p className="mt-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm leading-relaxed text-white/70">
+                        {treino.notes}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              </section>
 
-              {phaseCounts ? (
-                <div className="grid gap-3 sm:grid-cols-3">
+              <section className="sticky top-14 z-20 -mx-1 rounded-2xl border border-white/10 bg-black/80 p-2 backdrop-blur-md md:top-0">
+                <div className="grid grid-cols-3 gap-2">
                   {WORKOUT_PHASES.map((phase) => {
-                    const total = phaseCounts[phase.id];
+                    const total = phaseCounts?.[phase.id] ?? 0;
                     const done = phaseProgress?.[phase.id]?.done ?? 0;
-                    const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+                    const selected = activePhase === phase.id;
+                    const disabled = total === 0;
 
                     return (
-                      <div
+                      <button
                         key={phase.id}
-                        className="rounded-xl border border-white/10 bg-white/[0.04] p-4"
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => setActivePhase(phase.id)}
+                        className={`rounded-xl px-2 py-3 text-left transition ${
+                          selected
+                            ? "bg-[#e85d6f] text-white shadow-[0_8px_24px_rgba(232,93,111,0.25)]"
+                            : disabled
+                              ? "cursor-not-allowed bg-white/[0.02] text-white/25"
+                              : "bg-white/[0.04] text-white/70 hover:bg-white/[0.07]"
+                        }`}
                       >
-                        <p className="m-0 text-xs font-semibold uppercase tracking-wide text-[#e85d6f]">
+                        <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide">
                           {phase.label}
                         </p>
-                        <p className="mt-1 text-sm text-white/55">{phase.description}</p>
-                        <p className="mt-2 text-xs text-white/40">
-                          {total} exercício{total === 1 ? "" : "s"} • {done}/{total} feitos
+                        <p className="m-0 mt-1 text-xs opacity-80">
+                          {total > 0 ? `${done}/${total}` : "—"}
                         </p>
-                        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-black/30">
-                          <div
-                            className="h-full rounded-full bg-[#e85d6f] transition-all"
-                            style={{ width: `${percent}%` }}
-                          />
-                        </div>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
-              ) : null}
+              </section>
 
-              {WORKOUT_PHASES.map((phase) => {
-                const items = groupedExercises?.[phase.id] ?? [];
-                if (items.length === 0) return null;
+              <section className="space-y-4">
+                <div className="flex items-center justify-between gap-3 px-1">
+                  <div>
+                    <h3 className="m-0 text-lg font-semibold text-white">
+                      {WORKOUT_PHASES.find((phase) => phase.id === activePhase)?.label}
+                    </h3>
+                    <p className="m-0 mt-1 text-sm text-white/45">
+                      {
+                        WORKOUT_PHASES.find((phase) => phase.id === activePhase)
+                          ?.description
+                      }
+                    </p>
+                  </div>
+                  <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/50">
+                    {activePhaseItems.length} exercício
+                    {activePhaseItems.length === 1 ? "" : "s"}
+                  </span>
+                </div>
 
-                const meioGroups =
-                  phase.id === "MEIO" ? groupMeioExercisesByRegion(items) : null;
-
-                return (
-                  <section
-                    key={phase.id}
-                    className="rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:p-5"
-                  >
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
-                      <div>
-                        <h3 className="m-0 text-base font-semibold uppercase tracking-wide text-[#e85d6f]">
-                          {phase.label}
-                        </h3>
-                        <p className="mt-1 text-sm text-white/45">{phase.description}</p>
-                      </div>
-                      <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/50">
-                        {items.length} exercício{items.length === 1 ? "" : "s"}
-                      </span>
-                    </div>
-
-                    {phase.id === "MEIO" && meioGroups && meioGroups.length > 0 ? (
-                      <div className="space-y-6">
-                        {meioGroups.map((group) => (
-                          <div key={group.region}>
-                            <div className="mb-3 flex items-center gap-2">
-                              <span className="rounded-full bg-[#e85d6f]/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#f08a98]">
-                                {group.label}
-                              </span>
-                              <span className="text-xs text-white/35">
-                                {group.items.length} exercício
-                                {group.items.length === 1 ? "" : "s"}
-                              </span>
-                            </div>
-                            <div className="space-y-4">
-                              {group.items.map((item) => (
-                                <ExerciseCard
-                                  key={exerciseKey(item)}
-                                  item={item}
-                                  index={item.order}
-                                  mediaUrl={item.exercise.gifUrl ?? item.exercise.imageUrl}
-                                  done={Boolean(doneMap[exerciseKey(item)])}
-                                  onToggle={() => toggleDone(exerciseKey(item))}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {items.map((item) => (
-                          <ExerciseCard
+                {activePhaseItems.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-white/45">
+                    Nenhum exercício nesta etapa.
+                  </div>
+                ) : activePhase === "MEIO" && activeMeioGroups && activeMeioGroups.length > 0 ? (
+                  <div className="space-y-5">
+                    {activeMeioGroups.map((group) => (
+                      <div key={group.region} className="space-y-3">
+                        <div className="flex items-center gap-2 px-1">
+                          <span className="rounded-full bg-[#e85d6f]/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#f08a98]">
+                            {group.label}
+                          </span>
+                          <span className="text-xs text-white/35">
+                            {group.items.length} exercício
+                            {group.items.length === 1 ? "" : "s"}
+                          </span>
+                        </div>
+                        {group.items.map((item) => (
+                          <WorkoutExerciseCard
                             key={exerciseKey(item)}
                             item={item}
                             index={item.order}
@@ -286,10 +354,21 @@ export default function StudentTreinoPage() {
                           />
                         ))}
                       </div>
-                    )}
-                  </section>
-                );
-              })}
+                    ))}
+                  </div>
+                ) : (
+                  activePhaseItems.map((item) => (
+                    <WorkoutExerciseCard
+                      key={exerciseKey(item)}
+                      item={item}
+                      index={item.order}
+                      mediaUrl={item.exercise.gifUrl ?? item.exercise.imageUrl}
+                      done={Boolean(doneMap[exerciseKey(item)])}
+                      onToggle={() => toggleDone(exerciseKey(item))}
+                    />
+                  ))
+                )}
+              </section>
             </>
           )}
         </div>
@@ -298,114 +377,38 @@ export default function StudentTreinoPage() {
   );
 }
 
-function ExerciseCard({
-  item,
-  index,
-  mediaUrl,
-  done,
-  onToggle,
+function ProgressRing({
+  percent,
+  status,
 }: {
-  item: WorkoutExerciseItem;
-  index: number;
-  mediaUrl: string | null;
-  done: boolean;
-  onToggle: () => void;
+  percent: number;
+  status: WorkoutCompletionStatus;
 }) {
-  const regionBadge =
-    item.phase === "MEIO" &&
-    (item.exercise.bodyRegion === "SUPERIOR" ||
-      item.exercise.bodyRegion === "INFERIOR" ||
-      item.exercise.bodyRegion === "CARDIO")
-      ? bodyRegionLabel(item.exercise.bodyRegion)
-      : item.exercise.bodyRegion === "AQUECIMENTO" ||
-          item.exercise.bodyRegion === "ALONGAMENTO"
-        ? bodyRegionLabel(item.exercise.bodyRegion)
-        : null;
+  const radius = 30;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (percent / 100) * circumference;
+  const stroke =
+    status === "done" ? "#34d399" : status === "partial" ? "#fbbf24" : "#e85d6f";
 
   return (
-    <article
-      className={`overflow-hidden rounded-xl border backdrop-blur-sm transition ${
-        done ? "border-emerald-400/30 bg-emerald-500/5" : "border-white/10 bg-white/[0.05]"
-      }`}
-    >
-      <div className="grid gap-0 md:grid-cols-[220px_1fr]">
-        {mediaUrl ? (
-          <img
-            src={mediaUrl}
-            alt={item.exercise.name}
-            className="h-48 w-full object-cover md:h-full"
-            loading="lazy"
-          />
-        ) : (
-          <div className="flex h-48 items-center justify-center bg-black/20 text-sm text-white/35 md:h-full">
-            Sem imagem
-          </div>
-        )}
-
-        <div className="p-5">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="m-0 text-xs font-semibold uppercase tracking-wide text-white/45">
-                  Exercício {index}
-                </p>
-                {regionBadge ? (
-                  <span className="rounded-full border border-white/10 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-white/55">
-                    {regionBadge}
-                  </span>
-                ) : null}
-              </div>
-              <h4 className="m-0 mt-1 text-lg font-semibold text-white">{item.exercise.name}</h4>
-              <p className="mt-1 text-sm text-white/45">
-                {item.exercise.muscleGroup}
-                {item.exercise.equipment ? ` • ${item.exercise.equipment}` : ""}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={onToggle}
-              className={`rounded-lg px-4 py-2 text-xs font-semibold uppercase tracking-wide transition ${
-                done
-                  ? "bg-emerald-500/20 text-emerald-300"
-                  : "bg-[#e85d6f]/20 text-[#f08a98] hover:bg-[#e85d6f]/30"
-              }`}
-            >
-              {done ? "Feito" : "Marcar feito"}
-            </button>
-          </div>
-
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Metric label="Séries" value={String(item.sets)} />
-            <Metric label="Repetições" value={item.reps} />
-            <Metric label="Carga" value={item.load || "—"} />
-            <Metric label="Descanso" value={item.restSeconds ? `${item.restSeconds}s` : "—"} />
-          </div>
-
-          {item.notes ? (
-            <p className="mt-4 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-white/70">
-              {item.notes}
-            </p>
-          ) : null}
-
-          <div className="mt-4">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-white/45">
-              Como executar
-            </p>
-            <p className="m-0 text-sm leading-relaxed text-white/75">
-              {item.exercise.instructions}
-            </p>
-          </div>
-        </div>
+    <div className="relative flex h-[4.75rem] w-[4.75rem] shrink-0 items-center justify-center">
+      <svg className="h-full w-full -rotate-90" viewBox="0 0 72 72" aria-hidden>
+        <circle cx="36" cy="36" r={radius} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
+        <circle
+          cx="36"
+          cy="36"
+          r={radius}
+          fill="none"
+          stroke={stroke}
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-lg font-semibold text-white">{percent}%</span>
       </div>
-    </article>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
-      <p className="m-0 text-[0.65rem] uppercase tracking-wide text-white/40">{label}</p>
-      <p className="m-0 mt-1 text-sm font-semibold text-white">{value}</p>
     </div>
   );
 }
