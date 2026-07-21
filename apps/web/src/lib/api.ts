@@ -16,6 +16,7 @@ export function clearTenantSlug(): void {
 export async function apiFetch<T>(
   path: string,
   options: RequestInit = {},
+  studentId?: string,
 ): Promise<T> {
   const token = localStorage.getItem("token");
   const tenantSlug = getTenantSlug();
@@ -28,6 +29,7 @@ export async function apiFetch<T>(
       ...(hasBody ? { "Content-Type": "application/json" } : {}),
       "X-Tenant-Slug": tenantSlug,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(studentId ? { "X-Student-Id": studentId } : {}),
       ...options.headers,
     },
   });

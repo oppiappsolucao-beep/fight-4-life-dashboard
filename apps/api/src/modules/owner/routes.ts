@@ -4,6 +4,11 @@ import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
 import { requireAuth, requireRole } from "../../middleware/auth.js";
 import { normalizePlans } from "./plans.js";
+import {
+  saveStudentWorkoutSchema,
+  serializeWorkout,
+  workoutInclude,
+} from "./workouts.js";
 
 const studentCreateSchema = z.object({
   nomeCompleto: z.string().min(1),
@@ -297,4 +302,132 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
       message: "Planos atualizados com sucesso.",
     });
   });
+
+  app.get("/owner/exercises", async (_request, reply) => {
+    const exercises = await prisma.exercise.findMany({
+      where: { active: true },
+      orderBy: [{ muscleGroup: "asc" }, { name: "asc" }],
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        muscleGroup: true,
+        equipment: true,
+        instructions: true,
+        imageUrl: true,
+        gifUrl: true,
+      },
+    });
+
+    return reply.send({ exercises });
+  });
+
+  app.get<{ Params: { id: string } }>(
+    "/owner/alunos/:id/treino",
+    async (request, reply) => {
+      const student = await prisma.student.findFirst({
+        where: {
+          id: request.params.id,
+          tenantId: request.user.tenantId,
+          active: true,
+        },
+        select: { id: true, nomeCompleto: true },
+      });
+
+      if (!student) {
+        return reply.status(404).send({ error: "Aluno não encontrado." });
+      }
+
+      const treino = await prisma.studentWorkout.findFirst({
+        where: {
+          studentId: student.id,
+          tenantId: request.user.tenantId,
+          active: true,
+        },
+        include: workoutInclude,
+        orderBy: { updatedAt: "desc" },
+      });
+
+      return reply.send({
+        aluno: student,
+        treino: treino ? serializeWorkout(treino) : null,
+      });
+    },
+  );
+
+  app.put<{ Params: { id: string } }>(
+    "/owner/alunos/:id/treino",
+    async (request, reply) => {
+      const parsed = saveStudentWorkoutSchema.safeParse(request.body);
+
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.errors[0]?.message ?? "Dados inválidos.",
+        });
+      }
+
+      const student = await prisma.student.findFirst({
+        where: {
+          id: request.params.id,
+          tenantId: request.user.tenantId,
+          active: true,
+        },
+        select: { id: true },
+      });
+
+      if (!student) {
+        return reply.status(404).send({ error: "Aluno não encontrado." });
+      }
+
+      const data = parsed.data;
+      const exerciseIds = data.exercises.map((item) => item.exerciseId);
+      const validCount = await prisma.exercise.count({
+        where: { id: { in: exerciseIds }, active: true },
+      });
+
+      if (validCount !== exerciseIds.length) {
+        return reply.status(400).send({
+          error: "Um ou mais exercícios selecionados não existem.",
+        });
+      }
+
+      const treino = await prisma.$transaction(async (tx) => {
+        await tx.studentWorkout.updateMany({
+          where: {
+            studentId: student.id,
+            tenantId: request.user.tenantId,
+            active: true,
+          },
+          data: { active: false },
+        });
+
+        return tx.studentWorkout.create({
+          data: {
+            tenantId: request.user.tenantId,
+            studentId: student.id,
+            title: data.title.trim(),
+            notes: data.notes?.trim() || null,
+            assignedBy: request.user.sub,
+            exercises: {
+              create: data.exercises.map((item) => ({
+                exerciseId: item.exerciseId,
+                order: item.order,
+                sets: item.sets,
+                reps: item.reps,
+                load: item.load?.trim() || null,
+                restSeconds: item.restSeconds ?? 60,
+                notes: item.notes?.trim() || null,
+              })),
+            },
+          },
+          include: workoutInclude,
+        });
+      });
+
+      return reply.send({
+        treino: serializeWorkout(treino),
+        message: "Treino salvo e publicado para o aluno.",
+      });
+    },
+  );
 }

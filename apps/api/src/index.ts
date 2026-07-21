@@ -9,6 +9,7 @@ import { existsSync } from "node:fs";
 import { authRoutes } from "./modules/auth/routes.js";
 import { devRoutes } from "./modules/dev/routes.js";
 import { ownerRoutes } from "./modules/owner/routes.js";
+import { studentRoutes } from "./modules/student/routes.js";
 
 // EasyPanel injeta PORT (muitas vezes 80). A Porta do serviço no painel
 // deve ser a mesma deste valor.
@@ -33,6 +34,7 @@ app.get("/health", async () => ({ status: "ok" }));
 await app.register(authRoutes, { prefix: "/api" });
 await app.register(devRoutes, { prefix: "/api" });
 await app.register(ownerRoutes, { prefix: "/api" });
+await app.register(studentRoutes, { prefix: "/api" });
 
 // Em produção, servimos o front (Vite build) pelo mesmo servidor/domínio.
 const currentDir = dirname(fileURLToPath(import.meta.url));

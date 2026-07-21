@@ -44,6 +44,7 @@ model Tenant {
   leads      Lead[]
   students   Student[]
   config     TenantConfig?
+  workouts   StudentWorkout[]
 }
 
 model Student {
@@ -72,6 +73,7 @@ model Student {
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
   tenant               Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  workouts             StudentWorkout[]
 
   @@unique([tenantId, cpf])
   @@index([tenantId, email])
@@ -146,4 +148,53 @@ model Contract {
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
   lead              Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
+
+model Exercise {
+  id           String                   @id @default(uuid())
+  slug         String                   @unique
+  name         String
+  muscleGroup  String
+  equipment    String?
+  instructions String
+  imageUrl     String?
+  gifUrl       String?
+  active       Boolean                  @default(true)
+  createdAt    DateTime                 @default(now())
+  workoutItems StudentWorkoutExercise[]
+}
+
+model StudentWorkout {
+  id         String                   @id @default(uuid())
+  tenantId   String
+  studentId  String
+  title      String
+  notes      String?
+  active     Boolean                  @default(true)
+  assignedBy String?
+  createdAt  DateTime                 @default(now())
+  updatedAt  DateTime                 @updatedAt
+  tenant     Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  student    Student                  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  exercises  StudentWorkoutExercise[]
+
+  @@index([tenantId, studentId, active])
+  @@index([studentId, active])
+}
+
+model StudentWorkoutExercise {
+  id               String         @id @default(uuid())
+  studentWorkoutId String
+  exerciseId       String
+  order            Int
+  sets             Int            @default(3)
+  reps             String         @default("12")
+  load             String?
+  restSeconds      Int?           @default(60)
+  notes            String?
+  workout          StudentWorkout @relation(fields: [studentWorkoutId], references: [id], onDelete: Cascade)
+  exercise         Exercise       @relation(fields: [exerciseId], references: [id])
+
+  @@unique([studentWorkoutId, order])
+  @@index([studentWorkoutId])
 }

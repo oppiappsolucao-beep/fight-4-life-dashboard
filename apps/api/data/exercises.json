@@ -1,0 +1,162 @@
+[
+  {
+    "slug": "agachamento-livre",
+    "name": "Agachamento livre",
+    "muscleGroup": "Pernas",
+    "equipment": "Peso corporal ou barra",
+    "instructions": "Pés na largura do ombro, peito erguido e core ativo. Desça flexionando joelhos e quadril como se fosse sentar, mantendo joelhos alinhados aos pés. Desça até coxas paralelas ao chão e suba empurrando o chão.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Squat/0.jpg"
+  },
+  {
+    "slug": "leg-press",
+    "name": "Leg press",
+    "muscleGroup": "Pernas",
+    "equipment": "Máquina",
+    "instructions": "Assento ajustado para joelhos formarem cerca de 90° no meio do movimento. Pés na plataforma na largura do ombro. Desça controlando até 90° e empurre sem travar completamente os joelhos.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Press/0.jpg"
+  },
+  {
+    "slug": "afundo",
+    "name": "Afundo",
+    "muscleGroup": "Pernas",
+    "equipment": "Halteres ou peso corporal",
+    "instructions": "Dê um passo à frente, desça até joelho de trás quase tocar o chão. Tronco ereto, joelho da frente não passa muito a ponta do pé. Alterne pernas a cada série ou faça todas de um lado.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Lunge/0.jpg"
+  },
+  {
+    "slug": "stiff",
+    "name": "Stiff (Levantamento terra romeno)",
+    "muscleGroup": "Posterior",
+    "equipment": "Barra ou halteres",
+    "instructions": "Pés na largura do quadril, joelhos levemente flexionados. Incline o tronco empurrando o quadril para trás, barra próxima às pernas. Sinta alongamento no posterior e retorne contraindo glúteos.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Stiff-Legged_Barbell_Deadlift/0.jpg"
+  },
+  {
+    "slug": "supino-reto",
+    "name": "Supino reto",
+    "muscleGroup": "Peito",
+    "equipment": "Barra ou halteres",
+    "instructions": "Deitado no banco, pés firmes no chão. Pegada na largura dos ombros, desça a barra até o meio do peito com cotovelos a cerca de 45°. Empurre de forma controlada sem tirar glúteos do banco.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Bench_Press_-_Medium_Grip/0.jpg"
+  },
+  {
+    "slug": "crucifixo",
+    "name": "Crucifixo",
+    "muscleGroup": "Peito",
+    "equipment": "Halteres ou cabos",
+    "instructions": "Deitado ou em pé, braços semi-flexionados. Abra os braços em arco até sentir alongamento no peito e feche contraindo sem bater os halteres.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Flyes/0.jpg"
+  },
+  {
+    "slug": "remada-curvada",
+    "name": "Remada curvada",
+    "muscleGroup": "Costas",
+    "equipment": "Barra ou halteres",
+    "instructions": "Tronco inclinado, coluna neutra. Puxe a barra em direção ao umbigo, cotovelos para trás. Contraia as escápulas no topo e desça controlando.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Bent_Over_Row/0.jpg"
+  },
+  {
+    "slug": "puxada-frontal",
+    "name": "Puxada frontal",
+    "muscleGroup": "Costas",
+    "equipment": "Polia",
+    "instructions": "Segure a barra na largura dos ombros. Puxe até o peito superior, cotovelos para baixo e trás. Retorne devagar sem deixar o peso puxar os ombros para frente.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Lat_Pulldown/0.jpg"
+  },
+  {
+    "slug": "desenvolvimento",
+    "name": "Desenvolvimento de ombros",
+    "muscleGroup": "Ombros",
+    "equipment": "Halteres ou barra",
+    "instructions": "Halteres na altura dos ombros, core firme. Empurre acima da cabeça sem arquear excessivamente as costas. Desça até cotovelos na linha dos ombros.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Shoulder_Press/0.jpg"
+  },
+  {
+    "slug": "elevacao-lateral",
+    "name": "Elevação lateral",
+    "muscleGroup": "Ombros",
+    "equipment": "Halteres",
+    "instructions": "Braços ao lado do corpo, cotovelos levemente flexionados. Eleve até altura dos ombros e desça controlando. Evite balançar o tronco.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Lateral_Raise/0.jpg"
+  },
+  {
+    "slug": "rosca-direta",
+    "name": "Rosca direta",
+    "muscleGroup": "Bíceps",
+    "equipment": "Barra ou halteres",
+    "instructions": "Cotovelos fixos ao lado do corpo. Flexione os cotovelos trazendo a barra aos ombros. Desça em 2–3 segundos sem balançar.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Curl/0.jpg"
+  },
+  {
+    "slug": "triceps-polia",
+    "name": "Tríceps na polia",
+    "muscleGroup": "Tríceps",
+    "equipment": "Polia",
+    "instructions": "Cotovelos colados ao corpo. Estenda os braços para baixo contraindo o tríceps. Retorne até cotovelos a 90° sem mover o tronco.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Triceps_Pushdown/0.jpg"
+  },
+  {
+    "slug": "prancha",
+    "name": "Prancha",
+    "muscleGroup": "Core",
+    "equipment": "Peso corporal",
+    "instructions": "Apoie antebraços e pontas dos pés, corpo alinhado. Contraia abdômen e glúteos, evite afundar lombar ou elevar quadril. Mantenha a respiração.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plank/0.jpg"
+  },
+  {
+    "slug": "abdominal-crunch",
+    "name": "Abdominal crunch",
+    "muscleGroup": "Core",
+    "equipment": "Peso corporal",
+    "instructions": "Deitado, joelhos flexionados, pés no chão. Mãos leves atrás da cabeça. Eleve o tronco contraindo o abdômen, olhar para cima. Desça sem relaxar totalmente.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Crunch_-_Hands_Overhead/0.jpg"
+  },
+  {
+    "slug": "burpee",
+    "name": "Burpee",
+    "muscleGroup": "Condicionamento",
+    "equipment": "Peso corporal",
+    "instructions": "Agachamento, salto para prancha, flexão opcional, puxe os pés de volta, salte com braços acima. Mantenha ritmo constante e core ativo.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Burpee/0.jpg"
+  },
+  {
+    "slug": "esteira",
+    "name": "Esteira (cardio)",
+    "muscleGroup": "Cardio",
+    "equipment": "Esteira",
+    "instructions": "Aqueça 3–5 min caminhando. Ajuste inclinação e velocidade conforme orientação. Mantenha postura ereta e passada natural.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Running_Treadmill/0.jpg"
+  },
+  {
+    "slug": "bike",
+    "name": "Bike ergométrica",
+    "muscleGroup": "Cardio",
+    "equipment": "Bike",
+    "instructions": "Ajuste selim e guidão. Pedale com cadência constante, core levemente ativo. Aumente resistência gradualmente conforme prescrito.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bicycling_Stationary/0.jpg"
+  },
+  {
+    "slug": "panturrilha-pe",
+    "name": "Panturrilha em pé",
+    "muscleGroup": "Panturrilha",
+    "equipment": "Máquina ou step",
+    "instructions": "Pontas dos pés no step, calcanhares fora. Suba o máximo possível nas pontas, pause 1s e desça alongando. Movimento controlado.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Calf_Raises/0.jpg"
+  },
+  {
+    "slug": "flexao",
+    "name": "Flexão de braço",
+    "muscleGroup": "Peito",
+    "equipment": "Peso corporal",
+    "instructions": "Mãos na largura dos ombros, corpo alinhado. Desça peito próximo ao chão, cotovelos a 45°. Empurre o chão mantendo core firme.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Push-Up/0.jpg"
+  },
+  {
+    "slug": "puxada-alta-pegada-aberta",
+    "name": "Barra fixa (assistida)",
+    "muscleGroup": "Costas",
+    "equipment": "Barra ou máquina assistida",
+    "instructions": "Pegada pronada larga. Puxe o peito em direção à barra, cotovelos para baixo. Desça controlando até braços quase estendidos.",
+    "imageUrl": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Pullups/0.jpg"
+  }
+]
