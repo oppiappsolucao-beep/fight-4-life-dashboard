@@ -218,6 +218,10 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
+# Local build tooling (do not commit)
+.build-tools/
+.tsc-check/
+
 # Node.js
 node_modules/
 dist/

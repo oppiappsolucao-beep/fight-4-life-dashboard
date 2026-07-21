@@ -63,7 +63,7 @@ const modalityListInclude = {
   },
   scheduleSlots: {
     where: { active: true },
-    orderBy: [{ weekday: "asc" }, { startTime: "asc" }],
+    orderBy: [{ weekday: "asc" as const }, { startTime: "asc" as const }],
   },
 };
 

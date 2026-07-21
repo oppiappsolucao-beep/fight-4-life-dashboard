@@ -1,5 +1,7 @@
 node_modules
 **/node_modules
+.build-tools
+.tsc-check
 **/dist
 apps/web/dist
 apps/api/dist
