@@ -1,26 +1,25 @@
 import { FormEvent, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import OppiLogo from "../components/OppiLogo";
 import HeroBackground from "../components/HeroBackground";
 import { useAuth } from "../contexts/AuthContext";
 import { apiFetch, setTenantSlug } from "../lib/api";
 import { formatCpf } from "../lib/format";
-import {
-  setStudentSession,
-  type StudentLoginType,
-} from "../lib/studentSession";
+import { clearStudentSession, setStudentSession } from "../lib/studentSession";
 
-const TAB_CONFIG: Record<
-  StudentLoginType,
-  {
-    label: string;
-    placeholder: string;
-    inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
-  }
-> = {
-  cpf: { label: "CPF", placeholder: "000.000.000-00", inputMode: "numeric" },
-  email: { label: "E-mail", placeholder: "seu@email.com", inputMode: "email" },
-};
+type LoginStep = "identify" | "password";
+type ProfileType = "student" | "owner" | "dev";
+
+interface LookupResponse {
+  type: ProfileType;
+  name: string | null;
+  email?: string;
+  loginType?: "cpf" | "email";
+  tenant?: {
+    slug: string;
+    name: string;
+  };
+}
 
 interface StudentLoginResponse {
   student: {
@@ -36,31 +35,73 @@ interface StudentLoginResponse {
   };
 }
 
+const PROFILE_LABELS: Record<ProfileType, string> = {
+  student: "Área do Aluno",
+  owner: "Dono da Academia",
+  dev: "Desenvolvimento",
+};
+
+function isEmailIdentifier(value: string): boolean {
+  return value.includes("@");
+}
+
+function formatIdentifierInput(value: string): string {
+  return isEmailIdentifier(value) ? value : formatCpf(value);
+}
+
 export default function StudentLoginPage() {
-  const { logout } = useAuth();
+  const { login, ownerLogin, logout } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<StudentLoginType>("cpf");
+  const [step, setStep] = useState<LoginStep>("identify");
+  const [profile, setProfile] = useState<LookupResponse | null>(null);
   const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  function handleTabChange(next: StudentLoginType) {
-    setTab(next);
-    setIdentifier("");
+  function resetToIdentify() {
+    setStep("identify");
+    setProfile(null);
+    setPassword("");
     setError("");
   }
 
-  function handleInputChange(value: string) {
-    setIdentifier(tab === "cpf" ? formatCpf(value) : value);
+  function handleIdentifierChange(value: string) {
+    setIdentifier(formatIdentifierInput(value));
+    setError("");
   }
 
-  async function handleSubmit(event: FormEvent) {
+  async function completeStudentLogin(
+    loginType: "cpf" | "email",
+    value: string,
+  ) {
+    const data = await apiFetch<StudentLoginResponse>("/auth/student-login", {
+      method: "POST",
+      body: JSON.stringify({ type: loginType, identifier: value }),
+    });
+
+    setTenantSlug(data.tenant.slug);
+    setStudentSession({
+      id: data.student.id,
+      nomeCompleto: data.student.nomeCompleto,
+      cpf: data.student.cpf,
+      email: data.student.email,
+      identifier:
+        loginType === "cpf" ? formatCpf(data.student.cpf) : data.student.email,
+      loginType,
+      tenantSlug: data.tenant.slug,
+    });
+    navigate("/treino");
+  }
+
+  async function handleIdentify(event: FormEvent) {
     event.preventDefault();
     setError("");
 
     const value = identifier.trim();
     if (!value) {
-      setError(`Informe seu ${TAB_CONFIG[tab].label.toLowerCase()} cadastrado.`);
+      setError("Informe seu CPF ou e-mail cadastrado.");
       return;
     }
 
@@ -68,67 +109,96 @@ export default function StudentLoginPage() {
 
     try {
       logout();
-      const data = await apiFetch<StudentLoginResponse>("/auth/student-login", {
+      clearStudentSession();
+
+      const lookup = await apiFetch<LookupResponse>("/auth/lookup", {
         method: "POST",
-        body: JSON.stringify({ type: tab, identifier: value }),
+        body: JSON.stringify({ identifier: value }),
       });
 
-      setTenantSlug(data.tenant.slug);
-      setStudentSession({
-        id: data.student.id,
-        nomeCompleto: data.student.nomeCompleto,
-        cpf: data.student.cpf,
-        email: data.student.email,
-        identifier: tab === "cpf" ? formatCpf(data.student.cpf) : data.student.email,
-        loginType: tab,
-        tenantSlug: data.tenant.slug,
-      });
-      navigate("/treino");
+      if (lookup.type === "student") {
+        await completeStudentLogin(lookup.loginType ?? "cpf", value);
+        return;
+      }
+
+      if (lookup.tenant?.slug) {
+        setTenantSlug(lookup.tenant.slug);
+      }
+
+      setProfile(lookup);
+      setStep("password");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao entrar.";
-      setError(
-        tab === "email" && message.includes("não encontrado")
-          ? `${message} Se você é dono da academia, acesse "Dono da Academia" acima.`
-          : message,
-      );
+      setError(err instanceof Error ? err.message : "Erro ao verificar cadastro.");
     } finally {
       setLoading(false);
     }
   }
 
+  async function handlePasswordSubmit(event: FormEvent) {
+    event.preventDefault();
+    setError("");
+
+    if (!profile?.email) {
+      setError("Sessão expirada. Informe CPF ou e-mail novamente.");
+      resetToIdentify();
+      return;
+    }
+
+    if (!password.trim()) {
+      setError("Informe sua senha.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      logout();
+      clearStudentSession();
+
+      if (profile.type === "owner") {
+        await ownerLogin(profile.email, password);
+        navigate("/dono/cadastro-aluno");
+        return;
+      }
+
+      if (profile.tenant?.slug) {
+        setTenantSlug(profile.tenant.slug);
+      }
+
+      await login(profile.email, password);
+      navigate("/dev/cadastro-academias");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao entrar.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const activeType = profile?.type ?? "student";
+  const cardTitle = step === "identify" ? "Acesso" : PROFILE_LABELS[activeType];
+
   return (
     <div className="relative min-h-dvh overflow-hidden">
       <HeroBackground />
 
-      <div className="relative z-10 mx-auto flex min-h-dvh max-w-lg flex-col px-4 py-5 sm:max-w-xl sm:px-6">
-        <header className="flex flex-col items-center gap-4 pt-2 sm:flex-row sm:justify-between sm:pt-4">
+      <div className="relative z-10 mx-auto flex min-h-dvh max-w-md flex-col px-4 py-6 sm:px-6">
+        <header className="flex justify-center pt-2 sm:pt-4">
           <OppiLogo size="md" />
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <Link
-              to="/dono/login"
-              className="rounded-full border border-white/15 px-3 py-1.5 text-[0.68rem] font-medium text-white/70 transition hover:border-[#e85d6f]/40 hover:text-white sm:px-4 sm:text-[0.75rem]"
-            >
-              Dono da Academia
-            </Link>
-            <Link
-              to="/dev/login"
-              className="rounded-full border border-white/15 px-3 py-1.5 text-[0.68rem] font-medium text-white/50 transition hover:border-[#e85d6f]/40 hover:text-white sm:px-4 sm:text-[0.75rem]"
-            >
-              Desenvolvimento
-            </Link>
-          </div>
         </header>
 
-        <main className="flex flex-1 flex-col items-center justify-center py-6 sm:py-10">
-          <div className="mb-5 text-center sm:mb-6">
+        <main className="flex flex-1 flex-col items-center justify-center py-8">
+          <div className="mb-6 text-center">
             <h1 className="m-0 text-[clamp(1.35rem,5vw,1.85rem)] font-normal text-white/95">
-              Seja bem vindo!
+              {step === "password" && profile?.name
+                ? `Olá, ${profile.name.split(" ")[0]}!`
+                : "Seja bem vindo!"}
             </h1>
-            <p className="mt-2 text-[0.78rem] leading-relaxed text-[#9a9a9a] sm:text-[0.82rem]">
-              Área do aluno — use CPF ou e-mail cadastrado na academia
-            </p>
-            <p className="mt-1 text-[0.68rem] text-[#6a6a6a]">
-              Dono ou equipe Oppi Tech? Use os botões acima (e-mail + senha).
+            <p className="mt-2 text-[0.78rem] leading-relaxed text-[#9a9a9a]">
+              {step === "identify"
+                ? "Informe CPF ou e-mail — reconhecemos seu perfil automaticamente"
+                : profile?.type === "owner"
+                  ? `Entre na ${profile.tenant?.name ?? "sua academia"}`
+                  : "Digite sua senha para continuar"}
             </p>
           </div>
 
@@ -137,63 +207,104 @@ export default function StudentLoginPage() {
 
             <div className="px-5 pt-6 text-center sm:px-6">
               <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#e85d6f]/15 text-[#e85d6f]">
-                <UserIcon />
+                {step === "password" && profile?.type === "owner" ? (
+                  <ShieldIcon />
+                ) : step === "password" && profile?.type === "dev" ? (
+                  <CodeIcon />
+                ) : (
+                  <UserIcon />
+                )}
               </div>
               <h2 className="m-0 text-[0.9rem] font-bold uppercase tracking-wide text-white">
-                Área de Aluno
+                {cardTitle}
               </h2>
             </div>
 
-            <form onSubmit={handleSubmit} className="px-5 pb-6 pt-4 sm:px-6">
-              <div className="mb-4 flex rounded-lg border border-white/10 bg-black/20 p-1">
-                {(Object.keys(TAB_CONFIG) as StudentLoginType[]).map((key) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => handleTabChange(key)}
-                    className={`flex-1 rounded-md px-2 py-2.5 text-[0.68rem] font-semibold uppercase tracking-wide transition sm:text-[0.72rem] ${
-                      tab === key
-                        ? "bg-gradient-to-r from-[#e85d6f] to-[#d44d62] text-white"
-                        : "text-white/50 hover:text-white/80"
-                    }`}
-                  >
-                    {TAB_CONFIG[key].label}
-                  </button>
-                ))}
-              </div>
+            {step === "identify" ? (
+              <form onSubmit={handleIdentify} className="px-5 pb-6 pt-4 sm:px-6">
+                <label className="mb-1.5 block text-[0.65rem] font-semibold uppercase tracking-[0.06rem] text-white/75">
+                  CPF ou e-mail
+                </label>
+                <input
+                  type="text"
+                  inputMode={isEmailIdentifier(identifier) ? "email" : "numeric"}
+                  value={identifier}
+                  onChange={(e) => handleIdentifierChange(e.target.value)}
+                  placeholder="000.000.000-00 ou seu@email.com"
+                  autoComplete="username"
+                  className="mb-2 w-full rounded-lg border border-white/20 bg-white px-3 py-3 text-[0.9rem] text-black outline-none transition focus:border-[#e85d6f]/60 focus:ring-2 focus:ring-[#e85d6f]/15"
+                />
 
-              <label className="mb-1.5 block text-[0.65rem] font-semibold uppercase tracking-[0.06rem] text-white/75">
-                {TAB_CONFIG[tab].label}
-              </label>
-              <input
-                type={tab === "email" ? "email" : "text"}
-                inputMode={TAB_CONFIG[tab].inputMode}
-                value={identifier}
-                onChange={(e) => handleInputChange(e.target.value)}
-                placeholder={TAB_CONFIG[tab].placeholder}
-                autoComplete={tab === "email" ? "email" : "off"}
-                className="mb-2 w-full rounded-lg border border-white/20 bg-white px-3 py-3 text-[0.9rem] text-black outline-none transition focus:border-[#e85d6f]/60 focus:ring-2 focus:ring-[#e85d6f]/15"
-              />
+                {error && (
+                  <p className="mb-2 text-[0.75rem] leading-snug text-red-300/90">
+                    {error}
+                  </p>
+                )}
 
-              {error && (
-                <p className="mb-2 text-[0.75rem] leading-snug text-red-300/90">
-                  {error}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="mt-4 w-full rounded-lg bg-gradient-to-r from-[#e85d6f] to-[#d44d62] py-3 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
+                >
+                  {loading ? "Verificando..." : "Continuar"}
+                </button>
+
+                <p className="mt-4 text-center text-[0.65rem] leading-snug text-[#7a7a7a]">
+                  Primeiro acesso?{" "}
+                  <span className="text-[#e85d6f]">Fale com a recepção</span>
                 </p>
-              )}
+              </form>
+            ) : (
+              <form onSubmit={handlePasswordSubmit} className="px-5 pb-6 pt-4 sm:px-6">
+                <p className="mb-4 text-center text-[0.72rem] text-white/55">
+                  {profile?.email}
+                </p>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="mt-4 w-full rounded-lg bg-gradient-to-r from-[#e85d6f] to-[#d44d62] py-3 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
-              >
-                {loading ? "Verificando..." : "Continuar"}
-              </button>
+                <label className="mb-1.5 block text-[0.65rem] font-semibold uppercase tracking-[0.06rem] text-white/75">
+                  Senha
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Digite sua senha"
+                    autoComplete="current-password"
+                    autoFocus
+                    className="mb-2 w-full rounded-lg border border-white/20 bg-white px-3 py-3 pr-16 text-[0.9rem] text-black outline-none transition focus:border-[#e85d6f]/60 focus:ring-2 focus:ring-[#e85d6f]/15"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.68rem] font-medium text-zinc-500"
+                  >
+                    {showPassword ? "Ocultar" : "Ver"}
+                  </button>
+                </div>
 
-              <p className="mt-4 text-center text-[0.65rem] leading-snug text-[#7a7a7a]">
-                Primeiro acesso?{" "}
-                <span className="text-[#e85d6f]">Fale com a recepção</span>
-              </p>
-            </form>
+                {error && (
+                  <p className="mb-2 text-[0.75rem] leading-snug text-red-300/90">
+                    {error}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="mt-4 w-full rounded-lg bg-gradient-to-r from-[#e85d6f] to-[#d44d62] py-3 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
+                >
+                  {loading ? "Entrando..." : "Entrar"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={resetToIdentify}
+                  className="mt-3 w-full py-2 text-[0.72rem] font-medium text-white/45 transition hover:text-white/70"
+                >
+                  Voltar
+                </button>
+              </form>
+            )}
           </div>
         </main>
       </div>
@@ -206,6 +317,23 @@ function UserIcon() {
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <circle cx="12" cy="8" r="4" />
       <path d="M5 20c1.5-4 13.5-4 14 0" />
+    </svg>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M12 3 4 7v6c0 5 3.5 8 8 8s8-3 8-8V7l-8-4Z" />
+      <path d="M9 12l2 2 4-4" />
+    </svg>
+  );
+}
+
+function CodeIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M8 8 4 12l4 4M16 8l4 4-4 4M14 4l-4 16" />
     </svg>
   );
 }

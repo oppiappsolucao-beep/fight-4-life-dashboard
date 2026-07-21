@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import bcrypt from "bcryptjs";
+import { UserRole } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
 import { resolveTenant } from "../../middleware/tenant.js";
@@ -15,8 +16,43 @@ const studentLoginSchema = z.object({
   identifier: z.string().min(1, "Informe CPF ou e-mail."),
 });
 
+const lookupSchema = z.object({
+  identifier: z.string().min(1, "Informe CPF ou e-mail."),
+});
+
+const STAFF_DEV_ROLES: UserRole[] = [UserRole.DESENVOLVIMENTO];
+
 function normalizeCpf(value: string): string {
   return value.replace(/\D/g, "");
+}
+
+function normalizeEmail(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isEmailIdentifier(value: string): boolean {
+  return value.includes("@");
+}
+
+async function resolveTenantOrError(
+  request: Parameters<typeof resolveTenant>[0],
+  reply: import("fastify").FastifyReply,
+) {
+  try {
+    const tenant = await resolveTenant(request);
+    if (!tenant) {
+      reply.status(404).send({ error: "Academia não encontrada." });
+      return null;
+    }
+    return tenant;
+  } catch (error) {
+    request.log.error(error);
+    reply.status(503).send({
+      error:
+        "Banco de dados indisponível. Verifique a conexão Neon no arquivo .env.",
+    });
+    return null;
+  }
 }
 
 export async function authRoutes(app: FastifyInstance): Promise<void> {
@@ -123,6 +159,139 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
       return reply.send({ user, tenant });
     },
   );
+
+  app.post("/auth/lookup", async (request, reply) => {
+    const parsed = lookupSchema.safeParse(request.body);
+
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: parsed.error.errors[0]?.message ?? "Dados inválidos.",
+      });
+    }
+
+    const rawIdentifier = parsed.data.identifier.trim();
+
+    if (isEmailIdentifier(rawIdentifier)) {
+      const email = normalizeEmail(rawIdentifier);
+
+      const devUser = await prisma.user.findFirst({
+        where: {
+          email,
+          role: { in: STAFF_DEV_ROLES },
+          active: true,
+        },
+        select: {
+          name: true,
+          email: true,
+          tenant: {
+            select: { slug: true, name: true, active: true },
+          },
+        },
+      });
+
+      if (devUser) {
+        if (!devUser.tenant.active) {
+          return reply.status(403).send({
+            error: "Acesso bloqueado. Entre em contato com a equipe Oppi Tech.",
+          });
+        }
+
+        return reply.send({
+          type: "dev",
+          name: devUser.name,
+          email: devUser.email,
+          tenant: {
+            slug: devUser.tenant.slug,
+            name: devUser.tenant.name,
+          },
+        });
+      }
+
+      const owner = await prisma.user.findFirst({
+        where: {
+          email,
+          role: UserRole.PROPRIETARIO,
+          active: true,
+          tenant: { active: true },
+        },
+        select: {
+          name: true,
+          email: true,
+          tenant: {
+            select: { slug: true, name: true },
+          },
+        },
+      });
+
+      if (owner) {
+        return reply.send({
+          type: "owner",
+          name: owner.name,
+          email: owner.email,
+          tenant: {
+            slug: owner.tenant.slug,
+            name: owner.tenant.name,
+          },
+        });
+      }
+    }
+
+    const tenant = await resolveTenantOrError(request, reply);
+    if (!tenant) {
+      return;
+    }
+
+    const tenantRecord = await prisma.tenant.findUnique({
+      where: { id: tenant.id },
+      select: { active: true, slug: true, name: true },
+    });
+
+    if (!tenantRecord?.active) {
+      return reply.status(403).send({
+        error: "Acesso bloqueado. Entre em contato com a recepção.",
+      });
+    }
+
+    const student = isEmailIdentifier(rawIdentifier)
+      ? await prisma.student.findFirst({
+          where: {
+            tenantId: tenant.id,
+            active: true,
+            email: normalizeEmail(rawIdentifier),
+          },
+          select: {
+            nomeCompleto: true,
+          },
+        })
+      : await prisma.student.findFirst({
+          where: {
+            tenantId: tenant.id,
+            active: true,
+            cpf: normalizeCpf(rawIdentifier),
+          },
+          select: {
+            nomeCompleto: true,
+          },
+        });
+
+    if (!student) {
+      return reply.status(404).send({
+        error: isEmailIdentifier(rawIdentifier)
+          ? "E-mail não encontrado. Verifique o cadastro ou fale com a recepção."
+          : "CPF não encontrado. Verifique o cadastro ou fale com a recepção.",
+      });
+    }
+
+    return reply.send({
+      type: "student",
+      name: student.nomeCompleto,
+      loginType: isEmailIdentifier(rawIdentifier) ? "email" : "cpf",
+      tenant: {
+        slug: tenantRecord.slug,
+        name: tenantRecord.name,
+      },
+    });
+  });
 
   app.post("/auth/student-login", async (request, reply) => {
     let tenant;
