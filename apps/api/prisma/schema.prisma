@@ -176,7 +176,7 @@ model StudentWorkout {
   studentId   String
   title       String
   notes       String?
-  workoutDate DateTime                 @db.Date
+  workoutDate DateTime                 @default(now()) @db.Date
   active      Boolean                  @default(true)
   assignedBy  String?
   createdAt   DateTime                 @default(now())

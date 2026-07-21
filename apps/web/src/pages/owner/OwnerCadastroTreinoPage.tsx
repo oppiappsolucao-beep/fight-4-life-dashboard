@@ -129,17 +129,19 @@ export default function OwnerCadastroTreinoPage() {
     if (!studentId) return;
     apiFetch<{ treinos: WorkoutSummary[] }>(`/owner/alunos/${studentId}/treinos`)
       .then((data) => setSavedTreinos(data.treinos))
-      .catch(() => setSavedTreinos([]));
+      .catch(() => {
+        setSavedTreinos([]);
+      });
   }, []);
 
   const loadStudentWorkout = useCallback((studentId: string, date: string) => {
     if (!studentId) return;
     setLoadingTreino(true);
-    setError("");
     apiFetch<{ treino: StudentWorkout | null }>(
       `/owner/alunos/${studentId}/treino?date=${encodeURIComponent(date)}`,
     )
       .then((data) => {
+        setError("");
         if (!data.treino) {
           setTitle(`Treino ${formatWorkoutDateLabel(date)}`);
           setNotes("");
@@ -167,9 +169,13 @@ export default function OwnerCadastroTreinoPage() {
           ),
         );
       })
-      .catch((err) =>
-        setError(err instanceof Error ? err.message : "Erro ao carregar treino."),
-      )
+      .catch((err) => {
+        const message =
+          err instanceof Error ? err.message : "Erro ao carregar treino desta data.";
+        if (!message.includes("indisponível")) {
+          setError(message);
+        }
+      })
       .finally(() => setLoadingTreino(false));
   }, []);
 

@@ -338,98 +338,113 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
   app.get<{ Params: { id: string } }>(
     "/owner/alunos/:id/treinos",
     async (request, reply) => {
-      const student = await prisma.student.findFirst({
-        where: {
-          id: request.params.id,
-          tenantId: request.user.tenantId,
-          active: true,
-        },
-        select: { id: true, nomeCompleto: true },
-      });
+      try {
+        const student = await prisma.student.findFirst({
+          where: {
+            id: request.params.id,
+            tenantId: request.user.tenantId,
+            active: true,
+          },
+          select: { id: true, nomeCompleto: true },
+        });
 
-      if (!student) {
-        return reply.status(404).send({ error: "Aluno não encontrado." });
+        if (!student) {
+          return reply.status(404).send({ error: "Aluno não encontrado." });
+        }
+
+        const treinos = await prisma.studentWorkout.findMany({
+          where: {
+            studentId: student.id,
+            tenantId: request.user.tenantId,
+            active: true,
+          },
+          orderBy: { workoutDate: "desc" },
+          select: {
+            id: true,
+            title: true,
+            workoutDate: true,
+            updatedAt: true,
+            _count: { select: { exercises: true } },
+          },
+        });
+
+        return reply.send({
+          aluno: student,
+          treinos: treinos.map(serializeWorkoutSummary),
+        });
+      } catch (error) {
+        request.log.error(error);
+        return reply.status(503).send({
+          error: "Treinos indisponíveis. Aguarde o redeploy da API concluir.",
+        });
       }
-
-      const treinos = await prisma.studentWorkout.findMany({
-        where: {
-          studentId: student.id,
-          tenantId: request.user.tenantId,
-          active: true,
-        },
-        orderBy: { workoutDate: "desc" },
-        select: {
-          id: true,
-          title: true,
-          workoutDate: true,
-          updatedAt: true,
-          _count: { select: { exercises: true } },
-        },
-      });
-
-      return reply.send({
-        aluno: student,
-        treinos: treinos.map(serializeWorkoutSummary),
-      });
     },
   );
 
   app.get<{ Params: { id: string }; Querystring: { date?: string } }>(
     "/owner/alunos/:id/treino",
     async (request, reply) => {
-      const student = await prisma.student.findFirst({
-        where: {
-          id: request.params.id,
-          tenantId: request.user.tenantId,
-          active: true,
-        },
-        select: { id: true, nomeCompleto: true },
-      });
-
-      if (!student) {
-        return reply.status(404).send({ error: "Aluno não encontrado." });
-      }
-
-      const dateParam = request.query.date;
-      let treino;
-
-      if (dateParam) {
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
-          return reply.status(400).send({ error: "Data inválida. Use AAAA-MM-DD." });
-        }
-
-        treino = await prisma.studentWorkout.findUnique({
+      try {
+        const student = await prisma.student.findFirst({
           where: {
-            studentId_workoutDate: {
-              studentId: student.id,
-              workoutDate: parseWorkoutDate(dateParam),
-            },
-          },
-          include: workoutInclude,
-        });
-      } else {
-        treino = await prisma.studentWorkout.findFirst({
-          where: {
-            studentId: student.id,
+            id: request.params.id,
             tenantId: request.user.tenantId,
             active: true,
           },
-          include: workoutInclude,
-          orderBy: { workoutDate: "desc" },
+          select: { id: true, nomeCompleto: true },
+        });
+
+        if (!student) {
+          return reply.status(404).send({ error: "Aluno não encontrado." });
+        }
+
+        const dateParam = request.query.date;
+        let treino;
+
+        if (dateParam) {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+            return reply.status(400).send({ error: "Data inválida. Use AAAA-MM-DD." });
+          }
+
+          treino = await prisma.studentWorkout.findUnique({
+            where: {
+              studentId_workoutDate: {
+                studentId: student.id,
+                workoutDate: parseWorkoutDate(dateParam),
+              },
+            },
+            include: workoutInclude,
+          });
+        } else {
+          treino = await prisma.studentWorkout.findFirst({
+            where: {
+              studentId: student.id,
+              tenantId: request.user.tenantId,
+              active: true,
+            },
+            include: workoutInclude,
+            orderBy: { workoutDate: "desc" },
+          });
+        }
+
+        return reply.send({
+          aluno: student,
+          treino: treino && treino.active ? serializeWorkout(treino) : null,
+        });
+      } catch (error) {
+        request.log.error(error);
+        return reply.status(503).send({
+          error: "Treino indisponível. Aguarde o redeploy da API concluir.",
         });
       }
-
-      return reply.send({
-        aluno: student,
-        treino: treino && treino.active ? serializeWorkout(treino) : null,
-      });
     },
   );
 
   app.put<{ Params: { id: string } }>(
     "/owner/alunos/:id/treino",
     async (request, reply) => {
-      const parsed = saveStudentWorkoutSchema.safeParse(request.body);
+      try {
+        const parsed = saveStudentWorkoutSchema.safeParse(request.body);
 
       if (!parsed.success) {
         return reply.status(400).send({
@@ -532,6 +547,12 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
         treino: serializeWorkout(treino),
         message: "Treino salvo e publicado para o aluno.",
       });
+      } catch (error) {
+        request.log.error(error);
+        return reply.status(503).send({
+          error: "Não foi possível salvar o treino. Tente novamente após o redeploy.",
+        });
+      }
     },
   );
 }
