@@ -31,28 +31,37 @@ function normalizeEmail(value: string): string {
 }
 
 function isEmailIdentifier(value: string): boolean {
-  return value.includes("@");
+  return value.includes("@") || /[a-zA-Z]/.test(value);
 }
 
-async function resolveTenantOrError(
-  request: Parameters<typeof resolveTenant>[0],
-  reply: import("fastify").FastifyReply,
-) {
-  try {
-    const tenant = await resolveTenant(request);
-    if (!tenant) {
-      reply.status(404).send({ error: "Academia não encontrada." });
-      return null;
-    }
-    return tenant;
-  } catch (error) {
-    request.log.error(error);
-    reply.status(503).send({
-      error:
-        "Banco de dados indisponível. Verifique a conexão Neon no arquivo .env.",
-    });
-    return null;
-  }
+const activeStudentSelect = {
+  id: true,
+  nomeCompleto: true,
+  cpf: true,
+  email: true,
+  tenant: {
+    select: { id: true, slug: true, name: true, active: true },
+  },
+} as const;
+
+async function findActiveStudent(identifier: string) {
+  const byEmail = isEmailIdentifier(identifier);
+
+  return prisma.student.findFirst({
+    where: byEmail
+      ? {
+          active: true,
+          email: normalizeEmail(identifier),
+          tenant: { active: true },
+        }
+      : {
+          active: true,
+          cpf: normalizeCpf(identifier),
+          tenant: { active: true },
+        },
+    select: activeStudentSelect,
+    orderBy: { createdAt: "desc" },
+  });
 }
 
 export async function authRoutes(app: FastifyInstance): Promise<void> {
@@ -236,43 +245,7 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
       }
     }
 
-    const tenant = await resolveTenantOrError(request, reply);
-    if (!tenant) {
-      return;
-    }
-
-    const tenantRecord = await prisma.tenant.findUnique({
-      where: { id: tenant.id },
-      select: { active: true, slug: true, name: true },
-    });
-
-    if (!tenantRecord?.active) {
-      return reply.status(403).send({
-        error: "Acesso bloqueado. Entre em contato com a recepção.",
-      });
-    }
-
-    const student = isEmailIdentifier(rawIdentifier)
-      ? await prisma.student.findFirst({
-          where: {
-            tenantId: tenant.id,
-            active: true,
-            email: normalizeEmail(rawIdentifier),
-          },
-          select: {
-            nomeCompleto: true,
-          },
-        })
-      : await prisma.student.findFirst({
-          where: {
-            tenantId: tenant.id,
-            active: true,
-            cpf: normalizeCpf(rawIdentifier),
-          },
-          select: {
-            nomeCompleto: true,
-          },
-        });
+    const student = await findActiveStudent(rawIdentifier);
 
     if (!student) {
       return reply.status(404).send({
@@ -287,29 +260,13 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
       name: student.nomeCompleto,
       loginType: isEmailIdentifier(rawIdentifier) ? "email" : "cpf",
       tenant: {
-        slug: tenantRecord.slug,
-        name: tenantRecord.name,
+        slug: student.tenant.slug,
+        name: student.tenant.name,
       },
     });
   });
 
   app.post("/auth/student-login", async (request, reply) => {
-    let tenant;
-
-    try {
-      tenant = await resolveTenant(request);
-    } catch (error) {
-      request.log.error(error);
-      return reply.status(503).send({
-        error:
-          "Banco de dados indisponível. Verifique a conexão Neon no arquivo .env.",
-      });
-    }
-
-    if (!tenant) {
-      return reply.status(404).send({ error: "Academia não encontrada." });
-    }
-
     const parsed = studentLoginSchema.safeParse(request.body);
 
     if (!parsed.success) {
@@ -320,45 +277,17 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
 
     const { type, identifier } = parsed.data;
 
-    const tenantRecord = await prisma.tenant.findUnique({
-      where: { id: tenant.id },
-      select: { active: true },
-    });
+    let student;
 
-    if (!tenantRecord?.active) {
-      return reply.status(403).send({
-        error: "Acesso bloqueado. Entre em contato com a recepção.",
+    try {
+      student = await findActiveStudent(identifier);
+    } catch (error) {
+      request.log.error(error);
+      return reply.status(503).send({
+        error:
+          "Banco de dados indisponível. Verifique a conexão Neon no arquivo .env.",
       });
     }
-
-    const student =
-      type === "cpf"
-        ? await prisma.student.findFirst({
-            where: {
-              tenantId: tenant.id,
-              active: true,
-              cpf: normalizeCpf(identifier),
-            },
-            select: {
-              id: true,
-              nomeCompleto: true,
-              cpf: true,
-              email: true,
-            },
-          })
-        : await prisma.student.findFirst({
-            where: {
-              tenantId: tenant.id,
-              active: true,
-              email: identifier.trim().toLowerCase(),
-            },
-            select: {
-              id: true,
-              nomeCompleto: true,
-              cpf: true,
-              email: true,
-            },
-          });
 
     if (!student) {
       return reply.status(401).send({
@@ -367,12 +296,30 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
       });
     }
 
+    const loginType = type === "email" ? "email" : "cpf";
+    const identifierMatches =
+      loginType === "email"
+        ? student.email === normalizeEmail(identifier)
+        : student.cpf === normalizeCpf(identifier);
+
+    if (!identifierMatches) {
+      return reply.status(401).send({
+        error:
+          "CPF ou e-mail não encontrado. Verifique o cadastro com a recepção.",
+      });
+    }
+
     return reply.send({
-      student,
+      student: {
+        id: student.id,
+        nomeCompleto: student.nomeCompleto,
+        cpf: student.cpf,
+        email: student.email,
+      },
       tenant: {
-        id: tenant.id,
-        slug: tenant.slug,
-        name: tenant.name,
+        id: student.tenant.id,
+        slug: student.tenant.slug,
+        name: student.tenant.name,
       },
     });
   });
