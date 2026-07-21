@@ -41,12 +41,15 @@ const PROFILE_LABELS: Record<ProfileType, string> = {
   dev: "Desenvolvimento",
 };
 
-function isEmailIdentifier(value: string): boolean {
-  return value.includes("@");
+function looksLikeEmailInput(value: string): boolean {
+  return /[a-zA-Z@]/.test(value);
 }
 
 function formatIdentifierInput(value: string): string {
-  return isEmailIdentifier(value) ? value : formatCpf(value);
+  if (looksLikeEmailInput(value)) {
+    return value;
+  }
+  return formatCpf(value);
 }
 
 export default function StudentLoginPage() {
@@ -174,8 +177,14 @@ export default function StudentLoginPage() {
     }
   }
 
-  const activeType = profile?.type ?? "student";
-  const cardTitle = step === "identify" ? "Acesso" : PROFILE_LABELS[activeType];
+  const headerSubtitle =
+    step === "identify"
+      ? "Informe CPF ou e-mail — reconhecemos seu perfil automaticamente"
+      : profile?.type === "owner"
+        ? `Entre na ${profile.tenant?.name ?? "sua academia"}`
+        : profile?.email
+          ? `${PROFILE_LABELS[profile.type]} • ${profile.email}`
+          : "Digite sua senha para continuar";
 
   return (
     <div className="relative min-h-dvh overflow-hidden">
@@ -194,40 +203,17 @@ export default function StudentLoginPage() {
                 : "Seja bem vindo!"}
             </h1>
             <p className="mt-2 text-[0.78rem] leading-relaxed text-[#9a9a9a]">
-              {step === "identify"
-                ? "Informe CPF ou e-mail — reconhecemos seu perfil automaticamente"
-                : profile?.type === "owner"
-                  ? `Entre na ${profile.tenant?.name ?? "sua academia"}`
-                  : "Digite sua senha para continuar"}
+              {headerSubtitle}
             </p>
           </div>
 
           <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05] shadow-[0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur-md">
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#e85d6f]/40 to-transparent" />
 
-            <div className="px-5 pt-6 text-center sm:px-6">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#e85d6f]/15 text-[#e85d6f]">
-                {step === "password" && profile?.type === "owner" ? (
-                  <ShieldIcon />
-                ) : step === "password" && profile?.type === "dev" ? (
-                  <CodeIcon />
-                ) : (
-                  <UserIcon />
-                )}
-              </div>
-              <h2 className="m-0 text-[0.9rem] font-bold uppercase tracking-wide text-white">
-                {cardTitle}
-              </h2>
-            </div>
-
             {step === "identify" ? (
-              <form onSubmit={handleIdentify} className="px-5 pb-6 pt-4 sm:px-6">
-                <label className="mb-1.5 block text-[0.65rem] font-semibold uppercase tracking-[0.06rem] text-white/75">
-                  CPF ou e-mail
-                </label>
+              <form onSubmit={handleIdentify} className="px-5 py-6 sm:px-6">
                 <input
                   type="text"
-                  inputMode={isEmailIdentifier(identifier) ? "email" : "numeric"}
                   value={identifier}
                   onChange={(e) => handleIdentifierChange(e.target.value)}
                   placeholder="000.000.000-00 ou seu@email.com"
@@ -248,21 +234,9 @@ export default function StudentLoginPage() {
                 >
                   {loading ? "Verificando..." : "Continuar"}
                 </button>
-
-                <p className="mt-4 text-center text-[0.65rem] leading-snug text-[#7a7a7a]">
-                  Primeiro acesso?{" "}
-                  <span className="text-[#e85d6f]">Fale com a recepção</span>
-                </p>
               </form>
             ) : (
-              <form onSubmit={handlePasswordSubmit} className="px-5 pb-6 pt-4 sm:px-6">
-                <p className="mb-4 text-center text-[0.72rem] text-white/55">
-                  {profile?.email}
-                </p>
-
-                <label className="mb-1.5 block text-[0.65rem] font-semibold uppercase tracking-[0.06rem] text-white/75">
-                  Senha
-                </label>
+              <form onSubmit={handlePasswordSubmit} className="px-5 py-6 sm:px-6">
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
@@ -309,31 +283,5 @@ export default function StudentLoginPage() {
         </main>
       </div>
     </div>
-  );
-}
-
-function UserIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <circle cx="12" cy="8" r="4" />
-      <path d="M5 20c1.5-4 13.5-4 14 0" />
-    </svg>
-  );
-}
-
-function ShieldIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M12 3 4 7v6c0 5 3.5 8 8 8s8-3 8-8V7l-8-4Z" />
-      <path d="M9 12l2 2 4-4" />
-    </svg>
-  );
-}
-
-function CodeIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M8 8 4 12l4 4M16 8l4 4-4 4M14 4l-4 16" />
-    </svg>
   );
 }
