@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import OppiLogo from "../OppiLogo";
 import { sidebarShellClass } from "../DashboardShell";
 import { clearStudentSession, getStudentSession } from "../../lib/studentSession";
@@ -73,7 +73,14 @@ export default function StudentSidebar({ open, onClose }: StudentSidebarProps) {
         ))}
       </nav>
 
-      <div className="border-t border-white/10 p-4">
+      <div className="space-y-2 border-t border-white/10 p-4">
+        <Link
+          to="/dono/login"
+          onClick={onClose}
+          className="block w-full rounded-lg border border-white/15 px-3 py-2 text-center text-xs font-medium text-white/60 transition hover:border-[#e85d6f]/40 hover:text-white"
+        >
+          Dono da Academia
+        </Link>
         <button
           type="button"
           onClick={handleLogout}

@@ -1,7 +1,8 @@
 import { FormEvent, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import OppiLogo from "../components/OppiLogo";
 import HeroBackground from "../components/HeroBackground";
+import { useAuth } from "../contexts/AuthContext";
 import { apiFetch, setTenantSlug } from "../lib/api";
 import { formatCpf } from "../lib/format";
 import {
@@ -36,6 +37,7 @@ interface StudentLoginResponse {
 }
 
 export default function StudentLoginPage() {
+  const { logout } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState<StudentLoginType>("cpf");
   const [identifier, setIdentifier] = useState("");
@@ -65,6 +67,7 @@ export default function StudentLoginPage() {
     setLoading(true);
 
     try {
+      logout();
       const data = await apiFetch<StudentLoginResponse>("/auth/student-login", {
         method: "POST",
         body: JSON.stringify({ type: tab, identifier: value }),
@@ -82,7 +85,12 @@ export default function StudentLoginPage() {
       });
       navigate("/treino");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao entrar.");
+      const message = err instanceof Error ? err.message : "Erro ao entrar.";
+      setError(
+        tab === "email" && message.includes("não encontrado")
+          ? `${message} Se você é dono da academia, acesse "Dono da Academia" acima.`
+          : message,
+      );
     } finally {
       setLoading(false);
     }
@@ -92,9 +100,23 @@ export default function StudentLoginPage() {
     <div className="relative min-h-dvh overflow-hidden">
       <HeroBackground />
 
-      <div className="relative z-10 mx-auto flex min-h-dvh max-w-lg flex-col px-4 py-5 sm:px-6">
-        <header className="flex justify-center pt-2 sm:pt-4">
+      <div className="relative z-10 mx-auto flex min-h-dvh max-w-lg flex-col px-4 py-5 sm:max-w-xl sm:px-6">
+        <header className="flex flex-col items-center gap-4 pt-2 sm:flex-row sm:justify-between sm:pt-4">
           <OppiLogo size="md" />
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <Link
+              to="/dono/login"
+              className="rounded-full border border-white/15 px-3 py-1.5 text-[0.68rem] font-medium text-white/70 transition hover:border-[#e85d6f]/40 hover:text-white sm:px-4 sm:text-[0.75rem]"
+            >
+              Dono da Academia
+            </Link>
+            <Link
+              to="/dev/login"
+              className="rounded-full border border-white/15 px-3 py-1.5 text-[0.68rem] font-medium text-white/50 transition hover:border-[#e85d6f]/40 hover:text-white sm:px-4 sm:text-[0.75rem]"
+            >
+              Desenvolvimento
+            </Link>
+          </div>
         </header>
 
         <main className="flex flex-1 flex-col items-center justify-center py-6 sm:py-10">
@@ -103,7 +125,10 @@ export default function StudentLoginPage() {
               Seja bem vindo!
             </h1>
             <p className="mt-2 text-[0.78rem] leading-relaxed text-[#9a9a9a] sm:text-[0.82rem]">
-              Acesse com CPF ou e-mail cadastrado na academia
+              Área do aluno — use CPF ou e-mail cadastrado na academia
+            </p>
+            <p className="mt-1 text-[0.68rem] text-[#6a6a6a]">
+              Dono ou equipe Oppi Tech? Use os botões acima (e-mail + senha).
             </p>
           </div>
 

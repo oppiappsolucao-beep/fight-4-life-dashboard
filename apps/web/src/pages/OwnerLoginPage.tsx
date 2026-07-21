@@ -1,9 +1,10 @@
 import { FormEvent, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import OppiLogo from "../components/OppiLogo";
 import HeroBackground from "../components/HeroBackground";
 import { useAuth } from "../contexts/AuthContext";
 import { canAccessOwner } from "../lib/access";
+import { clearStudentSession } from "../lib/studentSession";
 
 export default function OwnerLoginPage() {
   const { ownerLogin, logout, isAuthenticated, user } = useAuth();
@@ -32,6 +33,7 @@ export default function OwnerLoginPage() {
 
     try {
       logout();
+      clearStudentSession();
       await ownerLogin(email, password);
       navigate("/dono/cadastro-aluno");
     } catch (err) {
@@ -46,8 +48,14 @@ export default function OwnerLoginPage() {
       <HeroBackground />
 
       <div className="relative z-10 mx-auto flex min-h-dvh max-w-lg flex-col px-4 py-5 sm:px-6">
-        <header className="flex justify-center pt-2 sm:pt-4">
+        <header className="flex flex-col items-center gap-3 pt-2 sm:flex-row sm:justify-between sm:pt-4">
           <OppiLogo size="md" />
+          <Link
+            to="/"
+            className="text-[0.72rem] font-medium text-white/50 transition hover:text-white/80"
+          >
+            Voltar ao início
+          </Link>
         </header>
 
         <main className="flex flex-1 flex-col items-center justify-center py-6 sm:py-10">
