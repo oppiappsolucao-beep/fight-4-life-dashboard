@@ -1,4 +1,4 @@
-import { WorkoutPhase } from "@prisma/client";
+import { WorkoutPhase, WorkoutSource } from "@prisma/client";
 import { z } from "zod";
 
 export const workoutPhaseSchema = z.enum(["INICIO", "MEIO", "FIM"]);
@@ -43,6 +43,7 @@ export function serializeWorkout(workout: {
   notes: string | null;
   workoutDate: Date;
   updatedAt: Date;
+  source?: WorkoutSource;
   exercises: Array<{
     id: string;
     phase: WorkoutPhase;
@@ -52,6 +53,7 @@ export function serializeWorkout(workout: {
     load: string | null;
     restSeconds: number | null;
     notes: string | null;
+    completedSets?: number[];
     exercise: {
       id: string;
       slug: string;
@@ -61,6 +63,8 @@ export function serializeWorkout(workout: {
       instructions: string;
       imageUrl: string | null;
       gifUrl: string | null;
+      phases?: string[];
+      bodyRegion?: string;
     };
   }>;
 }) {
@@ -80,6 +84,7 @@ export function serializeWorkout(workout: {
       load: item.load,
       restSeconds: item.restSeconds,
       notes: item.notes,
+      completedSets: item.completedSets ?? [],
       exercise: item.exercise,
     }));
 
@@ -89,6 +94,7 @@ export function serializeWorkout(workout: {
     notes: workout.notes,
     workoutDate: formatWorkoutDate(workout.workoutDate),
     updatedAt: workout.updatedAt.toISOString(),
+    source: workout.source ?? WorkoutSource.OWNER,
     exercises,
   };
 }
@@ -119,6 +125,7 @@ export function serializeWorkoutSummary(workout: {
   title: string;
   workoutDate: Date;
   updatedAt: Date;
+  source?: WorkoutSource;
   _count?: { exercises: number };
 }) {
   return {
@@ -126,6 +133,7 @@ export function serializeWorkoutSummary(workout: {
     title: workout.title,
     workoutDate: formatWorkoutDate(workout.workoutDate),
     updatedAt: workout.updatedAt.toISOString(),
+    source: workout.source ?? WorkoutSource.OWNER,
     exerciseCount: workout._count?.exercises ?? 0,
   };
 }

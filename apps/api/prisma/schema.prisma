@@ -37,6 +37,11 @@ enum WorkoutPhase {
   FIM
 }
 
+enum WorkoutSource {
+  OWNER
+  STUDENT
+}
+
 enum ExerciseBodyRegion {
   SUPERIOR
   INFERIOR
@@ -188,6 +193,7 @@ model StudentWorkout {
   title       String
   notes       String?
   workoutDate DateTime                 @default(now()) @db.Date
+  source      WorkoutSource            @default(OWNER)
   active      Boolean                  @default(true)
   assignedBy  String?
   createdAt   DateTime                 @default(now())
@@ -212,6 +218,7 @@ model StudentWorkoutExercise {
   load             String?
   restSeconds      Int?           @default(60)
   notes            String?
+  completedSets    Int[]          @default([])
   workout          StudentWorkout @relation(fields: [studentWorkoutId], references: [id], onDelete: Cascade)
   exercise         Exercise       @relation(fields: [exerciseId], references: [id])
 

@@ -47,3 +47,22 @@ export function formatBrDate(isoDate: string): string {
   if (!year || !month || !day) return isoDate;
   return `${day}/${month}/${year}`;
 }
+
+export function getWeekRange(reference = new Date()): { start: string; end: string } {
+  const date = new Date(reference);
+  date.setHours(12, 0, 0, 0);
+
+  const day = date.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+
+  const start = new Date(date);
+  start.setDate(date.getDate() + diffToMonday);
+
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+
+  return {
+    start: formatIsoDate(start),
+    end: formatIsoDate(end),
+  };
+}

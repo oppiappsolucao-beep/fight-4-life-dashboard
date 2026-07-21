@@ -1,23 +1,24 @@
 import { useState } from "react";
-import { bodyRegionLabel } from "../../lib/workout";
+import { bodyRegionLabel, isExerciseComplete } from "../../lib/workout";
 import type { WorkoutExerciseItem } from "../../types/workout";
 
 interface WorkoutExerciseCardProps {
   item: WorkoutExerciseItem;
   index: number;
   mediaUrl: string | null;
-  done: boolean;
-  onToggle: () => void;
+  completedSets: number[];
+  onToggleSet: (setNumber: number) => void;
 }
 
 export default function WorkoutExerciseCard({
   item,
   index,
   mediaUrl,
-  done,
-  onToggle,
+  completedSets,
+  onToggleSet,
 }: WorkoutExerciseCardProps) {
   const [showInstructions, setShowInstructions] = useState(false);
+  const done = isExerciseComplete({ sets: item.sets, completedSets });
 
   const regionBadge =
     item.phase === "MEIO" &&
@@ -92,6 +93,35 @@ export default function WorkoutExerciseCard({
           <Metric label="Pausa" value={item.restSeconds ? `${item.restSeconds}s` : "—"} />
         </div>
 
+        <div className="mt-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/45">
+            Marcar séries feitas
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {Array.from({ length: item.sets }, (_, idx) => {
+              const setNumber = idx + 1;
+              const checked = completedSets.includes(setNumber);
+              return (
+                <button
+                  key={setNumber}
+                  type="button"
+                  onClick={() => onToggleSet(setNumber)}
+                  className={`min-w-[3rem] rounded-xl px-3 py-2 text-sm font-semibold transition ${
+                    checked
+                      ? "bg-emerald-500/20 text-emerald-300"
+                      : "border border-white/10 bg-black/20 text-white/70 hover:border-[#e85d6f]/40"
+                  }`}
+                >
+                  S{setNumber}
+                </button>
+              );
+            })}
+          </div>
+          <p className="m-0 mt-2 text-xs text-white/45">
+            {completedSets.length}/{item.sets} séries concluídas
+          </p>
+        </div>
+
         {item.notes ? (
           <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white/70">
             {item.notes}
@@ -112,18 +142,6 @@ export default function WorkoutExerciseCard({
             {item.exercise.instructions}
           </p>
         ) : null}
-
-        <button
-          type="button"
-          onClick={onToggle}
-          className={`mt-4 w-full rounded-xl px-4 py-3 text-sm font-semibold transition ${
-            done
-              ? "bg-emerald-500/20 text-emerald-300"
-              : "bg-[#e85d6f] text-white shadow-[0_10px_30px_rgba(232,93,111,0.25)]"
-          }`}
-        >
-          {done ? "Exercício concluído" : "Marcar como feito"}
-        </button>
       </div>
     </article>
   );

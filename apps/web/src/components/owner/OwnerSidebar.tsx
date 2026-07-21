@@ -4,6 +4,7 @@ import OppiLogo from "../OppiLogo";
 import { sidebarShellClass } from "../DashboardShell";
 
 const MENU_ITEMS = [
+  { to: "/dono/visao-geral", label: "Visão Geral", icon: HomeIcon },
   { to: "/dono/cadastro-aluno", label: "Cadastro Aluno", icon: UserPlusIcon },
   { to: "/dono/alunos", label: "Alunos", icon: UsersIcon },
   { to: "/dono/cadastro-treino", label: "Cadastro de Treino", icon: DumbbellIcon },
@@ -90,6 +91,14 @@ export default function OwnerSidebar({ open, onClose }: OwnerSidebarProps) {
         </button>
       </div>
     </aside>
+  );
+}
+
+function HomeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z" />
+    </svg>
   );
 }
 

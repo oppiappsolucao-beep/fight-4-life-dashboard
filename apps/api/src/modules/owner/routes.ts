@@ -2,8 +2,15 @@ import type { FastifyInstance } from "fastify";
 import { Prisma, UserRole } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
+import { getDueStatus, getWeekRange } from "../../lib/billing.js";
+import {
+  DEV_NEW_ACADEMIES_GOAL,
+  OWNER_NEW_STUDENTS_GOAL,
+  OWNER_WEEKLY_WORKOUT_GOAL,
+  percentValue,
+} from "../../lib/goals.js";
 import { requireAuth, requireRole } from "../../middleware/auth.js";
-import { normalizePlans } from "./plans.js";
+import { normalizePlans, plansToPriceMap } from "./plans.js";
 import {
   parseWorkoutDate,
   saveStudentWorkoutSchema,
@@ -75,6 +82,120 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
       UserRole.DIRETORIA,
     ),
   );
+
+  app.get("/owner/overview", async (request, reply) => {
+    const tenantId = request.user.tenantId;
+    const week = getWeekRange();
+
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { name: true },
+    });
+
+    const [alunos, planos, treinosPublicados, treinosSemana, totalAlunosHistorico] =
+      await Promise.all([
+      prisma.student.findMany({
+        where: { tenantId, active: true },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          nomeCompleto: true,
+          planoModalidade: true,
+          diaVencimento: true,
+          createdAt: true,
+        },
+      }),
+      getOrCreateTenantPlans(tenantId),
+      prisma.studentWorkout.count({
+        where: { tenantId, active: true },
+      }),
+      prisma.studentWorkout.count({
+        where: {
+          tenantId,
+          active: true,
+          workoutDate: {
+            gte: parseWorkoutDate(week.start),
+            lte: parseWorkoutDate(week.end),
+          },
+        },
+      }),
+      prisma.student.count({ where: { tenantId } }),
+    ]);
+
+    const priceMap = plansToPriceMap(planos);
+    let receitaPrevista = 0;
+    let vencidos = 0;
+    let venceHoje = 0;
+
+    for (const aluno of alunos) {
+      receitaPrevista += priceMap[aluno.planoModalidade] ?? 0;
+      const status = getDueStatus(aluno.diaVencimento);
+      if (status === "vencido") vencidos += 1;
+      if (status === "hoje") venceHoje += 1;
+    }
+
+    return reply.send({
+      tenant: { name: tenant?.name ?? "Academia" },
+      user: { name: request.user.name ?? null },
+      semana: week,
+      metrics: {
+        totalAlunos: alunos.length,
+        treinosPublicados,
+        treinosSemana,
+        receitaPrevista,
+        vencidos,
+        venceHoje,
+      },
+      recentAlunos: alunos.slice(0, 5).map((aluno) => ({
+        id: aluno.id,
+        nomeCompleto: aluno.nomeCompleto,
+        planoModalidade: aluno.planoModalidade,
+        createdAt: aluno.createdAt.toISOString(),
+      })),
+      metas: [
+        {
+          id: "novos-alunos-mes",
+          label: "Novos alunos no mês",
+          atual: alunos.filter((aluno) => {
+            const created = aluno.createdAt;
+            const now = new Date();
+            return (
+              created.getMonth() === now.getMonth() &&
+              created.getFullYear() === now.getFullYear()
+            );
+          }).length,
+          meta: OWNER_NEW_STUDENTS_GOAL,
+          unidade: "alunos",
+          status: "ativo",
+        },
+        {
+          id: "treinos-semana",
+          label: "Treinos publicados na semana",
+          atual: treinosSemana,
+          meta: OWNER_WEEKLY_WORKOUT_GOAL,
+          unidade: "fichas",
+          status: "ativo",
+        },
+        {
+          id: "retencao-alunos",
+          label: "Retenção de alunos",
+          atual: percentValue(alunos.length, totalAlunosHistorico),
+          meta: 95,
+          unidade: "%",
+          status: "ativo",
+        },
+        {
+          id: "inadimplencia",
+          label: "Inadimplência",
+          atual: percentValue(vencidos, alunos.length),
+          meta: 5,
+          unidade: "%",
+          status: "ativo",
+          direction: "down",
+        },
+      ],
+    });
+  });
 
   app.get("/owner/alunos", async (request, reply) => {
     const tenantId = request.user.tenantId;
@@ -366,6 +487,7 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
             title: true,
             workoutDate: true,
             updatedAt: true,
+            source: true,
             _count: { select: { exercises: true } },
           },
         });
@@ -502,6 +624,7 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
               title: data.title.trim(),
               notes: data.notes?.trim() || null,
               assignedBy: request.user.sub,
+              source: "OWNER",
               active: true,
               exercises: {
                 create: data.exercises.map((item) => ({
@@ -528,6 +651,7 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
             notes: data.notes?.trim() || null,
             workoutDate,
             assignedBy: request.user.sub,
+            source: "OWNER",
             exercises: {
               create: data.exercises.map((item) => ({
                 exerciseId: item.exerciseId,

@@ -14,6 +14,7 @@ import StudentPerfilPage from "./pages/student/StudentPerfilPage";
 import StudentTermoSaudePage from "./pages/student/StudentTermoSaudePage";
 import OwnerLayout from "./components/owner/OwnerLayout";
 import OwnerLoginPage from "./pages/OwnerLoginPage";
+import OwnerVisaoGeralPage from "./pages/owner/OwnerVisaoGeralPage";
 import OwnerCadastroAlunoPage from "./pages/owner/OwnerCadastroAlunoPage";
 import OwnerAlunosPage from "./pages/owner/OwnerAlunosPage";
 import OwnerCadastroTreinoPage from "./pages/owner/OwnerCadastroTreinoPage";
@@ -21,6 +22,7 @@ import OwnerPlanosPage from "./pages/owner/OwnerPlanosPage";
 import OwnerContasReceberPage from "./pages/owner/OwnerContasReceberPage";
 import DevLayout from "./components/dev/DevLayout";
 import DevLoginPage from "./pages/DevLoginPage";
+import DevVisaoGeralPage from "./pages/dev/DevVisaoGeralPage";
 import DevCadastroAcademiasPage from "./pages/dev/DevCadastroAcademiasPage";
 import DevDonosAcademiasPage from "./pages/dev/DevDonosAcademiasPage";
 import DevContasReceberPage from "./pages/dev/DevContasReceberPage";
@@ -87,6 +89,7 @@ export default function App() {
       />
 
       <Route element={<OwnerLayout />}>
+        <Route path="dono/visao-geral" element={<OwnerVisaoGeralPage />} />
         <Route path="dono/cadastro-aluno" element={<OwnerCadastroAlunoPage />} />
         <Route path="dono/alunos" element={<OwnerAlunosPage />} />
         <Route path="dono/cadastro-treino" element={<OwnerCadastroTreinoPage />} />
@@ -96,12 +99,13 @@ export default function App() {
       </Route>
 
       <Route element={<DevLayout />}>
+        <Route path="dev/visao-geral" element={<DevVisaoGeralPage />} />
         <Route path="dev/cadastro-academias" element={<DevCadastroAcademiasPage />} />
         <Route path="dev/donos-academias" element={<DevDonosAcademiasPage />} />
         <Route path="dev/contas-a-receber" element={<DevContasReceberPage />} />
       </Route>
 
-      <Route path="/dashboard" element={<Navigate to="/dono/cadastro-aluno" replace />} />
+      <Route path="/dashboard" element={<Navigate to="/dono/visao-geral" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

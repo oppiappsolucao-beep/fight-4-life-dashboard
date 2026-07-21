@@ -1,4 +1,7 @@
 import type { ExerciseBodyRegion, WorkoutPhase } from "../lib/workout";
+import type { WorkoutCompletionStatus } from "../lib/workout";
+
+export type WorkoutSource = "OWNER" | "STUDENT";
 
 export interface ExerciseCatalogItem {
   id: string;
@@ -22,6 +25,7 @@ export interface WorkoutExerciseItem {
   load: string | null;
   restSeconds: number | null;
   notes: string | null;
+  completedSets?: number[];
   exercise: ExerciseCatalogItem;
 }
 
@@ -31,6 +35,7 @@ export interface StudentWorkout {
   notes: string | null;
   workoutDate: string;
   updatedAt: string;
+  source: WorkoutSource;
   exercises: WorkoutExerciseItem[];
 }
 
@@ -39,7 +44,10 @@ export interface WorkoutSummary {
   title: string;
   workoutDate: string;
   updatedAt: string;
+  source: WorkoutSource;
   exerciseCount: number;
+  progressPercent?: number;
+  completionStatus?: WorkoutCompletionStatus;
 }
 
 export interface WorkoutExerciseDraft {

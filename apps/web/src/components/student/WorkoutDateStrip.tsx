@@ -4,7 +4,6 @@ import {
   formatWorkoutMonthShort,
   formatWorkoutWeekdayShort,
   getWeekRange,
-  getWorkoutCompletionStatus,
   isTodayWorkoutDate,
   type WorkoutCompletionStatus,
 } from "../../lib/workout";
@@ -15,6 +14,7 @@ interface WorkoutDateStripProps {
   selectedDate: string;
   completionByDate: Record<string, WorkoutCompletionStatus>;
   onSelect: (workoutDate: string) => void;
+  onCreateDate?: (workoutDate: string) => void;
 }
 
 export default function WorkoutDateStrip({
@@ -22,6 +22,7 @@ export default function WorkoutDateStrip({
   selectedDate,
   completionByDate,
   onSelect,
+  onCreateDate,
 }: WorkoutDateStripProps) {
   const week = getWeekRange();
 
@@ -45,6 +46,27 @@ export default function WorkoutDateStrip({
       </div>
 
       <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {selectedDate && !treinos.some((item) => item.workoutDate === selectedDate) ? (
+          <button
+            type="button"
+            onClick={() => onSelect(selectedDate)}
+            className="relative min-w-[5.5rem] shrink-0 snap-start rounded-2xl border border-[#e85d6f] bg-[#e85d6f]/15 px-3 py-3 text-left shadow-[0_0_0_1px_rgba(232,93,111,0.35)]"
+          >
+            <StatusDot status="pending" />
+            <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
+              {formatWorkoutWeekdayShort(selectedDate)}
+            </p>
+            <p className="m-0 mt-1 text-2xl font-semibold leading-none text-white">
+              {formatWorkoutDay(selectedDate)}
+            </p>
+            <p className="m-0 mt-1 text-xs text-white/55">
+              {formatWorkoutMonthShort(selectedDate)}
+            </p>
+            <span className="mt-2 inline-flex rounded-full border border-dashed border-white/25 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-white/60">
+              Nova
+            </span>
+          </button>
+        ) : null}
         {treinos.map((item) => {
           const selected = item.workoutDate === selectedDate;
           const status = completionByDate[item.workoutDate] ?? "pending";
@@ -75,6 +97,10 @@ export default function WorkoutDateStrip({
                 <span className="mt-2 inline-flex rounded-full bg-white/10 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-white/70">
                   Hoje
                 </span>
+              ) : item.source === "STUDENT" ? (
+                <span className="mt-2 inline-flex rounded-full bg-[#e85d6f]/15 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-[#f08a98]">
+                  Meu
+                </span>
               ) : (
                 <p className="m-0 mt-2 truncate text-[0.65rem] text-white/40">
                   {item.exerciseCount} ex.
@@ -83,6 +109,21 @@ export default function WorkoutDateStrip({
             </button>
           );
         })}
+        {onCreateDate ? (
+          <label className="relative min-w-[5.5rem] shrink-0 snap-start rounded-2xl border border-dashed border-white/20 bg-black/15 px-3 py-3 text-left">
+            <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
+              Nova
+            </span>
+            <span className="mt-3 block text-2xl font-semibold text-[#e85d6f]">+</span>
+            <input
+              type="date"
+              className="absolute inset-0 cursor-pointer opacity-0"
+              onChange={(event) => {
+                if (event.target.value) onCreateDate(event.target.value);
+              }}
+            />
+          </label>
+        ) : null}
       </div>
     </section>
   );
@@ -119,21 +160,9 @@ function StatusDot({
 }
 
 export function readStoredCompletionStatus(
-  studentId: string,
-  workoutDate: string,
-  exerciseCount: number,
+  _studentId: string,
+  _workoutDate: string,
+  _exerciseCount: number,
 ): WorkoutCompletionStatus {
-  if (typeof window === "undefined" || exerciseCount <= 0) return "pending";
-
-  try {
-    const raw = window.localStorage.getItem(
-      `f4l-student-workout-done:${studentId}:${workoutDate}`,
-    );
-    if (!raw) return "pending";
-    const parsed = JSON.parse(raw) as Record<string, boolean>;
-    const done = Object.values(parsed).filter(Boolean).length;
-    return getWorkoutCompletionStatus(exerciseCount, done);
-  } catch {
-    return "pending";
-  }
+  return "pending";
 }

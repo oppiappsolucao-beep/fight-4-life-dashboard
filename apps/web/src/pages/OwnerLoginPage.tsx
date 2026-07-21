@@ -18,7 +18,7 @@ export default function OwnerLoginPage() {
   useEffect(() => {
     if (isAuthenticated && user) {
       if (canAccessOwner(user.role)) {
-        navigate("/dono/cadastro-aluno", { replace: true });
+        navigate("/dono/visao-geral", { replace: true });
         return;
       }
       logout();
@@ -35,7 +35,7 @@ export default function OwnerLoginPage() {
       logout();
       clearStudentSession();
       await ownerLogin(email, password);
-      navigate("/dono/cadastro-aluno");
+      navigate("/dono/visao-geral");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar.");
     } finally {

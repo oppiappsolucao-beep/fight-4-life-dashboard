@@ -133,6 +133,61 @@ export function getWorkoutCompletionStatus(
   return "partial";
 }
 
+export function isExerciseComplete(item: { sets: number; completedSets?: number[] }): boolean {
+  return (item.completedSets?.length ?? 0) >= item.sets;
+}
+
+export function countWorkoutSetProgress(
+  exercises: Array<{ sets: number; completedSets?: number[] }>,
+): {
+  completedSets: number;
+  totalSets: number;
+  completedExercises: number;
+  totalExercises: number;
+} {
+  let completedSets = 0;
+  let totalSets = 0;
+  let completedExercises = 0;
+
+  for (const exercise of exercises) {
+    totalSets += exercise.sets;
+    completedSets += Math.min(exercise.completedSets?.length ?? 0, exercise.sets);
+    if (isExerciseComplete(exercise)) {
+      completedExercises += 1;
+    }
+  }
+
+  return {
+    completedSets,
+    totalSets,
+    completedExercises,
+    totalExercises: exercises.length,
+  };
+}
+
+export function workoutSetProgressPercent(
+  exercises: Array<{ sets: number; completedSets?: number[] }>,
+): number {
+  const { completedSets, totalSets } = countWorkoutSetProgress(exercises);
+  if (totalSets <= 0) return 0;
+  return Math.round((completedSets / totalSets) * 100);
+}
+
+export function toggleCompletedSet(
+  current: number[],
+  setNumber: number,
+  maxSets: number,
+): number[] {
+  if (setNumber < 1 || setNumber > maxSets) return current;
+  const next = new Set(current);
+  if (next.has(setNumber)) {
+    next.delete(setNumber);
+  } else {
+    next.add(setNumber);
+  }
+  return Array.from(next).sort((a, b) => a - b);
+}
+
 export function sortWorkoutsAscending<T extends { workoutDate: string }>(items: T[]): T[] {
   return [...items].sort((a, b) => a.workoutDate.localeCompare(b.workoutDate));
 }

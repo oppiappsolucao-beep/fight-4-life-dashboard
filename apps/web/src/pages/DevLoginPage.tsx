@@ -18,7 +18,7 @@ export default function DevLoginPage() {
   useEffect(() => {
     if (isAuthenticated && user) {
       if (canAccessDev(user.role)) {
-        navigate("/dev/cadastro-academias", { replace: true });
+        navigate("/dev/visao-geral", { replace: true });
       } else {
         logout();
         setError("Acesso restrito à equipe de desenvolvimento.");

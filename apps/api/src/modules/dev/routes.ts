@@ -24,6 +24,9 @@ import {
 
 } from "./academy.js";
 
+import { getPlatformPlanValue } from "./billing.js";
+import { DEV_NEW_ACADEMIES_GOAL, percentValue } from "../../lib/goals.js";
+
 
 
 const OPPITECH_SLUG = "oppi-tech";
@@ -91,6 +94,113 @@ async function isOwnerEmailTaken(email: string, excludeUserId?: string) {
 
 
 export async function devRoutes(app: FastifyInstance): Promise<void> {
+
+  app.get(
+    "/dev/overview",
+    { preHandler: [requireAuth, requireRole(UserRole.DESENVOLVIMENTO)] },
+    async (request, reply) => {
+      const tenants = await prisma.tenant.findMany({
+        where: { slug: { not: OPPITECH_SLUG } },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          active: true,
+          createdAt: true,
+          branding: true,
+          users: {
+            where: { role: UserRole.PROPRIETARIO },
+            select: { id: true, email: true, name: true, active: true },
+            take: 1,
+          },
+        },
+      });
+
+      let academiasAtivas = 0;
+      let academiasInativas = 0;
+      let donosCadastrados = 0;
+      let receitaPlataforma = 0;
+
+      for (const tenant of tenants) {
+        if (tenant.active) {
+          academiasAtivas += 1;
+          const billing = parseBilling(tenant.branding);
+          receitaPlataforma += getPlatformPlanValue(billing.plano, billing.periodo);
+        } else {
+          academiasInativas += 1;
+        }
+
+        if (tenant.users[0]) {
+          donosCadastrados += 1;
+        }
+      }
+
+      return reply.send({
+        user: { name: request.user.name ?? null },
+        metrics: {
+          totalAcademias: tenants.length,
+          academiasAtivas,
+          academiasInativas,
+          donosCadastrados,
+          receitaPlataforma,
+        },
+        recentAcademias: tenants.slice(0, 5).map((tenant) => {
+          const billing = parseBilling(tenant.branding);
+          return {
+            id: tenant.id,
+            name: tenant.name,
+            active: tenant.active,
+            createdAt: tenant.createdAt.toISOString(),
+            billing,
+            ownerEmail: tenant.users[0]?.email ?? null,
+          };
+        }),
+        metas: [
+          {
+            id: "academias-ativas",
+            label: "Academias ativas",
+            atual: academiasAtivas,
+            meta: tenants.length,
+            unidade: "academias",
+            status: "ativo",
+          },
+          {
+            id: "receita-plataforma",
+            label: "Receita da plataforma",
+            atual: receitaPlataforma,
+            meta: receitaPlataforma,
+            unidade: "R$",
+            status: "ativo",
+          },
+          {
+            id: "novas-academias-mes",
+            label: "Novas academias no mês",
+            atual: tenants.filter((tenant) => {
+              const created = tenant.createdAt;
+              const now = new Date();
+              return (
+                created.getMonth() === now.getMonth() &&
+                created.getFullYear() === now.getFullYear()
+              );
+            }).length,
+            meta: DEV_NEW_ACADEMIES_GOAL,
+            unidade: "academias",
+            status: "ativo",
+          },
+          {
+            id: "churn-plataforma",
+            label: "Churn da plataforma",
+            atual: percentValue(academiasInativas, tenants.length),
+            meta: 5,
+            unidade: "%",
+            status: "ativo",
+            direction: "down",
+          },
+        ],
+      });
+    },
+  );
 
   app.get(
 

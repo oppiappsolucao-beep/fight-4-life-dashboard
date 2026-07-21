@@ -69,9 +69,17 @@ export default function StudentVisaoGeralPage() {
 
           <section className="grid gap-3 sm:grid-cols-2">
             {overview.metas.map((meta) => {
-              const percent =
-                meta.meta > 0 ? Math.min(100, Math.round((meta.atual / meta.meta) * 100)) : 0;
               const emBreve = meta.status === "em_breve";
+              const lowerIsBetter = meta.direction === "down";
+              const percent = (() => {
+                if (emBreve || meta.meta <= 0) return 0;
+                if (lowerIsBetter) {
+                  if (meta.atual <= meta.meta) return 100;
+                  return Math.max(0, Math.round((meta.meta / meta.atual) * 100));
+                }
+                return Math.min(100, Math.round((meta.atual / meta.meta) * 100));
+              })();
+              const onTrack = lowerIsBetter ? meta.atual <= meta.meta : meta.atual >= meta.meta;
 
               return (
                 <div
@@ -83,6 +91,10 @@ export default function StudentVisaoGeralPage() {
                     {emBreve ? (
                       <span className="rounded-full bg-white/10 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-white/55">
                         Em breve
+                      </span>
+                    ) : onTrack ? (
+                      <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-emerald-300">
+                        No alvo
                       </span>
                     ) : null}
                   </div>
@@ -96,7 +108,7 @@ export default function StudentVisaoGeralPage() {
                   <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-black/30">
                     <div
                       className={`h-full rounded-full transition-all ${
-                        emBreve ? "bg-white/20" : "bg-[#e85d6f]"
+                        emBreve ? "bg-white/20" : onTrack ? "bg-emerald-400" : "bg-[#e85d6f]"
                       }`}
                       style={{ width: `${percent}%` }}
                     />

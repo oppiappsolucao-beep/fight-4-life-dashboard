@@ -4,6 +4,7 @@ import OppiLogo from "../OppiLogo";
 import { sidebarShellClass } from "../DashboardShell";
 
 const MENU_ITEMS = [
+  { to: "/dev/visao-geral", label: "Visão Geral", icon: HomeIcon },
   { to: "/dev/cadastro-academias", label: "Cadastro de Academias", icon: BuildingIcon },
   { to: "/dev/donos-academias", label: "Donos de Academias", icon: OwnersIcon },
   { to: "/dev/contas-a-receber", label: "Contas a Receber", icon: ReceivableIcon },
@@ -86,6 +87,14 @@ export default function DevSidebar({ open, onClose }: DevSidebarProps) {
         </button>
       </div>
     </aside>
+  );
+}
+
+function HomeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z" />
+    </svg>
   );
 }
 

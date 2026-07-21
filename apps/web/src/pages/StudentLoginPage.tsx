@@ -160,7 +160,7 @@ export default function StudentLoginPage() {
 
       if (profile.type === "owner") {
         await ownerLogin(profile.email, password);
-        navigate("/dono/cadastro-aluno");
+        navigate("/dono/visao-geral");
         return;
       }
 
@@ -169,7 +169,7 @@ export default function StudentLoginPage() {
       }
 
       await login(profile.email, password);
-      navigate("/dev/cadastro-academias");
+      navigate("/dev/visao-geral");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar.");
     } finally {
