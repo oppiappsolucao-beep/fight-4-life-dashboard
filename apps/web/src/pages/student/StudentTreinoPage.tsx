@@ -132,10 +132,13 @@ export default function StudentTreinoPage() {
         setAccessModalidades(data.modalidades);
         setSelectedModalityId((current) => {
           if (current && data.modalidades.some((item) => item.id === current)) return current;
-          const musculacao =
-            data.modalidades.find((item) => item.contentType === "EXERCISE_CATALOG") ??
-            data.modalidades[0];
-          return musculacao?.id ?? "";
+          const videoModality = data.modalidades.find(
+            (item) => item.contentType === "VIDEO_GALLERY",
+          );
+          const musculacao = data.modalidades.find(
+            (item) => item.contentType === "EXERCISE_CATALOG",
+          );
+          return videoModality?.id ?? musculacao?.id ?? data.modalidades[0]?.id ?? "";
         });
       })
       .catch((err) =>
@@ -378,7 +381,7 @@ export default function StudentTreinoPage() {
         </div>
       ) : (
         <div className="space-y-4 pb-8">
-          {accessModalidades.length > 1 ? (
+          {accessModalidades.length > 0 ? (
             <section className="flex flex-wrap gap-2">
               {accessModalidades.map((item) => (
                 <button

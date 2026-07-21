@@ -47,7 +47,7 @@ async function buildProfessorStats(
   const [modalities, students, lessons, assignments] = await Promise.all([
     prisma.modality.findMany({
       where: { tenantId, id: { in: modalityIds } },
-      select: { id: true, name: true, linkedPlans: true },
+      select: { id: true, name: true, linkedPlans: true, contentType: true, active: true },
     }),
     prisma.student.findMany({
       where: { tenantId, active: true },
@@ -304,7 +304,7 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
         slug,
         contentType: data.contentType,
         description: data.description?.trim() || null,
-        linkedPlans: [],
+        linkedPlans: [data.name.trim()],
         sortOrder: (last?.sortOrder ?? 0) + 1,
         active: true,
       },
@@ -1177,35 +1177,42 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
       const findLessonForSlot = (startTime: string, endTime: string) =>
         lessons.find(
           (lesson) =>
-            (lesson.startTime === startTime && lesson.endTime === endTime) ||
-            (!lesson.startTime &&
-              !lesson.endTime &&
-              slotSources.length <= 1 &&
-              lessons.length === 1),
+            lesson.startTime === startTime &&
+            lesson.endTime === endTime,
         ) ?? null;
 
-      let horarios = slotSources.map((slot) => {
-        const lesson = findLessonForSlot(slot.startTime, slot.endTime);
-        return {
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-          label: `${slot.startTime} – ${slot.endTime}`,
-          professorName: lesson?.professor?.name ?? lesson?.professor?.email ?? slot.professorName,
-          lesson: lesson ? serializeProfessorLesson(lesson) : null,
-        };
-      });
-
-      if (horarios.length === 0 && lessons.length > 0) {
-        horarios = lessons.map((lesson) => ({
-          startTime: lesson.startTime ?? "00:00",
-          endTime: lesson.endTime ?? "23:59",
-          label: lesson.startTime && lesson.endTime
+      const horariosFromLessons = lessons.map((lesson) => ({
+        startTime: lesson.startTime ?? "00:00",
+        endTime: lesson.endTime ?? "23:59",
+        label:
+          lesson.startTime && lesson.endTime
             ? `${lesson.startTime} – ${lesson.endTime}`
-            : "Aula do dia",
-          professorName: lesson.professor?.name ?? lesson.professor?.email ?? null,
-          lesson: serializeProfessorLesson(lesson),
-        }));
-      }
+            : lesson.title,
+        professorName: lesson.professor?.name ?? lesson.professor?.email ?? null,
+        lesson: serializeProfessorLesson(lesson),
+      }));
+
+      const usedKeys = new Set(
+        horariosFromLessons.map((item) => `${item.startTime}-${item.endTime}`),
+      );
+
+      const horariosFromSlots = slotSources
+        .filter((slot) => !usedKeys.has(`${slot.startTime}-${slot.endTime}`))
+        .map((slot) => {
+          const lesson = findLessonForSlot(slot.startTime, slot.endTime);
+          return {
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            label: `${slot.startTime} – ${slot.endTime}`,
+            professorName:
+              lesson?.professor?.name ?? lesson?.professor?.email ?? slot.professorName,
+            lesson: lesson ? serializeProfessorLesson(lesson) : null,
+          };
+        });
+
+      const horarios = [...horariosFromLessons, ...horariosFromSlots].sort((a, b) =>
+        a.startTime.localeCompare(b.startTime),
+      );
 
       return reply.send({
         planoModalidade: student.planoModalidade,

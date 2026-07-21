@@ -75,6 +75,13 @@ export function normalizePlanName(value: string): string {
   return value.trim().toLowerCase();
 }
 
+const BUNDLE_GYM_PLANS = [
+  "plano trimestral",
+  "plano semestral",
+  "plano anual",
+  "musculação livre",
+];
+
 export function planGrantsAllModalities(planName: string): boolean {
   const normalizedPlan = normalizePlanName(planName);
   if (!normalizedPlan) return false;
@@ -88,7 +95,7 @@ export function planGrantsAllModalities(planName: string): boolean {
 }
 
 export function modalityMatchesPlan(
-  modality: Pick<Modality, "name" | "linkedPlans">,
+  modality: Pick<Modality, "name" | "linkedPlans" | "contentType" | "active">,
   planName: string,
 ): boolean {
   const normalizedPlan = normalizePlanName(planName);
@@ -98,14 +105,33 @@ export function modalityMatchesPlan(
     return true;
   }
 
+  if (
+    modality.contentType === "VIDEO_GALLERY" &&
+    modality.active &&
+    modality.linkedPlans.length === 0
+  ) {
+    return true;
+  }
+
   if (modality.linkedPlans.some((plan) => normalizePlanName(plan) === normalizedPlan)) {
     return true;
   }
 
   const normalizedName = normalizePlanName(modality.name);
-  return (
-    normalizedPlan.includes(normalizedName) || normalizedName.includes(normalizedPlan)
-  );
+  if (normalizedPlan.includes(normalizedName) || normalizedName.includes(normalizedPlan)) {
+    return true;
+  }
+
+  if (BUNDLE_GYM_PLANS.includes(normalizedPlan)) {
+    if (modality.contentType === "EXERCISE_CATALOG" && modality.active) {
+      return true;
+    }
+    if (modality.contentType === "VIDEO_GALLERY" && modality.active) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 export function parseClassDate(value: string): Date {
