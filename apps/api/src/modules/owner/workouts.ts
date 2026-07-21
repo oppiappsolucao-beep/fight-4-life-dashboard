@@ -106,6 +106,8 @@ export const workoutInclude = {
           instructions: true,
           imageUrl: true,
           gifUrl: true,
+          phases: true,
+          bodyRegion: true,
         },
       },
     },

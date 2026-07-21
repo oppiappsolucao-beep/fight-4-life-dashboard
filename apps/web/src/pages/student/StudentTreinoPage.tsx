@@ -3,11 +3,19 @@ import { apiFetch } from "../../lib/api";
 import { getStudentSession } from "../../lib/studentSession";
 import {
   WORKOUT_PHASES,
+  bodyRegionLabel,
+  countPhaseExercises,
   formatWorkoutDateLabel,
   groupExercisesByPhase,
+  groupMeioExercisesByRegion,
+  type WorkoutPhase,
 } from "../../lib/workout";
-import type { StudentWorkout, WorkoutSummary } from "../../types/workout";
+import type { StudentWorkout, WorkoutExerciseItem, WorkoutSummary } from "../../types/workout";
 import StudentSectionPage from "./StudentSectionPage";
+
+function exerciseKey(item: WorkoutExerciseItem): string {
+  return item.id ?? `${item.phase}-${item.order}-${item.exercise.id}`;
+}
 
 export default function StudentTreinoPage() {
   const session = getStudentSession();
@@ -23,6 +31,35 @@ export default function StudentTreinoPage() {
     () => (treino ? groupExercisesByPhase(treino.exercises) : null),
     [treino],
   );
+
+  const phaseCounts = useMemo(
+    () => (groupedExercises ? countPhaseExercises(groupedExercises) : null),
+    [groupedExercises],
+  );
+
+  const phaseProgress = useMemo(() => {
+    if (!treino || !groupedExercises) return null;
+
+    const progress: Record<WorkoutPhase, { done: number; total: number }> = {
+      INICIO: { done: 0, total: 0 },
+      MEIO: { done: 0, total: 0 },
+      FIM: { done: 0, total: 0 },
+    };
+
+    for (const phase of WORKOUT_PHASES) {
+      const items = groupedExercises[phase.id];
+      progress[phase.id] = {
+        total: items.length,
+        done: items.filter((item) => doneMap[exerciseKey(item)]).length,
+      };
+    }
+
+    return progress;
+  }, [treino, groupedExercises, doneMap]);
+
+  const completedCount = treino
+    ? treino.exercises.filter((item) => doneMap[exerciseKey(item)]).length
+    : 0;
 
   const loadDates = useCallback(() => {
     if (!session?.id) {
@@ -91,14 +128,10 @@ export default function StudentTreinoPage() {
     setDoneMap((current) => ({ ...current, [key]: !current[key] }));
   }
 
-  const completedCount = treino
-    ? treino.exercises.filter((item) => doneMap[item.id ?? `${item.phase}-${item.order}`]).length
-    : 0;
-
   return (
     <StudentSectionPage
       title="Treino"
-      description="Escolha a data e execute sua ficha dividida em começo, meio e fim."
+      description="Escolha a data e execute sua ficha em começo, meio (superior, inferior ou cardio) e fim."
     >
       {loading ? (
         <div className="rounded-xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
@@ -157,35 +190,103 @@ export default function StudentTreinoPage() {
                 </p>
               </div>
 
+              {phaseCounts ? (
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {WORKOUT_PHASES.map((phase) => {
+                    const total = phaseCounts[phase.id];
+                    const done = phaseProgress?.[phase.id]?.done ?? 0;
+                    const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+
+                    return (
+                      <div
+                        key={phase.id}
+                        className="rounded-xl border border-white/10 bg-white/[0.04] p-4"
+                      >
+                        <p className="m-0 text-xs font-semibold uppercase tracking-wide text-[#e85d6f]">
+                          {phase.label}
+                        </p>
+                        <p className="mt-1 text-sm text-white/55">{phase.description}</p>
+                        <p className="mt-2 text-xs text-white/40">
+                          {total} exercício{total === 1 ? "" : "s"} • {done}/{total} feitos
+                        </p>
+                        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-black/30">
+                          <div
+                            className="h-full rounded-full bg-[#e85d6f] transition-all"
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : null}
+
               {WORKOUT_PHASES.map((phase) => {
                 const items = groupedExercises?.[phase.id] ?? [];
                 if (items.length === 0) return null;
 
+                const meioGroups =
+                  phase.id === "MEIO" ? groupMeioExercisesByRegion(items) : null;
+
                 return (
-                  <section key={phase.id} className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <h3 className="m-0 text-sm font-semibold uppercase tracking-wide text-[#e85d6f]">
-                        {phase.label}
-                      </h3>
-                      <span className="text-xs text-white/40">{phase.description}</span>
+                  <section
+                    key={phase.id}
+                    className="rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:p-5"
+                  >
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+                      <div>
+                        <h3 className="m-0 text-base font-semibold uppercase tracking-wide text-[#e85d6f]">
+                          {phase.label}
+                        </h3>
+                        <p className="mt-1 text-sm text-white/45">{phase.description}</p>
+                      </div>
+                      <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/50">
+                        {items.length} exercício{items.length === 1 ? "" : "s"}
+                      </span>
                     </div>
 
-                    {items.map((item) => {
-                      const key = item.id ?? `${item.phase}-${item.order}`;
-                      const mediaUrl = item.exercise.gifUrl ?? item.exercise.imageUrl;
-                      const done = Boolean(doneMap[key]);
-
-                      return (
-                        <ExerciseCard
-                          key={key}
-                          item={item}
-                          index={item.order}
-                          mediaUrl={mediaUrl}
-                          done={done}
-                          onToggle={() => toggleDone(key)}
-                        />
-                      );
-                    })}
+                    {phase.id === "MEIO" && meioGroups && meioGroups.length > 0 ? (
+                      <div className="space-y-6">
+                        {meioGroups.map((group) => (
+                          <div key={group.region}>
+                            <div className="mb-3 flex items-center gap-2">
+                              <span className="rounded-full bg-[#e85d6f]/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#f08a98]">
+                                {group.label}
+                              </span>
+                              <span className="text-xs text-white/35">
+                                {group.items.length} exercício
+                                {group.items.length === 1 ? "" : "s"}
+                              </span>
+                            </div>
+                            <div className="space-y-4">
+                              {group.items.map((item) => (
+                                <ExerciseCard
+                                  key={exerciseKey(item)}
+                                  item={item}
+                                  index={item.order}
+                                  mediaUrl={item.exercise.gifUrl ?? item.exercise.imageUrl}
+                                  done={Boolean(doneMap[exerciseKey(item)])}
+                                  onToggle={() => toggleDone(exerciseKey(item))}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {items.map((item) => (
+                          <ExerciseCard
+                            key={exerciseKey(item)}
+                            item={item}
+                            index={item.order}
+                            mediaUrl={item.exercise.gifUrl ?? item.exercise.imageUrl}
+                            done={Boolean(doneMap[exerciseKey(item)])}
+                            onToggle={() => toggleDone(exerciseKey(item))}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </section>
                 );
               })}
@@ -204,12 +305,23 @@ function ExerciseCard({
   done,
   onToggle,
 }: {
-  item: StudentWorkout["exercises"][number];
+  item: WorkoutExerciseItem;
   index: number;
   mediaUrl: string | null;
   done: boolean;
   onToggle: () => void;
 }) {
+  const regionBadge =
+    item.phase === "MEIO" &&
+    (item.exercise.bodyRegion === "SUPERIOR" ||
+      item.exercise.bodyRegion === "INFERIOR" ||
+      item.exercise.bodyRegion === "CARDIO")
+      ? bodyRegionLabel(item.exercise.bodyRegion)
+      : item.exercise.bodyRegion === "AQUECIMENTO" ||
+          item.exercise.bodyRegion === "ALONGAMENTO"
+        ? bodyRegionLabel(item.exercise.bodyRegion)
+        : null;
+
   return (
     <article
       className={`overflow-hidden rounded-xl border backdrop-blur-sm transition ${
@@ -233,9 +345,16 @@ function ExerciseCard({
         <div className="p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="m-0 text-xs font-semibold uppercase tracking-wide text-white/45">
-                Exercício {index}
-              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="m-0 text-xs font-semibold uppercase tracking-wide text-white/45">
+                  Exercício {index}
+                </p>
+                {regionBadge ? (
+                  <span className="rounded-full border border-white/10 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-white/55">
+                    {regionBadge}
+                  </span>
+                ) : null}
+              </div>
               <h4 className="m-0 mt-1 text-lg font-semibold text-white">{item.exercise.name}</h4>
               <p className="mt-1 text-sm text-white/45">
                 {item.exercise.muscleGroup}

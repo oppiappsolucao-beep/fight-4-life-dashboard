@@ -1,10 +1,14 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "../../lib/api";
 import {
+  MEIO_TREINO_REGIONS,
   WORKOUT_PHASES,
+  bodyRegionLabel,
   formatWorkoutDateLabel,
   groupExercisesByPhase,
+  matchesCatalogFilter,
   todayDateInputValue,
+  type MeioTreinoRegion,
   type WorkoutPhase,
 } from "../../lib/workout";
 import type {
@@ -55,6 +59,7 @@ export default function OwnerCadastroTreinoPage() {
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [workoutDate, setWorkoutDate] = useState(todayDateInputValue());
   const [activePhase, setActivePhase] = useState<WorkoutPhase>("INICIO");
+  const [meioRegion, setMeioRegion] = useState<MeioTreinoRegion>("SUPERIOR");
   const [title, setTitle] = useState("Treino personalizado");
   const [notes, setNotes] = useState("");
   const [drafts, setDrafts] = useState<WorkoutExerciseDraft[]>([]);
@@ -68,13 +73,20 @@ export default function OwnerCadastroTreinoPage() {
   const [success, setSuccess] = useState("");
 
   const muscleGroups = useMemo(() => {
-    const groups = new Set(catalog.map((item) => item.muscleGroup));
+    const phaseCatalog = catalog.filter((item) =>
+      matchesCatalogFilter(item, activePhase, meioRegion),
+    );
+    const groups = new Set(phaseCatalog.map((item) => item.muscleGroup));
     return ["Todos", ...Array.from(groups).sort()];
-  }, [catalog]);
+  }, [catalog, activePhase, meioRegion]);
+
+  const phaseCatalog = useMemo(() => {
+    return catalog.filter((item) => matchesCatalogFilter(item, activePhase, meioRegion));
+  }, [catalog, activePhase, meioRegion]);
 
   const filteredCatalog = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return catalog.filter((item) => {
+    return phaseCatalog.filter((item) => {
       if (muscleFilter !== "Todos" && item.muscleGroup !== muscleFilter) return false;
       if (!term) return true;
       return (
@@ -83,7 +95,10 @@ export default function OwnerCadastroTreinoPage() {
         (item.equipment ?? "").toLowerCase().includes(term)
       );
     });
-  }, [catalog, muscleFilter, search]);
+  }, [phaseCatalog, muscleFilter, search]);
+
+  const activePhaseMeta = WORKOUT_PHASES.find((p) => p.id === activePhase);
+  const meioRegionMeta = MEIO_TREINO_REGIONS.find((r) => r.id === meioRegion);
 
   const selectedStudent = alunos.find((item) => item.id === selectedStudentId);
   const groupedDrafts = useMemo(() => groupExercisesByPhase(drafts), [drafts]);
@@ -182,6 +197,12 @@ export default function OwnerCadastroTreinoPage() {
   useEffect(() => {
     loadBase();
   }, [loadBase]);
+
+  useEffect(() => {
+    if (!muscleGroups.includes(muscleFilter)) {
+      setMuscleFilter("Todos");
+    }
+  }, [muscleGroups, muscleFilter]);
 
   useEffect(() => {
     if (selectedStudentId) {
@@ -388,7 +409,11 @@ export default function OwnerCadastroTreinoPage() {
                   <button
                     key={phase.id}
                     type="button"
-                    onClick={() => setActivePhase(phase.id)}
+                    onClick={() => {
+                      setActivePhase(phase.id);
+                      setMuscleFilter("Todos");
+                      setSearch("");
+                    }}
                     className={`rounded-lg px-3 py-2 text-left transition ${
                       activePhase === phase.id
                         ? "bg-[#e85d6f]/25 text-white"
@@ -401,12 +426,51 @@ export default function OwnerCadastroTreinoPage() {
                 ))}
               </div>
 
+              {activePhase === "MEIO" ? (
+                <div className="mb-4 rounded-xl border border-white/10 bg-black/20 p-3">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/50">
+                    Tipo do meio do treino
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {MEIO_TREINO_REGIONS.map((region) => (
+                      <button
+                        key={region.id}
+                        type="button"
+                        onClick={() => {
+                          setMeioRegion(region.id);
+                          setMuscleFilter("Todos");
+                          setSearch("");
+                        }}
+                        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                          meioRegion === region.id
+                            ? "bg-[#e85d6f] text-white"
+                            : "border border-white/15 text-white/70 hover:border-[#e85d6f]/40"
+                        }`}
+                      >
+                        {region.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
               <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                 <div>
                   <h2 className="m-0 text-base font-semibold text-white">Catálogo</h2>
                   <p className="mt-1 text-sm text-white/45">
-                    Adicionando em:{" "}
-                    <strong>{WORKOUT_PHASES.find((p) => p.id === activePhase)?.label}</strong>
+                    Adicionando em: <strong>{activePhaseMeta?.label}</strong>
+                    {activePhase === "MEIO" ? (
+                      <>
+                        {" "}
+                        • <strong>{meioRegionMeta?.label}</strong>
+                      </>
+                    ) : null}
+                  </p>
+                  <p className="mt-1 text-xs text-white/40">
+                    {filteredCatalog.length} opção(ões) para{" "}
+                    {activePhase === "MEIO"
+                      ? `${activePhaseMeta?.label} — ${meioRegionMeta?.label?.toLowerCase()}`
+                      : activePhaseMeta?.label?.toLowerCase()}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -431,32 +495,45 @@ export default function OwnerCadastroTreinoPage() {
               </div>
 
               <div className="max-h-[420px] space-y-3 overflow-y-auto pr-1">
-                {filteredCatalog.map((exercise) => (
-                  <div
-                    key={exercise.id}
-                    className="flex gap-3 rounded-xl border border-white/10 bg-black/20 p-3"
-                  >
-                    {exercise.imageUrl ? (
-                      <img
-                        src={exercise.imageUrl}
-                        alt={exercise.name}
-                        className="h-14 w-14 shrink-0 rounded-lg object-cover"
-                        loading="lazy"
-                      />
-                    ) : null}
-                    <div className="min-w-0 flex-1">
-                      <p className="m-0 text-sm font-semibold text-white">{exercise.name}</p>
-                      <p className="mt-0.5 text-xs text-white/45">{exercise.muscleGroup}</p>
-                      <button
-                        type="button"
-                        onClick={() => addExercise(exercise)}
-                        className="mt-2 rounded-md bg-[#e85d6f]/20 px-3 py-1.5 text-xs font-semibold text-[#f08a98]"
-                      >
-                        Adicionar
-                      </button>
-                    </div>
+                {filteredCatalog.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-white/10 p-8 text-center text-sm text-white/45">
+                    Nenhum exercício disponível para{" "}
+                    {activePhase === "MEIO"
+                      ? `${activePhaseMeta?.label} (${meioRegionMeta?.label?.toLowerCase()})`
+                      : activePhaseMeta?.label?.toLowerCase()}
+                    .
                   </div>
-                ))}
+                ) : (
+                  filteredCatalog.map((exercise) => (
+                    <div
+                      key={exercise.id}
+                      className="flex gap-3 rounded-xl border border-white/10 bg-black/20 p-3"
+                    >
+                      {exercise.imageUrl ? (
+                        <img
+                          src={exercise.imageUrl}
+                          alt={exercise.name}
+                          className="h-14 w-14 shrink-0 rounded-lg object-cover"
+                          loading="lazy"
+                        />
+                      ) : null}
+                      <div className="min-w-0 flex-1">
+                        <p className="m-0 text-sm font-semibold text-white">{exercise.name}</p>
+                        <p className="mt-0.5 text-xs text-white/45">
+                          {exercise.muscleGroup}
+                          {exercise.bodyRegion ? ` • ${bodyRegionLabel(exercise.bodyRegion)}` : ""}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => addExercise(exercise)}
+                          className="mt-2 rounded-md bg-[#e85d6f]/20 px-3 py-1.5 text-xs font-semibold text-[#f08a98]"
+                        >
+                          Adicionar
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </section>
 

@@ -1,5 +1,13 @@
 export type WorkoutPhase = "INICIO" | "MEIO" | "FIM";
 
+export type MeioTreinoRegion = "SUPERIOR" | "INFERIOR" | "CARDIO";
+
+export type ExerciseBodyRegion =
+  | MeioTreinoRegion
+  | "AQUECIMENTO"
+  | "ALONGAMENTO"
+  | "GERAL";
+
 export const WORKOUT_PHASES: Array<{
   id: WorkoutPhase;
   label: string;
@@ -8,12 +16,12 @@ export const WORKOUT_PHASES: Array<{
   {
     id: "INICIO",
     label: "Começo",
-    description: "Aquecimento e preparação",
+    description: "Aquecimento, mobilidade e cardio leve",
   },
   {
     id: "MEIO",
     label: "Meio",
-    description: "Parte principal do treino",
+    description: "Parte principal — escolha superior, inferior ou cardio",
   },
   {
     id: "FIM",
@@ -21,6 +29,43 @@ export const WORKOUT_PHASES: Array<{
     description: "Alongamento e volta à calma",
   },
 ];
+
+export const MEIO_TREINO_REGIONS: Array<{
+  id: MeioTreinoRegion;
+  label: string;
+}> = [
+  { id: "SUPERIOR", label: "Treino superior" },
+  { id: "INFERIOR", label: "Treino inferior" },
+  { id: "CARDIO", label: "Cardio" },
+];
+
+export function bodyRegionLabel(region: ExerciseBodyRegion): string {
+  const labels: Record<ExerciseBodyRegion, string> = {
+    SUPERIOR: "Superior",
+    INFERIOR: "Inferior",
+    CARDIO: "Cardio",
+    AQUECIMENTO: "Aquecimento",
+    ALONGAMENTO: "Alongamento",
+    GERAL: "Geral",
+  };
+  return labels[region] ?? region;
+}
+
+export function matchesCatalogFilter(
+  exercise: { phases: string[]; bodyRegion: ExerciseBodyRegion },
+  phase: WorkoutPhase,
+  meioRegion: MeioTreinoRegion,
+): boolean {
+  if (!exercise.phases.includes(phase)) {
+    return false;
+  }
+
+  if (phase === "MEIO") {
+    return exercise.bodyRegion === meioRegion;
+  }
+
+  return true;
+}
 
 export function workoutPhaseLabel(phase: WorkoutPhase): string {
   return WORKOUT_PHASES.find((item) => item.id === phase)?.label ?? phase;
@@ -56,4 +101,36 @@ export function groupExercisesByPhase<T extends { phase: WorkoutPhase; order: nu
   }
 
   return grouped;
+}
+
+export function groupMeioExercisesByRegion<
+  T extends { order: number; exercise: { bodyRegion: ExerciseBodyRegion } },
+>(exercises: T[]): Array<{ region: MeioTreinoRegion; label: string; items: T[] }> {
+  const buckets = new Map<MeioTreinoRegion, T[]>();
+
+  for (const item of exercises) {
+    const region = item.exercise.bodyRegion;
+    if (region !== "SUPERIOR" && region !== "INFERIOR" && region !== "CARDIO") {
+      continue;
+    }
+    const current = buckets.get(region) ?? [];
+    current.push(item);
+    buckets.set(region, current);
+  }
+
+  return MEIO_TREINO_REGIONS.filter((entry) => buckets.has(entry.id)).map((entry) => ({
+    region: entry.id,
+    label: entry.label,
+    items: (buckets.get(entry.id) ?? []).sort((a, b) => a.order - b.order),
+  }));
+}
+
+export function countPhaseExercises(
+  grouped: Record<WorkoutPhase, unknown[]>,
+): Record<WorkoutPhase, number> {
+  return {
+    INICIO: grouped.INICIO.length,
+    MEIO: grouped.MEIO.length,
+    FIM: grouped.FIM.length,
+  };
 }

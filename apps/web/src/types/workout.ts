@@ -1,4 +1,4 @@
-import type { WorkoutPhase } from "../lib/workout";
+import type { ExerciseBodyRegion, WorkoutPhase } from "../lib/workout";
 
 export interface ExerciseCatalogItem {
   id: string;
@@ -9,6 +9,8 @@ export interface ExerciseCatalogItem {
   instructions: string;
   imageUrl: string | null;
   gifUrl: string | null;
+  phases: string[];
+  bodyRegion: ExerciseBodyRegion;
 }
 
 export interface WorkoutExerciseItem {

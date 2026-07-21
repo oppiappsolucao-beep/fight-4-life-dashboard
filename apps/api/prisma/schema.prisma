@@ -37,6 +37,15 @@ enum WorkoutPhase {
   FIM
 }
 
+enum ExerciseBodyRegion {
+  SUPERIOR
+  INFERIOR
+  CARDIO
+  AQUECIMENTO
+  ALONGAMENTO
+  GERAL
+}
+
 model Tenant {
   id         String        @id @default(uuid())
   slug       String        @unique
@@ -165,6 +174,8 @@ model Exercise {
   instructions String
   imageUrl     String?
   gifUrl       String?
+  phases       String[]
+  bodyRegion   ExerciseBodyRegion       @default(GERAL)
   active       Boolean                  @default(true)
   createdAt    DateTime                 @default(now())
   workoutItems StudentWorkoutExercise[]

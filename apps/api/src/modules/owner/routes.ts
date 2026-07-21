@@ -322,6 +322,8 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
           instructions: true,
           imageUrl: true,
           gifUrl: true,
+          phases: true,
+          bodyRegion: true,
         },
       });
 

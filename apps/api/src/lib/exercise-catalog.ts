@@ -1,6 +1,7 @@
 import { readFileSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ExerciseBodyRegion } from "@prisma/client";
 import { prisma } from "./prisma.js";
 
 interface ExerciseSeed {
@@ -11,6 +12,8 @@ interface ExerciseSeed {
   instructions: string;
   imageUrl?: string;
   gifUrl?: string;
+  phases: string[];
+  bodyRegion: keyof typeof ExerciseBodyRegion;
 }
 
 function resolveExercisesJsonPath(): string {
@@ -39,20 +42,14 @@ function loadExerciseSeeds(): ExerciseSeed[] {
 }
 
 export async function ensureExerciseCatalog(): Promise<number> {
-  let existing = 0;
-
   try {
-    existing = await prisma.exercise.count();
+    await prisma.exercise.count();
   } catch (error) {
     console.error(
       "[exercises] Tabela Exercise indisponível. Rode db:push no deploy.",
       error,
     );
     return 0;
-  }
-
-  if (existing > 0) {
-    return existing;
   }
 
   const exercises = loadExerciseSeeds();
@@ -67,6 +64,8 @@ export async function ensureExerciseCatalog(): Promise<number> {
         instructions: item.instructions,
         imageUrl: item.imageUrl ?? null,
         gifUrl: item.gifUrl ?? null,
+        phases: item.phases,
+        bodyRegion: ExerciseBodyRegion[item.bodyRegion],
         active: true,
       },
       create: {
@@ -77,10 +76,12 @@ export async function ensureExerciseCatalog(): Promise<number> {
         instructions: item.instructions,
         imageUrl: item.imageUrl ?? null,
         gifUrl: item.gifUrl ?? null,
+        phases: item.phases,
+        bodyRegion: ExerciseBodyRegion[item.bodyRegion],
       },
     });
   }
 
-  console.log(`[exercises] Catálogo carregado: ${exercises.length} exercícios.`);
+  console.log(`[exercises] Catálogo sincronizado: ${exercises.length} exercícios.`);
   return exercises.length;
 }
