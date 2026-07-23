@@ -11,6 +11,8 @@ import {
   countWorkoutSetProgress,
   formatWorkoutDateLabel,
   getWorkoutCompletionStatus,
+  pickDefaultWorkoutDate,
+  listDatesInWeekForWeekdays,
   todayDateInputValue,
   toggleCompletedSet,
   workoutSetProgressPercent,
@@ -28,6 +30,7 @@ interface StudentLessonTreinoFlowProps {
   modalityId: string;
   modalityName: string;
   planoModalidade: string;
+  scheduleWeekdays: number[];
   onSelectModality?: (modalityId: string) => void;
 }
 
@@ -98,6 +101,7 @@ export default function StudentLessonTreinoFlow({
   modalityId,
   modalityName,
   planoModalidade,
+  scheduleWeekdays,
   onSelectModality,
 }: StudentLessonTreinoFlowProps) {
   const session = getStudentSession();
@@ -160,6 +164,12 @@ export default function StudentLessonTreinoFlow({
     );
   }, [lessonDates]);
 
+  const weekScheduleDates = useMemo(
+    () =>
+      scheduleWeekdays.length > 0 ? listDatesInWeekForWeekdays(scheduleWeekdays) : [],
+    [scheduleWeekdays],
+  );
+
   const loadDates = useCallback(() => {
     if (!session?.id || !modalityId) return;
     apiFetch<{ dates: Array<{ classDate: string }> }>(
@@ -177,12 +187,30 @@ export default function StudentLessonTreinoFlow({
           exerciseCount: 0,
         }));
         setLessonDates(summaries);
-        if (summaries.length > 0 && !summaries.some((item) => item.workoutDate === classDate)) {
-          setClassDate(summaries[summaries.length - 1]?.workoutDate ?? todayDateInputValue());
-        }
+        setClassDate((current) => {
+          const allowedDates =
+            weekScheduleDates.length > 0
+              ? weekScheduleDates
+              : summaries.map((item) => item.workoutDate);
+          if (allowedDates.length === 0) return todayDateInputValue();
+          if (current && allowedDates.includes(current)) return current;
+          const weekMatches = summaries.filter((item) => allowedDates.includes(item.workoutDate));
+          return pickDefaultWorkoutDate(weekMatches.length > 0 ? weekMatches : allowedDates.map((workoutDate) => ({
+            workoutDate,
+          })));
+        });
       })
-      .catch(() => setLessonDates([]));
-  }, [session?.id, modalityId, modalityName, classDate]);
+      .catch(() => {
+        setLessonDates([]);
+        if (weekScheduleDates.length > 0) {
+          setClassDate((current) =>
+            current && weekScheduleDates.includes(current)
+              ? current
+              : pickDefaultWorkoutDate(weekScheduleDates.map((workoutDate) => ({ workoutDate }))),
+          );
+        }
+      });
+  }, [session?.id, modalityId, modalityName, weekScheduleDates]);
 
   const loadWarmup = useCallback(() => {
     if (!session?.id || !modalityId) return;
@@ -295,7 +323,7 @@ export default function StudentLessonTreinoFlow({
         selectedDate={classDate}
         completionByDate={completionByDate}
         onSelect={setClassDate}
-        onCreateDate={setClassDate}
+        scheduleWeekdays={scheduleWeekdays.length > 0 ? scheduleWeekdays : undefined}
       />
 
       <StudentDayGradePanel

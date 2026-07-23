@@ -5,6 +5,7 @@ import {
   formatWorkoutWeekdayShort,
   getWeekRange,
   isTodayWorkoutDate,
+  listDatesInWeekForWeekdays,
   type WorkoutCompletionStatus,
 } from "../../lib/workout";
 import type { WorkoutSummary } from "../../types/workout";
@@ -15,6 +16,7 @@ interface WorkoutDateStripProps {
   completionByDate: Record<string, WorkoutCompletionStatus>;
   onSelect: (workoutDate: string) => void;
   onCreateDate?: (workoutDate: string) => void;
+  scheduleWeekdays?: number[];
 }
 
 export default function WorkoutDateStrip({
@@ -23,8 +25,31 @@ export default function WorkoutDateStrip({
   completionByDate,
   onSelect,
   onCreateDate,
+  scheduleWeekdays,
 }: WorkoutDateStripProps) {
   const week = getWeekRange();
+  const weekScheduleDates =
+    scheduleWeekdays && scheduleWeekdays.length > 0
+      ? listDatesInWeekForWeekdays(scheduleWeekdays)
+      : null;
+
+  const displayTreinos = weekScheduleDates
+    ? weekScheduleDates.map((workoutDate) => {
+        const existing = treinos.find((item) => item.workoutDate === workoutDate);
+        return (
+          existing ?? {
+            id: workoutDate,
+            workoutDate,
+            title: "",
+            updatedAt: workoutDate,
+            source: "OWNER" as const,
+            exerciseCount: 0,
+          }
+        );
+      })
+    : treinos;
+
+  const allowCreateDate = Boolean(onCreateDate) && !weekScheduleDates;
 
   return (
     <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-3 backdrop-blur-md sm:p-4">
@@ -34,8 +59,9 @@ export default function WorkoutDateStrip({
             Seus treinos
           </p>
           <p className="m-0 mt-1 text-sm text-white/70">
-            {treinos.length} data{treinos.length === 1 ? "" : "s"} • semana{" "}
-            {formatWorkoutDateLabel(week.start)} a {formatWorkoutDateLabel(week.end)}
+            {weekScheduleDates
+              ? `${displayTreinos.length} dia${displayTreinos.length === 1 ? "" : "s"} na semana • ${formatWorkoutDateLabel(week.start)} a ${formatWorkoutDateLabel(week.end)}`
+              : `${treinos.length} data${treinos.length === 1 ? "" : "s"} • semana ${formatWorkoutDateLabel(week.start)} a ${formatWorkoutDateLabel(week.end)}`}
           </p>
         </div>
         <div className="hidden items-center gap-3 text-[0.65rem] text-white/45 sm:flex">
@@ -46,7 +72,9 @@ export default function WorkoutDateStrip({
       </div>
 
       <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {selectedDate && !treinos.some((item) => item.workoutDate === selectedDate) ? (
+        {!weekScheduleDates &&
+        selectedDate &&
+        !displayTreinos.some((item) => item.workoutDate === selectedDate) ? (
           <button
             type="button"
             onClick={() => onSelect(selectedDate)}
@@ -67,7 +95,7 @@ export default function WorkoutDateStrip({
             </span>
           </button>
         ) : null}
-        {treinos.map((item) => {
+        {displayTreinos.map((item) => {
           const selected = item.workoutDate === selectedDate;
           const status = completionByDate[item.workoutDate] ?? "pending";
           const today = isTodayWorkoutDate(item.workoutDate);
@@ -109,7 +137,7 @@ export default function WorkoutDateStrip({
             </button>
           );
         })}
-        {onCreateDate ? (
+        {allowCreateDate ? (
           <label className="relative min-w-[5.5rem] shrink-0 snap-start rounded-2xl border border-dashed border-white/20 bg-black/15 px-3 py-3 text-left">
             <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
               Nova
@@ -119,7 +147,7 @@ export default function WorkoutDateStrip({
               type="date"
               className="absolute inset-0 cursor-pointer opacity-0"
               onChange={(event) => {
-                if (event.target.value) onCreateDate(event.target.value);
+                if (event.target.value && onCreateDate) onCreateDate(event.target.value);
               }}
             />
           </label>

@@ -240,6 +240,28 @@ export function isWorkoutDateInRange(
   return workoutDate >= start && workoutDate <= end;
 }
 
+export function listDatesInWeekForWeekdays(
+  weekdays: number[],
+  reference = new Date(),
+): string[] {
+  if (weekdays.length === 0) return [];
+
+  const weekdaySet = new Set(weekdays);
+  const { start, end } = getWeekRange(reference);
+  const dates: string[] = [];
+  const cursor = new Date(`${start}T12:00:00`);
+  const endDate = new Date(`${end}T12:00:00`);
+
+  while (cursor <= endDate) {
+    if (weekdaySet.has(cursor.getDay())) {
+      dates.push(formatWorkoutDateIso(cursor));
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return dates;
+}
+
 export function groupExercisesByPhase<T extends { phase: WorkoutPhase; order: number }>(
   exercises: T[],
 ): Record<WorkoutPhase, T[]> {

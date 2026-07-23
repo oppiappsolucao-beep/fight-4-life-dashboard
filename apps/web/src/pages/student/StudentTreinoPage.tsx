@@ -115,6 +115,11 @@ export default function StudentTreinoPage() {
   );
   const isMusculacao = selectedModality?.contentType === "EXERCISE_CATALOG";
 
+  const selectedScheduleWeekdays = useMemo(() => {
+    const slots = selectedModality?.scheduleSlots ?? [];
+    return Array.from(new Set(slots.map((slot) => slot.weekday))).sort((a, b) => a - b);
+  }, [selectedModality]);
+
   const loadContext = useCallback(() => {
     if (!session?.id) {
       setContextLoading(false);
@@ -406,6 +411,7 @@ export default function StudentTreinoPage() {
               modalityId={selectedModality.id}
               modalityName={selectedModality.name}
               planoModalidade={planoModalidade}
+              scheduleWeekdays={selectedScheduleWeekdays}
               onSelectModality={setSelectedModalityId}
             />
           ) : (

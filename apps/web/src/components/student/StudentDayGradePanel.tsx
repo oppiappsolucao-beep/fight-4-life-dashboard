@@ -52,6 +52,14 @@ export default function StudentDayGradePanel({
     );
   }
 
+  const sequencia = selectedModalityId
+    ? data.sequencia.filter((item) => item.modalityId === selectedModalityId)
+    : data.sequencia;
+
+  if (sequencia.length === 0) {
+    return null;
+  }
+
   return (
     <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
       <div className="mb-3">
@@ -59,12 +67,12 @@ export default function StudentDayGradePanel({
           Grade do dia
         </p>
         <p className="m-0 mt-1 text-sm text-white/70">
-          {formatWorkoutDateLabel(classDate)} • {data.sequencia.length} horário(s)
+          {formatWorkoutDateLabel(classDate)} • {sequencia.length} horário(s)
         </p>
       </div>
 
       <div className="space-y-2">
-        {data.sequencia.map((item, index) => {
+        {sequencia.map((item, index) => {
           const selected = item.modalityId === selectedModalityId;
           return (
             <button
