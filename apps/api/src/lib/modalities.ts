@@ -312,6 +312,7 @@ export function serializeModality(
     contentType: modality.contentType,
     description: modality.description,
     linkedPlans: modality.linkedPlans,
+    scheduleRepeatsMonthly: modality.scheduleRepeatsMonthly,
     warmupExercises: normalizeWarmupExercises(modality.warmupExercises),
     warmupMovementCatalog: normalizeWarmupMovementCatalog(modality.warmupMovementCatalog),
     active: modality.active,

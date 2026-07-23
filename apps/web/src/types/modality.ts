@@ -38,6 +38,7 @@ export interface ModalityItem {
     notes?: string | null;
   }>;
   warmupMovementCatalog?: WarmupMovementCatalogEntry[];
+  scheduleRepeatsMonthly?: boolean;
   active: boolean;
   sortOrder: number;
   lessonCount: number;
@@ -139,6 +140,38 @@ export interface StudentTreinoAulasResponse {
   classDate: string;
   weekday: number;
   horarios: StudentLessonSlotOption[];
+}
+
+export interface ScheduleOccurrenceItem {
+  classDate: string;
+  weekday: number;
+  startTime: string;
+  endTime: string;
+  label: string;
+  cancelled: boolean;
+}
+
+export interface OwnerScheduleOccurrencesResponse {
+  month: string;
+  repeatsMonthly: boolean;
+  ocorrencias: ScheduleOccurrenceItem[];
+}
+
+export interface StudentDayGradeEntry {
+  modalityId: string;
+  modalityName: string;
+  contentType: ModalityContentType;
+  startTime: string;
+  endTime: string;
+  label: string;
+  hasLesson: boolean;
+}
+
+export interface StudentDayGradeResponse {
+  planoModalidade: string;
+  classDate: string;
+  weekday: number;
+  sequencia: StudentDayGradeEntry[];
 }
 
 export interface StudentFrequencyResponse {

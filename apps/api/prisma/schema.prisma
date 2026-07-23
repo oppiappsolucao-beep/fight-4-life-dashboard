@@ -80,6 +80,7 @@ model Tenant {
   modalities Modality[]
   lessons    ProfessorLesson[]
   attendances LessonAttendance[]
+  scheduleCancellations ModalityScheduleCancellation[]
 }
 
 model Student {
@@ -244,6 +245,21 @@ model ModalityScheduleSlot {
   @@index([tenantId, modalityId, weekday])
 }
 
+model ModalityScheduleCancellation {
+  id         String   @id @default(uuid())
+  tenantId   String
+  modalityId String
+  classDate  DateTime @db.Date
+  startTime  String
+  endTime    String
+  createdAt  DateTime @default(now())
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  modality   Modality @relation(fields: [modalityId], references: [id], onDelete: Cascade)
+
+  @@unique([modalityId, classDate, startTime, endTime])
+  @@index([tenantId, modalityId, classDate])
+}
+
 model ProfessorScheduleSlot {
   id         String   @id @default(uuid())
   tenantId   String
@@ -302,6 +318,7 @@ model Modality {
   linkedPlans String[]            @default([])
   warmupExercises Json?
   warmupMovementCatalog Json?
+  scheduleRepeatsMonthly Boolean @default(true)
   active      Boolean             @default(true)
   sortOrder   Int                 @default(0)
   createdAt   DateTime            @default(now())
@@ -312,6 +329,7 @@ model Modality {
   professors  ProfessorModality[]
   scheduleSlots ModalityScheduleSlot[]
   professorScheduleSlots ProfessorScheduleSlot[]
+  scheduleCancellations ModalityScheduleCancellation[]
   workouts    StudentWorkout[]
 
   @@unique([tenantId, slug])

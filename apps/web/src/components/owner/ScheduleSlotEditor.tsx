@@ -4,9 +4,15 @@ interface ScheduleSlotEditorProps {
   title: string;
   slots: ScheduleSlot[];
   onChange: (slots: ScheduleSlot[]) => void;
+  compact?: boolean;
 }
 
-export default function ScheduleSlotEditor({ title, slots, onChange }: ScheduleSlotEditorProps) {
+export default function ScheduleSlotEditor({
+  title,
+  slots,
+  onChange,
+  compact = false,
+}: ScheduleSlotEditorProps) {
   function updateSlot(index: number, patch: Partial<ScheduleSlot>) {
     onChange(slots.map((slot, currentIndex) => (currentIndex === index ? { ...slot, ...patch } : slot)));
   }
@@ -16,7 +22,7 @@ export default function ScheduleSlotEditor({ title, slots, onChange }: ScheduleS
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+    <div className={`rounded-2xl border border-white/10 bg-black/20 p-4 ${compact ? "" : ""}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="m-0 text-sm font-semibold text-white">{title}</p>
         <button
@@ -35,7 +41,11 @@ export default function ScheduleSlotEditor({ title, slots, onChange }: ScheduleS
           {slots.map((slot, index) => (
             <div
               key={`${slot.weekday}-${slot.startTime}-${slot.endTime}-${index}`}
-              className="grid gap-2 rounded-xl border border-white/10 bg-black/25 p-3 sm:grid-cols-[1.1fr_0.9fr_0.9fr_auto]"
+              className={`grid gap-2 rounded-xl border border-white/10 bg-black/25 p-3 ${
+                compact
+                  ? "md:grid-cols-[minmax(0,1fr)_auto_auto_auto]"
+                  : "sm:grid-cols-[1.1fr_0.9fr_0.9fr_auto]"
+              }`}
             >
               <label className="block text-xs text-white/50">
                 Dia

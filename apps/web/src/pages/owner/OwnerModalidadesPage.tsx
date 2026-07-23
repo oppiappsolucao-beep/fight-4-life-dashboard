@@ -1,5 +1,5 @@
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import ScheduleSlotEditor from "../../components/owner/ScheduleSlotEditor";
+import OwnerModalitySchedulePanel from "../../components/owner/OwnerModalitySchedulePanel";
 import WeeklyScheduleGrid from "../../components/owner/WeeklyScheduleGrid";
 import { apiFetch } from "../../lib/api";
 import { formatTimeRange, type ScheduleGridEntry } from "../../lib/schedule";
@@ -14,6 +14,7 @@ export default function OwnerModalidadesPage() {
   const [modalidades, setModalidades] = useState<ModalityItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [scheduleDrafts, setScheduleDrafts] = useState<Record<string, ScheduleSlot[]>>({});
+  const [repeatsMonthlyDrafts, setRepeatsMonthlyDrafts] = useState<Record<string, boolean>>({});
   const [gradeProfessorEntries, setGradeProfessorEntries] = useState<ScheduleGridEntry[]>([]);
   const [newName, setNewName] = useState("");
   const [newContentType, setNewContentType] = useState<"VIDEO_GALLERY" | "EXERCISE_CATALOG">(
@@ -54,6 +55,14 @@ export default function OwnerModalidadesPage() {
             modalidadesData.modalidades.map((item) => [
               item.id,
               item.scheduleSlots?.length ? item.scheduleSlots : [],
+            ]),
+          ),
+        );
+        setRepeatsMonthlyDrafts(
+          Object.fromEntries(
+            modalidadesData.modalidades.map((item) => [
+              item.id,
+              item.scheduleRepeatsMonthly ?? true,
             ]),
           ),
         );
@@ -172,7 +181,10 @@ export default function OwnerModalidadesPage() {
     try {
       const result = await apiFetch<{ message: string }>(`/owner/modalidades/${modalityId}/horarios`, {
         method: "PUT",
-        body: JSON.stringify({ slots: scheduleDrafts[modalityId] ?? [] }),
+        body: JSON.stringify({
+          slots: scheduleDrafts[modalityId] ?? [],
+          repeatsMonthly: repeatsMonthlyDrafts[modalityId] ?? true,
+        }),
       });
       setSuccess(result.message);
       setEditingScheduleId(null);
@@ -288,44 +300,70 @@ export default function OwnerModalidadesPage() {
             {saving ? "Salvando..." : "Salvar modalidades ofertadas"}
           </button>
 
-          {activeModalities.map((modality) => (
-            <div key={modality.id} className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="m-0 text-sm font-semibold text-white">Horários — {modality.name}</p>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setEditingScheduleId((current) => (current === modality.id ? null : modality.id))
-                  }
-                  className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/75"
-                >
-                  {editingScheduleId === modality.id ? "Fechar editor" : "Editar horários"}
-                </button>
+          {activeModalities.length > 0 ? (
+            <section className="space-y-3">
+              <div>
+                <p className="m-0 text-sm font-semibold text-white">Horários por modalidade</p>
+                <p className="m-0 mt-1 text-xs text-white/45">
+                  Edite uma modalidade por vez para manter a tela organizada.
+                </p>
               </div>
 
-              {editingScheduleId === modality.id ? (
-                <div className="space-y-3">
-                  <ScheduleSlotEditor
-                    title={`Dias e horários de ${modality.name}`}
-                    slots={scheduleDrafts[modality.id] ?? []}
-                    onChange={(slots) =>
-                      setScheduleDrafts((current) => ({ ...current, [modality.id]: slots }))
-                    }
-                  />
+              <div className="flex flex-wrap gap-2">
+                {activeModalities.map((modality) => (
                   <button
+                    key={modality.id}
                     type="button"
-                    disabled={savingScheduleId === modality.id}
-                    onClick={() => saveModalitySchedule(modality.id)}
-                    className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-200 disabled:opacity-60"
+                    onClick={() =>
+                      setEditingScheduleId((current) =>
+                        current === modality.id ? null : modality.id,
+                      )
+                    }
+                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                      editingScheduleId === modality.id
+                        ? "bg-[#e85d6f] text-white"
+                        : "border border-white/15 text-white/70 hover:border-[#e85d6f]/40"
+                    }`}
                   >
-                    {savingScheduleId === modality.id
-                      ? "Salvando horários..."
-                      : "Salvar horários da modalidade"}
+                    {modality.name}
+                    {(scheduleDrafts[modality.id] ?? []).length > 0
+                      ? ` • ${(scheduleDrafts[modality.id] ?? []).length} horário(s)`
+                      : ""}
                   </button>
+                ))}
+              </div>
+
+              {editingScheduleId ? (
+                (() => {
+                  const modality = activeModalities.find((item) => item.id === editingScheduleId);
+                  if (!modality) return null;
+                  return (
+                    <OwnerModalitySchedulePanel
+                      modality={modality}
+                      slots={scheduleDrafts[modality.id] ?? []}
+                      repeatsMonthly={repeatsMonthlyDrafts[modality.id] ?? true}
+                      saving={savingScheduleId === modality.id}
+                      onSlotsChange={(slots) =>
+                        setScheduleDrafts((current) => ({ ...current, [modality.id]: slots }))
+                      }
+                      onRepeatsMonthlyChange={(value) =>
+                        setRepeatsMonthlyDrafts((current) => ({
+                          ...current,
+                          [modality.id]: value,
+                        }))
+                      }
+                      onSave={() => saveModalitySchedule(modality.id)}
+                      onClose={() => setEditingScheduleId(null)}
+                    />
+                  );
+                })()
+              ) : (
+                <div className="rounded-xl border border-dashed border-white/10 px-4 py-6 text-sm text-white/45">
+                  Selecione uma modalidade acima para editar horários, repetição mensal e cancelamentos.
                 </div>
-              ) : null}
-            </div>
-          ))}
+              )}
+            </section>
+          ) : null}
 
           <WeeklyScheduleGrid
             title="Grade semanal da academia"

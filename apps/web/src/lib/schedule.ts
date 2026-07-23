@@ -51,6 +51,11 @@ export function formatTimeRange(slot: ScheduleSlot): string {
   return `${slot.startTime} – ${slot.endTime}`;
 }
 
+export function currentMonthInput(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
 export function groupEntriesByWeekday(entries: ScheduleGridEntry[]): ScheduleGridEntry[][] {
   return WEEKDAY_SHORT.map((_, weekday) =>
     entries

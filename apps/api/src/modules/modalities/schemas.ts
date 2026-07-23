@@ -64,6 +64,13 @@ export const scheduleSlotSchema = z.object({
 
 export const modalityScheduleSchema = z.object({
   slots: z.array(scheduleSlotSchema),
+  repeatsMonthly: z.boolean().optional(),
+});
+
+export const scheduleOccurrenceSchema = z.object({
+  classDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Informe a data no formato AAAA-MM-DD."),
+  startTime: scheduleSlotSchema.shape.startTime,
+  endTime: scheduleSlotSchema.shape.endTime,
 });
 
 export const professorModalityScheduleSchema = z.object({

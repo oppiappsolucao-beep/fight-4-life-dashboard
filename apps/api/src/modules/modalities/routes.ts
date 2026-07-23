@@ -19,7 +19,7 @@ import {
   serializeProfessorLesson,
   slugifyModality,
 } from "../../lib/modalities.js";
-import { normalizeScheduleSlots, serializeScheduleSlot, weekdayFromDateInput } from "../../lib/schedules.js";
+import { normalizeScheduleSlots, serializeScheduleSlot, weekdayFromDateInput, listDatesInMonth, parseMonthInput, currentMonthInput, scheduleOccurrenceKey } from "../../lib/schedules.js";
 import { normalizePlans } from "../owner/plans.js";
 import {
   parseWorkoutDate,
@@ -35,6 +35,7 @@ import {
   modalityScheduleSchema,
   modalityTemplateSchema,
   ownerLessonCreateSchema,
+  scheduleOccurrenceSchema,
   professorCreateSchema,
   professorLessonActiveSchema,
   professorLessonSchema,
@@ -58,6 +59,25 @@ async function getTenantPlans(tenantId: string) {
     select: { planosPrecos: true },
   });
   return normalizePlans(config?.planosPrecos ?? null);
+}
+
+function buildCancellationKeySet(
+  cancellations: Array<{ classDate: Date; startTime: string; endTime: string }>,
+): Set<string> {
+  return new Set(
+    cancellations.map((item) =>
+      scheduleOccurrenceKey(formatClassDate(item.classDate), item.startTime, item.endTime),
+    ),
+  );
+}
+
+function isOccurrenceCancelled(
+  cancellations: Set<string>,
+  classDate: string,
+  startTime: string,
+  endTime: string,
+): boolean {
+  return cancellations.has(scheduleOccurrenceKey(classDate, startTime, endTime));
 }
 
 async function buildProfessorStats(
@@ -361,6 +381,12 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
       }
 
       await saveModalitySchedule(tenantId, existing.id, parsed.data.slots);
+      if (parsed.data.repeatsMonthly !== undefined) {
+        await prisma.modality.update({
+          where: { id: existing.id },
+          data: { scheduleRepeatsMonthly: parsed.data.repeatsMonthly },
+        });
+      }
       const modality = await prisma.modality.findUniqueOrThrow({
         where: { id: existing.id },
         include: modalityListInclude,
@@ -370,6 +396,149 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
         modalidade: serializeModality(modality),
         message: "Horários da modalidade atualizados.",
       });
+    },
+  );
+
+  app.get<{ Params: { id: string }; Querystring: { month?: string } }>(
+    "/owner/modalidades/:id/ocorrencias",
+    async (request, reply) => {
+      const tenantId = request.user.tenantId;
+      const monthInput = request.query.month ?? currentMonthInput();
+      const parsedMonth = parseMonthInput(monthInput);
+      if (!parsedMonth) {
+        return reply.status(400).send({ error: "Informe o mês no formato AAAA-MM." });
+      }
+
+      const modality = await prisma.modality.findFirst({
+        where: { id: request.params.id, tenantId },
+        include: {
+          scheduleSlots: {
+            where: { active: true },
+            orderBy: [{ weekday: "asc" }, { startTime: "asc" }],
+          },
+        },
+      });
+
+      if (!modality) {
+        return reply.status(404).send({ error: "Modalidade não encontrada." });
+      }
+
+      const cancellations = await prisma.modalityScheduleCancellation.findMany({
+        where: {
+          tenantId,
+          modalityId: modality.id,
+          classDate: {
+            gte: parseClassDate(`${parsedMonth.year}-${String(parsedMonth.month).padStart(2, "0")}-01`),
+            lte: parseClassDate(
+              `${parsedMonth.year}-${String(parsedMonth.month).padStart(2, "0")}-${String(new Date(parsedMonth.year, parsedMonth.month, 0).getDate()).padStart(2, "0")}`,
+            ),
+          },
+        },
+      });
+      const cancelledKeys = buildCancellationKeySet(cancellations);
+
+      const weekdays = Array.from(new Set(modality.scheduleSlots.map((slot) => slot.weekday)));
+      const dates = modality.scheduleRepeatsMonthly
+        ? listDatesInMonth(parsedMonth.year, parsedMonth.month, weekdays)
+        : [];
+
+      const ocorrencias = dates.flatMap((classDate) => {
+        const weekday = weekdayFromDateInput(classDate);
+        return modality.scheduleSlots
+          .filter((slot) => slot.weekday === weekday)
+          .map((slot) => ({
+            classDate,
+            weekday,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            label: `${slot.startTime} – ${slot.endTime}`,
+            cancelled: isOccurrenceCancelled(
+              cancelledKeys,
+              classDate,
+              slot.startTime,
+              slot.endTime,
+            ),
+          }));
+      });
+
+      return reply.send({
+        month: monthInput,
+        repeatsMonthly: modality.scheduleRepeatsMonthly,
+        ocorrencias,
+      });
+    },
+  );
+
+  app.post<{ Params: { id: string } }>(
+    "/owner/modalidades/:id/ocorrencias/cancelar",
+    async (request, reply) => {
+      const parsed = scheduleOccurrenceSchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.errors[0]?.message ?? "Dados inválidos.",
+        });
+      }
+
+      const tenantId = request.user.tenantId;
+      const modality = await prisma.modality.findFirst({
+        where: { id: request.params.id, tenantId },
+      });
+      if (!modality) {
+        return reply.status(404).send({ error: "Modalidade não encontrada." });
+      }
+
+      await prisma.modalityScheduleCancellation.upsert({
+        where: {
+          modalityId_classDate_startTime_endTime: {
+            modalityId: modality.id,
+            classDate: parseClassDate(parsed.data.classDate),
+            startTime: parsed.data.startTime,
+            endTime: parsed.data.endTime,
+          },
+        },
+        update: {},
+        create: {
+          tenantId,
+          modalityId: modality.id,
+          classDate: parseClassDate(parsed.data.classDate),
+          startTime: parsed.data.startTime,
+          endTime: parsed.data.endTime,
+        },
+      });
+
+      return reply.send({ message: "Aula cancelada. A vaga foi liberada a partir desta data." });
+    },
+  );
+
+  app.delete<{ Params: { id: string } }>(
+    "/owner/modalidades/:id/ocorrencias/cancelar",
+    async (request, reply) => {
+      const parsed = scheduleOccurrenceSchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.errors[0]?.message ?? "Dados inválidos.",
+        });
+      }
+
+      const tenantId = request.user.tenantId;
+      const modality = await prisma.modality.findFirst({
+        where: { id: request.params.id, tenantId },
+      });
+      if (!modality) {
+        return reply.status(404).send({ error: "Modalidade não encontrada." });
+      }
+
+      await prisma.modalityScheduleCancellation.deleteMany({
+        where: {
+          tenantId,
+          modalityId: modality.id,
+          classDate: parseClassDate(parsed.data.classDate),
+          startTime: parsed.data.startTime,
+          endTime: parsed.data.endTime,
+        },
+      });
+
+      return reply.send({ message: "Cancelamento removido. A aula voltou para a grade." });
     },
   );
 
@@ -1647,6 +1816,12 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
       const tenantPlans = await getTenantPlans(student.tenantId);
       const modality = await prisma.modality.findFirst({
         where: { id: modalityId, tenantId: student.tenantId, active: true },
+        include: {
+          scheduleSlots: {
+            where: { active: true },
+            orderBy: [{ weekday: "asc" as const }, { startTime: "asc" as const }],
+          },
+        },
       });
 
       if (!modality) {
@@ -1663,9 +1838,44 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
         orderBy: { classDate: "asc" },
       });
 
-      const dates = Array.from(
-        new Set(lessons.map((lesson) => formatClassDate(lesson.classDate))),
-      ).map((classDate) => ({ classDate, hasLesson: true }));
+      const dateSet = new Set(lessons.map((lesson) => formatClassDate(lesson.classDate)));
+
+      if (modality.scheduleRepeatsMonthly && modality.scheduleSlots.length > 0) {
+        const month = currentMonthInput();
+        const parsedMonth = parseMonthInput(month);
+        if (parsedMonth) {
+          const weekdays = Array.from(new Set(modality.scheduleSlots.map((slot) => slot.weekday)));
+          const cancellations = await prisma.modalityScheduleCancellation.findMany({
+            where: { tenantId: student.tenantId, modalityId: modality.id },
+          });
+          const cancelledKeys = buildCancellationKeySet(cancellations);
+
+          for (const classDate of listDatesInMonth(
+            parsedMonth.year,
+            parsedMonth.month,
+            weekdays,
+          )) {
+            const weekday = weekdayFromDateInput(classDate);
+            const hasOpenSlot = modality.scheduleSlots.some(
+              (slot) =>
+                slot.weekday === weekday &&
+                !isOccurrenceCancelled(
+                  cancelledKeys,
+                  classDate,
+                  slot.startTime,
+                  slot.endTime,
+                ),
+            );
+            if (hasOpenSlot) {
+              dateSet.add(classDate);
+            }
+          }
+        }
+      }
+
+      const dates = Array.from(dateSet)
+        .sort()
+        .map((classDate) => ({ classDate, hasLesson: true }));
 
       return reply.send({ dates });
     },
@@ -1711,6 +1921,15 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
       }
 
       const weekday = weekdayFromDateInput(classDate);
+      const cancellations = await prisma.modalityScheduleCancellation.findMany({
+        where: {
+          tenantId: student.tenantId,
+          modalityId: modality.id,
+          classDate: parseClassDate(classDate),
+        },
+      });
+      const cancelledKeys = buildCancellationKeySet(cancellations);
+
       const lessons = await prisma.professorLesson.findMany({
         where: {
           tenantId: student.tenantId,
@@ -1756,7 +1975,19 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
             lesson.endTime === endTime,
         ) ?? null;
 
-      const horariosFromLessons = lessons.map((lesson) => ({
+      const horariosFromLessons = lessons
+        .filter(
+          (lesson) =>
+            !lesson.startTime ||
+            !lesson.endTime ||
+            !isOccurrenceCancelled(
+              cancelledKeys,
+              classDate,
+              lesson.startTime,
+              lesson.endTime,
+            ),
+        )
+        .map((lesson) => ({
         startTime: lesson.startTime ?? "00:00",
         endTime: lesson.endTime ?? "23:59",
         label:
@@ -1772,7 +2003,11 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
       );
 
       const horariosFromSlots = slotSources
-        .filter((slot) => !usedKeys.has(`${slot.startTime}-${slot.endTime}`))
+        .filter(
+          (slot) =>
+            !usedKeys.has(`${slot.startTime}-${slot.endTime}`) &&
+            !isOccurrenceCancelled(cancelledKeys, classDate, slot.startTime, slot.endTime),
+        )
         .map((slot) => {
           const lesson = findLessonForSlot(slot.startTime, slot.endTime);
           return {
@@ -1795,6 +2030,107 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
         classDate,
         weekday,
         horarios,
+      });
+    },
+  );
+
+  app.get<{ Querystring: { classDate: string } }>(
+    "/student/grade-dia",
+    { preHandler: [requireStudent] },
+    async (request, reply) => {
+      const { classDate } = request.query;
+      if (!classDate) {
+        return reply.status(400).send({ error: "Informe a data." });
+      }
+
+      const student = await prisma.student.findUnique({
+        where: { id: request.studentId },
+        select: { tenantId: true, planoModalidade: true },
+      });
+
+      if (!student) {
+        return reply.status(404).send({ error: "Aluno não encontrado." });
+      }
+
+      await ensureTenantModalities(student.tenantId);
+      const tenantPlans = await getTenantPlans(student.tenantId);
+      const weekday = weekdayFromDateInput(classDate);
+
+      const modalidades = await prisma.modality.findMany({
+        where: { tenantId: student.tenantId, active: true },
+        include: {
+          scheduleSlots: {
+            where: { active: true },
+            orderBy: [{ weekday: "asc" as const }, { startTime: "asc" as const }],
+          },
+        },
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      });
+
+      const accessible = modalidades.filter((item) =>
+        modalityMatchesPlan(item, student.planoModalidade, tenantPlans),
+      );
+
+      const cancellations = await prisma.modalityScheduleCancellation.findMany({
+        where: {
+          tenantId: student.tenantId,
+          classDate: parseClassDate(classDate),
+        },
+      });
+      const cancelledKeys = buildCancellationKeySet(cancellations);
+
+      const entries: Array<{
+        modalityId: string;
+        modalityName: string;
+        contentType: string;
+        startTime: string;
+        endTime: string;
+        label: string;
+        hasLesson: boolean;
+      }> = [];
+
+      for (const modality of accessible) {
+        const slotsForDay = modality.scheduleSlots.filter((slot) => slot.weekday === weekday);
+        if (slotsForDay.length === 0 && !modality.scheduleRepeatsMonthly) continue;
+
+        for (const slot of slotsForDay) {
+          if (
+            isOccurrenceCancelled(cancelledKeys, classDate, slot.startTime, slot.endTime)
+          ) {
+            continue;
+          }
+
+          const lesson = await prisma.professorLesson.findFirst({
+            where: {
+              tenantId: student.tenantId,
+              modalityId: modality.id,
+              active: true,
+              classDate: parseClassDate(classDate),
+              startTime: slot.startTime,
+              endTime: slot.endTime,
+            },
+            select: { id: true },
+          });
+
+          entries.push({
+            modalityId: modality.id,
+            modalityName: modality.name,
+            contentType: modality.contentType,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            label: `${slot.startTime} – ${slot.endTime}`,
+            hasLesson: Boolean(lesson),
+          });
+        }
+      }
+
+      entries.sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+      return reply.send({
+        planoModalidade: student.planoModalidade,
+        classDate,
+        weekday,
+        sequencia: entries,
       });
     },
   );

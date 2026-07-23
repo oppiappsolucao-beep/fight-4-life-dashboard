@@ -53,3 +53,41 @@ export function weekdayFromDateInput(value: string): number {
   const [year, month, day] = value.split("-").map(Number);
   return new Date(Date.UTC(year, month - 1, day)).getUTCDay();
 }
+
+export function formatDateInput(year: number, month: number, day: number): string {
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+export function parseMonthInput(value: string): { year: number; month: number } | null {
+  const match = /^(\d{4})-(\d{2})$/.exec(value.trim());
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) return null;
+  return { year, month };
+}
+
+export function currentMonthInput(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+export function listDatesInMonth(year: number, month: number, weekdays: number[]): string[] {
+  if (weekdays.length === 0) return [];
+  const weekdaySet = new Set(weekdays);
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const dates: string[] = [];
+
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const classDate = formatDateInput(year, month, day);
+    if (weekdaySet.has(weekdayFromDateInput(classDate))) {
+      dates.push(classDate);
+    }
+  }
+
+  return dates;
+}
+
+export function scheduleOccurrenceKey(classDate: string, startTime: string, endTime: string): string {
+  return `${classDate}|${startTime}|${endTime}`;
+}

@@ -406,6 +406,7 @@ export default function StudentTreinoPage() {
               modalityId={selectedModality.id}
               modalityName={selectedModality.name}
               planoModalidade={planoModalidade}
+              onSelectModality={setSelectedModalityId}
             />
           ) : (
             <>

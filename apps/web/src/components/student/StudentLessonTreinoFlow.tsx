@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import ModalityVideoPlayer from "../modality/ModalityVideoPlayer";
 import ProgressRing from "./ProgressRing";
 import WorkoutDateStrip from "./WorkoutDateStrip";
+import StudentDayGradePanel from "./StudentDayGradePanel";
 import WorkoutExerciseCard from "./WorkoutExerciseCard";
 import { apiFetch } from "../../lib/api";
 import { LESSON_PHASES, lessonProgressStorageKey, type LessonPhase } from "../../lib/lesson";
@@ -27,6 +28,7 @@ interface StudentLessonTreinoFlowProps {
   modalityId: string;
   modalityName: string;
   planoModalidade: string;
+  onSelectModality?: (modalityId: string) => void;
 }
 
 function lessonSlotKey(slot: Pick<StudentLessonSlotOption, "startTime" | "endTime">): string {
@@ -96,6 +98,7 @@ export default function StudentLessonTreinoFlow({
   modalityId,
   modalityName,
   planoModalidade,
+  onSelectModality,
 }: StudentLessonTreinoFlowProps) {
   const session = getStudentSession();
   const [classDate, setClassDate] = useState(todayDateInputValue());
@@ -293,6 +296,12 @@ export default function StudentLessonTreinoFlow({
         completionByDate={completionByDate}
         onSelect={setClassDate}
         onCreateDate={setClassDate}
+      />
+
+      <StudentDayGradePanel
+        classDate={classDate}
+        selectedModalityId={modalityId}
+        onSelectModality={onSelectModality}
       />
 
       {error ? (
