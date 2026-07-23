@@ -520,6 +520,16 @@ export default function ProfessorCadastroTreinoPage() {
     setSuccess("");
   }
 
+  function adjustDraftSets(phase: WorkoutPhase, order: number, delta: 1 | -1) {
+    setDrafts((current) =>
+      current.map((item) => {
+        if (item.phase !== phase || item.order !== order) return item;
+        return { ...item, sets: Math.max(1, item.sets + delta) };
+      }),
+    );
+    setSuccess("");
+  }
+
   function removeDraft(phase: WorkoutPhase, order: number) {
     setDrafts((current) =>
       reindexPhase(
@@ -1281,14 +1291,9 @@ export default function ProfessorCadastroTreinoPage() {
                             return (
                               <div
                                 key={entry.id}
-                                className="flex items-center justify-between rounded-lg border border-emerald-400/20 bg-emerald-500/5 p-3"
+                                className="flex items-center justify-between rounded-lg border border-white/10 bg-black/25 p-3"
                               >
-                                <div>
-                                  <span className="text-sm text-white">{label}</span>
-                                  <p className="m-0 mt-0.5 text-xs text-white/40">
-                                    {entry.sets ?? 3}x
-                                  </p>
-                                </div>
+                                <span className="text-sm text-white">{label}</span>
                                 <button
                                   type="button"
                                   onClick={() => addFromSavedCatalog(entry)}
@@ -1349,7 +1354,6 @@ export default function ProfessorCadastroTreinoPage() {
                           const exercise = draftMeta[draft.exerciseId];
                           if (!exercise) return null;
                           const draftKey = `${draft.phase}-${draft.exerciseId}-${draft.order}`;
-                          const expanded = expandedDraftKey === draftKey;
 
                           return (
                             <div
@@ -1357,64 +1361,38 @@ export default function ProfessorCadastroTreinoPage() {
                               className="rounded-lg border border-white/10 bg-black/25"
                             >
                               <div className="flex items-center gap-2 p-3">
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setExpandedDraftKey(expanded ? null : draftKey)
-                                  }
-                                  className="min-w-0 flex-1 text-left"
-                                >
+                                <div className="min-w-0 flex-1">
                                   <p className="m-0 truncate text-sm font-semibold text-white">
                                     {draft.order}. {exercise.name}
                                   </p>
                                   <p className="m-0 mt-0.5 text-xs text-white/45">{draft.sets}x</p>
-                                </button>
-                                <div className="flex shrink-0 gap-1">
+                                </div>
+                                <div className="flex shrink-0 items-center gap-1">
                                   <button
                                     type="button"
-                                    onClick={() => moveDraft(draft.phase, draft.order, -1)}
+                                    aria-label="Aumentar repetições"
+                                    onClick={() => adjustDraftSets(draft.phase, draft.order, 1)}
                                     className="rounded border border-white/10 px-2 py-1 text-xs text-white/60"
                                   >
                                     ↑
                                   </button>
                                   <button
                                     type="button"
-                                    onClick={() => moveDraft(draft.phase, draft.order, 1)}
+                                    aria-label="Diminuir repetições"
+                                    onClick={() => adjustDraftSets(draft.phase, draft.order, -1)}
                                     className="rounded border border-white/10 px-2 py-1 text-xs text-white/60"
                                   >
                                     ↓
                                   </button>
                                   <button
                                     type="button"
-                                    onClick={() => {
-                                      removeDraft(draft.phase, draft.order);
-                                      if (expandedDraftKey === draftKey) setExpandedDraftKey(null);
-                                    }}
+                                    onClick={() => removeDraft(draft.phase, draft.order)}
                                     className="rounded border border-red-400/20 px-2 py-1 text-xs text-red-300"
                                   >
                                     ×
                                   </button>
                                 </div>
                               </div>
-
-                              {expanded ? (
-                                <div className="border-t border-white/10 px-3 pb-3 pt-2">
-                                  <label className="text-xs text-white/50">
-                                    Quantidade de vezes
-                                    <input
-                                      type="number"
-                                      min={1}
-                                      value={draft.sets}
-                                      onChange={(e) =>
-                                        updateDraft(draftKey, {
-                                          sets: Number(e.target.value) || 1,
-                                        })
-                                      }
-                                      className="mt-1 w-full rounded-lg border border-white/10 bg-black/25 px-2 py-2 text-sm text-white"
-                                    />
-                                  </label>
-                                </div>
-                              ) : null}
                             </div>
                           );
                         })}
