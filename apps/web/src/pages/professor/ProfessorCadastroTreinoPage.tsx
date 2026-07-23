@@ -17,7 +17,7 @@ import type {
   WorkoutExerciseDraft,
   WorkoutSummary,
 } from "../../types/workout";
-import type { ModalityItem, LessonAttendanceItem, ProfessorModalitySchedule } from "../../types/modality";
+import type { ModalityItem, ProfessorModalitySchedule } from "../../types/modality";
 import { LESSON_PHASES, type LessonPhase } from "../../lib/lesson";
 import LessonVideoUploadField from "../../components/professor/LessonVideoUploadField";
 import {
@@ -51,6 +51,25 @@ function emptyDraft(
   };
 }
 
+function customExerciseCatalogItem(id: string, name: string): ExerciseCatalogItem {
+  return {
+    id,
+    slug: id,
+    name,
+    muscleGroup: "Personalizado",
+    equipment: null,
+    instructions: "",
+    imageUrl: null,
+    gifUrl: null,
+    phases: ["INICIO"],
+    bodyRegion: "AQUECIMENTO",
+  };
+}
+
+function isCustomExerciseId(exerciseId: string) {
+  return exerciseId.startsWith("custom:");
+}
+
 function reindexPhase(drafts: WorkoutExerciseDraft[], phase: WorkoutPhase) {
   let order = 1;
   return drafts.map((item) => {
@@ -66,9 +85,6 @@ export default function ProfessorCadastroTreinoPage() {
   const [catalog, setCatalog] = useState<ExerciseCatalogItem[]>([]);
   const [modalidades, setModalidades] = useState<ModalityItem[]>([]);
   const [professorSchedules, setProfessorSchedules] = useState<ProfessorModalitySchedule[]>([]);
-  const [pendingPresencas, setPendingPresencas] = useState<LessonAttendanceItem[]>([]);
-  const [loadingPresencas, setLoadingPresencas] = useState(false);
-  const [validatingId, setValidatingId] = useState<string | null>(null);
   const [selectedModalityId, setSelectedModalityId] = useState("");
   const [savedTreinos, setSavedTreinos] = useState<WorkoutSummary[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState("");
@@ -89,6 +105,7 @@ export default function ProfessorCadastroTreinoPage() {
   const [drafts, setDrafts] = useState<WorkoutExerciseDraft[]>([]);
   const [draftMeta, setDraftMeta] = useState<Record<string, ExerciseCatalogItem>>({});
   const [search, setSearch] = useState("");
+  const [customMovementName, setCustomMovementName] = useState("");
   const [muscleFilter, setMuscleFilter] = useState("Todos");
   const [loading, setLoading] = useState(true);
   const [loadingTreino, setLoadingTreino] = useState(false);
@@ -133,14 +150,6 @@ export default function ProfessorCadastroTreinoPage() {
     [modalidades, selectedModalityId],
   );
   const isMusculacao = selectedModality?.contentType === "EXERCISE_CATALOG";
-
-  const loadPendingPresencas = useCallback(() => {
-    setLoadingPresencas(true);
-    apiFetch<{ presencas: LessonAttendanceItem[] }>("/professor/presencas/pendentes")
-      .then((data) => setPendingPresencas(data.presencas))
-      .catch(() => setPendingPresencas([]))
-      .finally(() => setLoadingPresencas(false));
-  }, []);
 
   const loadBase = useCallback(() => {
     setLoading(true);
@@ -264,8 +273,7 @@ export default function ProfessorCadastroTreinoPage() {
 
   useEffect(() => {
     loadBase();
-    loadPendingPresencas();
-  }, [loadBase, loadPendingPresencas]);
+  }, [loadBase]);
 
   useEffect(() => {
     if (!muscleGroups.includes(muscleFilter)) {
@@ -292,22 +300,31 @@ export default function ProfessorCadastroTreinoPage() {
   useEffect(() => {
     if (!selectedModality || isMusculacao) return;
     const warmup = selectedModality.warmupExercises ?? [];
-    const nextDrafts: WorkoutExerciseDraft[] = warmup.map((item, index) => ({
-      exerciseId: item.exerciseId,
-      phase: "INICIO",
-      order: item.order ?? index + 1,
-      sets: item.sets,
-      reps: item.reps,
-      load: item.load ?? "",
-      restSeconds: item.restSeconds ?? 60,
-      notes: item.notes ?? "",
-    }));
+    const nextDrafts: WorkoutExerciseDraft[] = warmup.map((item, index) => {
+      const customId = item.customName ? `custom:${index}-${item.order}` : (item.exerciseId ?? "");
+      return {
+        exerciseId: customId,
+        phase: "INICIO",
+        order: item.order ?? index + 1,
+        sets: item.sets,
+        reps: item.reps ?? "",
+        load: item.load ?? "",
+        restSeconds: item.restSeconds ?? 60,
+        notes: item.notes ?? "",
+      };
+    });
     setDrafts(nextDrafts);
     const meta: Record<string, ExerciseCatalogItem> = {};
-    for (const draft of nextDrafts) {
-      const exercise = catalog.find((item) => item.id === draft.exerciseId);
-      if (exercise) meta[draft.exerciseId] = exercise;
-    }
+    warmup.forEach((item, index) => {
+      if (item.customName) {
+        const customId = `custom:${index}-${item.order}`;
+        meta[customId] = customExerciseCatalogItem(customId, item.customName);
+        return;
+      }
+      if (!item.exerciseId) return;
+      const exercise = catalog.find((entry) => entry.id === item.exerciseId);
+      if (exercise) meta[item.exerciseId] = exercise;
+    });
     setDraftMeta(meta);
   }, [selectedModality, isMusculacao, catalog]);
 
@@ -355,6 +372,36 @@ export default function ProfessorCadastroTreinoPage() {
   function closePhaseEditor() {
     setActivePhase(null);
     setExpandedDraftKey(null);
+  }
+
+  function addCustomMovement() {
+    const name = customMovementName.trim();
+    if (!name) {
+      setError("Informe o nome do movimento.");
+      return;
+    }
+    const phase: WorkoutPhase = "INICIO";
+    const customId = `custom:${crypto.randomUUID()}`;
+    setError("");
+    const order = drafts.filter((item) => item.phase === phase).length + 1;
+    setDrafts((current) => [
+      ...current,
+      {
+        exerciseId: customId,
+        phase,
+        order,
+        sets: 3,
+        reps: "",
+        load: "",
+        restSeconds: 60,
+        notes: "",
+      },
+    ]);
+    setDraftMeta((current) => ({
+      ...current,
+      [customId]: customExerciseCatalogItem(customId, name),
+    }));
+    setCustomMovementName("");
   }
 
   function addExercise(exercise: ExerciseCatalogItem) {
@@ -418,24 +465,6 @@ export default function ProfessorCadastroTreinoPage() {
     });
   }
 
-  async function handlePresencaAction(attendanceId: string, action: "validate" | "reject") {
-    setValidatingId(attendanceId);
-    setError("");
-    setSuccess("");
-    try {
-      const result = await apiFetch<{ message: string }>(`/professor/presencas/${attendanceId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ action }),
-      });
-      setSuccess(result.message);
-      loadPendingPresencas();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao validar presença.");
-    } finally {
-      setValidatingId(null);
-    }
-  }
-
   async function handleVideoSubmit(event: FormEvent) {
     event.preventDefault();
     if (!selectedModalityId) {
@@ -455,15 +484,17 @@ export default function ProfessorCadastroTreinoPage() {
     setError("");
     setSuccess("");
     try {
-      const warmupExercises = drafts.map((item, index) => ({
-        exerciseId: item.exerciseId,
-        order: index + 1,
-        sets: item.sets,
-        reps: item.reps,
-        load: item.load || undefined,
-        restSeconds: item.restSeconds,
-        notes: item.notes || undefined,
-      }));
+      const warmupExercises = drafts.map((item, index) => {
+        const exercise = draftMeta[item.exerciseId];
+        const isCustom = isCustomExerciseId(item.exerciseId);
+        return {
+          ...(isCustom
+            ? { customName: exercise?.name ?? "Movimento" }
+            : { exerciseId: item.exerciseId }),
+          order: index + 1,
+          sets: item.sets,
+        };
+      });
 
       await apiFetch(`/professor/modalidades/${selectedModalityId}`, {
         method: "PATCH",
@@ -1119,6 +1150,27 @@ export default function ProfessorCadastroTreinoPage() {
                 <div className="grid gap-4 xl:grid-cols-2">
                   <div className="rounded-xl border border-white/10 bg-black/20 p-4">
                     <h3 className="m-0 text-sm font-semibold text-white">Catálogo</h3>
+                    <div className="mt-3 flex gap-2">
+                      <input
+                        value={customMovementName}
+                        onChange={(event) => setCustomMovementName(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            addCustomMovement();
+                          }
+                        }}
+                        placeholder="Nome do movimento"
+                        className="min-w-0 flex-1 rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={addCustomMovement}
+                        className="shrink-0 rounded-lg bg-[#e85d6f] px-3 py-2 text-xs font-semibold text-white"
+                      >
+                        Adicionar
+                      </button>
+                    </div>
                     <input
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
@@ -1191,10 +1243,7 @@ export default function ProfessorCadastroTreinoPage() {
                                   <p className="m-0 truncate text-sm font-semibold text-white">
                                     {draft.order}. {exercise.name}
                                   </p>
-                                  <p className="m-0 mt-0.5 text-xs text-white/45">
-                                    {draft.sets}x{draft.reps}
-                                    {draft.load ? ` • ${draft.load}` : ""}
-                                  </p>
+                                  <p className="m-0 mt-0.5 text-xs text-white/45">{draft.sets}x</p>
                                 </button>
                                 <div className="flex shrink-0 gap-1">
                                   <button
@@ -1226,56 +1275,20 @@ export default function ProfessorCadastroTreinoPage() {
 
                               {expanded ? (
                                 <div className="border-t border-white/10 px-3 pb-3 pt-2">
-                                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                                    <label className="text-xs text-white/50">
-                                      Séries
-                                      <input
-                                        type="number"
-                                        min={1}
-                                        value={draft.sets}
-                                        onChange={(e) =>
-                                          updateDraft(draftKey, {
-                                            sets: Number(e.target.value) || 1,
-                                          })
-                                        }
-                                        className="mt-1 w-full rounded-lg border border-white/10 bg-black/25 px-2 py-2 text-sm text-white"
-                                      />
-                                    </label>
-                                    <label className="text-xs text-white/50">
-                                      Reps
-                                      <input
-                                        value={draft.reps}
-                                        onChange={(e) =>
-                                          updateDraft(draftKey, { reps: e.target.value })
-                                        }
-                                        className="mt-1 w-full rounded-lg border border-white/10 bg-black/25 px-2 py-2 text-sm text-white"
-                                      />
-                                    </label>
-                                    <label className="text-xs text-white/50">
-                                      Carga
-                                      <input
-                                        value={draft.load}
-                                        onChange={(e) =>
-                                          updateDraft(draftKey, { load: e.target.value })
-                                        }
-                                        className="mt-1 w-full rounded-lg border border-white/10 bg-black/25 px-2 py-2 text-sm text-white"
-                                      />
-                                    </label>
-                                    <label className="text-xs text-white/50">
-                                      Descanso
-                                      <input
-                                        type="number"
-                                        min={0}
-                                        value={draft.restSeconds}
-                                        onChange={(e) =>
-                                          updateDraft(draftKey, {
-                                            restSeconds: Number(e.target.value) || 0,
-                                          })
-                                        }
-                                        className="mt-1 w-full rounded-lg border border-white/10 bg-black/25 px-2 py-2 text-sm text-white"
-                                      />
-                                    </label>
-                                  </div>
+                                  <label className="text-xs text-white/50">
+                                    Quantidade de vezes
+                                    <input
+                                      type="number"
+                                      min={1}
+                                      value={draft.sets}
+                                      onChange={(e) =>
+                                        updateDraft(draftKey, {
+                                          sets: Number(e.target.value) || 1,
+                                        })
+                                      }
+                                      className="mt-1 w-full rounded-lg border border-white/10 bg-black/25 px-2 py-2 text-sm text-white"
+                                    />
+                                  </label>
                                 </div>
                               ) : null}
                             </div>
@@ -1285,81 +1298,6 @@ export default function ProfessorCadastroTreinoPage() {
                     )}
                   </div>
                 </div>
-              </div>
-            )}
-          </section>
-
-          <section className="rounded-xl border border-white/10 bg-white/[0.04] p-4 sm:p-5">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="m-0 text-base font-semibold text-white">
-                  Confirmações de presença
-                </h2>
-                <p className="mt-1 text-sm text-white/45">
-                  Alunos que confirmaram frequência aguardando sua validação.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={loadPendingPresencas}
-                disabled={loadingPresencas}
-                className="rounded-lg border border-white/15 px-3 py-2 text-sm text-white/70 transition hover:border-[#e85d6f]/40 hover:text-white disabled:opacity-60"
-              >
-                {loadingPresencas ? "Atualizando..." : "Atualizar"}
-              </button>
-            </div>
-
-            {loadingPresencas && pendingPresencas.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-white/10 p-8 text-center text-sm text-white/45">
-                Carregando confirmações...
-              </div>
-            ) : pendingPresencas.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-white/10 p-8 text-center text-sm text-white/45">
-                Nenhuma confirmação pendente no momento.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {pendingPresencas.map((item) => (
-                  <article
-                    key={item.id}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/25 p-4"
-                  >
-                    <div>
-                      <p className="m-0 font-semibold text-white">
-                        {item.student?.nomeCompleto ?? "Aluno"}
-                      </p>
-                      <p className="m-0 mt-1 text-sm text-white/50">
-                        {item.lesson?.title ?? "Aula"} •{" "}
-                        {item.lesson ? formatWorkoutDateLabel(item.lesson.classDate) : ""}
-                        {item.lesson?.modality?.name ? ` • ${item.lesson.modality.name}` : ""}
-                      </p>
-                      {item.studentConfirmedAt ? (
-                        <p className="m-0 mt-1 text-xs text-white/40">
-                          Confirmou em{" "}
-                          {new Date(item.studentConfirmedAt).toLocaleString("pt-BR")}
-                        </p>
-                      ) : null}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        disabled={validatingId === item.id}
-                        onClick={() => handlePresencaAction(item.id, "validate")}
-                        className="rounded-xl bg-emerald-500/20 px-4 py-2 text-sm font-semibold text-emerald-200 ring-1 ring-emerald-400/30 disabled:opacity-60"
-                      >
-                        {validatingId === item.id ? "..." : "Validar presença"}
-                      </button>
-                      <button
-                        type="button"
-                        disabled={validatingId === item.id}
-                        onClick={() => handlePresencaAction(item.id, "reject")}
-                        className="rounded-xl border border-red-400/30 px-4 py-2 text-sm font-semibold text-red-300 disabled:opacity-60"
-                      >
-                        Não compareceu
-                      </button>
-                    </div>
-                  </article>
-                ))}
               </div>
             )}
           </section>

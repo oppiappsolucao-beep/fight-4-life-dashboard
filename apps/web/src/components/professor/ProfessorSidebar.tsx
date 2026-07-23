@@ -3,7 +3,10 @@ import { useAuth } from "../../contexts/AuthContext";
 import OppiLogo from "../OppiLogo";
 import { sidebarShellClass } from "../DashboardShell";
 
-const MENU_ITEMS = [{ to: "/professor/cadastro-treino", label: "Cadastro de Treino", icon: DumbbellIcon }];
+const MENU_ITEMS = [
+  { to: "/professor/cadastro-treino", label: "Cadastro de Treino", icon: DumbbellIcon },
+  { to: "/professor/presenca", label: "Presença", icon: CheckIcon },
+];
 
 interface ProfessorSidebarProps {
   open: boolean;
@@ -82,6 +85,15 @@ function DumbbellIcon() {
       <path d="M6 9v6M18 9v6M9 12h6" />
       <rect x="3" y="8" width="3" height="8" rx="1" />
       <rect x="18" y="8" width="3" height="8" rx="1" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M9 11l3 3L22 4" />
+      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
     </svg>
   );
 }

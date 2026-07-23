@@ -21,10 +21,11 @@ export interface ModalityItem {
   description: string | null;
   linkedPlans: string[];
   warmupExercises?: Array<{
-    exerciseId: string;
+    exerciseId?: string;
+    customName?: string | null;
     order: number;
     sets: number;
-    reps: string;
+    reps?: string | null;
     load?: string | null;
     restSeconds?: number | null;
     notes?: string | null;

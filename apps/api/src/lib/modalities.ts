@@ -86,10 +86,11 @@ const BUNDLE_GYM_PLANS = [
 ];
 
 export interface ModalityWarmupExercise {
-  exerciseId: string;
+  exerciseId?: string;
+  customName?: string | null;
   order: number;
   sets: number;
-  reps: string;
+  reps?: string | null;
   load?: string | null;
   restSeconds?: number | null;
   notes?: string | null;
@@ -103,17 +104,19 @@ export function normalizeWarmupExercises(raw: unknown): ModalityWarmupExercise[]
   raw.forEach((item, index) => {
     if (!item || typeof item !== "object") return;
     const row = item as Record<string, unknown>;
-    const exerciseId = typeof row.exerciseId === "string" ? row.exerciseId : "";
-    if (!exerciseId) return;
+    const exerciseId = typeof row.exerciseId === "string" ? row.exerciseId.trim() : "";
+    const customName = typeof row.customName === "string" ? row.customName.trim() : "";
+    if (!exerciseId && !customName) return;
 
     const sets = Number(row.sets);
     const order = Number(row.order);
 
     items.push({
-      exerciseId,
+      ...(exerciseId ? { exerciseId } : {}),
+      ...(customName ? { customName } : {}),
       order: Number.isFinite(order) && order > 0 ? order : index + 1,
       sets: Number.isFinite(sets) && sets > 0 ? sets : 3,
-      reps: typeof row.reps === "string" && row.reps.trim() ? row.reps.trim() : "12",
+      reps: typeof row.reps === "string" && row.reps.trim() ? row.reps.trim() : null,
       load: typeof row.load === "string" ? row.load.trim() || null : null,
       restSeconds:
         row.restSeconds == null ? 60 : Number.isFinite(Number(row.restSeconds))

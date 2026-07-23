@@ -20,15 +20,20 @@ export const tenantModalityUpdateSchema = z.object({
   active: z.boolean().optional(),
   warmupExercises: z
     .array(
-      z.object({
-        exerciseId: z.string().uuid(),
-        order: z.number().int().min(1),
-        sets: z.number().int().min(1).max(20),
-        reps: z.string().min(1),
-        load: z.string().optional(),
-        restSeconds: z.number().int().min(0).max(600).optional(),
-        notes: z.string().optional(),
-      }),
+      z
+        .object({
+          exerciseId: z.string().uuid().optional(),
+          customName: z.string().min(1).optional(),
+          order: z.number().int().min(1),
+          sets: z.number().int().min(1).max(20),
+          reps: z.string().optional(),
+          load: z.string().optional(),
+          restSeconds: z.number().int().min(0).max(600).optional(),
+          notes: z.string().optional(),
+        })
+        .refine((item) => Boolean(item.exerciseId || item.customName), {
+          message: "Informe o exercício ou o nome do movimento.",
+        }),
     )
     .optional(),
 });

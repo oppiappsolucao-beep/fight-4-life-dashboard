@@ -1547,10 +1547,14 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
         return reply.send({ exercises: [] });
       }
 
+      const catalogExerciseIds = warmupItems
+        .map((item) => item.exerciseId)
+        .filter((item): item is string => Boolean(item));
+
       const exercises = await prisma.exercise.findMany({
         where: {
           active: true,
-          id: { in: warmupItems.map((item) => item.exerciseId) },
+          id: { in: catalogExerciseIds },
         },
         select: {
           id: true,
@@ -1571,15 +1575,33 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
       return reply.send({
         exercises: warmupItems
           .map((item) => {
-            const exercise = exerciseById.get(item.exerciseId);
+            const catalogExercise = item.exerciseId
+              ? exerciseById.get(item.exerciseId)
+              : null;
+            const exercise =
+              catalogExercise ??
+              (item.customName
+                ? {
+                    id: `custom-${modality.id}-${item.order}`,
+                    slug: `custom-${item.order}`,
+                    name: item.customName,
+                    muscleGroup: "Personalizado",
+                    equipment: null,
+                    instructions: "",
+                    imageUrl: null,
+                    gifUrl: null,
+                    phases: ["INICIO"],
+                    bodyRegion: "AQUECIMENTO" as const,
+                  }
+                : null);
             if (!exercise) return null;
             return {
               id: `${modality.id}-${item.order}`,
-              exerciseId: item.exerciseId,
+              exerciseId: item.exerciseId ?? exercise.id,
               phase: "INICIO" as const,
               order: item.order,
               sets: item.sets,
-              reps: item.reps,
+              reps: item.reps ?? "1",
               load: item.load,
               restSeconds: item.restSeconds ?? 60,
               notes: item.notes,
