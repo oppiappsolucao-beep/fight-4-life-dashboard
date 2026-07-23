@@ -76,7 +76,12 @@ export default function StudentPagamentosPage() {
           </section>
 
           <div className={`rounded-2xl border px-4 py-3 text-sm ${statusClass}`}>
-            Status: <strong>{billingStatusLabel(billing.status)}</strong>
+            Status: <strong>{billingStatusLabel(billing.status, billing.acessoLiberadoAte)}</strong>
+            {billing.acessoLiberadoAte && billing.status === "em_dia" ? (
+              <span className="block mt-1 text-white/70">
+                Acesso liberado pela academia até {billing.liberadoAteLabel ?? billing.acessoLiberadoAte}.
+              </span>
+            ) : null}
           </div>
 
           <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">

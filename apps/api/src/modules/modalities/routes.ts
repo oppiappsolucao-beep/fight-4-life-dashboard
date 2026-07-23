@@ -18,6 +18,14 @@ import {
 } from "../../lib/modalities.js";
 import { normalizeScheduleSlots, serializeScheduleSlot, weekdayFromDateInput } from "../../lib/schedules.js";
 import { normalizePlans } from "../owner/plans.js";
+import {
+  parseWorkoutDate,
+  saveStudentWorkoutSchema,
+  serializeWorkout,
+  serializeWorkoutSummary,
+  workoutInclude,
+} from "../owner/workouts.js";
+import { ensureExerciseCatalog } from "../../lib/exercise-catalog.js";
 import { requireAuth, requireRole } from "../../middleware/auth.js";
 import { requireStudent } from "../../middleware/student.js";
 import {
@@ -1106,6 +1114,258 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
           markedAt: item.markedAt.toISOString(),
           student: item.student,
         })),
+      });
+    },
+  );
+
+  app.get("/professor/alunos", async (request, reply) => {
+    const tenantId = request.user.tenantId;
+    const alunos = await prisma.student.findMany({
+      where: { tenantId, active: true },
+      orderBy: { nomeCompleto: "asc" },
+      select: {
+        id: true,
+        nomeCompleto: true,
+        planoModalidade: true,
+      },
+    });
+    return reply.send({ alunos });
+  });
+
+  app.get("/professor/exercises", async (request, reply) => {
+    await ensureExerciseCatalog();
+    const exercises = await prisma.exercise.findMany({
+      where: { active: true },
+      orderBy: [{ muscleGroup: "asc" }, { name: "asc" }],
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        muscleGroup: true,
+        equipment: true,
+        instructions: true,
+        imageUrl: true,
+        gifUrl: true,
+        phases: true,
+        bodyRegion: true,
+      },
+    });
+    return reply.send({ exercises });
+  });
+
+  app.patch<{ Params: { id: string } }>(
+    "/professor/modalidades/:id",
+    async (request, reply) => {
+      const parsed = tenantModalityUpdateSchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.errors[0]?.message ?? "Dados inválidos.",
+        });
+      }
+
+      const tenantId = request.user.tenantId;
+      const allowed = await assertProfessorAccess(request.user.sub, tenantId, request.params.id);
+      if (!allowed) {
+        return reply.status(403).send({ error: "Modalidade não liberada para você." });
+      }
+
+      const data = parsed.data;
+      const modality = await prisma.modality.update({
+        where: { id: request.params.id },
+        data: {
+          ...(data.warmupExercises
+            ? {
+                warmupExercises: normalizeWarmupExercises(
+                  data.warmupExercises,
+                ) as unknown as Prisma.InputJsonValue,
+              }
+            : {}),
+        },
+        include: modalityListInclude,
+      });
+
+      return reply.send({
+        modalidade: serializeModality(modality),
+        message: "Aquecimento atualizado.",
+      });
+    },
+  );
+
+  app.get<{ Params: { id: string } }>(
+    "/professor/alunos/:id/treinos",
+    async (request, reply) => {
+      const tenantId = request.user.tenantId;
+      const student = await prisma.student.findFirst({
+        where: { id: request.params.id, tenantId, active: true },
+        select: { id: true, nomeCompleto: true },
+      });
+      if (!student) {
+        return reply.status(404).send({ error: "Aluno não encontrado." });
+      }
+
+      const treinos = await prisma.studentWorkout.findMany({
+        where: { studentId: student.id, tenantId, active: true },
+        orderBy: { workoutDate: "desc" },
+        select: {
+          id: true,
+          title: true,
+          workoutDate: true,
+          updatedAt: true,
+          source: true,
+          _count: { select: { exercises: true } },
+        },
+      });
+
+      return reply.send({
+        aluno: student,
+        treinos: treinos.map(serializeWorkoutSummary),
+      });
+    },
+  );
+
+  app.get<{ Params: { id: string }; Querystring: { date?: string } }>(
+    "/professor/alunos/:id/treino",
+    async (request, reply) => {
+      const tenantId = request.user.tenantId;
+      const student = await prisma.student.findFirst({
+        where: { id: request.params.id, tenantId, active: true },
+        select: { id: true, nomeCompleto: true },
+      });
+      if (!student) {
+        return reply.status(404).send({ error: "Aluno não encontrado." });
+      }
+
+      const dateParam = request.query.date;
+      let treino;
+
+      if (dateParam) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+          return reply.status(400).send({ error: "Data inválida. Use AAAA-MM-DD." });
+        }
+        treino = await prisma.studentWorkout.findUnique({
+          where: {
+            studentId_workoutDate: {
+              studentId: student.id,
+              workoutDate: parseWorkoutDate(dateParam),
+            },
+          },
+          include: workoutInclude,
+        });
+      } else {
+        treino = await prisma.studentWorkout.findFirst({
+          where: { studentId: student.id, tenantId, active: true },
+          include: workoutInclude,
+          orderBy: { workoutDate: "desc" },
+        });
+      }
+
+      return reply.send({
+        aluno: student,
+        treino: treino && treino.active ? serializeWorkout(treino) : null,
+      });
+    },
+  );
+
+  app.put<{ Params: { id: string } }>(
+    "/professor/alunos/:id/treino",
+    async (request, reply) => {
+      const parsed = saveStudentWorkoutSchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.errors[0]?.message ?? "Dados inválidos.",
+        });
+      }
+
+      const tenantId = request.user.tenantId;
+      const student = await prisma.student.findFirst({
+        where: { id: request.params.id, tenantId, active: true },
+        select: { id: true },
+      });
+      if (!student) {
+        return reply.status(404).send({ error: "Aluno não encontrado." });
+      }
+
+      const data = parsed.data;
+      const allowed = await assertProfessorAccess(request.user.sub, tenantId, data.modalityId ?? "");
+      if (!data.modalityId || !allowed) {
+        return reply.status(403).send({ error: "Modalidade não liberada para você." });
+      }
+
+      const workoutDate = parseWorkoutDate(data.workoutDate);
+      const exerciseIds = data.exercises.map((item) => item.exerciseId);
+      const validCount = await prisma.exercise.count({
+        where: { id: { in: exerciseIds }, active: true },
+      });
+      if (validCount !== exerciseIds.length) {
+        return reply.status(400).send({ error: "Um ou mais exercícios selecionados não existem." });
+      }
+
+      const treino = await prisma.$transaction(async (tx) => {
+        const existing = await tx.studentWorkout.findUnique({
+          where: {
+            studentId_workoutDate: { studentId: student.id, workoutDate },
+          },
+          select: { id: true },
+        });
+
+        if (existing) {
+          await tx.studentWorkoutExercise.deleteMany({ where: { studentWorkoutId: existing.id } });
+          return tx.studentWorkout.update({
+            where: { id: existing.id },
+            data: {
+              title: data.title.trim(),
+              notes: data.notes?.trim() || null,
+              modalityId: data.modalityId,
+              assignedBy: request.user.sub,
+              source: "OWNER",
+              active: true,
+              exercises: {
+                create: data.exercises.map((item) => ({
+                  exerciseId: item.exerciseId,
+                  phase: item.phase,
+                  order: item.order,
+                  sets: item.sets,
+                  reps: item.reps,
+                  load: item.load?.trim() || null,
+                  restSeconds: item.restSeconds ?? 60,
+                  notes: item.notes?.trim() || null,
+                })),
+              },
+            },
+            include: workoutInclude,
+          });
+        }
+
+        return tx.studentWorkout.create({
+          data: {
+            tenantId,
+            studentId: student.id,
+            modalityId: data.modalityId,
+            title: data.title.trim(),
+            notes: data.notes?.trim() || null,
+            workoutDate,
+            assignedBy: request.user.sub,
+            source: "OWNER",
+            exercises: {
+              create: data.exercises.map((item) => ({
+                exerciseId: item.exerciseId,
+                phase: item.phase,
+                order: item.order,
+                sets: item.sets,
+                reps: item.reps,
+                load: item.load?.trim() || null,
+                restSeconds: item.restSeconds ?? 60,
+                notes: item.notes?.trim() || null,
+              })),
+            },
+          },
+          include: workoutInclude,
+        });
+      });
+
+      return reply.send({
+        treino: serializeWorkout(treino),
+        message: "Treino salvo e publicado para o aluno.",
       });
     },
   );

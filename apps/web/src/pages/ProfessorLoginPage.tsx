@@ -16,7 +16,7 @@ export default function ProfessorLoginPage() {
 
   useEffect(() => {
     if (isAuthenticated && user && canAccessProfessor(user.role)) {
-      navigate("/professor/aulas", { replace: true });
+      navigate("/professor/cadastro-treino", { replace: true });
     }
   }, [isAuthenticated, user, navigate]);
 
@@ -28,7 +28,7 @@ export default function ProfessorLoginPage() {
       logout();
       clearStudentSession();
       await professorLogin(email, password);
-      navigate("/professor/aulas");
+      navigate("/professor/cadastro-treino");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar.");
     } finally {

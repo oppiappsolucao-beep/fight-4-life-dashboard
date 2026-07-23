@@ -33,4 +33,6 @@ export interface StudentBilling {
   formaPagamento: string | null;
   dataInicio: string;
   status: "em_dia" | "vencido" | "hoje";
+  acessoLiberadoAte?: string | null;
+  liberadoAteLabel?: string | null;
 }

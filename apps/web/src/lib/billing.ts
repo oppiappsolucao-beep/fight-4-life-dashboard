@@ -71,7 +71,8 @@ export function formatIsoDate(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-export function billingStatusLabel(status: BillingDueStatus): string {
+export function billingStatusLabel(status: BillingDueStatus, liberadoAte?: string | null): string {
+  if (status === "em_dia" && liberadoAte) return "Liberado pela academia";
   if (status === "hoje") return "Vence hoje";
   if (status === "vencido") return "Em atraso";
   return "Em dia";

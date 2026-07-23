@@ -5,6 +5,7 @@ import {
   formatBrDate,
   formatIsoDate,
   getDueStatus,
+  getEffectiveDueStatus,
   getNextDueDate,
   getWeekRange,
 } from "../../lib/billing.js";
@@ -531,6 +532,7 @@ export async function studentRoutes(app: FastifyInstance): Promise<void> {
             dataInicio: true,
             diaVencimento: true,
             formaPagamento: true,
+            acessoLiberadoAte: true,
             tenantId: true,
           },
         });
@@ -544,7 +546,8 @@ export async function studentRoutes(app: FastifyInstance): Promise<void> {
         const valorMensalidade = priceMap[student.planoModalidade] ?? 0;
         const proximoVencimentoDate = getNextDueDate(student.diaVencimento);
         const proximoVencimento = formatIsoDate(proximoVencimentoDate);
-        const status = getDueStatus(student.diaVencimento);
+        const status = getEffectiveDueStatus(student);
+        const liberadoAte = student.acessoLiberadoAte;
 
         return reply.send({
           planoModalidade: student.planoModalidade,
@@ -555,6 +558,8 @@ export async function studentRoutes(app: FastifyInstance): Promise<void> {
           formaPagamento: student.formaPagamento,
           dataInicio: student.dataInicio,
           status,
+          acessoLiberadoAte: liberadoAte,
+          liberadoAteLabel: liberadoAte ? formatBrDate(liberadoAte) : null,
         });
       } catch (error) {
         request.log.error(error);

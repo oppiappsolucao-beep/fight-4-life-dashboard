@@ -7,7 +7,6 @@ const MENU_ITEMS = [
   { to: "/dono/visao-geral", label: "Visão Geral", icon: HomeIcon },
   { to: "/dono/cadastro-aluno", label: "Cadastro Aluno", icon: UserPlusIcon },
   { to: "/dono/alunos", label: "Alunos", icon: UsersIcon },
-  { to: "/dono/cadastro-treino", label: "Cadastro de Treino", icon: DumbbellIcon },
   { to: "/dono/modalidades", label: "Modalidades", icon: ModalityIcon },
   { to: "/dono/professores", label: "Professores", icon: UsersIcon },
   { to: "/dono/planos", label: "Planos", icon: PlanIcon },
@@ -118,14 +117,6 @@ function UsersIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <circle cx="9" cy="8" r="3.5" />
       <path d="M3 20c1-4 5-6 12-6M16 8a3 3 0 1 1 0 6M21 20c0-3.5-2.5-5.5-5-6.5" />
-    </svg>
-  );
-}
-
-function DumbbellIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M4 10v4M7 8v8M17 8v8M20 10v4M7 12h10" />
     </svg>
   );
 }

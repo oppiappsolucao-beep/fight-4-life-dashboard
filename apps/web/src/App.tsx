@@ -17,7 +17,7 @@ import OwnerLoginPage from "./pages/OwnerLoginPage";
 import OwnerVisaoGeralPage from "./pages/owner/OwnerVisaoGeralPage";
 import OwnerCadastroAlunoPage from "./pages/owner/OwnerCadastroAlunoPage";
 import OwnerAlunosPage from "./pages/owner/OwnerAlunosPage";
-import OwnerCadastroTreinoPage from "./pages/owner/OwnerCadastroTreinoPage";
+import ProfessorCadastroTreinoPage from "./pages/professor/ProfessorCadastroTreinoPage";
 import OwnerPlanosPage from "./pages/owner/OwnerPlanosPage";
 import OwnerContasReceberPage from "./pages/owner/OwnerContasReceberPage";
 import DevLayout from "./components/dev/DevLayout";
@@ -31,7 +31,6 @@ import OwnerModalidadesPage from "./pages/owner/OwnerModalidadesPage";
 import OwnerProfessoresPage from "./pages/owner/OwnerProfessoresPage";
 import ProfessorLayout from "./components/professor/ProfessorLayout";
 import ProfessorLoginPage from "./pages/ProfessorLoginPage";
-import ProfessorAulasPage from "./pages/professor/ProfessorAulasPage";
 
 export default function App() {
   const { loading } = useAuth();
@@ -100,7 +99,7 @@ export default function App() {
         <Route path="dono/visao-geral" element={<OwnerVisaoGeralPage />} />
         <Route path="dono/cadastro-aluno" element={<OwnerCadastroAlunoPage />} />
         <Route path="dono/alunos" element={<OwnerAlunosPage />} />
-        <Route path="dono/cadastro-treino" element={<OwnerCadastroTreinoPage />} />
+        <Route path="dono/cadastro-treino" element={<Navigate to="/dono/visao-geral" replace />} />
         <Route path="dono/modalidades" element={<OwnerModalidadesPage />} />
         <Route path="dono/professores" element={<OwnerProfessoresPage />} />
         <Route path="dono/planos" element={<OwnerPlanosPage />} />
@@ -117,7 +116,8 @@ export default function App() {
       </Route>
 
       <Route element={<ProfessorLayout />}>
-        <Route path="professor/aulas" element={<ProfessorAulasPage />} />
+        <Route path="professor/cadastro-treino" element={<ProfessorCadastroTreinoPage />} />
+        <Route path="professor/aulas" element={<Navigate to="/professor/cadastro-treino" replace />} />
       </Route>
 
       <Route path="/dashboard" element={<Navigate to="/dono/visao-geral" replace />} />
