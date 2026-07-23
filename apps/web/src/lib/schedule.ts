@@ -9,6 +9,8 @@ export interface ScheduleGridEntry extends ScheduleSlot {
   label: string;
   sublabel?: string;
   tone?: "modality" | "professor";
+  modalityId?: string;
+  colorClass?: string;
 }
 
 export const WEEKDAY_LABELS = [
@@ -70,7 +72,6 @@ export function buildTimeRows(entries: ScheduleGridEntry[]): string[] {
   const minutes = new Set<number>();
   for (const entry of entries) {
     minutes.add(timeToMinutes(entry.startTime));
-    minutes.add(timeToMinutes(entry.endTime));
   }
 
   return Array.from(minutes)
@@ -82,4 +83,23 @@ export function buildTimeRows(entries: ScheduleGridEntry[]): string[] {
       const mins = (value % 60).toString().padStart(2, "0");
       return `${hours}:${mins}`;
     });
+}
+
+const MODALITY_COLOR_CLASSES = [
+  "bg-[#e85d6f]/15 text-[#f08a98]",
+  "bg-sky-500/15 text-sky-200",
+  "bg-amber-500/15 text-amber-200",
+  "bg-violet-500/15 text-violet-200",
+  "bg-teal-500/15 text-teal-200",
+  "bg-orange-500/15 text-orange-200",
+] as const;
+
+export function buildModalityColorMap(modalityIds: string[]): Record<string, string> {
+  return Object.fromEntries(
+    modalityIds.map((id, index) => [id, MODALITY_COLOR_CLASSES[index % MODALITY_COLOR_CLASSES.length]]),
+  );
+}
+
+export function professorEntryClassName(): string {
+  return "bg-emerald-500/15 text-emerald-200";
 }

@@ -3,8 +3,7 @@ import ModalitySchedulePicker from "../../components/owner/ModalitySchedulePicke
 import WeeklyScheduleGrid from "../../components/owner/WeeklyScheduleGrid";
 import { useAuth } from "../../contexts/AuthContext";
 import { apiFetch } from "../../lib/api";
-import type { PlanItem } from "../../lib/plans";
-import { formatTimeRange, type ScheduleGridEntry } from "../../lib/schedule";
+import { buildModalityColorMap, formatTimeRange, type ScheduleGridEntry } from "../../lib/schedule";
 import type {
   ModalityItem,
   ProfessorItem,
@@ -24,11 +23,18 @@ export default function OwnerProfessoresPage() {
   const { user } = useAuth();
   const [professores, setProfessores] = useState<ProfessorItem[]>([]);
   const [modalidades, setModalidades] = useState<ModalityItem[]>([]);
-  const [planos, setPlanos] = useState<PlanItem[]>([]);
   const [form, setForm] = useState(EMPTY_FORM);
   const [formSchedules, setFormSchedules] = useState<Record<string, ScheduleSlot[]>>({});
+  const [formEditingModalityId, setFormEditingModalityId] = useState<string | null>(null);
   const [selfModalityIds, setSelfModalityIds] = useState<string[]>([]);
   const [selfSchedules, setSelfSchedules] = useState<Record<string, ScheduleSlot[]>>({});
+  const [selfEditingModalityId, setSelfEditingModalityId] = useState<string | null>(null);
+  const [professorScheduleDrafts, setProfessorScheduleDrafts] = useState<
+    Record<string, Record<string, ScheduleSlot[]>>
+  >({});
+  const [professorEditingModalityId, setProfessorEditingModalityId] = useState<
+    Record<string, string | null>
+  >({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [updatingProfessorId, setUpdatingProfessorId] = useState<string | null>(null);
@@ -46,12 +52,20 @@ export default function OwnerProfessoresPage() {
     Promise.all([
       apiFetch<{ professores: ProfessorItem[] }>("/owner/professores"),
       apiFetch<{ modalidades: ModalityItem[] }>("/owner/modalidades"),
-      apiFetch<{ planos: PlanItem[] }>("/owner/planos"),
     ])
-      .then(([profData, modData, planData]) => {
+      .then(([profData, modData]) => {
         setProfessores(profData.professores);
         setModalidades(modData.modalidades);
-        setPlanos(planData.planos);
+        setProfessorScheduleDrafts(
+          Object.fromEntries(
+            profData.professores.map((professor) => [
+              professor.id,
+              Object.fromEntries(
+                (professor.schedules ?? []).map((entry) => [entry.modalityId, entry.slots]),
+              ),
+            ]),
+          ),
+        );
 
         if (user?.id) {
           const selfProfessor = profData.professores.find((item) => item.id === user.id);
@@ -75,21 +89,28 @@ export default function OwnerProfessoresPage() {
     load();
   }, [load]);
 
+  const modalityColorMap = useMemo(
+    () => buildModalityColorMap(activeModalities.map((item) => item.id)),
+    [activeModalities],
+  );
+
   const professorGridEntries = useMemo<ScheduleGridEntry[]>(
     () =>
       professores.flatMap((professor) =>
         (professor.schedules ?? []).flatMap((entry) => {
-          const modalityName =
-            activeModalities.find((item) => item.id === entry.modalityId)?.name ?? "Modalidade";
+          const modality = activeModalities.find((item) => item.id === entry.modalityId);
+          const modalityName = modality?.name ?? "Modalidade";
           return entry.slots.map((slot) => ({
             ...slot,
+            modalityId: entry.modalityId,
             label: modalityName,
-            sublabel: `${professor.name ?? professor.email} • ${formatTimeRange(slot)}`,
+            sublabel: professor.name ?? professor.email,
             tone: "professor" as const,
+            colorClass: modality ? modalityColorMap[modality.id] : undefined,
           }));
         }),
       ),
-    [professores, activeModalities],
+    [professores, activeModalities, modalityColorMap],
   );
 
   function toggleFormModality(id: string) {
@@ -105,6 +126,9 @@ export default function OwnerProfessoresPage() {
           delete next[id];
           return next;
         });
+        setFormEditingModalityId((currentEditing) => (currentEditing === id ? null : currentEditing));
+      } else {
+        setFormEditingModalityId(id);
       }
 
       return { ...current, modalityIds };
@@ -121,6 +145,9 @@ export default function OwnerProfessoresPage() {
           delete next[id];
           return next;
         });
+        setSelfEditingModalityId((currentEditing) => (currentEditing === id ? null : currentEditing));
+      } else {
+        setSelfEditingModalityId(id);
       }
       return selected ? current.filter((item) => item !== id) : [...current, id];
     });
@@ -257,17 +284,23 @@ export default function OwnerProfessoresPage() {
     }
   }
 
-  async function saveLinkedPlans(modalityId: string, linkedPlans: string[]) {
-    try {
-      await apiFetch(`/owner/modalidades/${modalityId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ linkedPlans }),
-      });
-      setSuccess("Planos vinculados atualizados.");
-      load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao salvar planos.");
-    }
+  async function saveProfessorSchedule(professor: ProfessorItem) {
+    const drafts = professorScheduleDrafts[professor.id] ?? {};
+    const modalityIds = Array.from(
+      new Set([
+        ...professor.modalityIds,
+        ...Object.keys(drafts).filter((id) => (drafts[id] ?? []).length > 0),
+      ]),
+    );
+
+    await updateProfessor(
+      professor.id,
+      {
+        modalityIds,
+        schedules: buildSchedulesPayload(drafts, modalityIds),
+      },
+      "Horários do professor atualizados.",
+    );
   }
 
   return (
@@ -298,36 +331,62 @@ export default function OwnerProfessoresPage() {
               Selecione suas modalidades e os horários da grade em que você atua.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {activeModalities.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => toggleSelfModality(item.id)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                    selfModalityIds.includes(item.id)
-                      ? "bg-[#e85d6f] text-white"
-                      : "border border-white/15 text-white/70"
-                  }`}
-                >
-                  {item.name}
-                </button>
-              ))}
+              {activeModalities.map((item) => {
+                const selected = selfModalityIds.includes(item.id);
+                const editing = selfEditingModalityId === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      const selected = selfModalityIds.includes(item.id);
+                      const editing = selfEditingModalityId === item.id;
+                      if (!selected) {
+                        toggleSelfModality(item.id);
+                      } else if (editing) {
+                        toggleSelfModality(item.id);
+                      } else {
+                        setSelfEditingModalityId(item.id);
+                      }
+                    }}
+                    className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                      editing
+                        ? "bg-[#e85d6f] text-white ring-2 ring-[#e85d6f]/40"
+                        : selected
+                          ? "bg-emerald-500/20 text-emerald-200"
+                          : "border border-white/15 text-white/70"
+                    }`}
+                  >
+                    {item.name}
+                    {selected ? ` • ${(selfSchedules[item.id] ?? []).length} horário(s)` : ""}
+                  </button>
+                );
+              })}
             </div>
-            {selfModalityIds.map((modalityId) => {
-              const modality = activeModalities.find((item) => item.id === modalityId);
-              if (!modality) return null;
-              return (
-                <div key={modalityId} className="mt-3">
-                  <ModalitySchedulePicker
-                    modality={modality}
-                    selectedSlots={selfSchedules[modalityId] ?? []}
-                    onChange={(slots) =>
-                      setSelfSchedules((current) => ({ ...current, [modalityId]: slots }))
-                    }
-                  />
-                </div>
-              );
-            })}
+            {selfEditingModalityId && selfModalityIds.includes(selfEditingModalityId) ? (
+              (() => {
+                const modality = activeModalities.find((item) => item.id === selfEditingModalityId);
+                if (!modality) return null;
+                return (
+                  <div className="mt-3">
+                    <ModalitySchedulePicker
+                      modality={modality}
+                      selectedSlots={selfSchedules[selfEditingModalityId] ?? []}
+                      onChange={(slots) =>
+                        setSelfSchedules((current) => ({
+                          ...current,
+                          [selfEditingModalityId]: slots,
+                        }))
+                      }
+                    />
+                  </div>
+                );
+              })()
+            ) : selfModalityIds.length > 0 ? (
+              <p className="m-0 mt-3 text-xs text-white/45">
+                Clique em uma modalidade selecionada para escolher os horários.
+              </p>
+            ) : null}
             <button
               type="button"
               onClick={handleRegisterSelf}
@@ -387,15 +446,38 @@ export default function OwnerProfessoresPage() {
                       const scheduleEntry = professor.schedules?.find(
                         (entry) => entry.modalityId === stat.modalityId,
                       );
+                      const modality = activeModalities.find((item) => item.id === stat.modalityId);
+                      const editingModalityId = professorEditingModalityId[professor.id] ?? null;
+                      const draftSlots =
+                        professorScheduleDrafts[professor.id]?.[stat.modalityId] ??
+                        scheduleEntry?.slots ??
+                        [];
+
                       return (
                         <div
                           key={stat.modalityId}
                           className="mt-4 rounded-xl border border-white/10 bg-black/20 p-3"
                         >
                           <div className="flex flex-wrap items-center justify-between gap-2">
-                            <p className="m-0 text-sm font-semibold text-white">
+                            <button
+                              type="button"
+                              disabled={!stat.assignmentActive}
+                              onClick={() =>
+                                setProfessorEditingModalityId((current) => ({
+                                  ...current,
+                                  [professor.id]:
+                                    editingModalityId === stat.modalityId ? null : stat.modalityId,
+                                }))
+                              }
+                              className={`rounded-lg px-2.5 py-1 text-sm font-semibold ${
+                                editingModalityId === stat.modalityId
+                                  ? "bg-[#e85d6f]/20 text-[#f08a98]"
+                                  : "text-white"
+                              } disabled:cursor-not-allowed disabled:opacity-50`}
+                            >
                               {stat.modalityName}
-                            </p>
+                              {draftSlots.length > 0 ? ` • ${draftSlots.length} horário(s)` : ""}
+                            </button>
                             <button
                               type="button"
                               disabled={updatingProfessorId === professor.id}
@@ -415,19 +497,47 @@ export default function OwnerProfessoresPage() {
                               {stat.assignmentActive ? "Bloquear modalidade" : "Liberar modalidade"}
                             </button>
                           </div>
-                          <div className="mt-2 grid gap-2 text-xs text-white/55 sm:grid-cols-2 lg:grid-cols-4">
+                          <div className="mt-2 grid gap-2 text-xs text-white/55 sm:grid-cols-3">
                             <span>{stat.studentCount} aluno(s) no plano</span>
                             <span>
                               {stat.activeLessonCount}/{stat.lessonCount} aula(s) ativa(s)
                             </span>
                             <span>{stat.attendanceCount} presença(s)</span>
-                            <span>
-                              Horários:{" "}
-                              {scheduleEntry?.slots.length
-                                ? scheduleEntry.slots.map((slot) => formatTimeRange(slot)).join(" • ")
-                                : "—"}
-                            </span>
                           </div>
+
+                          {editingModalityId === stat.modalityId && modality ? (
+                            <div className="mt-3 space-y-2">
+                              <ModalitySchedulePicker
+                                modality={modality}
+                                selectedSlots={draftSlots}
+                                professorLabel={professor.name ?? professor.email}
+                                onChange={(slots) =>
+                                  setProfessorScheduleDrafts((current) => ({
+                                    ...current,
+                                    [professor.id]: {
+                                      ...(current[professor.id] ?? {}),
+                                      [stat.modalityId]: slots,
+                                    },
+                                  }))
+                                }
+                              />
+                              <button
+                                type="button"
+                                disabled={updatingProfessorId === professor.id}
+                                onClick={() => saveProfessorSchedule(professor)}
+                                className="rounded-lg border border-emerald-400/30 px-3 py-1.5 text-xs font-semibold text-emerald-200"
+                              >
+                                Salvar horários
+                              </button>
+                            </div>
+                          ) : stat.assignmentActive ? (
+                            <p className="m-0 mt-2 text-xs text-white/45">
+                              Horários:{" "}
+                              {draftSlots.length
+                                ? draftSlots.map((slot) => formatTimeRange(slot)).join(" • ")
+                                : "Nenhum — clique na modalidade para cadastrar"}
+                            </p>
+                          ) : null}
                         </div>
                       );
                     })}
@@ -523,36 +633,63 @@ export default function OwnerProfessoresPage() {
                 <div>
                   <p className="m-0 mb-2 text-xs text-white/50">Modalidades que leciona</p>
                   <div className="flex flex-wrap gap-2">
-                    {activeModalities.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => toggleFormModality(item.id)}
-                        className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                          form.modalityIds.includes(item.id)
-                            ? "bg-emerald-500/20 text-emerald-300"
-                            : "border border-white/15 text-white/60"
-                        }`}
-                      >
-                        {item.name}
-                      </button>
-                    ))}
+                    {activeModalities.map((item) => {
+                      const selected = form.modalityIds.includes(item.id);
+                      const editing = formEditingModalityId === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            const selected = form.modalityIds.includes(item.id);
+                            const editing = formEditingModalityId === item.id;
+                            if (!selected) {
+                              toggleFormModality(item.id);
+                            } else if (editing) {
+                              toggleFormModality(item.id);
+                            } else {
+                              setFormEditingModalityId(item.id);
+                            }
+                          }}
+                          className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                            editing
+                              ? "bg-[#e85d6f] text-white ring-2 ring-[#e85d6f]/40"
+                              : selected
+                                ? "bg-emerald-500/20 text-emerald-300"
+                                : "border border-white/15 text-white/60"
+                          }`}
+                        >
+                          {item.name}
+                          {selected ? ` • ${(formSchedules[item.id] ?? []).length} horário(s)` : ""}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-                {form.modalityIds.map((modalityId) => {
-                  const modality = activeModalities.find((item) => item.id === modalityId);
-                  if (!modality) return null;
-                  return (
-                    <ModalitySchedulePicker
-                      key={modalityId}
-                      modality={modality}
-                      selectedSlots={formSchedules[modalityId] ?? []}
-                      onChange={(slots) =>
-                        setFormSchedules((current) => ({ ...current, [modalityId]: slots }))
-                      }
-                    />
-                  );
-                })}
+                {formEditingModalityId && form.modalityIds.includes(formEditingModalityId) ? (
+                  (() => {
+                    const modality = activeModalities.find(
+                      (item) => item.id === formEditingModalityId,
+                    );
+                    if (!modality) return null;
+                    return (
+                      <ModalitySchedulePicker
+                        modality={modality}
+                        selectedSlots={formSchedules[formEditingModalityId] ?? []}
+                        onChange={(slots) =>
+                          setFormSchedules((current) => ({
+                            ...current,
+                            [formEditingModalityId]: slots,
+                          }))
+                        }
+                      />
+                    );
+                  })()
+                ) : form.modalityIds.length > 0 ? (
+                  <p className="m-0 text-xs text-white/45">
+                    Clique em uma modalidade selecionada para escolher os horários.
+                  </p>
+                ) : null}
               </div>
               <button
                 type="submit"
@@ -563,38 +700,6 @@ export default function OwnerProfessoresPage() {
               </button>
             </form>
           </div>
-
-          {activeModalities.map((modality) => (
-            <section key={modality.id} className="rounded-2xl border border-white/10 bg-black/20 p-4">
-              <p className="m-0 text-sm font-semibold text-white">
-                Planos vinculados — {modality.name}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {planos.map((plan) => {
-                  const selected = modality.linkedPlans.includes(plan.nome);
-                  return (
-                    <button
-                      key={plan.nome}
-                      type="button"
-                      onClick={() => {
-                        const next = selected
-                          ? modality.linkedPlans.filter((item) => item !== plan.nome)
-                          : [...modality.linkedPlans, plan.nome];
-                        saveLinkedPlans(modality.id, next);
-                      }}
-                      className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                        selected
-                          ? "bg-[#e85d6f]/20 text-[#f08a98]"
-                          : "border border-white/15 text-white/60"
-                      }`}
-                    >
-                      {plan.nome}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
 
           <WeeklyScheduleGrid
             title="Grade dos professores"

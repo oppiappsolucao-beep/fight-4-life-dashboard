@@ -2,7 +2,7 @@ import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react
 import OwnerModalitySchedulePanel from "../../components/owner/OwnerModalitySchedulePanel";
 import WeeklyScheduleGrid from "../../components/owner/WeeklyScheduleGrid";
 import { apiFetch } from "../../lib/api";
-import { formatTimeRange, type ScheduleGridEntry } from "../../lib/schedule";
+import { formatTimeRange, buildModalityColorMap, type ScheduleGridEntry } from "../../lib/schedule";
 import {
   contentTypeLabel,
   type ModalityItem,
@@ -22,6 +22,7 @@ export default function OwnerModalidadesPage() {
   );
   const [newDescription, setNewDescription] = useState("");
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
+  const [gridFilterModalityId, setGridFilterModalityId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -87,6 +88,12 @@ export default function OwnerModalidadesPage() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    if (editingScheduleId) {
+      setGridFilterModalityId(editingScheduleId);
+    }
+  }, [editingScheduleId]);
+
   const galleryModalities = useMemo(
     () => modalidades.filter((item) => item.contentType === "VIDEO_GALLERY"),
     [modalidades],
@@ -97,23 +104,42 @@ export default function OwnerModalidadesPage() {
     [modalidades, selectedIds],
   );
 
+  const modalityColorMap = useMemo(
+    () => buildModalityColorMap(activeModalities.map((item) => item.id)),
+    [activeModalities],
+  );
+
   const modalityGridEntries = useMemo<ScheduleGridEntry[]>(
     () =>
       activeModalities.flatMap((modality) =>
         (scheduleDrafts[modality.id] ?? []).map((slot) => ({
           ...slot,
+          modalityId: modality.id,
           label: modality.name,
           sublabel: formatTimeRange(slot),
           tone: "modality" as const,
+          colorClass: modalityColorMap[modality.id],
         })),
       ),
-    [activeModalities, scheduleDrafts],
+    [activeModalities, scheduleDrafts, modalityColorMap],
   );
 
   const combinedGridEntries = useMemo(
-    () => [...modalityGridEntries, ...gradeProfessorEntries],
-    [modalityGridEntries, gradeProfessorEntries],
+    () => [
+      ...modalityGridEntries,
+      ...gradeProfessorEntries.map((entry) => {
+        const modality = activeModalities.find((item) => item.name === entry.label);
+        return {
+          ...entry,
+          modalityId: modality?.id,
+          colorClass: modality ? modalityColorMap[modality.id] : undefined,
+        };
+      }),
+    ],
+    [modalityGridEntries, gradeProfessorEntries, activeModalities, modalityColorMap],
   );
+
+  const gridFilterModality = activeModalities.find((item) => item.id === gridFilterModalityId);
 
   function toggle(id: string) {
     setSelectedIds((current) =>
@@ -257,33 +283,43 @@ export default function OwnerModalidadesPage() {
             </button>
           </form>
 
-          <section className="grid gap-3 sm:grid-cols-2">
-            {modalidades.map((item) => {
-              const selected = selectedIds.includes(item.id);
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => toggle(item.id)}
-                  className={`rounded-2xl border p-4 text-left transition ${
-                    selected
-                      ? "border-[#e85d6f] bg-[#e85d6f]/10"
-                      : "border-white/10 bg-black/20 hover:border-white/20"
-                  }`}
-                >
-                  <p className="m-0 font-semibold text-white">{item.name}</p>
-                  <p className="m-0 mt-1 text-xs text-white/50">{contentTypeLabel(item.contentType)}</p>
-                  {item.description ? (
-                    <p className="m-0 mt-2 text-sm text-white/55">{item.description}</p>
-                  ) : null}
-                  {(scheduleDrafts[item.id] ?? []).length > 0 ? (
-                    <p className="m-0 mt-2 text-xs text-emerald-300">
-                      {(scheduleDrafts[item.id] ?? []).length} horário(s) cadastrado(s)
-                    </p>
-                  ) : null}
-                </button>
-              );
-            })}
+          <section className="rounded-xl border border-white/10 bg-black/20 p-3">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <p className="m-0 text-sm font-semibold text-white">Modalidades ofertadas</p>
+              <span className="text-xs text-white/45">{selectedIds.length} ativa(s)</span>
+            </div>
+            <div className="divide-y divide-white/10">
+              {modalidades.map((item) => {
+                const enabled = selectedIds.includes(item.id);
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
+                  >
+                    <div className="min-w-0">
+                      <p className="m-0 truncate text-sm text-white">{item.name}</p>
+                      <p className="m-0 text-[0.65rem] text-white/40">
+                        {contentTypeLabel(item.contentType)}
+                        {(scheduleDrafts[item.id] ?? []).length > 0
+                          ? ` • ${(scheduleDrafts[item.id] ?? []).length} horário(s)`
+                          : ""}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => toggle(item.id)}
+                      className={`shrink-0 rounded-full px-3 py-1 text-[0.65rem] font-semibold ${
+                        enabled
+                          ? "bg-emerald-500/20 text-emerald-200"
+                          : "border border-white/15 text-white/45"
+                      }`}
+                    >
+                      {enabled ? "Ativa" : "Inativa"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
           </section>
 
           <p className="text-sm text-white/45">
@@ -365,10 +401,42 @@ export default function OwnerModalidadesPage() {
             </section>
           ) : null}
 
+          {activeModalities.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setGridFilterModalityId(null)}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                  !gridFilterModalityId
+                    ? "bg-white/15 text-white"
+                    : "border border-white/15 text-white/60"
+                }`}
+              >
+                Todas
+              </button>
+              {activeModalities.map((modality) => (
+                <button
+                  key={modality.id}
+                  type="button"
+                  onClick={() => setGridFilterModalityId(modality.id)}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    gridFilterModalityId === modality.id
+                      ? modalityColorMap[modality.id]
+                      : "border border-white/15 text-white/60"
+                  }`}
+                >
+                  {modality.name}
+                </button>
+              ))}
+            </div>
+          ) : null}
+
           <WeeklyScheduleGrid
             title="Grade semanal da academia"
             entries={combinedGridEntries}
             emptyMessage="Ative modalidades e cadastre horários para montar a grade."
+            filterModalityId={gridFilterModalityId}
+            filterLabel={gridFilterModality?.name}
           />
         </div>
       )}

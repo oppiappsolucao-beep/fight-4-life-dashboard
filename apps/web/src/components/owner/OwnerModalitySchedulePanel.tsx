@@ -60,10 +60,18 @@ export default function OwnerModalitySchedulePanel({
   const upcomingOccurrences = useMemo(() => {
     if (!occurrences) return [];
     const today = new Date().toISOString().slice(0, 10);
-    return occurrences.ocorrencias
-      .filter((item) => item.classDate >= today)
-      .slice(0, 12);
+    return occurrences.ocorrencias.filter((item) => item.classDate >= today).slice(0, 20);
   }, [occurrences]);
+
+  const occurrencesByDate = useMemo(() => {
+    const grouped = new Map<string, OwnerScheduleOccurrencesResponse["ocorrencias"]>();
+    for (const item of upcomingOccurrences) {
+      const current = grouped.get(item.classDate) ?? [];
+      current.push(item);
+      grouped.set(item.classDate, current);
+    }
+    return Array.from(grouped.entries()).slice(0, 8);
+  }, [upcomingOccurrences]);
 
   async function toggleCancellation(
     item: OwnerScheduleOccurrencesResponse["ocorrencias"][number],
@@ -178,51 +186,44 @@ export default function OwnerModalitySchedulePanel({
 
           {loadingOccurrences ? (
             <p className="m-0 text-sm text-white/45">Carregando ocorrências...</p>
-          ) : upcomingOccurrences.length === 0 ? (
+          ) : occurrencesByDate.length === 0 ? (
             <p className="m-0 text-sm text-white/45">
               Nenhuma aula prevista neste mês com os horários cadastrados.
             </p>
           ) : (
-            <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
-              {upcomingOccurrences.map((item) => {
-                const key = `${item.classDate}-${item.startTime}-${item.endTime}`;
-                return (
-                  <div
-                    key={key}
-                    className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 ${
-                      item.cancelled
-                        ? "border-red-400/20 bg-red-500/5"
-                        : "border-white/10 bg-black/25"
-                    }`}
-                  >
-                    <div className="min-w-0">
-                      <p className="m-0 text-sm text-white">
-                        {formatWorkoutDateLabel(item.classDate)} • {WEEKDAY_LABELS[item.weekday]}
-                      </p>
-                      <p className="m-0 text-xs text-white/45">
-                        {formatTimeRange(item)}
-                        {item.cancelled ? " • Cancelada" : ""}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      disabled={cancellingKey === key}
-                      onClick={() => toggleCancellation(item)}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-semibold disabled:opacity-60 ${
-                        item.cancelled
-                          ? "border border-emerald-400/30 text-emerald-200"
-                          : "border border-red-400/30 text-red-200"
-                      }`}
-                    >
-                      {cancellingKey === key
-                        ? "..."
-                        : item.cancelled
-                          ? "Reativar"
-                          : "Cancelar aula"}
-                    </button>
+            <div className="max-h-44 space-y-2 overflow-y-auto pr-1">
+              {occurrencesByDate.map(([classDate, items]) => (
+                <div
+                  key={classDate}
+                  className="rounded-lg border border-white/10 bg-black/25 px-2.5 py-2"
+                >
+                  <p className="m-0 text-xs font-semibold text-white">
+                    {formatWorkoutDateLabel(classDate)} • {WEEKDAY_LABELS[items[0]?.weekday ?? 0]}
+                  </p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {items.map((item) => {
+                      const key = `${item.classDate}-${item.startTime}-${item.endTime}`;
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          disabled={cancellingKey === key}
+                          onClick={() => toggleCancellation(item)}
+                          className={`rounded-full px-2 py-0.5 text-[0.65rem] font-semibold disabled:opacity-60 ${
+                            item.cancelled
+                              ? "border border-red-400/30 bg-red-500/10 text-red-200 line-through"
+                              : "border border-white/15 text-white/70 hover:border-red-400/30"
+                          }`}
+                          title={item.cancelled ? "Reativar aula" : "Cancelar aula"}
+                        >
+                          {formatTimeRange(item)}
+                          {cancellingKey === key ? " ..." : item.cancelled ? " ✕" : ""}
+                        </button>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           )}
         </section>
