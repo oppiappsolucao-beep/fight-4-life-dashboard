@@ -87,6 +87,26 @@ export default function OwnerProfessoresPage() {
       }));
   }
 
+  function resolveFormModalityIds(
+    modalityIds: string[],
+    schedules: Record<string, ScheduleSlot[]>,
+  ) {
+    return modalityIds.filter((modalityId) => (schedules[modalityId] ?? []).length > 0);
+  }
+
+  function syncFormModalityFromSchedules(modalityId: string, slots: ScheduleSlot[]) {
+    setFormSchedules((current) => ({ ...current, [modalityId]: slots }));
+    setForm((current) => ({
+      ...current,
+      modalityIds:
+        slots.length > 0
+          ? current.modalityIds.includes(modalityId)
+            ? current.modalityIds
+            : [...current.modalityIds, modalityId]
+          : current.modalityIds.filter((item) => item !== modalityId),
+    }));
+  }
+
   function resetCreateForm() {
     setFormMode("create");
     setEditingProfessorId(null);
@@ -96,48 +116,42 @@ export default function OwnerProfessoresPage() {
   }
 
   function openProfessorCadastro(professor: ProfessorItem) {
+    const schedulesMap = Object.fromEntries(
+      (professor.schedules ?? []).map((entry) => [entry.modalityId, entry.slots]),
+    );
+    const modalityIds = professor.modalityIds.filter(
+      (id) => (schedulesMap[id] ?? []).length > 0,
+    );
+
     setFormMode("edit");
     setEditingProfessorId(professor.id);
     setForm({
       name: professor.name ?? "",
       email: professor.email,
       password: "",
-      modalityIds: [...professor.modalityIds],
+      modalityIds,
     });
-    setFormSchedules(
-      Object.fromEntries(
-        (professor.schedules ?? []).map((entry) => [entry.modalityId, entry.slots]),
-      ),
-    );
-    setFormEditingModalityId(professor.modalityIds[0] ?? null);
+    setFormSchedules(schedulesMap);
+    setFormEditingModalityId(modalityIds[0] ?? null);
     cadastroFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  function toggleFormModality(id: string) {
-    setForm((current) => {
-      const selected = current.modalityIds.includes(id);
-      const modalityIds = selected
-        ? current.modalityIds.filter((item) => item !== id)
-        : [...current.modalityIds, id];
-
-      if (selected) {
-        setFormSchedules((schedules) => {
-          const next = { ...schedules };
-          delete next[id];
-          return next;
-        });
-        setFormEditingModalityId((currentEditing) => (currentEditing === id ? null : currentEditing));
-      } else {
-        setFormEditingModalityId(id);
-      }
-
-      return { ...current, modalityIds };
-    });
+  function selectFormModality(id: string) {
+    setFormEditingModalityId((current) => (current === id ? null : id));
     setSuccess("");
   }
 
   async function handleSubmitProfessor(event: FormEvent) {
     event.preventDefault();
+
+    const modalityIds = resolveFormModalityIds(form.modalityIds, formSchedules);
+    if (modalityIds.length === 0) {
+      setError("Selecione ao menos uma modalidade com horários.");
+      return;
+    }
+
+    const schedules = buildSchedulesPayload(formSchedules, modalityIds);
+
     setSaving(true);
     setError("");
     setSuccess("");
@@ -146,8 +160,11 @@ export default function OwnerProfessoresPage() {
         const result = await apiFetch<{ message: string }>("/owner/professores", {
           method: "POST",
           body: JSON.stringify({
-            ...form,
-            schedules: buildSchedulesPayload(formSchedules, form.modalityIds),
+            name: form.name,
+            email: form.email,
+            password: form.password,
+            modalityIds,
+            schedules,
           }),
         });
         setSuccess(result.message);
@@ -158,8 +175,8 @@ export default function OwnerProfessoresPage() {
           {
             name: form.name.trim(),
             ...(form.password ? { password: form.password } : {}),
-            modalityIds: form.modalityIds,
-            schedules: buildSchedulesPayload(formSchedules, form.modalityIds),
+            modalityIds,
+            schedules,
           },
           "Ficha do professor atualizada.",
         );
@@ -283,21 +300,14 @@ export default function OwnerProfessoresPage() {
                 <p className="m-0 mb-2 text-xs text-white/50">Modalidades que leciona</p>
                 <div className="flex flex-wrap gap-2">
                   {activeModalities.map((item) => {
-                    const selected = form.modalityIds.includes(item.id);
+                    const slotCount = (formSchedules[item.id] ?? []).length;
+                    const selected = slotCount > 0;
                     const editing = formEditingModalityId === item.id;
                     return (
                       <button
                         key={item.id}
                         type="button"
-                        onClick={() => {
-                          if (!selected) {
-                            toggleFormModality(item.id);
-                          } else if (editing) {
-                            toggleFormModality(item.id);
-                          } else {
-                            setFormEditingModalityId(item.id);
-                          }
-                        }}
+                        onClick={() => selectFormModality(item.id)}
                         className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                           editing
                             ? "bg-[#e85d6f] text-white ring-2 ring-[#e85d6f]/40"
@@ -307,13 +317,13 @@ export default function OwnerProfessoresPage() {
                         }`}
                       >
                         {item.name}
-                        {selected ? ` • ${(formSchedules[item.id] ?? []).length} horário(s)` : ""}
+                        {selected ? ` • ${slotCount} horário(s)` : ""}
                       </button>
                     );
                   })}
                 </div>
               </div>
-              {formEditingModalityId && form.modalityIds.includes(formEditingModalityId) ? (
+              {formEditingModalityId ? (
                 (() => {
                   const modality = activeModalities.find(
                     (item) => item.id === formEditingModalityId,
@@ -323,20 +333,16 @@ export default function OwnerProfessoresPage() {
                     <ModalitySchedulePicker
                       modality={modality}
                       selectedSlots={formSchedules[formEditingModalityId] ?? []}
-                      onChange={(slots) =>
-                        setFormSchedules((current) => ({
-                          ...current,
-                          [formEditingModalityId]: slots,
-                        }))
-                      }
+                      onChange={(slots) => syncFormModalityFromSchedules(formEditingModalityId, slots)}
                     />
                   );
                 })()
-              ) : form.modalityIds.length > 0 ? (
+              ) : (
                 <p className="m-0 text-xs text-white/45">
-                  Clique em uma modalidade selecionada para escolher os horários.
+                  Clique em uma modalidade para escolher os horários. Só entram no cadastro as que
+                  tiverem horário selecionado.
                 </p>
-              ) : null}
+              )}
             </div>
             <button
               type="submit"
