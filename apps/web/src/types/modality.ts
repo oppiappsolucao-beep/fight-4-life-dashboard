@@ -45,6 +45,20 @@ export interface ScheduleSlot {
   endTime: string;
 }
 
+export type LessonAttendanceStatus = "STUDENT_CONFIRMED" | "VALIDATED" | "REJECTED";
+
+export interface LessonAttendanceItem {
+  id: string;
+  status: LessonAttendanceStatus;
+  markedAt: string;
+  studentConfirmedAt: string | null;
+  professorValidatedAt: string | null;
+  lessonId: string;
+  studentId: string;
+  student?: { id: string; nomeCompleto: string; planoModalidade: string };
+  lesson?: ProfessorLessonItem;
+}
+
 export interface ProfessorModalitySchedule {
   modalityId: string;
   slots: ScheduleSlot[];
@@ -90,6 +104,8 @@ export interface ProfessorLessonItem {
   createdAt: string;
   updatedAt: string;
   presencaMarcada?: boolean;
+  presencaStatus?: LessonAttendanceStatus | null;
+  presencaPendente?: boolean;
 }
 
 export interface StudentGalleryResponse {
@@ -122,6 +138,7 @@ export interface StudentFrequencyResponse {
   historico: Array<{
     id: string;
     markedAt: string;
+    professorValidatedAt?: string | null;
     aula: ProfessorLessonItem;
   }>;
   totalPresencas: number;

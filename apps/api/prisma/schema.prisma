@@ -25,6 +25,12 @@ enum CommercialStatus {
   FECHADO
 }
 
+enum LessonAttendanceStatus {
+  STUDENT_CONFIRMED
+  VALIDATED
+  REJECTED
+}
+
 enum ContractStatus {
   PENDENTE
   ENVIADO
@@ -350,15 +356,19 @@ model ProfessorLesson {
 }
 
 model LessonAttendance {
-  id        String          @id @default(uuid())
-  tenantId  String
-  lessonId  String
-  studentId String
-  markedAt  DateTime        @default(now())
-  tenant    Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  lesson    ProfessorLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  student   Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  id                   String                 @id @default(uuid())
+  tenantId             String
+  lessonId             String
+  studentId            String
+  status               LessonAttendanceStatus @default(STUDENT_CONFIRMED)
+  studentConfirmedAt   DateTime?
+  professorValidatedAt DateTime?
+  markedAt             DateTime               @default(now())
+  tenant               Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  lesson               ProfessorLesson        @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  student              Student                @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([lessonId, studentId])
   @@index([tenantId, studentId])
+  @@index([tenantId, status])
 }

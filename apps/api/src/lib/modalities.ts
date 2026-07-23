@@ -1,4 +1,6 @@
 import type {
+  LessonAttendance,
+  LessonAttendanceStatus,
   Modality,
   ModalityContentType,
   ModalityScheduleSlot,
@@ -345,6 +347,41 @@ export function serializeProfessorLesson(
       : null,
     createdAt: lesson.createdAt.toISOString(),
     updatedAt: lesson.updatedAt.toISOString(),
+  };
+}
+
+export function effectiveAttendanceStatus(
+  attendance: Pick<LessonAttendance, "status" | "studentConfirmedAt" | "markedAt">,
+): LessonAttendanceStatus {
+  if (attendance.status === "VALIDATED" || attendance.status === "REJECTED") {
+    return attendance.status;
+  }
+  if (attendance.studentConfirmedAt) {
+    return "STUDENT_CONFIRMED";
+  }
+  if (attendance.markedAt) {
+    return "VALIDATED";
+  }
+  return attendance.status;
+}
+
+export function serializeLessonAttendance(
+  attendance: LessonAttendance & {
+    student?: { id: string; nomeCompleto: string; planoModalidade: string };
+    lesson?: ReturnType<typeof serializeProfessorLesson>;
+  },
+) {
+  const status = effectiveAttendanceStatus(attendance);
+  return {
+    id: attendance.id,
+    status,
+    markedAt: attendance.markedAt.toISOString(),
+    studentConfirmedAt: attendance.studentConfirmedAt?.toISOString() ?? null,
+    professorValidatedAt: attendance.professorValidatedAt?.toISOString() ?? null,
+    lessonId: attendance.lessonId,
+    studentId: attendance.studentId,
+    student: attendance.student ?? undefined,
+    lesson: attendance.lesson ?? undefined,
   };
 }
 

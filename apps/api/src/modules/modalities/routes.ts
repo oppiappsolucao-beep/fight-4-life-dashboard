@@ -12,6 +12,8 @@ import {
   formatClassDate,
   serializeModality,
   serializeModalityTemplate,
+  serializeLessonAttendance,
+  effectiveAttendanceStatus,
   serializeProfessor,
   serializeProfessorLesson,
   slugifyModality,
@@ -35,6 +37,7 @@ import {
   professorCreateSchema,
   professorLessonActiveSchema,
   professorLessonSchema,
+  professorPresencaActionSchema,
   professorSelfSchema,
   professorUpdateSchema,
   tenantModalityCreateSchema,
@@ -937,11 +940,117 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
     const modalidades = await prisma.modality.findMany({
       where: { tenantId, id: { in: modalityIds }, active: true },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-      include: { _count: { select: { lessons: true } } },
+      include: modalityListInclude,
     });
 
     return reply.send({ modalidades: modalidades.map(serializeModality) });
   });
+
+  app.get("/professor/horarios", async (request, reply) => {
+    const tenantId = request.user.tenantId;
+    const schedules = await getProfessorSchedules(request.user.sub, tenantId);
+    return reply.send({ schedules });
+  });
+
+  app.get("/professor/presencas/pendentes", async (request, reply) => {
+    const tenantId = request.user.tenantId;
+    const presencas = await prisma.lessonAttendance.findMany({
+      where: {
+        tenantId,
+        status: "STUDENT_CONFIRMED",
+        lesson: {
+          professorId: request.user.sub,
+          active: true,
+        },
+      },
+      include: {
+        student: {
+          select: { id: true, nomeCompleto: true, planoModalidade: true },
+        },
+        lesson: {
+          include: lessonInclude,
+        },
+      },
+      orderBy: [{ studentConfirmedAt: "desc" }, { markedAt: "desc" }],
+    });
+
+    return reply.send({
+      presencas: presencas.map((item) =>
+        serializeLessonAttendance({
+          ...item,
+          lesson: serializeProfessorLesson(item.lesson),
+        }),
+      ),
+    });
+  });
+
+  app.patch<{ Params: { id: string } }>(
+    "/professor/presencas/:id",
+    async (request, reply) => {
+      const parsed = professorPresencaActionSchema.safeParse(request.body);
+
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.errors[0]?.message ?? "Dados inválidos.",
+        });
+      }
+
+      const attendance = await prisma.lessonAttendance.findFirst({
+        where: {
+          id: request.params.id,
+          tenantId: request.user.tenantId,
+          lesson: {
+            professorId: request.user.sub,
+            active: true,
+          },
+        },
+        include: {
+          student: {
+            select: { id: true, nomeCompleto: true, planoModalidade: true },
+          },
+          lesson: {
+            include: lessonInclude,
+          },
+        },
+      });
+
+      if (!attendance) {
+        return reply.status(404).send({ error: "Confirmação não encontrada." });
+      }
+
+      if (effectiveAttendanceStatus(attendance) !== "STUDENT_CONFIRMED") {
+        return reply.status(400).send({ error: "Esta presença já foi processada." });
+      }
+
+      const now = new Date();
+      const updated = await prisma.lessonAttendance.update({
+        where: { id: attendance.id },
+        data: {
+          status: parsed.data.action === "validate" ? "VALIDATED" : "REJECTED",
+          professorValidatedAt: now,
+        },
+        include: {
+          student: {
+            select: { id: true, nomeCompleto: true, planoModalidade: true },
+          },
+          lesson: {
+            include: lessonInclude,
+          },
+        },
+      });
+
+      return reply.send({
+        presenca: serializeLessonAttendance({
+          ...updated,
+          lesson: serializeProfessorLesson(updated.lesson),
+        }),
+        message:
+          parsed.data.action === "validate"
+            ? "Presença validada."
+            : "Presença rejeitada.",
+      });
+    },
+  );
 
   app.get("/professor/aulas", async (request, reply) => {
     const tenantId = request.user.tenantId;
@@ -1109,11 +1218,12 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
       });
 
       return reply.send({
-        presencas: presencas.map((item) => ({
-          id: item.id,
-          markedAt: item.markedAt.toISOString(),
-          student: item.student,
-        })),
+        presencas: presencas.map((item) =>
+          serializeLessonAttendance({
+            ...item,
+            student: item.student,
+          }),
+        ),
       });
     },
   );
@@ -1753,20 +1863,33 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
       orderBy: { markedAt: "desc" },
     });
 
-    const markedLessonIds = new Set(presencas.map((item) => item.lessonId));
+    const attendanceByLesson = new Map(
+      presencas.map((item) => [item.lessonId, item]),
+    );
 
     return reply.send({
       planoModalidade: student.planoModalidade,
-      aulasDisponiveis: aulasDisponiveis.map((lesson) => ({
-        ...serializeProfessorLesson(lesson),
-        presencaMarcada: markedLessonIds.has(lesson.id),
-      })),
-      historico: presencas.map((item) => ({
-        id: item.id,
-        markedAt: item.markedAt.toISOString(),
-        aula: serializeProfessorLesson(item.lesson),
-      })),
-      totalPresencas: presencas.length,
+      aulasDisponiveis: aulasDisponiveis.map((lesson) => {
+        const attendance = attendanceByLesson.get(lesson.id);
+        const status = attendance ? effectiveAttendanceStatus(attendance) : null;
+        return {
+          ...serializeProfessorLesson(lesson),
+          presencaStatus: status,
+          presencaMarcada: status === "VALIDATED",
+          presencaPendente: status === "STUDENT_CONFIRMED",
+        };
+      }),
+      historico: presencas
+        .filter((item) => effectiveAttendanceStatus(item) === "VALIDATED")
+        .map((item) => ({
+          id: item.id,
+          markedAt: item.markedAt.toISOString(),
+          professorValidatedAt: item.professorValidatedAt?.toISOString() ?? null,
+          aula: serializeProfessorLesson(item.lesson),
+        })),
+      totalPresencas: presencas.filter(
+        (item) => effectiveAttendanceStatus(item) === "VALIDATED",
+      ).length,
     });
   });
 
@@ -1801,6 +1924,32 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
         return reply.status(403).send({ error: "Esta aula não pertence à sua modalidade." });
       }
 
+      const existing = await prisma.lessonAttendance.findUnique({
+        where: {
+          lessonId_studentId: {
+            lessonId: lesson.id,
+            studentId: request.studentId!,
+          },
+        },
+      });
+
+      if (existing) {
+        const status = effectiveAttendanceStatus(existing);
+        if (status === "VALIDATED") {
+          return reply.send({
+            presenca: serializeLessonAttendance(existing),
+            message: "Sua presença já foi validada pelo professor.",
+          });
+        }
+        if (status === "STUDENT_CONFIRMED") {
+          return reply.send({
+            presenca: serializeLessonAttendance(existing),
+            message: "Confirmação já enviada. Aguarde a validação do professor.",
+          });
+        }
+      }
+
+      const now = new Date();
       const attendance = await prisma.lessonAttendance.upsert({
         where: {
           lessonId_studentId: {
@@ -1808,21 +1957,25 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
             studentId: request.studentId!,
           },
         },
-        update: { markedAt: new Date() },
+        update: {
+          status: "STUDENT_CONFIRMED",
+          studentConfirmedAt: now,
+          markedAt: now,
+          professorValidatedAt: null,
+        },
         create: {
           tenantId: student.tenantId,
           lessonId: lesson.id,
           studentId: request.studentId!,
+          status: "STUDENT_CONFIRMED",
+          studentConfirmedAt: now,
+          markedAt: now,
         },
       });
 
       return reply.send({
-        presenca: {
-          id: attendance.id,
-          markedAt: attendance.markedAt.toISOString(),
-          lessonId: lesson.id,
-        },
-        message: "Presença registrada.",
+        presenca: serializeLessonAttendance(attendance),
+        message: "Confirmação enviada. Aguarde a validação do professor.",
       });
     },
   );
