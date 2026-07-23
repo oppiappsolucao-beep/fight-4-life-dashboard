@@ -78,6 +78,15 @@ export default function OwnerProfessoresPage() {
     [professores, activeModalities, modalityColorMap],
   );
 
+  const selectedViewModality = activeModalities.find((item) => item.id === formEditingModalityId);
+
+  const filteredProfessores = useMemo(() => {
+    if (!formEditingModalityId) return [];
+    return professores.filter((professor) =>
+      professor.modalityIds.includes(formEditingModalityId),
+    );
+  }, [professores, formEditingModalityId]);
+
   function buildSchedulesPayload(source: Record<string, ScheduleSlot[]>, modalityIds: string[]) {
     return modalityIds
       .filter((modalityId) => (source[modalityId] ?? []).length > 0)
@@ -357,62 +366,74 @@ export default function OwnerProfessoresPage() {
             </button>
           </form>
 
-          <section className="rounded-xl border border-white/10 bg-black/20 p-3">
-            <div className="mb-2 flex items-center justify-between gap-3">
-              <p className="m-0 text-sm font-semibold text-white">
-                Professores cadastrados ({professores.length})
-              </p>
-            </div>
-            {professores.length === 0 ? (
-              <p className="m-0 py-4 text-center text-sm text-white/45">
-                Nenhum professor cadastrado.
-              </p>
-            ) : (
-              <div className="divide-y divide-white/10">
-                {professores.map((professor) => (
-                  <div
-                    key={professor.id}
-                    className="flex flex-wrap items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
-                  >
-                    <div className="min-w-0">
-                      <p className="m-0 truncate text-sm font-medium text-white">
-                        {professor.name ?? professor.email}
-                      </p>
-                      <p className="m-0 truncate text-[0.65rem] text-white/40">{professor.email}</p>
-                    </div>
-                    <div className="flex shrink-0 flex-wrap items-center gap-2">
-                      <button
-                        type="button"
-                        disabled={updatingProfessorId === professor.id}
-                        onClick={() => openProfessorCadastro(professor)}
-                        className="rounded-lg border border-white/15 px-2.5 py-1 text-[0.65rem] font-semibold text-white/75"
+          {formEditingModalityId && selectedViewModality ? (
+            <>
+              <section className="rounded-xl border border-white/10 bg-black/20 p-3">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <p className="m-0 text-sm font-semibold text-white">
+                    Professores — {selectedViewModality.name} ({filteredProfessores.length})
+                  </p>
+                </div>
+                {filteredProfessores.length === 0 ? (
+                  <p className="m-0 py-4 text-center text-sm text-white/45">
+                    Nenhum professor cadastrado nesta modalidade.
+                  </p>
+                ) : (
+                  <div className="divide-y divide-white/10">
+                    {filteredProfessores.map((professor) => (
+                      <div
+                        key={professor.id}
+                        className="flex flex-wrap items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
                       >
-                        Cadastro
-                      </button>
-                      <button
-                        type="button"
-                        disabled={updatingProfessorId === professor.id}
-                        onClick={() => toggleProfessorAccess(professor)}
-                        className={`rounded-full px-3 py-1 text-[0.65rem] font-semibold ${
-                          professor.active
-                            ? "bg-emerald-500/20 text-emerald-200"
-                            : "border border-white/15 text-white/45"
-                        }`}
-                      >
-                        {professor.active ? "Habilitado" : "Desabilitado"}
-                      </button>
-                    </div>
+                        <div className="min-w-0">
+                          <p className="m-0 truncate text-sm font-medium text-white">
+                            {professor.name ?? professor.email}
+                          </p>
+                          <p className="m-0 truncate text-[0.65rem] text-white/40">
+                            {professor.email}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            disabled={updatingProfessorId === professor.id}
+                            onClick={() => openProfessorCadastro(professor)}
+                            className="rounded-lg border border-white/15 px-2.5 py-1 text-[0.65rem] font-semibold text-white/75"
+                          >
+                            Cadastro
+                          </button>
+                          <button
+                            type="button"
+                            disabled={updatingProfessorId === professor.id}
+                            onClick={() => toggleProfessorAccess(professor)}
+                            className={`rounded-full px-3 py-1 text-[0.65rem] font-semibold ${
+                              professor.active
+                                ? "bg-emerald-500/20 text-emerald-200"
+                                : "border border-white/15 text-white/45"
+                            }`}
+                          >
+                            {professor.active ? "Habilitado" : "Desabilitado"}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </section>
+                )}
+              </section>
 
-          <WeeklyScheduleGrid
-            title="Grade dos professores"
-            entries={professorGridEntries}
-            emptyMessage="Cadastre professores com horários por modalidade para montar a grade."
-          />
+              <WeeklyScheduleGrid
+                title={`Grade — ${selectedViewModality.name}`}
+                entries={professorGridEntries}
+                emptyMessage="Cadastre professores com horários nesta modalidade para montar a grade."
+                filterModalityId={formEditingModalityId}
+                filterLabel={selectedViewModality.name}
+              />
+            </>
+          ) : (
+            <div className="rounded-xl border border-dashed border-white/10 px-4 py-8 text-center text-sm text-white/45">
+              Selecione uma modalidade acima para ver os professores e a grade de horários.
+            </div>
+          )}
         </div>
       )}
     </OwnerSectionPage>
