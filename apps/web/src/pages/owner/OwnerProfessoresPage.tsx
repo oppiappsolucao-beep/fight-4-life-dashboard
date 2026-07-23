@@ -21,12 +21,6 @@ export default function OwnerProfessoresPage() {
   const [formEditingModalityId, setFormEditingModalityId] = useState<string | null>(null);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [editingProfessorId, setEditingProfessorId] = useState<string | null>(null);
-  const [professorScheduleDrafts, setProfessorScheduleDrafts] = useState<
-    Record<string, Record<string, ScheduleSlot[]>>
-  >({});
-  const [professorEditingModalityId, setProfessorEditingModalityId] = useState<
-    Record<string, string | null>
-  >({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [updatingProfessorId, setUpdatingProfessorId] = useState<string | null>(null);
@@ -49,16 +43,6 @@ export default function OwnerProfessoresPage() {
       .then(([profData, modData]) => {
         setProfessores(profData.professores);
         setModalidades(modData.modalidades);
-        setProfessorScheduleDrafts(
-          Object.fromEntries(
-            profData.professores.map((professor) => [
-              professor.id,
-              Object.fromEntries(
-                (professor.schedules ?? []).map((entry) => [entry.modalityId, entry.slots]),
-              ),
-            ]),
-          ),
-        );
       })
       .catch((err) =>
         setError(err instanceof Error ? err.message : "Erro ao carregar professores."),
@@ -214,61 +198,7 @@ export default function OwnerProfessoresPage() {
     await updateProfessor(
       professor.id,
       { active: !professor.active },
-      professor.active ? "Acesso do professor bloqueado." : "Acesso do professor liberado.",
-    );
-  }
-
-  async function toggleProfessorModality(professor: ProfessorItem, modalityId: string) {
-    const enabled = professor.modalityIds.includes(modalityId);
-    const drafts = professorScheduleDrafts[professor.id] ?? {};
-
-    if (enabled) {
-      const nextModalityIds = professor.modalityIds.filter((id) => id !== modalityId);
-      const nextDrafts = { ...drafts };
-      delete nextDrafts[modalityId];
-      setProfessorScheduleDrafts((current) => ({
-        ...current,
-        [professor.id]: nextDrafts,
-      }));
-      setProfessorEditingModalityId((current) => ({
-        ...current,
-        [professor.id]: current[professor.id] === modalityId ? null : current[professor.id],
-      }));
-      await updateProfessor(
-        professor.id,
-        {
-          modalityIds: nextModalityIds,
-          schedules: buildSchedulesPayload(nextDrafts, nextModalityIds),
-        },
-        "Modalidade desativada para o professor.",
-      );
-      return;
-    }
-
-    const nextModalityIds = [...professor.modalityIds, modalityId];
-    setProfessorEditingModalityId((current) => ({
-      ...current,
-      [professor.id]: modalityId,
-    }));
-    await updateProfessor(
-      professor.id,
-      {
-        modalityIds: nextModalityIds,
-        schedules: buildSchedulesPayload(drafts, nextModalityIds),
-      },
-      "Modalidade ativada — escolha os horários.",
-    );
-  }
-
-  async function saveProfessorSchedule(professor: ProfessorItem) {
-    const drafts = professorScheduleDrafts[professor.id] ?? {};
-    await updateProfessor(
-      professor.id,
-      {
-        modalityIds: professor.modalityIds,
-        schedules: buildSchedulesPayload(drafts, professor.modalityIds),
-      },
-      "Horários do professor atualizados.",
+      professor.active ? "Professor desabilitado." : "Professor habilitado.",
     );
   }
 
@@ -293,171 +223,6 @@ export default function OwnerProfessoresPage() {
               {success}
             </div>
           ) : null}
-
-          <section className="space-y-3">
-            <p className="m-0 text-sm font-semibold text-white">
-              Professores cadastrados ({professores.length})
-            </p>
-            {professores.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-white/45">
-                Nenhum professor cadastrado.
-              </div>
-            ) : (
-              professores.map((professor) => {
-                const editingModalityId = professorEditingModalityId[professor.id] ?? null;
-                const drafts = professorScheduleDrafts[professor.id] ?? {};
-
-                return (
-                  <article
-                    key={professor.id}
-                    className="rounded-2xl border border-white/10 bg-black/25 p-4"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="m-0 font-semibold text-white">
-                          {professor.name ?? professor.email}
-                        </p>
-                        <p className="m-0 mt-1 text-sm text-white/50">Usuário: {professor.email}</p>
-                        <p
-                          className={`m-0 mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
-                            professor.active
-                              ? "bg-emerald-500/15 text-emerald-200"
-                              : "bg-red-500/15 text-red-200"
-                          }`}
-                        >
-                          {professor.active ? "Acesso ativo" : "Acesso bloqueado"}
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          disabled={updatingProfessorId === professor.id}
-                          onClick={() => openProfessorCadastro(professor)}
-                          className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-white/80"
-                        >
-                          Cadastro
-                        </button>
-                        <button
-                          type="button"
-                          disabled={updatingProfessorId === professor.id}
-                          onClick={() => toggleProfessorAccess(professor)}
-                          className={`rounded-lg px-3 py-2 text-xs font-semibold ${
-                            professor.active
-                              ? "border border-red-400/30 text-red-200"
-                              : "border border-emerald-400/30 text-emerald-200"
-                          }`}
-                        >
-                          {professor.active ? "Bloquear acesso" : "Liberar acesso"}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-3">
-                      <p className="m-0 mb-2 text-xs font-semibold text-white/50">Modalidades</p>
-                      <div className="divide-y divide-white/10">
-                        {activeModalities.map((modality) => {
-                          const enabled = professor.modalityIds.includes(modality.id);
-                          const slotCount =
-                            (drafts[modality.id] ??
-                              professor.schedules?.find((entry) => entry.modalityId === modality.id)
-                                ?.slots ??
-                              []).length;
-
-                          return (
-                            <div
-                              key={modality.id}
-                              className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
-                            >
-                              <button
-                                type="button"
-                                disabled={!enabled}
-                                onClick={() =>
-                                  setProfessorEditingModalityId((current) => ({
-                                    ...current,
-                                    [professor.id]:
-                                      editingModalityId === modality.id ? null : modality.id,
-                                  }))
-                                }
-                                className={`min-w-0 truncate text-left text-sm ${
-                                  editingModalityId === modality.id
-                                    ? "font-semibold text-[#f08a98]"
-                                    : enabled
-                                      ? "text-white"
-                                      : "text-white/45"
-                                } disabled:cursor-default`}
-                              >
-                                {modality.name}
-                                {enabled && slotCount > 0 ? ` • ${slotCount} horário(s)` : ""}
-                              </button>
-                              <button
-                                type="button"
-                                disabled={updatingProfessorId === professor.id}
-                                onClick={() => toggleProfessorModality(professor, modality.id)}
-                                className={`shrink-0 rounded-full px-3 py-1 text-[0.65rem] font-semibold ${
-                                  enabled
-                                    ? "bg-emerald-500/20 text-emerald-200"
-                                    : "border border-white/15 text-white/45"
-                                }`}
-                              >
-                                {enabled ? "Ativa" : "Inativa"}
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {editingModalityId &&
-                      professor.modalityIds.includes(editingModalityId) &&
-                      (() => {
-                        const modality = activeModalities.find(
-                          (item) => item.id === editingModalityId,
-                        );
-                        if (!modality) return null;
-                        const draftSlots =
-                          drafts[editingModalityId] ??
-                          professor.schedules?.find((entry) => entry.modalityId === editingModalityId)
-                            ?.slots ??
-                          [];
-
-                        return (
-                          <div className="mt-3 space-y-2 border-t border-white/10 pt-3">
-                            <ModalitySchedulePicker
-                              modality={modality}
-                              selectedSlots={draftSlots}
-                              professorLabel={professor.name ?? professor.email}
-                              onChange={(slots) =>
-                                setProfessorScheduleDrafts((current) => ({
-                                  ...current,
-                                  [professor.id]: {
-                                    ...(current[professor.id] ?? {}),
-                                    [editingModalityId]: slots,
-                                  },
-                                }))
-                              }
-                            />
-                            <button
-                              type="button"
-                              disabled={updatingProfessorId === professor.id}
-                              onClick={() => saveProfessorSchedule(professor)}
-                              className="rounded-lg border border-emerald-400/30 px-3 py-1.5 text-xs font-semibold text-emerald-200"
-                            >
-                              Salvar horários
-                            </button>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  </article>
-                );
-              })
-            )}
-          </section>
-
-          <WeeklyScheduleGrid
-            title="Grade dos professores"
-            entries={professorGridEntries}
-            emptyMessage="Cadastre professores com horários por modalidade para montar a grade."
-          />
 
           <form
             ref={cadastroFormRef}
@@ -585,6 +350,63 @@ export default function OwnerProfessoresPage() {
                   : "Salvar ficha"}
             </button>
           </form>
+
+          <section className="rounded-xl border border-white/10 bg-black/20 p-3">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <p className="m-0 text-sm font-semibold text-white">
+                Professores cadastrados ({professores.length})
+              </p>
+            </div>
+            {professores.length === 0 ? (
+              <p className="m-0 py-4 text-center text-sm text-white/45">
+                Nenhum professor cadastrado.
+              </p>
+            ) : (
+              <div className="divide-y divide-white/10">
+                {professores.map((professor) => (
+                  <div
+                    key={professor.id}
+                    className="flex flex-wrap items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
+                  >
+                    <div className="min-w-0">
+                      <p className="m-0 truncate text-sm font-medium text-white">
+                        {professor.name ?? professor.email}
+                      </p>
+                      <p className="m-0 truncate text-[0.65rem] text-white/40">{professor.email}</p>
+                    </div>
+                    <div className="flex shrink-0 flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={updatingProfessorId === professor.id}
+                        onClick={() => openProfessorCadastro(professor)}
+                        className="rounded-lg border border-white/15 px-2.5 py-1 text-[0.65rem] font-semibold text-white/75"
+                      >
+                        Cadastro
+                      </button>
+                      <button
+                        type="button"
+                        disabled={updatingProfessorId === professor.id}
+                        onClick={() => toggleProfessorAccess(professor)}
+                        className={`rounded-full px-3 py-1 text-[0.65rem] font-semibold ${
+                          professor.active
+                            ? "bg-emerald-500/20 text-emerald-200"
+                            : "border border-white/15 text-white/45"
+                        }`}
+                      >
+                        {professor.active ? "Habilitado" : "Desabilitado"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <WeeklyScheduleGrid
+            title="Grade dos professores"
+            entries={professorGridEntries}
+            emptyMessage="Cadastre professores com horários por modalidade para montar a grade."
+          />
         </div>
       )}
     </OwnerSectionPage>
