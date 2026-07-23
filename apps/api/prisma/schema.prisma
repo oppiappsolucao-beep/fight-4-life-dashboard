@@ -98,6 +98,7 @@ model Student {
   diaVencimento        String
   formaPagamento       String?
   fotoUrl              String?
+  acessoLiberadoAte    String?
   active               Boolean  @default(true)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
@@ -293,6 +294,7 @@ model Modality {
   contentType ModalityContentType @default(VIDEO_GALLERY)
   description String?
   linkedPlans String[]            @default([])
+  warmupExercises Json?
   active      Boolean             @default(true)
   sortOrder   Int                 @default(0)
   createdAt   DateTime            @default(now())

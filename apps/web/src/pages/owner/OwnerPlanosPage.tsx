@@ -7,8 +7,21 @@ import {
 } from "../../lib/plans";
 import OwnerSectionPage from "./OwnerSectionPage";
 
+function formatValorInput(value: number): string {
+  if (!Number.isFinite(value) || value === 0) return "";
+  return String(value);
+}
+
+function parseValorInput(value: string): number | null {
+  const trimmed = value.trim().replace(",", ".");
+  if (!trimmed) return null;
+  const numeric = Number(trimmed);
+  return Number.isFinite(numeric) && numeric >= 0 ? numeric : null;
+}
+
 export default function OwnerPlanosPage() {
   const [planos, setPlanos] = useState<PlanItem[]>(DEFAULT_OWNER_PLANS);
+  const [valorInputs, setValorInputs] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -18,7 +31,11 @@ export default function OwnerPlanosPage() {
     setLoading(true);
     setError("");
     apiFetch<{ planos: PlanItem[] }>("/owner/planos")
-      .then((data) => setPlanos(data.planos.length ? data.planos : DEFAULT_OWNER_PLANS))
+      .then((data) => {
+        const next = data.planos.length ? data.planos : DEFAULT_OWNER_PLANS;
+        setPlanos(next);
+        setValorInputs(next.map((plan) => formatValorInput(plan.valor)));
+      })
       .catch((err) =>
         setError(err instanceof Error ? err.message : "Erro ao carregar planos."),
       )
@@ -29,16 +46,32 @@ export default function OwnerPlanosPage() {
     load();
   }, [load]);
 
-  function updatePlan(index: number, field: keyof PlanItem, value: string) {
+  function updatePlanName(index: number, value: string) {
     setPlanos((current) =>
-      current.map((plan, i) => {
-        if (i !== index) return plan;
-        if (field === "valor") {
-          const numeric = Number(value.replace(",", "."));
-          return { ...plan, valor: Number.isFinite(numeric) ? numeric : 0 };
-        }
-        return { ...plan, nome: value };
-      }),
+      current.map((plan, i) => (i === index ? { ...plan, nome: value } : plan)),
+    );
+    setSuccess("");
+    setError("");
+  }
+
+  function updateValorInput(index: number, value: string) {
+    setValorInputs((current) => current.map((item, i) => (i === index ? value : item)));
+    const parsed = parseValorInput(value);
+    if (parsed != null) {
+      setPlanos((current) =>
+        current.map((plan, i) => (i === index ? { ...plan, valor: parsed } : plan)),
+      );
+    }
+    setSuccess("");
+    setError("");
+  }
+
+  function toggleDiferencial(index: number) {
+    setPlanos((current) =>
+      current.map((plan, i) => ({
+        ...plan,
+        liberaTodaGrade: i === index ? !plan.liberaTodaGrade : false,
+      })),
     );
     setSuccess("");
     setError("");
@@ -46,11 +79,13 @@ export default function OwnerPlanosPage() {
 
   function addPlan() {
     setPlanos((current) => [...current, { nome: "Novo plano", valor: 0 }]);
+    setValorInputs((current) => [...current, ""]);
     setSuccess("");
   }
 
   function removePlan(index: number) {
     setPlanos((current) => current.filter((_, i) => i !== index));
+    setValorInputs((current) => current.filter((_, i) => i !== index));
     setSuccess("");
   }
 
@@ -62,14 +97,19 @@ export default function OwnerPlanosPage() {
 
     try {
       const cleaned = planos
-        .map((plan) => ({
+        .map((plan, index) => ({
           nome: plan.nome.trim(),
-          valor: Number(plan.valor),
+          valor: parseValorInput(valorInputs[index] ?? "") ?? Number(plan.valor),
+          liberaTodaGrade: plan.liberaTodaGrade === true,
         }))
         .filter((plan) => plan.nome.length > 0);
 
       if (cleaned.length === 0) {
         throw new Error("Adicione ao menos um plano.");
+      }
+
+      if (cleaned.some((plan) => !Number.isFinite(plan.valor) || plan.valor < 0)) {
+        throw new Error("Informe valores válidos para todos os planos.");
       }
 
       const result = await apiFetch<{ planos: PlanItem[]; message: string }>(
@@ -81,6 +121,7 @@ export default function OwnerPlanosPage() {
       );
 
       setPlanos(result.planos);
+      setValorInputs(result.planos.map((plan) => formatValorInput(plan.valor)));
       setSuccess(result.message);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao salvar planos.");
@@ -131,6 +172,7 @@ export default function OwnerPlanosPage() {
                 <tr className="border-b border-white/10 text-[0.7rem] uppercase tracking-wide text-white/45">
                   <th className="px-4 py-3 font-medium">Plano / modalidade</th>
                   <th className="px-4 py-3 font-medium">Valor</th>
+                  <th className="px-4 py-3 font-medium">Diferencial</th>
                   <th className="px-4 py-3 text-right font-medium">Ações</th>
                 </tr>
               </thead>
@@ -140,7 +182,7 @@ export default function OwnerPlanosPage() {
                     <td className="px-4 py-3">
                       <input
                         value={plan.nome}
-                        onChange={(e) => updatePlan(index, "nome", e.target.value)}
+                        onChange={(e) => updatePlanName(index, e.target.value)}
                         className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-[#e85d6f]/60"
                         required
                       />
@@ -148,18 +190,31 @@ export default function OwnerPlanosPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={plan.valor}
-                          onChange={(e) => updatePlan(index, "valor", e.target.value)}
+                          type="text"
+                          inputMode="decimal"
+                          value={valorInputs[index] ?? ""}
+                          onChange={(e) => updateValorInput(index, e.target.value)}
+                          placeholder="0,00"
                           className="w-36 rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-[#e85d6f]/60"
                           required
                         />
                         <span className="text-xs text-white/40">
-                          {formatPlanCurrency(plan.valor)}
+                          {formatPlanCurrency(
+                            parseValorInput(valorInputs[index] ?? "") ?? plan.valor,
+                          )}
                         </span>
                       </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <label className="inline-flex items-center gap-2 text-xs text-white/70">
+                        <input
+                          type="checkbox"
+                          checked={plan.liberaTodaGrade === true}
+                          onChange={() => toggleDiferencial(index)}
+                          className="rounded border-white/20"
+                        />
+                        Libera toda a grade
+                      </label>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
@@ -176,6 +231,11 @@ export default function OwnerPlanosPage() {
               </tbody>
             </table>
           </div>
+
+          <p className="text-xs text-white/45">
+            Marque um plano como diferencial para liberar todas as modalidades e horários da academia
+            para o aluno matriculado nele.
+          </p>
 
           <div className="flex justify-end">
             <button

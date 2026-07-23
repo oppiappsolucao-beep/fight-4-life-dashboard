@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import DashboardShell from "../DashboardShell";
+import StudentBillingGate from "./StudentBillingGate";
 import StudentSidebar from "./StudentSidebar";
 import { hasStudentSession } from "../../lib/studentSession";
 
@@ -31,7 +32,9 @@ export default function StudentLayout() {
           <StudentSidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
         }
       >
-        <Outlet />
+        <StudentBillingGate>
+          <Outlet />
+        </StudentBillingGate>
       </DashboardShell>
     </div>
   );

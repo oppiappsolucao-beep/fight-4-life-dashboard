@@ -18,6 +18,19 @@ export const tenantModalityOfferSchema = z.object({
 export const tenantModalityUpdateSchema = z.object({
   linkedPlans: z.array(z.string().min(1)).optional(),
   active: z.boolean().optional(),
+  warmupExercises: z
+    .array(
+      z.object({
+        exerciseId: z.string().uuid(),
+        order: z.number().int().min(1),
+        sets: z.number().int().min(1).max(20),
+        reps: z.string().min(1),
+        load: z.string().optional(),
+        restSeconds: z.number().int().min(0).max(600).optional(),
+        notes: z.string().optional(),
+      }),
+    )
+    .optional(),
 });
 
 export const tenantModalityCreateSchema = z.object({

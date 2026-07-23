@@ -1,6 +1,7 @@
 export interface PlanItem {
   nome: string;
   valor: number;
+  liberaTodaGrade?: boolean;
 }
 
 export const DEFAULT_OWNER_PLANS: PlanItem[] = [

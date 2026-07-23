@@ -1,6 +1,7 @@
 export interface PlanItem {
   nome: string;
   valor: number;
+  liberaTodaGrade?: boolean;
 }
 
 export const DEFAULT_OWNER_PLANS: PlanItem[] = [
@@ -20,11 +21,20 @@ export function normalizePlans(raw: unknown): PlanItem[] {
     const items = raw
       .map((item) => {
         if (!item || typeof item !== "object") return null;
-        const row = item as { nome?: unknown; valor?: unknown };
+        const row = item as {
+          nome?: unknown;
+          valor?: unknown;
+          liberaTodaGrade?: unknown;
+        };
         const nome = typeof row.nome === "string" ? row.nome.trim() : "";
         const valor = Number(row.valor);
         if (!nome || !Number.isFinite(valor) || valor < 0) return null;
-        return { nome, valor };
+        const plan: PlanItem = {
+          nome,
+          valor,
+          liberaTodaGrade: row.liberaTodaGrade === true,
+        };
+        return plan;
       })
       .filter((item): item is PlanItem => item !== null);
 

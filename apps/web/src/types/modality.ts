@@ -20,6 +20,15 @@ export interface ModalityItem {
   contentType: ModalityContentType;
   description: string | null;
   linkedPlans: string[];
+  warmupExercises?: Array<{
+    exerciseId: string;
+    order: number;
+    sets: number;
+    reps: string;
+    load?: string | null;
+    restSeconds?: number | null;
+    notes?: string | null;
+  }>;
   active: boolean;
   sortOrder: number;
   lessonCount: number;

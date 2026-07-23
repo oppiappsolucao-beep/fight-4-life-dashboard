@@ -1,13 +1,15 @@
 import type { FastifyInstance } from "fastify";
 import bcrypt from "bcryptjs";
-import { UserRole } from "@prisma/client";
+import { Prisma, UserRole } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
 import {
   ensureModalityTemplates,
   ensureTenantModalities,
   isAllowedVideoUrl,
   modalityMatchesPlan,
+  normalizeWarmupExercises,
   parseClassDate,
+  formatClassDate,
   serializeModality,
   serializeModalityTemplate,
   serializeProfessor,
@@ -15,6 +17,7 @@ import {
   slugifyModality,
 } from "../../lib/modalities.js";
 import { normalizeScheduleSlots, serializeScheduleSlot, weekdayFromDateInput } from "../../lib/schedules.js";
+import { normalizePlans } from "../owner/plans.js";
 import { requireAuth, requireRole } from "../../middleware/auth.js";
 import { requireStudent } from "../../middleware/student.js";
 import {
@@ -32,10 +35,18 @@ import {
 } from "./schemas.js";
 
 const lessonInclude = {
-  modality: { select: { id: true, name: true, slug: true } },
+  modality: { select: { id: true, name: true, slug: true, linkedPlans: true, contentType: true, active: true } },
   professor: { select: { id: true, name: true, email: true } },
   _count: { select: { attendances: true } },
 } as const;
+
+async function getTenantPlans(tenantId: string) {
+  const config = await prisma.tenantConfig.findUnique({
+    where: { tenantId },
+    select: { planosPrecos: true },
+  });
+  return normalizePlans(config?.planosPrecos ?? null);
+}
 
 async function buildProfessorStats(
   tenantId: string,
@@ -43,6 +54,8 @@ async function buildProfessorStats(
   modalityIds: string[],
 ) {
   if (modalityIds.length === 0) return [];
+
+  const tenantPlans = await getTenantPlans(tenantId);
 
   const [modalities, students, lessons, assignments] = await Promise.all([
     prisma.modality.findMany({
@@ -71,7 +84,7 @@ async function buildProfessorStats(
     const modalityLessons = lessons.filter((lesson) => lesson.modalityId === modality.id);
     const assignment = assignments.find((item) => item.modalityId === modality.id);
     const studentCount = students.filter((student) =>
-      modalityMatchesPlan(modality, student.planoModalidade),
+      modalityMatchesPlan(modality, student.planoModalidade, tenantPlans),
     ).length;
 
     return {
@@ -488,6 +501,13 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
         data: {
           ...(data.linkedPlans ? { linkedPlans: data.linkedPlans } : {}),
           ...(data.active !== undefined ? { active: data.active } : {}),
+          ...(data.warmupExercises
+            ? {
+                warmupExercises: normalizeWarmupExercises(
+                  data.warmupExercises,
+                ) as unknown as Prisma.InputJsonValue,
+              }
+            : {}),
         },
         include: modalityListInclude,
       });
@@ -788,6 +808,29 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
     },
   );
 
+  app.delete<{ Params: { professorId: string; lessonId: string } }>(
+    "/owner/professores/:professorId/aulas/:lessonId",
+    async (request, reply) => {
+      const tenantId = request.user.tenantId;
+      const lesson = await prisma.professorLesson.findFirst({
+        where: {
+          id: request.params.lessonId,
+          tenantId,
+          professorId: request.params.professorId,
+        },
+        select: { id: true },
+      });
+
+      if (!lesson) {
+        return reply.status(404).send({ error: "Aula não encontrada." });
+      }
+
+      await prisma.professorLesson.delete({ where: { id: lesson.id } });
+
+      return reply.send({ message: "Aula excluída com sucesso." });
+    },
+  );
+
   app.get<{ Querystring: { modalityId?: string; classDate?: string; professorId?: string } }>(
     "/owner/aulas",
     async (request, reply) => {
@@ -1080,6 +1123,7 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
     }
 
     await ensureTenantModalities(student.tenantId);
+    const tenantPlans = await getTenantPlans(student.tenantId);
 
     const modalidades = await prisma.modality.findMany({
       where: { tenantId: student.tenantId, active: true },
@@ -1088,7 +1132,7 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
     });
 
     const accessible = modalidades.filter((item) =>
-      modalityMatchesPlan(item, student.planoModalidade),
+      modalityMatchesPlan(item, student.planoModalidade, tenantPlans),
     );
 
     return reply.send({
@@ -1096,6 +1140,132 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
       modalidades: accessible.map(serializeModality),
     });
   });
+
+  app.get<{ Querystring: { modalityId: string } }>(
+    "/student/modality-aquecimento",
+    { preHandler: [requireStudent] },
+    async (request, reply) => {
+      const modalityId = request.query.modalityId;
+      if (!modalityId) {
+        return reply.status(400).send({ error: "Informe a modalidade." });
+      }
+
+      const student = await prisma.student.findUnique({
+        where: { id: request.studentId },
+        select: { tenantId: true, planoModalidade: true },
+      });
+
+      if (!student) {
+        return reply.status(404).send({ error: "Aluno não encontrado." });
+      }
+
+      const tenantPlans = await getTenantPlans(student.tenantId);
+      const modality = await prisma.modality.findFirst({
+        where: { id: modalityId, tenantId: student.tenantId, active: true },
+      });
+
+      if (!modality) {
+        return reply.status(404).send({ error: "Modalidade não encontrada." });
+      }
+
+      if (!modalityMatchesPlan(modality, student.planoModalidade, tenantPlans)) {
+        return reply.status(403).send({ error: "Modalidade não incluída no seu plano." });
+      }
+
+      const warmupItems = normalizeWarmupExercises(modality.warmupExercises);
+      if (warmupItems.length === 0) {
+        return reply.send({ exercises: [] });
+      }
+
+      const exercises = await prisma.exercise.findMany({
+        where: {
+          active: true,
+          id: { in: warmupItems.map((item) => item.exerciseId) },
+        },
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          muscleGroup: true,
+          equipment: true,
+          instructions: true,
+          imageUrl: true,
+          gifUrl: true,
+          phases: true,
+          bodyRegion: true,
+        },
+      });
+
+      const exerciseById = new Map(exercises.map((item) => [item.id, item]));
+
+      return reply.send({
+        exercises: warmupItems
+          .map((item) => {
+            const exercise = exerciseById.get(item.exerciseId);
+            if (!exercise) return null;
+            return {
+              id: `${modality.id}-${item.order}`,
+              exerciseId: item.exerciseId,
+              phase: "INICIO" as const,
+              order: item.order,
+              sets: item.sets,
+              reps: item.reps,
+              load: item.load,
+              restSeconds: item.restSeconds ?? 60,
+              notes: item.notes,
+              completedSets: [] as number[],
+              exercise,
+            };
+          })
+          .filter((item): item is NonNullable<typeof item> => item !== null),
+      });
+    },
+  );
+
+  app.get<{ Querystring: { modalityId: string } }>(
+    "/student/treino-aulas-datas",
+    { preHandler: [requireStudent] },
+    async (request, reply) => {
+      const modalityId = request.query.modalityId;
+      if (!modalityId) {
+        return reply.status(400).send({ error: "Informe a modalidade." });
+      }
+
+      const student = await prisma.student.findUnique({
+        where: { id: request.studentId },
+        select: { tenantId: true, planoModalidade: true },
+      });
+
+      if (!student) {
+        return reply.status(404).send({ error: "Aluno não encontrado." });
+      }
+
+      const tenantPlans = await getTenantPlans(student.tenantId);
+      const modality = await prisma.modality.findFirst({
+        where: { id: modalityId, tenantId: student.tenantId, active: true },
+      });
+
+      if (!modality) {
+        return reply.status(404).send({ error: "Modalidade não encontrada." });
+      }
+
+      if (!modalityMatchesPlan(modality, student.planoModalidade, tenantPlans)) {
+        return reply.status(403).send({ error: "Modalidade não incluída no seu plano." });
+      }
+
+      const lessons = await prisma.professorLesson.findMany({
+        where: { tenantId: student.tenantId, modalityId, active: true },
+        select: { classDate: true },
+        orderBy: { classDate: "asc" },
+      });
+
+      const dates = Array.from(
+        new Set(lessons.map((lesson) => formatClassDate(lesson.classDate))),
+      ).map((classDate) => ({ classDate, hasLesson: true }));
+
+      return reply.send({ dates });
+    },
+  );
 
   app.get<{ Querystring: { modalityId: string; classDate: string } }>(
     "/student/treino-aulas",
@@ -1116,6 +1286,7 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
       }
 
       await ensureTenantModalities(student.tenantId);
+      const tenantPlans = await getTenantPlans(student.tenantId);
 
       const modality = await prisma.modality.findFirst({
         where: { id: modalityId, tenantId: student.tenantId, active: true },
@@ -1131,7 +1302,7 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
         return reply.status(404).send({ error: "Modalidade não encontrada." });
       }
 
-      if (!modalityMatchesPlan(modality, student.planoModalidade)) {
+      if (!modalityMatchesPlan(modality, student.planoModalidade, tenantPlans)) {
         return reply.status(403).send({ error: "Esta modalidade não está incluída no seu plano." });
       }
 
@@ -1238,6 +1409,7 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
       }
 
       await ensureTenantModalities(student.tenantId);
+      const tenantPlans = await getTenantPlans(student.tenantId);
 
       const modalidades = await prisma.modality.findMany({
         where: { tenantId: student.tenantId, active: true, contentType: "VIDEO_GALLERY" },
@@ -1246,11 +1418,11 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
       });
 
       const accessibleModalidades = modalidades.filter((item) =>
-        modalityMatchesPlan(item, student.planoModalidade),
+        modalityMatchesPlan(item, student.planoModalidade, tenantPlans),
       );
 
       const matched = accessibleModalidades.find((item) =>
-        modalityMatchesPlan(item, student.planoModalidade),
+        modalityMatchesPlan(item, student.planoModalidade, tenantPlans),
       );
       const selectedModalityId =
         request.query.modalityId ?? matched?.id ?? accessibleModalidades[0]?.id ?? null;
@@ -1291,13 +1463,14 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
     }
 
     await ensureTenantModalities(student.tenantId);
+    const tenantPlans = await getTenantPlans(student.tenantId);
 
     const modalidades = await prisma.modality.findMany({
       where: { tenantId: student.tenantId, active: true, contentType: "VIDEO_GALLERY" },
     });
 
     const matchedModalityIds = modalidades
-      .filter((item) => modalityMatchesPlan(item, student.planoModalidade))
+      .filter((item) => modalityMatchesPlan(item, student.planoModalidade, tenantPlans))
       .map((item) => item.id);
 
     const aulasDisponiveis = await prisma.professorLesson.findMany({
@@ -1363,7 +1536,8 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
         return reply.status(404).send({ error: "Aula não encontrada." });
       }
 
-      if (!modalityMatchesPlan(lesson.modality, student.planoModalidade)) {
+      const tenantPlans = await getTenantPlans(student.tenantId);
+      if (!modalityMatchesPlan(lesson.modality, student.planoModalidade, tenantPlans)) {
         return reply.status(403).send({ error: "Esta aula não pertence à sua modalidade." });
       }
 

@@ -1,4 +1,8 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
+import {
+  isStudentBillingBlocked,
+  STUDENT_BILLING_BLOCKED_MESSAGE,
+} from "../lib/billing.js";
 import { prisma } from "../lib/prisma.js";
 
 declare module "fastify" {
@@ -24,11 +28,23 @@ export async function requireStudent(
       active: true,
       tenant: { active: true },
     },
-    select: { id: true },
+    select: {
+      id: true,
+      diaVencimento: true,
+      acessoLiberadoAte: true,
+    },
   });
 
   if (!student) {
     reply.status(401).send({ error: "Aluno não encontrado ou inativo." });
+    return;
+  }
+
+  if (isStudentBillingBlocked(student)) {
+    reply.status(403).send({
+      error: STUDENT_BILLING_BLOCKED_MESSAGE,
+      code: "BILLING_BLOCKED",
+    });
     return;
   }
 

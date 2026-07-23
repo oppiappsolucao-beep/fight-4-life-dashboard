@@ -19,6 +19,7 @@ import type {
 } from "../../types/workout";
 import type { ModalityItem, ProfessorItem } from "../../types/modality";
 import OwnerLessonCadastroPanel from "../../components/owner/OwnerLessonCadastroPanel";
+import OwnerModalityWarmupPanel from "../../components/owner/OwnerModalityWarmupPanel";
 import OwnerSectionPage from "./OwnerSectionPage";
 
 interface AlunoOption {
@@ -378,14 +379,39 @@ export default function OwnerCadastroTreinoPage() {
           Carregando alunos e exercícios...
         </div>
       ) : !isMusculacao ? (
-        <OwnerLessonCadastroPanel
-          modalidades={modalidades}
-          selectedModalityId={selectedModalityId}
-          onModalityChange={setSelectedModalityId}
-          classDate={workoutDate}
-          onClassDateChange={setWorkoutDate}
-          professores={professores}
-        />
+        <div className="space-y-5">
+          <div className="flex flex-wrap gap-2">
+            {modalidades
+              .filter((item) => item.contentType === "VIDEO_GALLERY" && item.active)
+              .map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setSelectedModalityId(item.id)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                    selectedModalityId === item.id
+                      ? "bg-[#e85d6f] text-white"
+                      : "border border-white/15 text-white/70"
+                  }`}
+                >
+                  {item.name}
+                </button>
+              ))}
+          </div>
+          {selectedModality ? (
+            <>
+              <OwnerModalityWarmupPanel modality={selectedModality} />
+              <OwnerLessonCadastroPanel
+                modalidades={modalidades}
+                selectedModalityId={selectedModalityId}
+                onModalityChange={setSelectedModalityId}
+                classDate={workoutDate}
+                onClassDateChange={setWorkoutDate}
+                professores={professores}
+              />
+            </>
+          ) : null}
+        </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
           {error ? (

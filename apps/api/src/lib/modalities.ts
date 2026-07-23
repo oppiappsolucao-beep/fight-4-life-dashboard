@@ -8,6 +8,7 @@ import type {
 } from "@prisma/client";
 import { prisma } from "./prisma.js";
 import { serializeScheduleSlot } from "./schedules.js";
+import type { PlanItem } from "../modules/owner/plans.js";
 
 export interface ModalityTemplateSeed {
   name: string;
@@ -82,9 +83,60 @@ const BUNDLE_GYM_PLANS = [
   "musculação livre",
 ];
 
-export function planGrantsAllModalities(planName: string): boolean {
+export interface ModalityWarmupExercise {
+  exerciseId: string;
+  order: number;
+  sets: number;
+  reps: string;
+  load?: string | null;
+  restSeconds?: number | null;
+  notes?: string | null;
+}
+
+export function normalizeWarmupExercises(raw: unknown): ModalityWarmupExercise[] {
+  if (!Array.isArray(raw)) return [];
+
+  const items: ModalityWarmupExercise[] = [];
+
+  raw.forEach((item, index) => {
+    if (!item || typeof item !== "object") return;
+    const row = item as Record<string, unknown>;
+    const exerciseId = typeof row.exerciseId === "string" ? row.exerciseId : "";
+    if (!exerciseId) return;
+
+    const sets = Number(row.sets);
+    const order = Number(row.order);
+
+    items.push({
+      exerciseId,
+      order: Number.isFinite(order) && order > 0 ? order : index + 1,
+      sets: Number.isFinite(sets) && sets > 0 ? sets : 3,
+      reps: typeof row.reps === "string" && row.reps.trim() ? row.reps.trim() : "12",
+      load: typeof row.load === "string" ? row.load.trim() || null : null,
+      restSeconds:
+        row.restSeconds == null ? 60 : Number.isFinite(Number(row.restSeconds))
+          ? Number(row.restSeconds)
+          : 60,
+      notes: typeof row.notes === "string" ? row.notes.trim() || null : null,
+    });
+  });
+
+  return items.sort((a, b) => a.order - b.order);
+}
+
+export function planGrantsAllModalities(
+  planName: string,
+  tenantPlans: PlanItem[] = [],
+): boolean {
   const normalizedPlan = normalizePlanName(planName);
   if (!normalizedPlan) return false;
+
+  const configuredPlan = tenantPlans.find(
+    (plan) => normalizePlanName(plan.nome) === normalizedPlan,
+  );
+  if (configuredPlan?.liberaTodaGrade) {
+    return true;
+  }
 
   return (
     normalizedPlan.includes("master") ||
@@ -97,20 +149,13 @@ export function planGrantsAllModalities(planName: string): boolean {
 export function modalityMatchesPlan(
   modality: Pick<Modality, "name" | "linkedPlans" | "contentType" | "active">,
   planName: string,
+  tenantPlans: PlanItem[] = [],
 ): boolean {
   const normalizedPlan = normalizePlanName(planName);
   if (!normalizedPlan) return false;
 
-  if (planGrantsAllModalities(planName)) {
-    return true;
-  }
-
-  if (
-    modality.contentType === "VIDEO_GALLERY" &&
-    modality.active &&
-    modality.linkedPlans.length === 0
-  ) {
-    return true;
+  if (planGrantsAllModalities(planName, tenantPlans)) {
+    return modality.active;
   }
 
   if (modality.linkedPlans.some((plan) => normalizePlanName(plan) === normalizedPlan)) {
@@ -124,9 +169,6 @@ export function modalityMatchesPlan(
 
   if (BUNDLE_GYM_PLANS.includes(normalizedPlan)) {
     if (modality.contentType === "EXERCISE_CATALOG" && modality.active) {
-      return true;
-    }
-    if (modality.contentType === "VIDEO_GALLERY" && modality.active) {
       return true;
     }
   }
@@ -232,6 +274,7 @@ export function serializeModality(
     contentType: modality.contentType,
     description: modality.description,
     linkedPlans: modality.linkedPlans,
+    warmupExercises: normalizeWarmupExercises(modality.warmupExercises),
     active: modality.active,
     sortOrder: modality.sortOrder,
     lessonCount: modality._count?.lessons ?? 0,

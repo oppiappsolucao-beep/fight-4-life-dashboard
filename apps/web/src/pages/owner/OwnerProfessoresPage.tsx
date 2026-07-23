@@ -239,6 +239,24 @@ export default function OwnerProfessoresPage() {
     }
   }
 
+  async function deleteLesson(professorId: string, lesson: ProfessorLessonItem) {
+    if (!window.confirm(`Excluir a aula "${lesson.title}"?`)) return;
+
+    setUpdatingProfessorId(professorId);
+    setError("");
+    try {
+      await apiFetch(`/owner/professores/${professorId}/aulas/${lesson.id}`, {
+        method: "DELETE",
+      });
+      setSuccess("Aula excluída com sucesso.");
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao excluir aula.");
+    } finally {
+      setUpdatingProfessorId(null);
+    }
+  }
+
   async function saveLinkedPlans(modalityId: string, linkedPlans: string[]) {
     try {
       await apiFetch(`/owner/modalidades/${modalityId}`, {
@@ -431,18 +449,28 @@ export default function OwnerProfessoresPage() {
                                 {lesson.attendanceCount} presença(s)
                               </p>
                             </div>
-                            <button
-                              type="button"
-                              disabled={updatingProfessorId === professor.id}
-                              onClick={() => toggleLesson(professor.id, lesson)}
-                              className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
-                                lesson.active
-                                  ? "border border-red-400/30 text-red-200"
-                                  : "border border-emerald-400/30 text-emerald-200"
-                              }`}
-                            >
-                              {lesson.active ? "Bloquear aula" : "Liberar aula"}
-                            </button>
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                disabled={updatingProfessorId === professor.id}
+                                onClick={() => toggleLesson(professor.id, lesson)}
+                                className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
+                                  lesson.active
+                                    ? "border border-red-400/30 text-red-200"
+                                    : "border border-emerald-400/30 text-emerald-200"
+                                }`}
+                              >
+                                {lesson.active ? "Bloquear aula" : "Liberar aula"}
+                              </button>
+                              <button
+                                type="button"
+                                disabled={updatingProfessorId === professor.id}
+                                onClick={() => deleteLesson(professor.id, lesson)}
+                                className="rounded-lg border border-red-400/30 px-2.5 py-1 text-xs font-semibold text-red-200"
+                              >
+                                Excluir aula
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>

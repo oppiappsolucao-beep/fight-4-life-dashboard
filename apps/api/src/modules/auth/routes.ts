@@ -3,6 +3,10 @@ import bcrypt from "bcryptjs";
 import { UserRole } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
+import {
+  isStudentBillingBlocked,
+  STUDENT_BILLING_BLOCKED_MESSAGE,
+} from "../../lib/billing.js";
 import { resolveTenant } from "../../middleware/tenant.js";
 import { requireAuth } from "../../middleware/auth.js";
 
@@ -39,6 +43,8 @@ const activeStudentSelect = {
   nomeCompleto: true,
   cpf: true,
   email: true,
+  diaVencimento: true,
+  acessoLiberadoAte: true,
   tenant: {
     select: { id: true, slug: true, name: true, active: true },
   },
@@ -333,6 +339,13 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
       return reply.status(401).send({
         error:
           "CPF ou e-mail não encontrado. Verifique o cadastro com a recepção.",
+      });
+    }
+
+    if (isStudentBillingBlocked(student)) {
+      return reply.status(403).send({
+        error: STUDENT_BILLING_BLOCKED_MESSAGE,
+        code: "BILLING_BLOCKED",
       });
     }
 

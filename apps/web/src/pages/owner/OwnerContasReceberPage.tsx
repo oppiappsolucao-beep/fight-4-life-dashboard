@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiFetch } from "../../lib/api";
+import {
+  getEffectiveDueStatus,
+  getNextDueDate,
+  type BillingDueStatus,
+} from "../../lib/billing";
 import { formatCpf, formatPhone } from "../../lib/format";
 import {
   DEFAULT_OWNER_PLANS,
@@ -20,6 +25,7 @@ interface AlunoRecebivel {
   dataInicio: string;
   diaVencimento: string;
   formaPagamento: string | null;
+  acessoLiberadoAte: string | null;
   createdAt: string;
 }
 
@@ -33,40 +39,13 @@ function parseDueDay(diaVencimento: string): number {
   return day;
 }
 
-function getNextDueDate(diaVencimento: string): Date {
-  const day = parseDueDay(diaVencimento);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  let due = new Date(today.getFullYear(), today.getMonth(), day);
-  due.setHours(0, 0, 0, 0);
-
-  if (due < today) {
-    due = new Date(today.getFullYear(), today.getMonth() + 1, day);
-    due.setHours(0, 0, 0, 0);
-  }
-
-  return due;
-}
-
-function getDueStatus(diaVencimento: string): "em_dia" | "vencido" | "hoje" {
-  const day = parseDueDay(diaVencimento);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const currentDue = new Date(today.getFullYear(), today.getMonth(), day);
-  currentDue.setHours(0, 0, 0, 0);
-
-  if (currentDue.getTime() === today.getTime()) return "hoje";
-  if (currentDue < today) return "vencido";
-  return "em_dia";
-}
-
 export default function OwnerContasReceberPage() {
   const [alunos, setAlunos] = useState<AlunoRecebivel[]>([]);
   const [planos, setPlanos] = useState<PlanItem[]>(DEFAULT_OWNER_PLANS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [releasingId, setReleasingId] = useState<string | null>(null);
 
   const priceMap = useMemo(() => plansToPriceMap(planos), [planos]);
 
@@ -94,12 +73,38 @@ export default function OwnerContasReceberPage() {
     load();
   }, [load]);
 
+  async function liberarAluno(aluno: AlunoRecebivel) {
+    setReleasingId(aluno.id);
+    setError("");
+    setSuccess("");
+    try {
+      const result = await apiFetch<{ message: string; aluno: AlunoRecebivel }>(
+        `/owner/alunos/${aluno.id}/liberar-acesso`,
+        { method: "POST" },
+      );
+      setAlunos((current) =>
+        current.map((item) =>
+          item.id === aluno.id
+            ? { ...item, acessoLiberadoAte: result.aluno.acessoLiberadoAte }
+            : item,
+        ),
+      );
+      setSuccess(result.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao liberar aluno.");
+    } finally {
+      setReleasingId(null);
+    }
+  }
+
   const totalPrevisto = alunos.reduce(
     (sum, aluno) => sum + (priceMap[aluno.planoModalidade] ?? 0),
     0,
   );
-  const vencidos = alunos.filter((a) => getDueStatus(a.diaVencimento) === "vencido").length;
-  const venceHoje = alunos.filter((a) => getDueStatus(a.diaVencimento) === "hoje").length;
+  const vencidos = alunos.filter(
+    (a) => getEffectiveDueStatus(a) === "vencido",
+  ).length;
+  const venceHoje = alunos.filter((a) => getEffectiveDueStatus(a) === "hoje").length;
 
   return (
     <OwnerSectionPage
@@ -115,6 +120,12 @@ export default function OwnerContasReceberPage() {
       {error ? (
         <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           {error}
+        </div>
+      ) : null}
+
+      {success ? (
+        <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+          {success}
         </div>
       ) : null}
 
@@ -155,12 +166,13 @@ export default function OwnerContasReceberPage() {
                   <th className="px-4 py-3 font-medium">Próximo venc.</th>
                   <th className="px-4 py-3 font-medium">Pagamento</th>
                   <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {alunos.map((aluno) => {
                   const valor = priceMap[aluno.planoModalidade];
-                  const status = getDueStatus(aluno.diaVencimento);
+                  const status = getEffectiveDueStatus(aluno);
                   const proximoVenc = getNextDueDate(aluno.diaVencimento);
 
                   return (
@@ -196,7 +208,21 @@ export default function OwnerContasReceberPage() {
                         {aluno.formaPagamento || "—"}
                       </td>
                       <td className="px-4 py-3">
-                        <StatusBadge status={status} />
+                        <StatusBadge status={status} liberadoAte={aluno.acessoLiberadoAte} />
+                      </td>
+                      <td className="px-4 py-3">
+                        {status === "vencido" ? (
+                          <button
+                            type="button"
+                            disabled={releasingId === aluno.id}
+                            onClick={() => liberarAluno(aluno)}
+                            className="rounded-lg border border-emerald-400/30 px-3 py-1.5 text-xs font-semibold text-emerald-200 hover:bg-emerald-500/10 disabled:opacity-50"
+                          >
+                            {releasingId === aluno.id ? "Liberando..." : "Liberar aluno"}
+                          </button>
+                        ) : (
+                          <span className="text-xs text-white/35">—</span>
+                        )}
                       </td>
                     </tr>
                   );
@@ -221,7 +247,13 @@ function SummaryCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-function StatusBadge({ status }: { status: "em_dia" | "vencido" | "hoje" }) {
+function StatusBadge({
+  status,
+  liberadoAte,
+}: {
+  status: BillingDueStatus;
+  liberadoAte: string | null;
+}) {
   const styles = {
     em_dia: "bg-emerald-500/15 text-emerald-300",
     vencido: "bg-red-500/15 text-red-300",
@@ -229,7 +261,7 @@ function StatusBadge({ status }: { status: "em_dia" | "vencido" | "hoje" }) {
   } as const;
 
   const labels = {
-    em_dia: "Em dia",
+    em_dia: liberadoAte ? "Liberado" : "Em dia",
     vencido: "Vencido",
     hoje: "Vence hoje",
   } as const;

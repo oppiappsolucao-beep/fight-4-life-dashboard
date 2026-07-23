@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { Prisma, UserRole } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
-import { getDueStatus, getWeekRange } from "../../lib/billing.js";
+import { getDueStatus, getNextDueDate, getWeekRange, formatIsoDate } from "../../lib/billing.js";
 import {
   DEV_NEW_ACADEMIES_GOAL,
   OWNER_NEW_STUDENTS_GOAL,
@@ -53,6 +53,7 @@ const plansUpdateSchema = z.object({
       z.object({
         nome: z.string().min(1),
         valor: z.number().min(0),
+        liberaTodaGrade: z.boolean().optional(),
       }),
     )
     .min(1),
@@ -214,6 +215,7 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
         dataInicio: true,
         diaVencimento: true,
         formaPagamento: true,
+        acessoLiberadoAte: true,
         fotoUrl: true,
         createdAt: true,
       },
@@ -369,6 +371,38 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
     },
   );
 
+  app.post<{ Params: { id: string } }>(
+    "/owner/alunos/:id/liberar-acesso",
+    async (request, reply) => {
+      const tenantId = request.user.tenantId;
+      const aluno = await prisma.student.findFirst({
+        where: { id: request.params.id, tenantId },
+        select: { id: true, diaVencimento: true, nomeCompleto: true },
+      });
+
+      if (!aluno) {
+        return reply.status(404).send({ error: "Aluno não encontrado." });
+      }
+
+      const releaseUntil = formatIsoDate(getNextDueDate(aluno.diaVencimento));
+      const updated = await prisma.student.update({
+        where: { id: aluno.id },
+        data: { acessoLiberadoAte: releaseUntil },
+        select: {
+          id: true,
+          nomeCompleto: true,
+          diaVencimento: true,
+          acessoLiberadoAte: true,
+        },
+      });
+
+      return reply.send({
+        aluno: updated,
+        message: `Acesso liberado até ${releaseUntil.split("-").reverse().join("/")}.`,
+      });
+    },
+  );
+
   app.delete<{ Params: { id: string } }>(
     "/owner/alunos/:id",
     async (request, reply) => {
@@ -408,6 +442,13 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
     if (new Set(names).size !== names.length) {
       return reply.status(400).send({
         error: "Existem planos com o mesmo nome.",
+      });
+    }
+
+    const diferencialCount = planos.filter((plan) => plan.liberaTodaGrade).length;
+    if (diferencialCount > 1) {
+      return reply.status(400).send({
+        error: "Somente um plano pode ser marcado como diferencial (acesso total).",
       });
     }
 

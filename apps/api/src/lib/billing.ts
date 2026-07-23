@@ -1,5 +1,45 @@
 export type BillingDueStatus = "em_dia" | "vencido" | "hoje";
 
+export interface StudentBillingFields {
+  diaVencimento: string;
+  acessoLiberadoAte: string | null;
+}
+
+export const STUDENT_BILLING_BLOCKED_MESSAGE =
+  "Por favor entrar em contato com a academia.";
+
+function parseIsoDateEnd(value: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const date = new Date(`${value}T23:59:59.999`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+export function hasActiveBillingRelease(
+  student: StudentBillingFields,
+  reference = new Date(),
+): boolean {
+  if (!student.acessoLiberadoAte) return false;
+  const releaseUntil = parseIsoDateEnd(student.acessoLiberadoAte);
+  if (!releaseUntil) return false;
+  return releaseUntil.getTime() >= reference.getTime();
+}
+
+export function isStudentBillingBlocked(
+  student: StudentBillingFields,
+  reference = new Date(),
+): boolean {
+  if (hasActiveBillingRelease(student, reference)) return false;
+  return getDueStatus(student.diaVencimento, reference) === "vencido";
+}
+
+export function getEffectiveDueStatus(
+  student: StudentBillingFields,
+  reference = new Date(),
+): BillingDueStatus {
+  if (hasActiveBillingRelease(student, reference)) return "em_dia";
+  return getDueStatus(student.diaVencimento, reference);
+}
+
 export function parseDueDay(diaVencimento: string): number {
   const day = Number.parseInt(diaVencimento.replace(/\D/g, ""), 10);
   if (!Number.isFinite(day) || day < 1 || day > 31) return 1;
