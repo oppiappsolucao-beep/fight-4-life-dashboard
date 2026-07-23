@@ -6,8 +6,10 @@ import {
   getWeekRange,
   isTodayWorkoutDate,
   listDatesInWeekForWeekdays,
+  pickDefaultWorkoutDate,
   type WorkoutCompletionStatus,
 } from "../../lib/workout";
+import { useEffect, useMemo, useState } from "react";
 import type { WorkoutSummary } from "../../types/workout";
 
 interface WorkoutDateStripProps {
@@ -27,11 +29,41 @@ export default function WorkoutDateStrip({
   onCreateDate,
   scheduleWeekdays,
 }: WorkoutDateStripProps) {
-  const week = getWeekRange();
+  const [weekOffset, setWeekOffset] = useState(0);
+
+  useEffect(() => {
+    setWeekOffset(0);
+  }, [scheduleWeekdays?.join(",")]);
+
+  const weekReference = useMemo(() => {
+    const reference = new Date();
+    reference.setHours(12, 0, 0, 0);
+    reference.setDate(reference.getDate() + weekOffset * 7);
+    return reference;
+  }, [weekOffset]);
+
+  const week = getWeekRange(weekReference);
   const weekScheduleDates =
     scheduleWeekdays && scheduleWeekdays.length > 0
-      ? listDatesInWeekForWeekdays(scheduleWeekdays)
+      ? listDatesInWeekForWeekdays(scheduleWeekdays, weekReference)
       : null;
+
+  function shiftWeek(delta: number) {
+    if (!scheduleWeekdays?.length) return;
+
+    const nextOffset = weekOffset + delta;
+    const reference = new Date();
+    reference.setHours(12, 0, 0, 0);
+    reference.setDate(reference.getDate() + nextOffset * 7);
+    const nextDates = listDatesInWeekForWeekdays(scheduleWeekdays, reference);
+
+    setWeekOffset(nextOffset);
+    if (nextDates.length === 0) return;
+
+    onSelect(
+      pickDefaultWorkoutDate(nextDates.map((workoutDate) => ({ workoutDate }))),
+    );
+  }
 
   const displayTreinos = weekScheduleDates
     ? weekScheduleDates.map((workoutDate) => {
@@ -54,15 +86,50 @@ export default function WorkoutDateStrip({
   return (
     <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-3 backdrop-blur-md sm:p-4">
       <div className="mb-3 flex items-center justify-between gap-3 px-1">
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
             Seus treinos
           </p>
-          <p className="m-0 mt-1 text-sm text-white/70">
-            {weekScheduleDates
-              ? `${displayTreinos.length} dia${displayTreinos.length === 1 ? "" : "s"} na semana • ${formatWorkoutDateLabel(week.start)} a ${formatWorkoutDateLabel(week.end)}`
-              : `${treinos.length} data${treinos.length === 1 ? "" : "s"} • semana ${formatWorkoutDateLabel(week.start)} a ${formatWorkoutDateLabel(week.end)}`}
-          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            {weekScheduleDates ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => shiftWeek(-1)}
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/15 text-sm text-white/75 transition hover:border-white/30 hover:text-white"
+                  aria-label="Semana anterior"
+                >
+                  ←
+                </button>
+                <p className="m-0 min-w-0 text-sm text-white/70">
+                  {displayTreinos.length} dia{displayTreinos.length === 1 ? "" : "s"} •{" "}
+                  {formatWorkoutDateLabel(week.start)} a {formatWorkoutDateLabel(week.end)}
+                  {weekOffset !== 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => shiftWeek(-weekOffset)}
+                      className="ml-2 text-xs font-semibold text-[#f08a98] hover:text-[#e85d6f]"
+                    >
+                      Hoje
+                    </button>
+                  ) : null}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => shiftWeek(1)}
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/15 text-sm text-white/75 transition hover:border-white/30 hover:text-white"
+                  aria-label="Próxima semana"
+                >
+                  →
+                </button>
+              </>
+            ) : (
+              <p className="m-0 text-sm text-white/70">
+                {treinos.length} data{treinos.length === 1 ? "" : "s"} • semana{" "}
+                {formatWorkoutDateLabel(week.start)} a {formatWorkoutDateLabel(week.end)}
+              </p>
+            )}
+          </div>
         </div>
         <div className="hidden items-center gap-3 text-[0.65rem] text-white/45 sm:flex">
           <LegendDot tone="done" label="Concluído" />
