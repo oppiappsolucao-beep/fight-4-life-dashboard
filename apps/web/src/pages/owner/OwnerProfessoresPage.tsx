@@ -61,8 +61,15 @@ export default function OwnerProfessoresPage() {
 
   const professorGridEntries = useMemo<ScheduleGridEntry[]>(
     () =>
-      professores.flatMap((professor) =>
-        (professor.schedules ?? []).flatMap((entry) => {
+      professores.flatMap((professor) => {
+        if (!professor.active) return [];
+
+        return (professor.schedules ?? []).flatMap((entry) => {
+          const assignmentActive = professor.modalityStats?.find(
+            (stat) => stat.modalityId === entry.modalityId,
+          )?.assignmentActive;
+          if (!assignmentActive) return [];
+
           const modality = activeModalities.find((item) => item.id === entry.modalityId);
           const modalityName = modality?.name ?? "Modalidade";
           return entry.slots.map((slot) => ({
@@ -73,10 +80,17 @@ export default function OwnerProfessoresPage() {
             tone: "professor" as const,
             colorClass: modality ? modalityColorMap[modality.id] : undefined,
           }));
-        }),
-      ),
+        });
+      }),
     [professores, activeModalities, modalityColorMap],
   );
+
+  function isModalityAssignmentActive(professor: ProfessorItem, modalityId: string) {
+    return (
+      professor.modalityStats?.find((stat) => stat.modalityId === modalityId)?.assignmentActive ??
+      false
+    );
+  }
 
   const selectedViewModality = activeModalities.find((item) => item.id === formEditingModalityId);
 
@@ -224,9 +238,29 @@ export default function OwnerProfessoresPage() {
     await updateProfessor(
       professor.id,
       { active: !professor.active },
-      professor.active ? "Professor desabilitado." : "Professor habilitado.",
+      professor.active ? "Acesso geral do professor bloqueado." : "Acesso geral do professor liberado.",
     );
   }
+
+  async function toggleProfessorModalityAccess(
+    professor: ProfessorItem,
+    modalityId: string,
+    modalityName: string,
+  ) {
+    const assignmentActive = isModalityAssignmentActive(professor, modalityId);
+    await updateProfessor(
+      professor.id,
+      { modalityUpdates: [{ modalityId, active: !assignmentActive }] },
+      assignmentActive
+        ? `Professor desabilitado em ${modalityName}.`
+        : `Professor habilitado em ${modalityName}.`,
+    );
+  }
+
+  const editingProfessor = useMemo(
+    () => professores.find((professor) => professor.id === editingProfessorId) ?? null,
+    [professores, editingProfessorId],
+  );
 
   return (
     <OwnerSectionPage
@@ -352,6 +386,40 @@ export default function OwnerProfessoresPage() {
                   tiverem horário selecionado.
                 </p>
               )}
+              {formMode === "edit" && editingProfessor ? (
+                <div className="rounded-xl border border-white/10 bg-black/25 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="m-0 text-xs font-semibold text-white/50">Acesso geral</p>
+                      <p
+                        className={`m-0 mt-1 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          editingProfessor.active
+                            ? "bg-emerald-500/15 text-emerald-200"
+                            : "bg-red-500/15 text-red-200"
+                        }`}
+                      >
+                        {editingProfessor.active ? "Professor ativo" : "Professor bloqueado"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={updatingProfessorId === editingProfessor.id}
+                      onClick={() => toggleProfessorAccess(editingProfessor)}
+                      className={`rounded-lg px-3 py-2 text-xs font-semibold ${
+                        editingProfessor.active
+                          ? "border border-red-400/30 text-red-200"
+                          : "border border-emerald-400/30 text-emerald-200"
+                      }`}
+                    >
+                      {editingProfessor.active ? "Bloquear acesso geral" : "Liberar acesso geral"}
+                    </button>
+                  </div>
+                  <p className="m-0 mt-2 text-[0.65rem] text-white/40">
+                    Bloqueie aqui para impedir o professor em todas as modalidades. Na lista abaixo,
+                    habilitar/desabilitar vale só para a modalidade selecionada.
+                  </p>
+                </div>
+              ) : null}
             </div>
             <button
               type="submit"
@@ -380,7 +448,13 @@ export default function OwnerProfessoresPage() {
                   </p>
                 ) : (
                   <div className="divide-y divide-white/10">
-                    {filteredProfessores.map((professor) => (
+                    {filteredProfessores.map((professor) => {
+                      const modalityActive = isModalityAssignmentActive(
+                        professor,
+                        formEditingModalityId,
+                      );
+
+                      return (
                       <div
                         key={professor.id}
                         className="flex flex-wrap items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
@@ -392,6 +466,11 @@ export default function OwnerProfessoresPage() {
                           <p className="m-0 truncate text-[0.65rem] text-white/40">
                             {professor.email}
                           </p>
+                          {!professor.active ? (
+                            <p className="m-0 mt-1 text-[0.6rem] text-red-300">
+                              Acesso geral bloqueado
+                            </p>
+                          ) : null}
                         </div>
                         <div className="flex shrink-0 flex-wrap items-center gap-2">
                           <button
@@ -404,19 +483,26 @@ export default function OwnerProfessoresPage() {
                           </button>
                           <button
                             type="button"
-                            disabled={updatingProfessorId === professor.id}
-                            onClick={() => toggleProfessorAccess(professor)}
-                            className={`rounded-full px-3 py-1 text-[0.65rem] font-semibold ${
-                              professor.active
+                            disabled={updatingProfessorId === professor.id || !professor.active}
+                            onClick={() =>
+                              toggleProfessorModalityAccess(
+                                professor,
+                                formEditingModalityId,
+                                selectedViewModality.name,
+                              )
+                            }
+                            className={`rounded-full px-3 py-1 text-[0.65rem] font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${
+                              modalityActive
                                 ? "bg-emerald-500/20 text-emerald-200"
                                 : "border border-white/15 text-white/45"
                             }`}
                           >
-                            {professor.active ? "Habilitado" : "Desabilitado"}
+                            {modalityActive ? "Habilitado" : "Desabilitado"}
                           </button>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </section>
