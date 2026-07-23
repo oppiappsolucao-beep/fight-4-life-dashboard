@@ -8,6 +8,7 @@ import {
   isAllowedVideoUrl,
   modalityMatchesPlan,
   normalizeWarmupExercises,
+  normalizeWarmupMovementCatalog,
   parseClassDate,
   formatClassDate,
   serializeModality,
@@ -1283,6 +1284,13 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
       const modality = await prisma.modality.update({
         where: { id: request.params.id },
         data: {
+          ...(data.warmupMovementCatalog
+            ? {
+                warmupMovementCatalog: normalizeWarmupMovementCatalog(
+                  data.warmupMovementCatalog,
+                ) as unknown as Prisma.InputJsonValue,
+              }
+            : {}),
           ...(data.warmupExercises
             ? {
                 warmupExercises: normalizeWarmupExercises(
@@ -1294,9 +1302,13 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
         include: modalityListInclude,
       });
 
+      const message = data.warmupMovementCatalog
+        ? "Catálogo de movimentos atualizado."
+        : "Aquecimento atualizado.";
+
       return reply.send({
         modalidade: serializeModality(modality),
-        message: "Aquecimento atualizado.",
+        message,
       });
     },
   );

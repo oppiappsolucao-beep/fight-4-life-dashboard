@@ -1,5 +1,12 @@
 export type ModalityContentType = "EXERCISE_CATALOG" | "VIDEO_GALLERY";
 
+export interface WarmupMovementCatalogEntry {
+  id: string;
+  customName?: string | null;
+  exerciseId?: string | null;
+  sets?: number;
+}
+
 export interface ModalityTemplate {
   id: string;
   name: string;
@@ -30,6 +37,7 @@ export interface ModalityItem {
     restSeconds?: number | null;
     notes?: string | null;
   }>;
+  warmupMovementCatalog?: WarmupMovementCatalogEntry[];
   active: boolean;
   sortOrder: number;
   lessonCount: number;

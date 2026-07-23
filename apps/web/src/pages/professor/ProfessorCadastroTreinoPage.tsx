@@ -17,7 +17,7 @@ import type {
   WorkoutExerciseDraft,
   WorkoutSummary,
 } from "../../types/workout";
-import type { ModalityItem, ProfessorModalitySchedule } from "../../types/modality";
+import type { ModalityItem, ProfessorModalitySchedule, WarmupMovementCatalogEntry } from "../../types/modality";
 import { LESSON_PHASES, type LessonPhase } from "../../lib/lesson";
 import LessonVideoUploadField from "../../components/professor/LessonVideoUploadField";
 import {
@@ -110,6 +110,7 @@ export default function ProfessorCadastroTreinoPage() {
   const [loading, setLoading] = useState(true);
   const [loadingTreino, setLoadingTreino] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savingCatalog, setSavingCatalog] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -150,6 +151,35 @@ export default function ProfessorCadastroTreinoPage() {
     [modalidades, selectedModalityId],
   );
   const isMusculacao = selectedModality?.contentType === "EXERCISE_CATALOG";
+
+  const savedCatalog = useMemo(
+    () => selectedModality?.warmupMovementCatalog ?? [],
+    [selectedModality],
+  );
+
+  const filteredSavedCatalog = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return savedCatalog.filter((entry) => {
+      const label =
+        entry.customName ??
+        catalog.find((item) => item.id === entry.exerciseId)?.name ??
+        "";
+      if (!term) return true;
+      return label.toLowerCase().includes(term);
+    });
+  }, [savedCatalog, search, catalog]);
+
+  const filteredGlobalCatalog = useMemo(() => {
+    return catalog
+      .filter(
+        (item) => item.bodyRegion === "AQUECIMENTO" || item.phases.includes("INICIO"),
+      )
+      .filter((item) => {
+        const term = search.trim().toLowerCase();
+        if (!term) return true;
+        return item.name.toLowerCase().includes(term);
+      });
+  }, [catalog, search]);
 
   const loadBase = useCallback(() => {
     setLoading(true);
@@ -374,34 +404,93 @@ export default function ProfessorCadastroTreinoPage() {
     setExpandedDraftKey(null);
   }
 
-  function addCustomMovement() {
+  function addFromSavedCatalog(entry: WarmupMovementCatalogEntry) {
+    const phase: WorkoutPhase = "INICIO";
+    setError("");
+
+    if (entry.customName) {
+      const customId = `custom:${entry.id}`;
+      if (drafts.some((item) => item.phase === phase && item.exerciseId === customId)) {
+        setError("Este movimento já está no aquecimento de hoje.");
+        return;
+      }
+      const order = drafts.filter((item) => item.phase === phase).length + 1;
+      setDrafts((current) => [
+        ...current,
+        {
+          exerciseId: customId,
+          phase,
+          order,
+          sets: entry.sets ?? 3,
+          reps: "",
+          load: "",
+          restSeconds: 60,
+          notes: "",
+        },
+      ]);
+      setDraftMeta((current) => ({
+        ...current,
+        [customId]: customExerciseCatalogItem(customId, entry.customName!),
+      }));
+      return;
+    }
+
+    if (entry.exerciseId) {
+      const exercise = catalog.find((item) => item.id === entry.exerciseId);
+      if (exercise) {
+        setActivePhase("INICIO");
+        addExercise(exercise);
+      }
+    }
+  }
+
+  async function addCustomMovement() {
     const name = customMovementName.trim();
     if (!name) {
       setError("Informe o nome do movimento.");
       return;
     }
-    const phase: WorkoutPhase = "INICIO";
-    const customId = `custom:${crypto.randomUUID()}`;
+    if (!selectedModalityId) {
+      setError("Selecione a modalidade.");
+      return;
+    }
+    if (
+      savedCatalog.some(
+        (entry) => entry.customName?.trim().toLowerCase() === name.toLowerCase(),
+      )
+    ) {
+      setError("Este movimento já está salvo no catálogo.");
+      return;
+    }
+
+    const newEntry: WarmupMovementCatalogEntry = {
+      id: crypto.randomUUID(),
+      customName: name,
+      sets: 3,
+    };
+    const updatedCatalog = [...savedCatalog, newEntry];
+
+    setSavingCatalog(true);
     setError("");
-    const order = drafts.filter((item) => item.phase === phase).length + 1;
-    setDrafts((current) => [
-      ...current,
-      {
-        exerciseId: customId,
-        phase,
-        order,
-        sets: 3,
-        reps: "",
-        load: "",
-        restSeconds: 60,
-        notes: "",
-      },
-    ]);
-    setDraftMeta((current) => ({
-      ...current,
-      [customId]: customExerciseCatalogItem(customId, name),
-    }));
-    setCustomMovementName("");
+    setSuccess("");
+    try {
+      const result = await apiFetch<{ modalidade: ModalityItem; message: string }>(
+        `/professor/modalidades/${selectedModalityId}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ warmupMovementCatalog: updatedCatalog }),
+        },
+      );
+      setModalidades((current) =>
+        current.map((item) => (item.id === selectedModalityId ? result.modalidade : item)),
+      );
+      setCustomMovementName("");
+      setSuccess(result.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao salvar movimento.");
+    } finally {
+      setSavingCatalog(false);
+    }
   }
 
   function addExercise(exercise: ExerciseCatalogItem) {
@@ -1157,7 +1246,7 @@ export default function ProfessorCadastroTreinoPage() {
                         onKeyDown={(event) => {
                           if (event.key === "Enter") {
                             event.preventDefault();
-                            addCustomMovement();
+                            void addCustomMovement();
                           }
                         }}
                         placeholder="Nome do movimento"
@@ -1165,10 +1254,11 @@ export default function ProfessorCadastroTreinoPage() {
                       />
                       <button
                         type="button"
-                        onClick={addCustomMovement}
-                        className="shrink-0 rounded-lg bg-[#e85d6f] px-3 py-2 text-xs font-semibold text-white"
+                        onClick={() => void addCustomMovement()}
+                        disabled={savingCatalog}
+                        className="shrink-0 rounded-lg bg-[#e85d6f] px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
                       >
-                        Adicionar
+                        {savingCatalog ? "Salvando..." : "Salvar"}
                       </button>
                     </div>
                     <input
@@ -1177,36 +1267,70 @@ export default function ProfessorCadastroTreinoPage() {
                       placeholder="Buscar exercício"
                       className="mt-3 w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white"
                     />
-                    <div className="mt-3 max-h-72 space-y-2 overflow-y-auto">
-                      {catalog
-                        .filter(
-                          (item) =>
-                            item.bodyRegion === "AQUECIMENTO" ||
-                            item.phases.includes("INICIO"),
-                        )
-                        .filter((item) => {
-                          const term = search.trim().toLowerCase();
-                          if (!term) return true;
-                          return item.name.toLowerCase().includes(term);
-                        })
-                        .map((exercise) => (
-                          <div
-                            key={exercise.id}
-                            className="flex items-center justify-between rounded-lg border border-white/10 bg-black/25 p-3"
-                          >
-                            <span className="text-sm text-white">{exercise.name}</span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActivePhase("INICIO");
-                                addExercise(exercise);
-                              }}
-                              className="rounded-md bg-[#e85d6f]/20 px-3 py-1 text-xs font-semibold text-[#f08a98]"
-                            >
-                              Adicionar
-                            </button>
+                    <div className="mt-3 max-h-72 space-y-3 overflow-y-auto">
+                      {filteredSavedCatalog.length > 0 ? (
+                        <div className="space-y-2">
+                          <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
+                            Meus movimentos
+                          </p>
+                          {filteredSavedCatalog.map((entry) => {
+                            const label =
+                              entry.customName ??
+                              catalog.find((item) => item.id === entry.exerciseId)?.name ??
+                              "Movimento";
+                            return (
+                              <div
+                                key={entry.id}
+                                className="flex items-center justify-between rounded-lg border border-emerald-400/20 bg-emerald-500/5 p-3"
+                              >
+                                <div>
+                                  <span className="text-sm text-white">{label}</span>
+                                  <p className="m-0 mt-0.5 text-xs text-white/40">
+                                    {entry.sets ?? 3}x
+                                  </p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => addFromSavedCatalog(entry)}
+                                  className="rounded-md bg-[#e85d6f]/20 px-3 py-1 text-xs font-semibold text-[#f08a98]"
+                                >
+                                  Adicionar
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+
+                      <div className="space-y-2">
+                        <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
+                          Catálogo geral
+                        </p>
+                        {filteredGlobalCatalog.length === 0 ? (
+                          <div className="rounded-lg border border-dashed border-white/10 p-4 text-center text-sm text-white/45">
+                            Nenhum exercício encontrado.
                           </div>
-                        ))}
+                        ) : (
+                          filteredGlobalCatalog.map((exercise) => (
+                            <div
+                              key={exercise.id}
+                              className="flex items-center justify-between rounded-lg border border-white/10 bg-black/25 p-3"
+                            >
+                              <span className="text-sm text-white">{exercise.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActivePhase("INICIO");
+                                  addExercise(exercise);
+                                }}
+                                className="rounded-md bg-[#e85d6f]/20 px-3 py-1 text-xs font-semibold text-[#f08a98]"
+                              >
+                                Adicionar
+                              </button>
+                            </div>
+                          ))
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="rounded-xl border border-white/10 bg-black/20 p-4">

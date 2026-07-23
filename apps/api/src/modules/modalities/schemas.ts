@@ -15,9 +15,21 @@ export const tenantModalityOfferSchema = z.object({
   modalityIds: z.array(z.string().uuid()).min(1, "Selecione ao menos uma modalidade."),
 });
 
+const warmupMovementCatalogEntrySchema = z
+  .object({
+    id: z.string().uuid(),
+    exerciseId: z.string().uuid().optional(),
+    customName: z.string().min(1).optional(),
+    sets: z.number().int().min(1).max(20).optional(),
+  })
+  .refine((item) => Boolean(item.exerciseId || item.customName), {
+    message: "Informe o exercício ou o nome do movimento.",
+  });
+
 export const tenantModalityUpdateSchema = z.object({
   linkedPlans: z.array(z.string().min(1)).optional(),
   active: z.boolean().optional(),
+  warmupMovementCatalog: z.array(warmupMovementCatalogEntrySchema).optional(),
   warmupExercises: z
     .array(
       z

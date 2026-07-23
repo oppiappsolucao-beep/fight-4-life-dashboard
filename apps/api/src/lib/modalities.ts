@@ -96,6 +96,39 @@ export interface ModalityWarmupExercise {
   notes?: string | null;
 }
 
+export interface WarmupMovementCatalogEntry {
+  id: string;
+  customName?: string | null;
+  exerciseId?: string | null;
+  sets?: number;
+}
+
+export function normalizeWarmupMovementCatalog(raw: unknown): WarmupMovementCatalogEntry[] {
+  if (!Array.isArray(raw)) return [];
+
+  const items: WarmupMovementCatalogEntry[] = [];
+
+  raw.forEach((item) => {
+    if (!item || typeof item !== "object") return;
+    const row = item as Record<string, unknown>;
+    const id = typeof row.id === "string" ? row.id.trim() : "";
+    const exerciseId = typeof row.exerciseId === "string" ? row.exerciseId.trim() : "";
+    const customName = typeof row.customName === "string" ? row.customName.trim() : "";
+    if (!id || (!exerciseId && !customName)) return;
+
+    const sets = Number(row.sets);
+
+    items.push({
+      id,
+      ...(customName ? { customName } : {}),
+      ...(exerciseId ? { exerciseId } : {}),
+      sets: Number.isFinite(sets) && sets > 0 ? sets : 3,
+    });
+  });
+
+  return items;
+}
+
 export function normalizeWarmupExercises(raw: unknown): ModalityWarmupExercise[] {
   if (!Array.isArray(raw)) return [];
 
@@ -280,6 +313,7 @@ export function serializeModality(
     description: modality.description,
     linkedPlans: modality.linkedPlans,
     warmupExercises: normalizeWarmupExercises(modality.warmupExercises),
+    warmupMovementCatalog: normalizeWarmupMovementCatalog(modality.warmupMovementCatalog),
     active: modality.active,
     sortOrder: modality.sortOrder,
     lessonCount: modality._count?.lessons ?? 0,
