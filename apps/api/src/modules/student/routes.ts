@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { WorkoutSource } from "@prisma/client";
+import { Prisma, WorkoutSource } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
 import {
   formatBrDate,
@@ -625,7 +625,7 @@ export async function studentRoutes(app: FastifyInstance): Promise<void> {
       data: {
         termoSaudeSignedAt: signedAt,
         termoSaudeSignedIp: typeof body.ip === "string" ? body.ip : null,
-        termoSaudeAnswers: body.answers ?? {},
+        termoSaudeAnswers: (body.answers ?? {}) as Prisma.InputJsonValue,
       },
     });
 

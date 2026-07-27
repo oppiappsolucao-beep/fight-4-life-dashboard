@@ -393,14 +393,28 @@ export function serializeProfessorLesson(
   };
 }
 
+type ProfessorLessonSummarySource = Pick<
+  ProfessorLesson,
+  | "id"
+  | "modalityId"
+  | "professorId"
+  | "title"
+  | "description"
+  | "classDate"
+  | "startTime"
+  | "endTime"
+  | "thumbnailUrl"
+  | "active"
+  | "createdAt"
+  | "updatedAt"
+> & {
+  modality?: Pick<Modality, "id" | "name" | "slug">;
+  professor?: Pick<User, "id" | "name" | "email">;
+  _count?: { attendances: number };
+};
+
 /** Lista de aulas sem payload de vídeo (evita transferir base64 em listagens). */
-export function serializeProfessorLessonSummary(
-  lesson: Omit<ProfessorLesson, "videoUrl"> & {
-    modality?: Pick<Modality, "id" | "name" | "slug">;
-    professor?: Pick<User, "id" | "name" | "email">;
-    _count?: { attendances: number };
-  },
-) {
+export function serializeProfessorLessonSummary(lesson: ProfessorLessonSummarySource) {
   return {
     id: lesson.id,
     modalityId: lesson.modalityId,
@@ -443,7 +457,7 @@ export function effectiveAttendanceStatus(
 export function serializeLessonAttendance(
   attendance: LessonAttendance & {
     student?: { id: string; nomeCompleto: string; planoModalidade: string };
-    lesson?: ReturnType<typeof serializeProfessorLesson>;
+    lesson?: ReturnType<typeof serializeProfessorLessonSummary>;
   },
 ) {
   const status = effectiveAttendanceStatus(attendance);

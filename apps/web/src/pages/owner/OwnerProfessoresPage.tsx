@@ -281,6 +281,9 @@ export default function OwnerProfessoresPage() {
         </div>
       ) : (
         <div className="space-y-5">
+          {refreshing ? (
+            <p className="m-0 text-xs text-white/40">Atualizando dados...</p>
+          ) : null}
           {error ? (
             <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
               {error}
