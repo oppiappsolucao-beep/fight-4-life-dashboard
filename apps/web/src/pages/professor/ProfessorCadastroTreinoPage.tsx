@@ -168,12 +168,12 @@ export default function ProfessorCadastroTreinoPage() {
 
   const dateSummaries = useMemo(() => {
     const dates = new Set<string>();
-    const sourceItems = isMusculacao
-      ? savedTreinos
-      : savedAulas.filter((item) => item.modalityId === selectedModalityId);
-
-    for (const item of sourceItems) {
-      dates.add(isMusculacao ? item.workoutDate : item.classDate);
+    if (isMusculacao) {
+      for (const item of savedTreinos) dates.add(item.workoutDate);
+    } else {
+      for (const item of savedAulas) {
+        if (item.modalityId === selectedModalityId) dates.add(item.classDate);
+      }
     }
     if (workoutDate) dates.add(workoutDate);
 
