@@ -212,22 +212,30 @@ export default function StudentLessonTreinoFlow({
       });
   }, [session?.id, modalityId, modalityName, weekScheduleDates]);
 
-  const loadWarmup = useCallback(() => {
-    if (!session?.id || !modalityId) return;
-    apiFetch<{ exercises: WorkoutExerciseItem[] }>(
-      `/student/modality-aquecimento?modalityId=${encodeURIComponent(modalityId)}`,
-      {},
-      session.id,
-    )
-      .then((data) => {
-        setWarmupExercises(data.exercises);
-        setSetsMap(readWarmupSetsMap(modalityId, classDate));
-      })
-      .catch(() => {
+  const loadWarmupForDay = useCallback(
+    (hasLesson: boolean) => {
+      if (!session?.id || !modalityId || !hasLesson) {
         setWarmupExercises([]);
         setSetsMap({});
-      });
-  }, [session?.id, modalityId, classDate]);
+        return;
+      }
+
+      apiFetch<{ exercises: WorkoutExerciseItem[] }>(
+        `/student/modality-aquecimento?modalityId=${encodeURIComponent(modalityId)}`,
+        {},
+        session.id,
+      )
+        .then((data) => {
+          setWarmupExercises(data.exercises);
+          setSetsMap(readWarmupSetsMap(modalityId, classDate));
+        })
+        .catch(() => {
+          setWarmupExercises([]);
+          setSetsMap({});
+        });
+    },
+    [session?.id, modalityId, classDate],
+  );
 
   const loadSchedule = useCallback(() => {
     if (!session?.id || !modalityId || !classDate) return;
@@ -248,10 +256,12 @@ export default function StudentLessonTreinoFlow({
           setAulaCompleted(
             readAulaCompleted(modalityId, classDate, firstWithLesson.lesson.id),
           );
+          loadWarmupForDay(true);
         } else {
           setSelectedSlotKey("");
           setActiveLesson(null);
           setAulaCompleted(false);
+          loadWarmupForDay(false);
         }
       })
       .catch((err) => {
@@ -259,10 +269,11 @@ export default function StudentLessonTreinoFlow({
         setActiveLesson(null);
         setSelectedSlotKey("");
         setAulaCompleted(false);
+        loadWarmupForDay(false);
         setError(err instanceof Error ? err.message : "Erro ao carregar aulas.");
       })
       .finally(() => setLoading(false));
-  }, [session?.id, modalityId, classDate]);
+  }, [session?.id, modalityId, classDate, loadWarmupForDay]);
 
   useEffect(() => {
     setHorarios([]);
@@ -278,10 +289,6 @@ export default function StudentLessonTreinoFlow({
   useEffect(() => {
     loadDates();
   }, [loadDates]);
-
-  useEffect(() => {
-    loadWarmup();
-  }, [loadWarmup]);
 
   useEffect(() => {
     loadSchedule();
@@ -451,7 +458,9 @@ export default function StudentLessonTreinoFlow({
             <section className="space-y-4">
               {warmupExercises.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-white/45">
-                  Nenhum movimento de aquecimento cadastrado para {modalityName}.
+                  {activeLesson
+                    ? `Nenhum movimento de aquecimento cadastrado para ${modalityName}.`
+                    : `Sem aquecimento para ${formatWorkoutDateLabel(classDate)}. Aguarde o professor cadastrar a aula.`}
                 </div>
               ) : (
                 warmupExercises.map((item) => (
