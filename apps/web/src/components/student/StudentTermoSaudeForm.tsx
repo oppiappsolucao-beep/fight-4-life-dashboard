@@ -1,4 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
+import { apiFetch } from "../../lib/api";
+import { getStudentSession } from "../../lib/studentSession";
 
 type YesNo = "" | "sim" | "nao";
 
@@ -57,16 +59,35 @@ export default function StudentTermoSaudeForm() {
   const [acceptance, setAcceptance] = useState<AcceptanceRecord | null>(null);
 
   useEffect(() => {
-    const saved = sessionStorage.getItem("termoSaudeAceite");
-    if (!saved) return;
-    try {
-      const data = JSON.parse(saved);
-      if (data.data && data.hora) {
-        setAcceptance({ data: data.data, hora: data.hora, ip: data.ip ?? "—" });
-      }
-    } catch {
-      /* ignore */
-    }
+    const session = getStudentSession();
+    if (!session?.id) return;
+
+    apiFetch<{ signedAt: string | null; ip: string | null }>(
+      "/student/termo-saude",
+      {},
+      session.id,
+    )
+      .then((data) => {
+        if (!data.signedAt) return;
+        const signedAt = new Date(data.signedAt);
+        setAcceptance({
+          data: signedAt.toLocaleDateString("pt-BR"),
+          hora: signedAt.toLocaleTimeString("pt-BR"),
+          ip: data.ip ?? "—",
+        });
+      })
+      .catch(() => {
+        const saved = sessionStorage.getItem("termoSaudeAceite");
+        if (!saved) return;
+        try {
+          const data = JSON.parse(saved);
+          if (data.data && data.hora) {
+            setAcceptance({ data: data.data, hora: data.hora, ip: data.ip ?? "—" });
+          }
+        } catch {
+          /* ignore */
+        }
+      });
   }, []);
 
   function setAnswer(id: QuestionId, value: YesNo) {
@@ -109,13 +130,24 @@ export default function StudentTermoSaudeForm() {
       ip,
     };
 
-    sessionStorage.setItem(
-      "termoSaudeAceite",
-      JSON.stringify({ ...record, answers, alergia, cirurgia, historicoFamiliar, gravida }),
-    );
+    const payload = { answers, alergia, cirurgia, historicoFamiliar, gravida, ip };
 
-    setAcceptance(record);
-    setLoading(false);
+    try {
+      const session = getStudentSession();
+      if (session?.id) {
+        await apiFetch<{ signedAt: string }>(
+          "/student/termo-saude",
+          { method: "POST", body: JSON.stringify(payload) },
+          session.id,
+        );
+      }
+      sessionStorage.setItem("termoSaudeAceite", JSON.stringify({ ...record, ...payload }));
+      setAcceptance(record);
+    } catch {
+      setError("Não foi possível registrar o termo. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (acceptance) {

@@ -105,6 +105,9 @@ model Student {
   diaVencimento        String
   formaPagamento       String?
   fotoUrl              String?
+  termoSaudeSignedAt   DateTime?
+  termoSaudeSignedIp   String?
+  termoSaudeAnswers    Json?
   acessoLiberadoAte    String?
   active               Boolean  @default(true)
   createdAt            DateTime @default(now())

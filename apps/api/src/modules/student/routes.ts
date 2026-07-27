@@ -570,5 +570,71 @@ export async function studentRoutes(app: FastifyInstance): Promise<void> {
     },
   );
 
+  app.get("/student/perfil", { preHandler: [requireStudent] }, async (request, reply) => {
+    const student = await prisma.student.findUnique({
+      where: { id: request.studentId },
+      select: {
+        nomeCompleto: true,
+        cpf: true,
+        email: true,
+        fotoUrl: true,
+        termoSaudeSignedAt: true,
+        termoSaudeSignedIp: true,
+      },
+    });
+
+    if (!student) {
+      return reply.status(404).send({ error: "Aluno não encontrado." });
+    }
+
+    return reply.send({
+      aluno: {
+        ...student,
+        termoSaudeSignedAt: student.termoSaudeSignedAt?.toISOString() ?? null,
+      },
+    });
+  });
+
+  app.get("/student/termo-saude", { preHandler: [requireStudent] }, async (request, reply) => {
+    const student = await prisma.student.findUnique({
+      where: { id: request.studentId },
+      select: {
+        termoSaudeSignedAt: true,
+        termoSaudeSignedIp: true,
+        termoSaudeAnswers: true,
+      },
+    });
+
+    if (!student) {
+      return reply.status(404).send({ error: "Aluno não encontrado." });
+    }
+
+    return reply.send({
+      signedAt: student.termoSaudeSignedAt?.toISOString() ?? null,
+      ip: student.termoSaudeSignedIp,
+      answers: student.termoSaudeAnswers,
+    });
+  });
+
+  app.post("/student/termo-saude", { preHandler: [requireStudent] }, async (request, reply) => {
+    const body = request.body as { answers?: unknown; ip?: string };
+    const signedAt = new Date();
+
+    await prisma.student.update({
+      where: { id: request.studentId },
+      data: {
+        termoSaudeSignedAt: signedAt,
+        termoSaudeSignedIp: typeof body.ip === "string" ? body.ip : null,
+        termoSaudeAnswers: body.answers ?? {},
+      },
+    });
+
+    return reply.send({
+      message: "Termo registrado.",
+      signedAt: signedAt.toISOString(),
+      ip: typeof body.ip === "string" ? body.ip : null,
+    });
+  });
+
   await registerStudentModalityRoutes(app);
 }

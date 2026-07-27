@@ -22,6 +22,7 @@ export default function OwnerProfessoresPage() {
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [editingProfessorId, setEditingProfessorId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [updatingProfessorId, setUpdatingProfessorId] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -33,8 +34,12 @@ export default function OwnerProfessoresPage() {
     [modalidades],
   );
 
-  const load = useCallback(() => {
-    setLoading(true);
+  const load = useCallback((options?: { silent?: boolean }) => {
+    if (options?.silent) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     setError("");
     Promise.all([
       apiFetch<{ professores: ProfessorItem[] }>("/owner/professores"),
@@ -47,7 +52,10 @@ export default function OwnerProfessoresPage() {
       .catch((err) =>
         setError(err instanceof Error ? err.message : "Erro ao carregar professores."),
       )
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setRefreshing(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -226,7 +234,7 @@ export default function OwnerProfessoresPage() {
         body: JSON.stringify(body),
       });
       setSuccess(successMessage);
-      load();
+      load({ silent: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao atualizar professor.");
     } finally {
@@ -287,6 +295,7 @@ export default function OwnerProfessoresPage() {
           <form
             ref={cadastroFormRef}
             onSubmit={handleSubmitProfessor}
+            autoComplete="off"
             className="rounded-2xl border border-white/10 bg-black/20 p-4"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -324,6 +333,8 @@ export default function OwnerProfessoresPage() {
                   className="mt-1 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
                   required
                   readOnly={formMode === "edit"}
+                  autoComplete="off"
+                  name="professor-cadastro-email"
                 />
               </label>
               <label className="block text-xs text-white/50">
@@ -337,6 +348,8 @@ export default function OwnerProfessoresPage() {
                   placeholder={formMode === "edit" ? "Deixe em branco para manter" : "Mínimo 6 caracteres"}
                   className="mt-1 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
                   required={formMode === "create"}
+                  autoComplete="new-password"
+                  name="professor-cadastro-password"
                 />
               </label>
               <div>

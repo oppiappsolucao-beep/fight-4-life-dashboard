@@ -252,6 +252,11 @@ export async function ensureModalityTemplates(): Promise<number> {
 
 export async function ensureTenantModalities(tenantId: string): Promise<number> {
   await ensureModalityTemplates();
+  return prisma.modality.count({ where: { tenantId } });
+}
+
+export async function seedTenantModalitiesFromTemplates(tenantId: string): Promise<number> {
+  await ensureModalityTemplates();
 
   const existing = await prisma.modality.count({ where: { tenantId } });
   if (existing > 0) return existing;
@@ -276,7 +281,7 @@ export async function ensureTenantModalities(tenantId: string): Promise<number> 
         description: template.description,
         linkedPlans: templateBySlug.get(template.slug) ?? [],
         sortOrder: template.sortOrder,
-        active: true,
+        active: false,
       },
     });
   }
@@ -374,6 +379,38 @@ export function serializeProfessorLesson(
     startTime: lesson.startTime,
     endTime: lesson.endTime,
     videoUrl: lesson.videoUrl,
+    thumbnailUrl: lesson.thumbnailUrl,
+    active: lesson.active,
+    attendanceCount: lesson._count?.attendances ?? 0,
+    modality: lesson.modality
+      ? { id: lesson.modality.id, name: lesson.modality.name, slug: lesson.modality.slug }
+      : null,
+    professor: lesson.professor
+      ? { id: lesson.professor.id, name: lesson.professor.name, email: lesson.professor.email }
+      : null,
+    createdAt: lesson.createdAt.toISOString(),
+    updatedAt: lesson.updatedAt.toISOString(),
+  };
+}
+
+/** Lista de aulas sem payload de vídeo (evita transferir base64 em listagens). */
+export function serializeProfessorLessonSummary(
+  lesson: Omit<ProfessorLesson, "videoUrl"> & {
+    modality?: Pick<Modality, "id" | "name" | "slug">;
+    professor?: Pick<User, "id" | "name" | "email">;
+    _count?: { attendances: number };
+  },
+) {
+  return {
+    id: lesson.id,
+    modalityId: lesson.modalityId,
+    professorId: lesson.professorId,
+    title: lesson.title,
+    description: lesson.description,
+    classDate: formatClassDate(lesson.classDate),
+    startTime: lesson.startTime,
+    endTime: lesson.endTime,
+    videoUrl: "",
     thumbnailUrl: lesson.thumbnailUrl,
     active: lesson.active,
     attendanceCount: lesson._count?.attendances ?? 0,

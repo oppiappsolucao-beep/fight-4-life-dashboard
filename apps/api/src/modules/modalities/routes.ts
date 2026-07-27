@@ -5,6 +5,7 @@ import { prisma } from "../../lib/prisma.js";
 import {
   ensureModalityTemplates,
   ensureTenantModalities,
+  seedTenantModalitiesFromTemplates,
   isAllowedVideoUrl,
   modalityMatchesPlan,
   normalizeWarmupExercises,
@@ -17,6 +18,7 @@ import {
   effectiveAttendanceStatus,
   serializeProfessor,
   serializeProfessorLesson,
+  serializeProfessorLessonSummary,
   slugifyModality,
 } from "../../lib/modalities.js";
 import { normalizeScheduleSlots, serializeScheduleSlot, weekdayFromDateInput, listDatesInMonth, parseMonthInput, currentMonthInput, scheduleOccurrenceKey } from "../../lib/schedules.js";
@@ -53,6 +55,24 @@ const lessonInclude = {
   _count: { select: { attendances: true } },
 } as const;
 
+const lessonSummarySelect = {
+  id: true,
+  modalityId: true,
+  professorId: true,
+  title: true,
+  description: true,
+  classDate: true,
+  startTime: true,
+  endTime: true,
+  thumbnailUrl: true,
+  active: true,
+  createdAt: true,
+  updatedAt: true,
+  modality: { select: { id: true, name: true, slug: true } },
+  professor: { select: { id: true, name: true, email: true } },
+  _count: { select: { attendances: true } },
+} as const;
+
 async function getTenantPlans(tenantId: string) {
   const config = await prisma.tenantConfig.findUnique({
     where: { tenantId },
@@ -84,20 +104,26 @@ async function buildProfessorStats(
   tenantId: string,
   userId: string,
   modalityIds: string[],
+  cached?: {
+    tenantPlans: Awaited<ReturnType<typeof getTenantPlans>>;
+    students: Array<{ planoModalidade: string }>;
+  },
 ) {
   if (modalityIds.length === 0) return [];
 
-  const tenantPlans = await getTenantPlans(tenantId);
+  const tenantPlans = cached?.tenantPlans ?? (await getTenantPlans(tenantId));
 
   const [modalities, students, lessons, assignments] = await Promise.all([
     prisma.modality.findMany({
       where: { tenantId, id: { in: modalityIds } },
       select: { id: true, name: true, linkedPlans: true, contentType: true, active: true },
     }),
-    prisma.student.findMany({
-      where: { tenantId, active: true },
-      select: { planoModalidade: true },
-    }),
+    cached?.students
+      ? Promise.resolve(cached.students)
+      : prisma.student.findMany({
+          where: { tenantId, active: true },
+          select: { planoModalidade: true },
+        }),
     prisma.professorLesson.findMany({
       where: { tenantId, professorId: userId, modalityId: { in: modalityIds } },
       select: {
@@ -144,21 +170,18 @@ async function serializeProfessorDetails(
   },
   tenantId: string,
   modalityIds: string[],
+  cached?: {
+    tenantPlans: Awaited<ReturnType<typeof getTenantPlans>>;
+    students: Array<{ planoModalidade: string }>;
+  },
 ) {
-  const [professorSchedules, modalityStats, recentLessons] = await Promise.all([
+  const [professorSchedules, modalityStats] = await Promise.all([
     getProfessorSchedules(user.id, tenantId),
-    buildProfessorStats(tenantId, user.id, modalityIds),
-    prisma.professorLesson.findMany({
-      where: { tenantId, professorId: user.id },
-      orderBy: [{ classDate: "desc" }, { createdAt: "desc" }],
-      take: 8,
-      include: lessonInclude,
-    }),
+    buildProfessorStats(tenantId, user.id, modalityIds, cached),
   ]);
 
   return serializeProfessor(user, modalityIds, professorSchedules, {
     modalityStats,
-    recentLessons: recentLessons.map(serializeProfessorLesson),
   });
 }
 
@@ -314,6 +337,24 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
     });
 
     return reply.send({ modalidades: modalidades.map(serializeModality) });
+  });
+
+  app.post("/owner/modalidades/import-templates", async (request, reply) => {
+    const tenantId = request.user.tenantId;
+    const count = await seedTenantModalitiesFromTemplates(tenantId);
+    const modalidades = await prisma.modality.findMany({
+      where: { tenantId },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      include: modalityListInclude,
+    });
+
+    return reply.send({
+      modalidades: modalidades.map(serializeModality),
+      message:
+        count > 0
+          ? "Catálogo padrão importado. Ative as modalidades que deseja ofertar."
+          : "Modalidades já existem nesta academia.",
+    });
   });
 
   app.post("/owner/modalidades", async (request, reply) => {
@@ -722,9 +763,16 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
       grouped.set(row.userId, current);
     }
 
+    const tenantPlans = await getTenantPlans(tenantId);
+    const students = await prisma.student.findMany({
+      where: { tenantId, active: true },
+      select: { planoModalidade: true },
+    });
+    const professorCache = { tenantPlans, students };
+
     const professores = await Promise.all(
       Array.from(grouped.values()).map((item) =>
-        serializeProfessorDetails(item.user, tenantId, item.modalityIds),
+        serializeProfessorDetails(item.user, tenantId, item.modalityIds, professorCache),
       ),
     );
 
@@ -1026,10 +1074,10 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
           ...(classDate ? { classDate: parseClassDate(classDate) } : {}),
         },
         orderBy: [{ classDate: "desc" }, { createdAt: "desc" }],
-        include: lessonInclude,
+        select: lessonSummarySelect,
       });
 
-      return reply.send({ aulas: aulas.map(serializeProfessorLesson) });
+      return reply.send({ aulas: aulas.map(serializeProfessorLessonSummary) });
     },
   );
 
@@ -1138,7 +1186,7 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
           select: { id: true, nomeCompleto: true, planoModalidade: true },
         },
         lesson: {
-          include: lessonInclude,
+          select: lessonSummarySelect,
         },
       },
       orderBy: [{ studentConfirmedAt: "desc" }, { markedAt: "desc" }],
@@ -1148,7 +1196,7 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
       presencas: presencas.map((item) =>
         serializeLessonAttendance({
           ...item,
-          lesson: serializeProfessorLesson(item.lesson),
+          lesson: serializeProfessorLessonSummary(item.lesson),
         }),
       ),
     });
@@ -1204,7 +1252,7 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
             select: { id: true, nomeCompleto: true, planoModalidade: true },
           },
           lesson: {
-            include: lessonInclude,
+            select: lessonSummarySelect,
           },
         },
       });
@@ -1212,7 +1260,7 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
       return reply.send({
         presenca: serializeLessonAttendance({
           ...updated,
-          lesson: serializeProfessorLesson(updated.lesson),
+          lesson: serializeProfessorLessonSummary(updated.lesson),
         }),
         message:
           parsed.data.action === "validate"
@@ -1222,9 +1270,12 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
     },
   );
 
-  app.get("/professor/aulas", async (request, reply) => {
+  app.get<{ Querystring: { classDateFrom?: string; classDateTo?: string } }>(
+    "/professor/aulas",
+    async (request, reply) => {
     const tenantId = request.user.tenantId;
     const modalityIds = await getProfessorModalityIds(request.user.sub, tenantId);
+    const { classDateFrom, classDateTo } = request.query;
 
     const aulas = await prisma.professorLesson.findMany({
       where: {
@@ -1232,12 +1283,20 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
         professorId: request.user.sub,
         modalityId: { in: modalityIds },
         active: true,
+        ...(classDateFrom || classDateTo
+          ? {
+              classDate: {
+                ...(classDateFrom ? { gte: parseClassDate(classDateFrom) } : {}),
+                ...(classDateTo ? { lte: parseClassDate(classDateTo) } : {}),
+              },
+            }
+          : {}),
       },
       orderBy: [{ classDate: "desc" }, { createdAt: "desc" }],
-      include: lessonInclude,
+      select: lessonSummarySelect,
     });
 
-    return reply.send({ aulas: aulas.map(serializeProfessorLesson) });
+    return reply.send({ aulas: aulas.map(serializeProfessorLessonSummary) });
   });
 
   app.post("/professor/aulas", async (request, reply) => {
@@ -1400,16 +1459,53 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
 
   app.get("/professor/alunos", async (request, reply) => {
     const tenantId = request.user.tenantId;
-    const alunos = await prisma.student.findMany({
-      where: { tenantId, active: true },
-      orderBy: { nomeCompleto: "asc" },
-      select: {
-        id: true,
-        nomeCompleto: true,
-        planoModalidade: true,
-      },
+    const modalityIds = await getProfessorModalityIds(request.user.sub, tenantId);
+    const tenantPlans = await getTenantPlans(tenantId);
+
+    const [modalities, students] = await Promise.all([
+      prisma.modality.findMany({
+        where: { tenantId, id: { in: modalityIds }, active: true },
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+        select: {
+          id: true,
+          name: true,
+          linkedPlans: true,
+          contentType: true,
+          active: true,
+        },
+      }),
+      prisma.student.findMany({
+        where: { tenantId, active: true },
+        orderBy: { nomeCompleto: "asc" },
+        select: {
+          id: true,
+          nomeCompleto: true,
+          planoModalidade: true,
+          email: true,
+          telefone: true,
+          fotoUrl: true,
+          dataInicio: true,
+        },
+      }),
+    ]);
+
+    const alunos = students
+      .map((student) => {
+        const matchingModalities = modalities.filter((modality) =>
+          modalityMatchesPlan(modality, student.planoModalidade, tenantPlans),
+        );
+        return {
+          ...student,
+          modalityIds: matchingModalities.map((item) => item.id),
+          modalityNames: matchingModalities.map((item) => item.name),
+        };
+      })
+      .filter((student) => student.modalityIds.length > 0);
+
+    return reply.send({
+      alunos,
+      modalidades: modalities.map((item) => ({ id: item.id, name: item.name })),
     });
-    return reply.send({ alunos });
   });
 
   app.get("/professor/exercises", async (request, reply) => {
@@ -2178,7 +2274,7 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
               active: true,
             },
             orderBy: [{ classDate: "desc" }, { createdAt: "desc" }],
-            include: lessonInclude,
+            select: lessonSummarySelect,
           })
         : [];
 
@@ -2187,7 +2283,7 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
         modalidadeAtual: matched ? serializeModality(matched) : null,
         modalidadeSelecionada: selectedModality ? serializeModality(selectedModality) : null,
         modalidades: accessibleModalidades.map(serializeModality),
-        aulas: lessons.map(serializeProfessorLesson),
+        aulas: lessons.map(serializeProfessorLessonSummary),
       });
     },
   );
@@ -2220,14 +2316,14 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
         active: true,
       },
       orderBy: [{ classDate: "desc" }, { createdAt: "desc" }],
-      include: lessonInclude,
+      select: lessonSummarySelect,
     });
 
     const presencas = await prisma.lessonAttendance.findMany({
       where: { studentId: request.studentId! },
       include: {
         lesson: {
-          include: lessonInclude,
+          select: lessonSummarySelect,
         },
       },
       orderBy: { markedAt: "desc" },
@@ -2243,7 +2339,7 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
         const attendance = attendanceByLesson.get(lesson.id);
         const status = attendance ? effectiveAttendanceStatus(attendance) : null;
         return {
-          ...serializeProfessorLesson(lesson),
+          ...serializeProfessorLessonSummary(lesson),
           presencaStatus: status,
           presencaMarcada: status === "VALIDATED",
           presencaPendente: status === "STUDENT_CONFIRMED",
@@ -2255,13 +2351,48 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
           id: item.id,
           markedAt: item.markedAt.toISOString(),
           professorValidatedAt: item.professorValidatedAt?.toISOString() ?? null,
-          aula: serializeProfessorLesson(item.lesson),
+          aula: serializeProfessorLessonSummary(item.lesson),
         })),
       totalPresencas: presencas.filter(
         (item) => effectiveAttendanceStatus(item) === "VALIDATED",
       ).length,
     });
   });
+
+  app.get<{ Params: { id: string } }>(
+    "/student/aulas/:id",
+    { preHandler: [requireStudent] },
+    async (request, reply) => {
+      const student = await prisma.student.findUnique({
+        where: { id: request.studentId },
+        select: { tenantId: true, planoModalidade: true },
+      });
+
+      if (!student) {
+        return reply.status(404).send({ error: "Aluno não encontrado." });
+      }
+
+      const lesson = await prisma.professorLesson.findFirst({
+        where: {
+          id: request.params.id,
+          tenantId: student.tenantId,
+          active: true,
+        },
+        include: lessonInclude,
+      });
+
+      if (!lesson) {
+        return reply.status(404).send({ error: "Aula não encontrada." });
+      }
+
+      const tenantPlans = await getTenantPlans(student.tenantId);
+      if (!lesson.modality || !modalityMatchesPlan(lesson.modality, student.planoModalidade, tenantPlans)) {
+        return reply.status(403).send({ error: "Esta aula não pertence à sua modalidade." });
+      }
+
+      return reply.send({ aula: serializeProfessorLesson(lesson) });
+    },
+  );
 
   app.post<{ Params: { id: string } }>(
     "/student/aulas/:id/presenca",

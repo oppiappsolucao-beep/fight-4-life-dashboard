@@ -177,6 +177,23 @@ export default function OwnerAlunoEditModal({
 
           {form ? (
             <form onSubmit={handleSubmit} className="space-y-6">
+              {form.fotoUrl ? (
+                <div className="flex items-center gap-4 rounded-xl border border-white/10 bg-black/20 p-4">
+                  <img
+                    src={form.fotoUrl}
+                    alt=""
+                    className="h-16 w-16 rounded-full object-cover ring-2 ring-white/10"
+                  />
+                  <div>
+                    <p className="m-0 text-xs font-semibold uppercase tracking-wide text-white/45">
+                      Foto do cadastro
+                    </p>
+                    <p className="m-0 mt-1 text-sm text-white/70">
+                      Imagem registrada no momento da matrícula.
+                    </p>
+                  </div>
+                </div>
+              ) : null}
               <Section title="Dados pessoais">
                 <Field label="Nome completo" span>
                   <Input

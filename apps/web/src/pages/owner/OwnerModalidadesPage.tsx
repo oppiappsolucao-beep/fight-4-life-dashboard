@@ -24,14 +24,20 @@ export default function OwnerModalidadesPage() {
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [gridFilterModalityId, setGridFilterModalityId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [savingScheduleId, setSavingScheduleId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const load = useCallback(() => {
-    setLoading(true);
+  const load = useCallback((options?: { silent?: boolean }) => {
+    if (options?.silent) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     setError("");
     Promise.all([
       apiFetch<{ modalidades: ModalityItem[] }>("/owner/modalidades"),
@@ -81,7 +87,10 @@ export default function OwnerModalidadesPage() {
       .catch((err) =>
         setError(err instanceof Error ? err.message : "Erro ao carregar modalidades."),
       )
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setRefreshing(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -148,6 +157,23 @@ export default function OwnerModalidadesPage() {
     setSuccess("");
   }
 
+  async function handleImportTemplates() {
+    setImporting(true);
+    setError("");
+    setSuccess("");
+    try {
+      const result = await apiFetch<{ message: string }>("/owner/modalidades/import-templates", {
+        method: "POST",
+      });
+      setSuccess(result.message);
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao importar catálogo.");
+    } finally {
+      setImporting(false);
+    }
+  }
+
   async function handleCreateModality(event: FormEvent) {
     event.preventDefault();
     if (!newName.trim()) {
@@ -193,7 +219,7 @@ export default function OwnerModalidadesPage() {
         body: JSON.stringify({ modalityIds: selectedIds }),
       });
       setSuccess(result.message);
-      load();
+      load({ silent: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao salvar.");
     } finally {
@@ -214,7 +240,7 @@ export default function OwnerModalidadesPage() {
       });
       setSuccess(result.message);
       setEditingScheduleId(null);
-      load();
+      load({ silent: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao salvar horários.");
     } finally {
@@ -233,6 +259,9 @@ export default function OwnerModalidadesPage() {
         </div>
       ) : (
         <div className="space-y-5">
+          {refreshing ? (
+            <p className="m-0 text-xs text-white/40">Atualizando dados...</p>
+          ) : null}
           {error ? (
             <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
               {error}
@@ -242,6 +271,25 @@ export default function OwnerModalidadesPage() {
             <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
               {success}
             </div>
+          ) : null}
+
+          {modalidades.length === 0 ? (
+            <section className="rounded-xl border border-dashed border-white/15 bg-black/20 p-6 text-center">
+              <p className="m-0 text-sm text-white/70">
+                Nenhuma modalidade cadastrada nesta academia.
+              </p>
+              <p className="m-0 mt-2 text-xs text-white/45">
+                Importe o catálogo padrão ou inclua modalidades manualmente abaixo.
+              </p>
+              <button
+                type="button"
+                disabled={importing}
+                onClick={handleImportTemplates}
+                className="mt-4 rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-white/80 disabled:opacity-60"
+              >
+                {importing ? "Importando..." : "Importar catálogo padrão"}
+              </button>
+            </section>
           ) : null}
 
           <form

@@ -16,6 +16,7 @@ export default function StudentGaleriaPage() {
   const [gallery, setGallery] = useState<StudentGalleryResponse | null>(null);
   const [selectedModalityId, setSelectedModalityId] = useState("");
   const [activeLesson, setActiveLesson] = useState<ProfessorLessonItem | null>(null);
+  const [loadingLessonId, setLoadingLessonId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -34,10 +35,7 @@ export default function StudentGaleriaPage() {
         .then((data) => {
           setGallery(data);
           setSelectedModalityId(data.modalidadeSelecionada?.id ?? "");
-          setActiveLesson((current) => {
-            if (current && data.aulas.some((item) => item.id === current.id)) return current;
-            return data.aulas[0] ?? null;
-          });
+          setActiveLesson(data.aulas[0] ?? null);
         })
         .catch((err) =>
           setError(err instanceof Error ? err.message : "Erro ao carregar galeria."),
@@ -47,9 +45,42 @@ export default function StudentGaleriaPage() {
     [session?.id],
   );
 
+  const loadLessonDetail = useCallback(
+    async (lessonId: string) => {
+      if (!session?.id) return;
+      setLoadingLessonId(lessonId);
+      try {
+        const data = await apiFetch<{ aula: ProfessorLessonItem }>(
+          `/student/aulas/${lessonId}`,
+          {},
+          session.id,
+        );
+        setActiveLesson(data.aula);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Erro ao carregar vídeo da aula.");
+      } finally {
+        setLoadingLessonId(null);
+      }
+    },
+    [session?.id],
+  );
+
+  async function handleSelectLesson(aula: ProfessorLessonItem) {
+    setActiveLesson(aula);
+    if (!aula.videoUrl) {
+      await loadLessonDetail(aula.id);
+    }
+  }
+
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (activeLesson?.id && !activeLesson.videoUrl) {
+      void loadLessonDetail(activeLesson.id);
+    }
+  }, [activeLesson?.id, activeLesson?.videoUrl, loadLessonDetail]);
 
   const selectedModalityName = useMemo(() => {
     if (!gallery) return "";
@@ -115,7 +146,17 @@ export default function StudentGaleriaPage() {
           ) : (
             <>
               {activeLesson ? (
-                <ModalityVideoPlayer video={lessonToVideoCard(activeLesson)} />
+                loadingLessonId === activeLesson.id && !activeLesson.videoUrl ? (
+                  <div className="rounded-2xl border border-white/10 bg-black/25 p-10 text-center text-sm text-white/50">
+                    Carregando vídeo...
+                  </div>
+                ) : activeLesson.videoUrl ? (
+                  <ModalityVideoPlayer video={lessonToVideoCard(activeLesson)} />
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/45">
+                    Vídeo indisponível para esta aula.
+                  </div>
+                )
               ) : null}
               <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {gallery.aulas.map((aula) => (
@@ -123,11 +164,10 @@ export default function StudentGaleriaPage() {
                     key={aula.id}
                     video={lessonToVideoCard(aula)}
                     selected={activeLesson?.id === aula.id}
-                    onSelect={() => setActiveLesson(aula)}
+                    onSelect={() => void handleSelectLesson(aula)}
                   />
                 ))}
-              </section>
-            </>
+              </section>            </>
           )}
         </div>
       ) : null}

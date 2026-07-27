@@ -40,7 +40,7 @@ export default function ScheduleSlotEditor({
         <div className="mt-3 space-y-2">
           {slots.map((slot, index) => (
             <div
-              key={`${slot.weekday}-${slot.startTime}-${slot.endTime}-${index}`}
+              key={`slot-${index}`}
               className={`grid gap-2 rounded-xl border border-white/10 bg-black/25 p-3 ${
                 compact
                   ? "md:grid-cols-[minmax(0,1fr)_auto_auto_auto]"

@@ -1,6 +1,7 @@
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { apiFetch } from "../../lib/api";
-import {
+import WorkoutDateStrip from "../../components/student/WorkoutDateStrip";import {
   MEIO_TREINO_REGIONS,
   WORKOUT_PHASES,
   bodyRegionLabel,
@@ -32,8 +33,8 @@ interface AlunoOption {
   id: string;
   nomeCompleto: string;
   planoModalidade: string;
+  modalityIds?: string[];
 }
-
 function emptyDraft(
   exercise: ExerciseCatalogItem,
   phase: WorkoutPhase,
@@ -81,7 +82,14 @@ function reindexPhase(drafts: WorkoutExerciseDraft[], phase: WorkoutPhase) {
 }
 
 export default function ProfessorCadastroTreinoPage() {
-  const [alunos, setAlunos] = useState<AlunoOption[]>([]);
+  const location = useLocation();
+  const initialStudentId =
+    typeof location.state === "object" &&
+    location.state &&
+    "studentId" in location.state &&
+    typeof location.state.studentId === "string"
+      ? location.state.studentId
+      : "";  const [alunos, setAlunos] = useState<AlunoOption[]>([]);
   const [catalog, setCatalog] = useState<ExerciseCatalogItem[]>([]);
   const [modalidades, setModalidades] = useState<ModalityItem[]>([]);
   const [professorSchedules, setProfessorSchedules] = useState<ProfessorModalitySchedule[]>([]);
@@ -92,9 +100,7 @@ export default function ProfessorCadastroTreinoPage() {
   const [activePhase, setActivePhase] = useState<WorkoutPhase | null>(null);
   const [activeLessonPhase, setActiveLessonPhase] = useState<LessonPhase | null>(null);
   const [meioRegion, setMeioRegion] = useState<MeioTreinoRegion>("SUPERIOR");
-  const [savedDatesOpen, setSavedDatesOpen] = useState(false);
-  const [notesOpen, setNotesOpen] = useState(false);
-  const [expandedDraftKey, setExpandedDraftKey] = useState<string | null>(null);
+  const [notesOpen, setNotesOpen] = useState(false);  const [expandedDraftKey, setExpandedDraftKey] = useState<string | null>(null);
   const [title, setTitle] = useState("Treino personalizado");
   const [notes, setNotes] = useState("");
   const [lessonDescription, setLessonDescription] = useState("");
@@ -144,14 +150,43 @@ export default function ProfessorCadastroTreinoPage() {
   const activePhaseMeta = WORKOUT_PHASES.find((p) => p.id === activePhase);
   const meioRegionMeta = MEIO_TREINO_REGIONS.find((r) => r.id === meioRegion);
 
-  const selectedStudent = alunos.find((item) => item.id === selectedStudentId);
-  const groupedDrafts = useMemo(() => groupExercisesByPhase(drafts), [drafts]);
   const selectedModality = useMemo(
     () => modalidades.find((item) => item.id === selectedModalityId),
     [modalidades, selectedModalityId],
   );
   const isMusculacao = selectedModality?.contentType === "EXERCISE_CATALOG";
 
+  const alunosForModality = useMemo(() => {
+    if (!selectedModalityId) return alunos;
+    return alunos.filter((item) => item.modalityIds?.includes(selectedModalityId));
+  }, [alunos, selectedModalityId]);
+
+  const selectedStudent = alunosForModality.find((item) => item.id === selectedStudentId);
+  const groupedDrafts = useMemo(() => groupExercisesByPhase(drafts), [drafts]);
+
+  const dateSummaries = useMemo(() => {
+    const dates = new Set<string>();
+    for (const item of savedTreinos) dates.add(item.workoutDate);
+    if (workoutDate) dates.add(workoutDate);
+
+    return Array.from(dates)
+      .sort((a, b) => a.localeCompare(b))
+      .map(
+        (date): WorkoutSummary => {
+          const existing = savedTreinos.find((item) => item.workoutDate === date);
+          return (
+            existing ?? {
+              id: date,
+              title: isMusculacao ? "Treino" : "Aula",
+              workoutDate: date,
+              updatedAt: "",
+              source: "OWNER",
+              exerciseCount: 0,
+            }
+          );
+        },
+      );
+  }, [savedTreinos, workoutDate, isMusculacao]);
   const savedCatalog = useMemo(
     () => selectedModality?.warmupMovementCatalog ?? [],
     [selectedModality],
@@ -193,8 +228,15 @@ export default function ProfessorCadastroTreinoPage() {
       .then(([alunosResult, exercisesResult, modalidadesResult, schedulesResult]) => {
         if (alunosResult.status === "fulfilled") {
           setAlunos(alunosResult.value.alunos);
-          if (alunosResult.value.alunos.length > 0) {
-            setSelectedStudentId((current) => current || alunosResult.value.alunos[0].id);
+          const nextAlunos = alunosResult.value.alunos;
+          if (nextAlunos.length > 0) {
+            setSelectedStudentId((current) => {
+              if (current && nextAlunos.some((item) => item.id === current)) return current;
+              if (initialStudentId && nextAlunos.some((item) => item.id === initialStudentId)) {
+                return initialStudentId;
+              }
+              return nextAlunos[0].id;
+            });
           }
         }
         if (exercisesResult.status === "fulfilled") {
@@ -242,7 +284,21 @@ export default function ProfessorCadastroTreinoPage() {
         if (failures.length > 0) setError(failures.join(" "));
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [initialStudentId]);
+
+  useEffect(() => {
+    if (!selectedStudentId && alunosForModality.length > 0) {
+      setSelectedStudentId(alunosForModality[0].id);
+      return;
+    }
+    if (
+      selectedStudentId &&
+      alunosForModality.length > 0 &&
+      !alunosForModality.some((item) => item.id === selectedStudentId)
+    ) {
+      setSelectedStudentId(alunosForModality[0].id);
+    }
+  }, [alunosForModality, selectedStudentId]);
 
   const loadStudentTreinos = useCallback((studentId: string) => {
     if (!studentId) return;
@@ -701,7 +757,21 @@ export default function ProfessorCadastroTreinoPage() {
             </div>
           ) : null}
 
-          <section className="grid gap-4 rounded-xl border border-white/10 bg-white/[0.04] p-4 sm:grid-cols-2 lg:grid-cols-5 sm:p-5">
+          <WorkoutDateStrip
+            treinos={dateSummaries}
+            selectedDate={workoutDate}
+            completionByDate={{}}
+            onSelect={(date) => {
+              setWorkoutDate(date);
+              closePhaseEditor();
+              closeLessonPhaseEditor();
+            }}
+            onCreateDate={setWorkoutDate}
+            sectionLabel={isMusculacao ? "Treinos do aluno" : "Datas da aula"}
+            showLegend={false}
+          />
+
+          <section className="grid gap-4 rounded-xl border border-white/10 bg-white/[0.04] p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5">
             {isMusculacao ? (
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-white/50">
@@ -712,11 +782,15 @@ export default function ProfessorCadastroTreinoPage() {
                 onChange={(e) => setSelectedStudentId(e.target.value)}
                 className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#e85d6f]/60"
               >
-                {alunos.map((aluno) => (
-                  <option key={aluno.id} value={aluno.id} className="bg-zinc-900">
-                    {aluno.nomeCompleto}
-                  </option>
-                ))}
+                {alunosForModality.length === 0 ? (
+                  <option value="">Nenhum aluno nesta modalidade</option>
+                ) : (
+                  alunosForModality.map((aluno) => (
+                    <option key={aluno.id} value={aluno.id} className="bg-zinc-900">
+                      {aluno.nomeCompleto}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
             ) : null}
@@ -741,19 +815,7 @@ export default function ProfessorCadastroTreinoPage() {
                 )}
               </select>
             </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-white/50">
-                Data do treino
-              </label>
-              <input
-                type="date"
-                value={workoutDate}
-                onChange={(e) => setWorkoutDate(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#e85d6f]/60"
-                required
-              />
-            </div>
-            <div className="lg:col-span-2">
+            <div className={isMusculacao ? "" : "sm:col-span-2 lg:col-span-2"}>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-white/50">
                 Título
               </label>
@@ -764,7 +826,7 @@ export default function ProfessorCadastroTreinoPage() {
                 required
               />
             </div>
-            <div className="sm:col-span-2 lg:col-span-5">
+            <div className="sm:col-span-2 lg:col-span-4">
               <button
                 type="button"
                 onClick={() => setNotesOpen((current) => !current)}
@@ -782,41 +844,6 @@ export default function ProfessorCadastroTreinoPage() {
                 />
               ) : null}
             </div>
-            {savedTreinos.length > 0 ? (
-              <div className="sm:col-span-2 lg:col-span-4">
-                <button
-                  type="button"
-                  onClick={() => setSavedDatesOpen((current) => !current)}
-                  className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-2.5 text-left text-sm text-white/70 transition hover:border-white/20"
-                >
-                  <span>
-                    Treinos cadastrados ({savedTreinos.length})
-                  </span>
-                  <span className="text-white/40">{savedDatesOpen ? "−" : "+"}</span>
-                </button>
-                {savedDatesOpen ? (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {savedTreinos.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => {
-                          setWorkoutDate(item.workoutDate);
-                          closePhaseEditor();
-                        }}
-                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
-                          item.workoutDate === workoutDate
-                            ? "bg-[#e85d6f] text-white"
-                            : "border border-white/15 text-white/70 hover:border-[#e85d6f]/40"
-                        }`}
-                      >
-                        {formatWorkoutDateLabel(item.workoutDate)} • {item.title}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
             {!isMusculacao ? (
               <div className="sm:col-span-2 lg:col-span-5">
                 <p className="m-0 text-xs font-semibold uppercase tracking-wide text-white/50">

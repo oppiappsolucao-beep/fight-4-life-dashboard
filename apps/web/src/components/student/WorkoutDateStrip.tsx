@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from "react";
 import {
   formatWorkoutDateLabel,
   formatWorkoutDay,
@@ -5,11 +6,11 @@ import {
   formatWorkoutWeekdayShort,
   getWeekRange,
   isTodayWorkoutDate,
+  isWorkoutDateInRange,
   listDatesInWeekForWeekdays,
   pickDefaultWorkoutDate,
   type WorkoutCompletionStatus,
 } from "../../lib/workout";
-import { useEffect, useMemo, useState } from "react";
 import type { WorkoutSummary } from "../../types/workout";
 
 interface WorkoutDateStripProps {
@@ -19,6 +20,8 @@ interface WorkoutDateStripProps {
   onSelect: (workoutDate: string) => void;
   onCreateDate?: (workoutDate: string) => void;
   scheduleWeekdays?: number[];
+  sectionLabel?: string;
+  showLegend?: boolean;
 }
 
 export default function WorkoutDateStrip({
@@ -28,6 +31,8 @@ export default function WorkoutDateStrip({
   onSelect,
   onCreateDate,
   scheduleWeekdays,
+  sectionLabel = "Seus treinos",
+  showLegend = true,
 }: WorkoutDateStripProps) {
   const [weekOffset, setWeekOffset] = useState(0);
 
@@ -48,22 +53,52 @@ export default function WorkoutDateStrip({
       ? listDatesInWeekForWeekdays(scheduleWeekdays, weekReference)
       : null;
 
-  function shiftWeek(delta: number) {
-    if (!scheduleWeekdays?.length) return;
+  const treinosInWeek = useMemo(
+    () => treinos.filter((item) => isWorkoutDateInRange(item.workoutDate, week.start, week.end)),
+    [treinos, week.start, week.end],
+  );
 
+  function pickDateForWeek(reference: Date) {
+    if (scheduleWeekdays?.length) {
+      const nextDates = listDatesInWeekForWeekdays(scheduleWeekdays, reference);
+      if (nextDates.length === 0) return null;
+      return pickDefaultWorkoutDate(nextDates.map((workoutDate) => ({ workoutDate })));
+    }
+
+    const range = getWeekRange(reference);
+    const inWeek = treinos.filter((item) =>
+      isWorkoutDateInRange(item.workoutDate, range.start, range.end),
+    );
+    if (inWeek.length > 0) return pickDefaultWorkoutDate(inWeek);
+    return range.start;
+  }
+
+  function shiftWeek(delta: number) {
     const nextOffset = weekOffset + delta;
     const reference = new Date();
     reference.setHours(12, 0, 0, 0);
     reference.setDate(reference.getDate() + nextOffset * 7);
-    const nextDates = listDatesInWeekForWeekdays(scheduleWeekdays, reference);
+    const nextDate = pickDateForWeek(reference);
+    if (!nextDate) return;
 
     setWeekOffset(nextOffset);
-    if (nextDates.length === 0) return;
-
-    onSelect(
-      pickDefaultWorkoutDate(nextDates.map((workoutDate) => ({ workoutDate }))),
-    );
+    onSelect(nextDate);
   }
+
+  useEffect(() => {
+    if (weekScheduleDates) {
+      if (selectedDate && weekScheduleDates.includes(selectedDate)) return;
+      if (weekScheduleDates.length === 0) return;
+      onSelect(
+        pickDefaultWorkoutDate(weekScheduleDates.map((workoutDate) => ({ workoutDate }))),
+      );
+      return;
+    }
+
+    if (selectedDate && isWorkoutDateInRange(selectedDate, week.start, week.end)) return;
+    onSelect(treinosInWeek.length > 0 ? pickDefaultWorkoutDate(treinosInWeek) : week.start);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sync only when week or treinos change
+  }, [week.start, week.end, weekScheduleDates?.join(","), treinosInWeek.map((item) => item.workoutDate).join(",")]);
 
   const displayTreinos = weekScheduleDates
     ? weekScheduleDates.map((workoutDate) => {
@@ -79,19 +114,20 @@ export default function WorkoutDateStrip({
           }
         );
       })
-    : treinos;
+    : treinosInWeek;
 
   const allowCreateDate = Boolean(onCreateDate) && !weekScheduleDates;
+  const showWeekNav = Boolean(weekScheduleDates) || true;
 
   return (
     <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-3 backdrop-blur-md sm:p-4">
       <div className="mb-3 flex items-center justify-between gap-3 px-1">
         <div className="min-w-0 flex-1">
           <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
-            Seus treinos
+            {sectionLabel}
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
-            {weekScheduleDates ? (
+            {showWeekNav ? (
               <>
                 <button
                   type="button"
@@ -131,37 +167,16 @@ export default function WorkoutDateStrip({
             )}
           </div>
         </div>
-        <div className="hidden items-center gap-3 text-[0.65rem] text-white/45 sm:flex">
-          <LegendDot tone="done" label="Concluído" />
-          <LegendDot tone="partial" label="Em andamento" />
-          <LegendDot tone="pending" label="Pendente" />
-        </div>
+        {showLegend ? (
+          <div className="hidden items-center gap-3 text-[0.65rem] text-white/45 sm:flex">
+            <LegendDot tone="done" label="Concluído" />
+            <LegendDot tone="partial" label="Em andamento" />
+            <LegendDot tone="pending" label="Pendente" />
+          </div>
+        ) : null}
       </div>
 
       <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {!weekScheduleDates &&
-        selectedDate &&
-        !displayTreinos.some((item) => item.workoutDate === selectedDate) ? (
-          <button
-            type="button"
-            onClick={() => onSelect(selectedDate)}
-            className="relative min-w-[5.5rem] shrink-0 snap-start rounded-2xl border border-[#e85d6f] bg-[#e85d6f]/15 px-3 py-3 text-left shadow-[0_0_0_1px_rgba(232,93,111,0.35)]"
-          >
-            <StatusDot status="pending" />
-            <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
-              {formatWorkoutWeekdayShort(selectedDate)}
-            </p>
-            <p className="m-0 mt-1 text-2xl font-semibold leading-none text-white">
-              {formatWorkoutDay(selectedDate)}
-            </p>
-            <p className="m-0 mt-1 text-xs text-white/55">
-              {formatWorkoutMonthShort(selectedDate)}
-            </p>
-            <span className="mt-2 inline-flex rounded-full border border-dashed border-white/25 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-white/60">
-              Nova
-            </span>
-          </button>
-        ) : null}
         {displayTreinos.map((item) => {
           const selected = item.workoutDate === selectedDate;
           const status = completionByDate[item.workoutDate] ?? "pending";
@@ -196,11 +211,11 @@ export default function WorkoutDateStrip({
                 <span className="mt-2 inline-flex rounded-full bg-[#e85d6f]/15 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-[#f08a98]">
                   Meu
                 </span>
-              ) : (
+              ) : item.exerciseCount > 0 ? (
                 <p className="m-0 mt-2 truncate text-[0.65rem] text-white/40">
                   {item.exerciseCount} ex.
                 </p>
-              )}
+              ) : null}
             </button>
           );
         })}
@@ -212,6 +227,8 @@ export default function WorkoutDateStrip({
             <span className="mt-3 block text-2xl font-semibold text-[#e85d6f]">+</span>
             <input
               type="date"
+              min={week.start}
+              max={week.end}
               className="absolute inset-0 cursor-pointer opacity-0"
               onChange={(event) => {
                 if (event.target.value && onCreateDate) onCreateDate(event.target.value);

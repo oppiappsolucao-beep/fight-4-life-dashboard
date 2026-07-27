@@ -1,5 +1,4 @@
-import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import LessonVideoUploadField from "../professor/LessonVideoUploadField";
+import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";import LessonVideoUploadField from "../professor/LessonVideoUploadField";
 import { apiFetch } from "../../lib/api";
 import {
   WEEKDAY_LABELS,
@@ -43,9 +42,9 @@ export default function OwnerLessonCadastroPanel({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const loadAulasRequestRef = useRef(0);
 
   const selectedModality = modalidades.find((item) => item.id === selectedModalityId);
-
   const availableProfessors = useMemo(
     () =>
       professores.filter((professor) => {
@@ -72,19 +71,31 @@ export default function OwnerLessonCadastroPanel({
 
   const loadAulas = useCallback(() => {
     if (!selectedModalityId || !classDate) return;
+    const requestId = ++loadAulasRequestRef.current;
     setLoadingAulas(true);
     apiFetch<{ aulas: ProfessorLessonItem[] }>(
       `/owner/aulas?modalityId=${encodeURIComponent(selectedModalityId)}&classDate=${encodeURIComponent(classDate)}`,
     )
-      .then((data) => setAulas(data.aulas))
-      .catch(() => setAulas([]))
-      .finally(() => setLoadingAulas(false));
+      .then((data) => {
+        if (requestId !== loadAulasRequestRef.current) return;
+        setAulas(data.aulas);
+      })
+      .catch(() => {
+        if (requestId !== loadAulasRequestRef.current) return;
+        setAulas([]);
+      })
+      .finally(() => {
+        if (requestId !== loadAulasRequestRef.current) return;
+        setLoadingAulas(false);
+      });
   }, [classDate, selectedModalityId]);
 
   useEffect(() => {
-    loadAulas();
+    const timer = window.setTimeout(() => {
+      loadAulas();
+    }, 200);
+    return () => window.clearTimeout(timer);
   }, [loadAulas]);
-
   useEffect(() => {
     setForm({
       ...EMPTY_FORM,

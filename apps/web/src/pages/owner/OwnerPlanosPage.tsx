@@ -178,7 +178,7 @@ export default function OwnerPlanosPage() {
               </thead>
               <tbody>
                 {planos.map((plan, index) => (
-                  <tr key={`${plan.nome}-${index}`} className="border-b border-white/5 last:border-0">
+                  <tr key={index} className="border-b border-white/5 last:border-0">
                     <td className="px-4 py-3">
                       <input
                         value={plan.nome}
