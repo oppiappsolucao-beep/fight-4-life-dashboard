@@ -289,6 +289,11 @@ export default function StudentTreinoPage() {
 
   useEffect(() => {
     if (isMusculacao && selectedDate) {
+      setTreino(null);
+      setSetsMap({});
+      setLoadingTreino(true);
+      setMode("execute");
+      setActivePhase("INICIO");
       loadTreino(selectedDate);
     }
   }, [isMusculacao, selectedDate, loadTreino]);
@@ -432,6 +437,9 @@ export default function StudentTreinoPage() {
             completionByDate={completionByDate}
             onSelect={setSelectedDate}
             onCreateDate={setSelectedDate}
+            scheduleWeekdays={
+              selectedScheduleWeekdays.length > 0 ? selectedScheduleWeekdays : undefined
+            }
           />
 
           {error && treino ? (
@@ -453,18 +461,59 @@ export default function StudentTreinoPage() {
               onCancel={treino ? () => setMode("execute") : undefined}
             />
           ) : !treino ? (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-8 text-center">
-              <p className="m-0 text-sm text-white/55">
-                Nenhum treino para {formatWorkoutDateLabel(selectedDate)}.
-              </p>
-              <button
-                type="button"
-                onClick={() => setMode("build")}
-                className="mt-4 rounded-xl bg-[#e85d6f] px-4 py-3 text-sm font-semibold text-white"
-              >
-                Criar meu treino
-              </button>
-            </div>
+            <>
+              <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] via-black/30 to-black/40 p-4 sm:p-5">
+                <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
+                  {formatWorkoutDateLabel(selectedDate)}
+                </p>
+                <h2 className="m-0 mt-1 text-xl font-semibold text-white sm:text-2xl">
+                  Sem treino cadastrado
+                </h2>
+                <p className="m-0 mt-2 text-sm text-white/55">
+                  Escolha uma etapa abaixo ou monte seu treino para este dia.
+                </p>
+              </section>
+
+              <section className="sticky top-14 z-20 -mx-1 rounded-2xl border border-white/10 bg-black/80 p-2 backdrop-blur-md md:top-0">
+                <div className="grid grid-cols-3 gap-2">
+                  {WORKOUT_PHASES.map((phase) => {
+                    const selected = activePhase === phase.id;
+                    return (
+                      <button
+                        key={phase.id}
+                        type="button"
+                        onClick={() => setActivePhase(phase.id)}
+                        className={`rounded-xl px-2 py-3 text-left transition ${
+                          selected
+                            ? "bg-[#e85d6f] text-white shadow-[0_8px_24px_rgba(232,93,111,0.25)]"
+                            : "bg-white/[0.04] text-white/70 hover:bg-white/[0.07]"
+                        }`}
+                      >
+                        <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide">
+                          {phase.label}
+                        </p>
+                        <p className="m-0 mt-1 text-xs opacity-80">—</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+
+              <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center">
+                <p className="m-0 text-sm text-white/55">
+                  Nenhum exercício em{" "}
+                  {WORKOUT_PHASES.find((phase) => phase.id === activePhase)?.label.toLowerCase()}{" "}
+                  para {formatWorkoutDateLabel(selectedDate)}.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setMode("build")}
+                  className="mt-4 rounded-xl bg-[#e85d6f] px-4 py-3 text-sm font-semibold text-white"
+                >
+                  Criar meu treino
+                </button>
+              </div>
+            </>
           ) : (
             <>
               <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#e85d6f]/20 via-black/30 to-black/40 p-4 sm:p-5">

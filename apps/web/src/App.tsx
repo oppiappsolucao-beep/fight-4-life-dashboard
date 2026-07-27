@@ -20,6 +20,7 @@ import OwnerAlunosPage from "./pages/owner/OwnerAlunosPage";
 import ProfessorCadastroTreinoPage from "./pages/professor/ProfessorCadastroTreinoPage";
 import ProfessorPresencaPage from "./pages/professor/ProfessorPresencaPage";
 import ProfessorAlunosPage from "./pages/professor/ProfessorAlunosPage";
+import ProfessorVisaoGeralPage from "./pages/professor/ProfessorVisaoGeralPage";
 import OwnerPlanosPage from "./pages/owner/OwnerPlanosPage";
 import OwnerContasReceberPage from "./pages/owner/OwnerContasReceberPage";
 import DevLayout from "./components/dev/DevLayout";
@@ -118,10 +119,12 @@ export default function App() {
       </Route>
 
       <Route element={<ProfessorLayout />}>
+        <Route path="professor/visao-geral" element={<ProfessorVisaoGeralPage />} />
         <Route path="professor/cadastro-treino" element={<ProfessorCadastroTreinoPage />} />
         <Route path="professor/alunos" element={<ProfessorAlunosPage />} />
         <Route path="professor/presenca" element={<ProfessorPresencaPage />} />
         <Route path="professor/aulas" element={<Navigate to="/professor/cadastro-treino" replace />} />
+        <Route path="professor" element={<Navigate to="/professor/visao-geral" replace />} />
       </Route>
 
       <Route path="/dashboard" element={<Navigate to="/dono/visao-geral" replace />} />

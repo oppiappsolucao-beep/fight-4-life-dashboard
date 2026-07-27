@@ -22,6 +22,7 @@ import {
   slugifyModality,
 } from "../../lib/modalities.js";
 import { normalizeScheduleSlots, serializeScheduleSlot, weekdayFromDateInput, listDatesInMonth, parseMonthInput, currentMonthInput, scheduleOccurrenceKey } from "../../lib/schedules.js";
+import { getWeekRange } from "../../lib/billing.js";
 import { normalizePlans } from "../owner/plans.js";
 import {
   parseWorkoutDate,
@@ -42,6 +43,7 @@ import {
   professorLessonActiveSchema,
   professorLessonSchema,
   professorPresencaActionSchema,
+  professorPresencaCreateSchema,
   professorSelfSchema,
   professorUpdateSchema,
   tenantModalityCreateSchema,
@@ -1456,6 +1458,235 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
       });
     },
   );
+
+  app.post<{ Params: { id: string } }>(
+    "/professor/aulas/:id/presencas",
+    async (request, reply) => {
+      const parsed = professorPresencaCreateSchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.errors[0]?.message ?? "Dados inválidos.",
+        });
+      }
+
+      const tenantId = request.user.tenantId;
+      const lesson = await prisma.professorLesson.findFirst({
+        where: {
+          id: request.params.id,
+          tenantId,
+          professorId: request.user.sub,
+          active: true,
+        },
+        include: {
+          modality: {
+            select: {
+              id: true,
+              name: true,
+              linkedPlans: true,
+              contentType: true,
+              active: true,
+            },
+          },
+        },
+      });
+
+      if (!lesson || !lesson.modality) {
+        return reply.status(404).send({ error: "Aula não encontrada." });
+      }
+
+      const student = await prisma.student.findFirst({
+        where: { id: parsed.data.studentId, tenantId, active: true },
+        select: { id: true, nomeCompleto: true, planoModalidade: true },
+      });
+
+      if (!student) {
+        return reply.status(404).send({ error: "Aluno não encontrado." });
+      }
+
+      const tenantPlans = await getTenantPlans(tenantId);
+      if (!modalityMatchesPlan(lesson.modality, student.planoModalidade, tenantPlans)) {
+        return reply.status(400).send({
+          error: "Este aluno não está matriculado na modalidade desta aula.",
+        });
+      }
+
+      const existing = await prisma.lessonAttendance.findUnique({
+        where: {
+          lessonId_studentId: {
+            lessonId: lesson.id,
+            studentId: student.id,
+          },
+        },
+      });
+
+      if (existing && effectiveAttendanceStatus(existing) === "VALIDATED") {
+        return reply.status(400).send({ error: "A presença deste aluno já foi confirmada." });
+      }
+
+      const now = new Date();
+      const attendance = await prisma.lessonAttendance.upsert({
+        where: {
+          lessonId_studentId: {
+            lessonId: lesson.id,
+            studentId: student.id,
+          },
+        },
+        update: {
+          status: "VALIDATED",
+          professorValidatedAt: now,
+          markedAt: now,
+        },
+        create: {
+          tenantId,
+          lessonId: lesson.id,
+          studentId: student.id,
+          status: "VALIDATED",
+          professorValidatedAt: now,
+          markedAt: now,
+        },
+        include: {
+          student: {
+            select: { id: true, nomeCompleto: true, planoModalidade: true },
+          },
+        },
+      });
+
+      return reply.send({
+        presenca: serializeLessonAttendance(attendance),
+        message: "Presença registrada com sucesso.",
+      });
+    },
+  );
+
+  app.get("/professor/visao-geral", async (request, reply) => {
+    const tenantId = request.user.tenantId;
+    const professorId = request.user.sub;
+    const modalityIds = await getProfessorModalityIds(professorId, tenantId);
+
+    if (modalityIds.length === 0) {
+      return reply.status(403).send({ error: "Nenhuma modalidade liberada para você." });
+    }
+
+    const monthInput = currentMonthInput();
+    const parsedMonth = parseMonthInput(monthInput);
+    const monthDates =
+      parsedMonth && parsedMonth.month >= 1 && parsedMonth.month <= 12
+        ? listDatesInMonth(parsedMonth.year, parsedMonth.month, [0, 1, 2, 3, 4, 5, 6])
+        : [];
+    const monthStart = monthDates[0] ?? `${monthInput}-01`;
+    const monthEnd = monthDates[monthDates.length - 1] ?? monthStart;
+
+    const [tenant, modalities, students, aulasMes, presencasPendentes, presencasValidadasMes] =
+      await Promise.all([
+        prisma.tenant.findUnique({
+          where: { id: tenantId },
+          select: { name: true },
+        }),
+        prisma.modality.findMany({
+          where: { tenantId, id: { in: modalityIds }, active: true },
+          orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+          select: {
+            id: true,
+            name: true,
+            linkedPlans: true,
+            contentType: true,
+            active: true,
+          },
+        }),
+        prisma.student.findMany({
+          where: { tenantId, active: true },
+          select: { id: true, planoModalidade: true },
+        }),
+        prisma.professorLesson.count({
+          where: {
+            tenantId,
+            professorId,
+            modalityId: { in: modalityIds },
+            active: true,
+            classDate: {
+              gte: parseClassDate(monthStart),
+              lte: parseClassDate(monthEnd),
+            },
+          },
+        }),
+        prisma.lessonAttendance.count({
+          where: {
+            tenantId,
+            status: "STUDENT_CONFIRMED",
+            lesson: {
+              professorId,
+              active: true,
+              modalityId: { in: modalityIds },
+            },
+          },
+        }),
+        prisma.lessonAttendance.count({
+          where: {
+            tenantId,
+            status: "VALIDATED",
+            lesson: {
+              professorId,
+              active: true,
+              modalityId: { in: modalityIds },
+            },
+            markedAt: {
+              gte: parseClassDate(monthStart),
+              lte: new Date(`${monthEnd}T23:59:59.999`),
+            },
+          },
+        }),
+      ]);
+
+    const tenantPlans = await getTenantPlans(tenantId);
+    const studentIds = new Set<string>();
+
+    const modalidades = await Promise.all(
+      modalities.map(async (modality) => {
+        const alunos = students.filter((student) =>
+          modalityMatchesPlan(modality, student.planoModalidade, tenantPlans),
+        );
+        alunos.forEach((student) => studentIds.add(student.id));
+
+        const aulas = await prisma.professorLesson.count({
+          where: {
+            tenantId,
+            professorId,
+            modalityId: modality.id,
+            active: true,
+            classDate: {
+              gte: parseClassDate(monthStart),
+              lte: parseClassDate(monthEnd),
+            },
+          },
+        });
+
+        return {
+          id: modality.id,
+          name: modality.name,
+          contentType: modality.contentType,
+          alunos: alunos.length,
+          aulasMes: aulas,
+        };
+      }),
+    );
+
+    const week = getWeekRange();
+
+    return reply.send({
+      tenant: { name: tenant?.name ?? "Academia" },
+      user: { name: request.user.name ?? null },
+      mes: { start: monthStart, end: monthEnd, label: monthInput },
+      semana: week,
+      metrics: {
+        totalAlunos: studentIds.size,
+        modalidadesAtivas: modalities.length,
+        aulasMes,
+        presencasPendentes,
+        presencasValidadasMes,
+      },
+      modalidades,
+    });
+  });
 
   app.get("/professor/alunos", async (request, reply) => {
     const tenantId = request.user.tenantId;

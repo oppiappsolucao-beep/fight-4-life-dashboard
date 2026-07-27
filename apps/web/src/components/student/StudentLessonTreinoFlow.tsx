@@ -265,6 +265,17 @@ export default function StudentLessonTreinoFlow({
   }, [session?.id, modalityId, classDate]);
 
   useEffect(() => {
+    setHorarios([]);
+    setActiveLesson(null);
+    setSelectedSlotKey("");
+    setAulaCompleted(false);
+    setActivePhase("AQUECIMENTO");
+    setWarmupExercises([]);
+    setSetsMap({});
+    setError("");
+  }, [classDate, modalityId]);
+
+  useEffect(() => {
     loadDates();
   }, [loadDates]);
 
@@ -352,7 +363,7 @@ export default function StudentLessonTreinoFlow({
                   {formatWorkoutDateLabel(classDate)} • {modalityName}
                 </p>
                 <h2 className="m-0 mt-1 truncate text-xl font-semibold text-white sm:text-2xl">
-                  {activeLesson?.title ?? "Aula do dia"}
+                  {activeLesson?.title ?? "Sem aula cadastrada"}
                 </h2>
                 <p className="m-0 mt-2 text-sm text-white/60">
                   Plano: {planoModalidade}
@@ -398,10 +409,10 @@ export default function StudentLessonTreinoFlow({
             <div className="grid grid-cols-2 gap-2">
               {LESSON_PHASES.map((phase) => {
                 const selected = activePhase === phase.id;
-                const disabled =
+                const hasContent =
                   phase.id === "AQUECIMENTO"
-                    ? warmupExercises.length === 0
-                    : !activeLesson;
+                    ? warmupExercises.length > 0
+                    : Boolean(activeLesson);
                 const subtitle =
                   phase.id === "AQUECIMENTO"
                     ? warmupExercises.length > 0
@@ -417,14 +428,13 @@ export default function StudentLessonTreinoFlow({
                   <button
                     key={phase.id}
                     type="button"
-                    disabled={disabled}
                     onClick={() => setActivePhase(phase.id)}
                     className={`rounded-xl px-2 py-3 text-left transition ${
                       selected
                         ? "bg-[#e85d6f] text-white shadow-[0_8px_24px_rgba(232,93,111,0.25)]"
-                        : disabled
-                          ? "cursor-not-allowed bg-white/[0.02] text-white/25"
-                          : "bg-white/[0.04] text-white/70 hover:bg-white/[0.07]"
+                        : hasContent
+                          ? "bg-white/[0.04] text-white/70 hover:bg-white/[0.07]"
+                          : "bg-white/[0.04] text-white/45 hover:bg-white/[0.07]"
                     }`}
                   >
                     <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide">

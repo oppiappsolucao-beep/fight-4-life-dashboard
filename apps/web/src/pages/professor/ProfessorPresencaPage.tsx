@@ -6,13 +6,25 @@ import WorkoutDateStrip from "../../components/student/WorkoutDateStrip";
 import type { LessonAttendanceItem, ProfessorLessonItem } from "../../types/modality";
 import type { WorkoutSummary } from "../../types/workout";
 
+interface AlunoOption {
+  id: string;
+  nomeCompleto: string;
+  planoModalidade: string;
+  modalityIds?: string[];
+}
+
 export default function ProfessorPresencaPage() {
   const [aulas, setAulas] = useState<ProfessorLessonItem[]>([]);
+  const [alunos, setAlunos] = useState<AlunoOption[]>([]);
   const [pendingPresencas, setPendingPresencas] = useState<LessonAttendanceItem[]>([]);
+  const [lessonPresencas, setLessonPresencas] = useState<LessonAttendanceItem[]>([]);
   const [selectedDate, setSelectedDate] = useState(todayDateInputValue());
   const [selectedLessonId, setSelectedLessonId] = useState("");
+  const [manualStudentId, setManualStudentId] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadingLessonPresencas, setLoadingLessonPresencas] = useState(false);
   const [validatingId, setValidatingId] = useState<string | null>(null);
+  const [registeringManual, setRegisteringManual] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -22,8 +34,9 @@ export default function ProfessorPresencaPage() {
     Promise.allSettled([
       apiFetch<{ aulas: ProfessorLessonItem[] }>("/professor/aulas"),
       apiFetch<{ presencas: LessonAttendanceItem[] }>("/professor/presencas/pendentes"),
+      apiFetch<{ alunos: AlunoOption[] }>("/professor/alunos"),
     ])
-      .then(([aulasResult, presencasResult]) => {
+      .then(([aulasResult, presencasResult, alunosResult]) => {
         if (aulasResult.status === "fulfilled") {
           setAulas(aulasResult.value.aulas);
         } else {
@@ -33,6 +46,11 @@ export default function ProfessorPresencaPage() {
           setPendingPresencas(presencasResult.value.presencas);
         } else {
           setPendingPresencas([]);
+        }
+        if (alunosResult.status === "fulfilled") {
+          setAlunos(alunosResult.value.alunos);
+        } else {
+          setAlunos([]);
         }
         const failures: string[] = [];
         if (aulasResult.status === "rejected") {
@@ -47,6 +65,13 @@ export default function ProfessorPresencaPage() {
             presencasResult.reason instanceof Error
               ? presencasResult.reason.message
               : "Erro ao carregar confirmações.",
+          );
+        }
+        if (alunosResult.status === "rejected") {
+          failures.push(
+            alunosResult.reason instanceof Error
+              ? alunosResult.reason.message
+              : "Erro ao carregar alunos.",
           );
         }
         if (failures.length > 0) setError(failures.join(" "));
@@ -99,6 +124,46 @@ export default function ProfessorPresencaPage() {
     setSelectedLessonId(aulasDoDia[0]?.id ?? "");
   }, [aulasDoDia, selectedLessonId]);
 
+  const selectedLesson = useMemo(
+    () => aulas.find((item) => item.id === selectedLessonId) ?? null,
+    [aulas, selectedLessonId],
+  );
+
+  const loadLessonPresencas = useCallback((lessonId: string) => {
+    if (!lessonId) {
+      setLessonPresencas([]);
+      return;
+    }
+    setLoadingLessonPresencas(true);
+    apiFetch<{ presencas: LessonAttendanceItem[] }>(`/professor/aulas/${lessonId}/presencas`)
+      .then((data) => setLessonPresencas(data.presencas))
+      .catch(() => setLessonPresencas([]))
+      .finally(() => setLoadingLessonPresencas(false));
+  }, []);
+
+  useEffect(() => {
+    loadLessonPresencas(selectedLessonId);
+    setManualStudentId("");
+  }, [selectedLessonId, loadLessonPresencas]);
+
+  const alunosParaPresencaManual = useMemo(() => {
+    if (!selectedLesson) return [];
+    const registrados = new Set(
+      lessonPresencas
+        .filter((item) => item.status === "VALIDATED" || item.status === "STUDENT_CONFIRMED")
+        .map((item) => item.studentId),
+    );
+    return alunos.filter(
+      (item) =>
+        item.modalityIds?.includes(selectedLesson.modalityId) && !registrados.has(item.id),
+    );
+  }, [alunos, selectedLesson, lessonPresencas]);
+
+  const presencasConfirmadas = useMemo(
+    () => lessonPresencas.filter((item) => item.status === "VALIDATED"),
+    [lessonPresencas],
+  );
+
   async function handlePresencaAction(attendanceId: string, action: "validate" | "reject") {
     setValidatingId(attendanceId);
     setError("");
@@ -114,6 +179,33 @@ export default function ProfessorPresencaPage() {
       setError(err instanceof Error ? err.message : "Erro ao validar presença.");
     } finally {
       setValidatingId(null);
+    }
+  }
+
+  async function handleManualPresenca() {
+    if (!selectedLessonId || !manualStudentId) {
+      setError("Selecione a aula e o aluno para registrar a presença.");
+      return;
+    }
+
+    setRegisteringManual(true);
+    setError("");
+    setSuccess("");
+    try {
+      const result = await apiFetch<{ message: string }>(
+        `/professor/aulas/${selectedLessonId}/presencas`,
+        {
+          method: "POST",
+          body: JSON.stringify({ studentId: manualStudentId }),
+        },
+      );
+      setSuccess(result.message);
+      setManualStudentId("");
+      loadLessonPresencas(selectedLessonId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao registrar presença.");
+    } finally {
+      setRegisteringManual(false);
     }
   }
 
@@ -210,6 +302,71 @@ export default function ProfessorPresencaPage() {
               </div>
             )}
           </section>
+
+          {selectedLesson ? (
+            <section className="rounded-xl border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+              <div className="mb-4">
+                <h2 className="m-0 text-base font-semibold text-white">Registrar presença manual</h2>
+                <p className="mt-1 text-sm text-white/45">
+                  Para alunos que compareceram sem solicitar confirmação pelo app.
+                </p>
+              </div>
+
+              {alunosParaPresencaManual.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-white/45">
+                  {loadingLessonPresencas
+                    ? "Carregando alunos..."
+                    : "Todos os alunos elegíveis já possuem presença registrada ou pendente."}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                  <div className="min-w-0 flex-1">
+                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-white/50">
+                      Aluno
+                    </label>
+                    <select
+                      value={manualStudentId}
+                      onChange={(event) => setManualStudentId(event.target.value)}
+                      className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#e85d6f]/60"
+                    >
+                      <option value="">Selecione o aluno</option>
+                      {alunosParaPresencaManual.map((aluno) => (
+                        <option key={aluno.id} value={aluno.id} className="bg-zinc-900">
+                          {aluno.nomeCompleto}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!manualStudentId || registeringManual}
+                    onClick={handleManualPresenca}
+                    className="rounded-xl bg-[#e85d6f] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                  >
+                    {registeringManual ? "Registrando..." : "Confirmar presença"}
+                  </button>
+                </div>
+              )}
+
+              {presencasConfirmadas.length > 0 ? (
+                <div className="mt-5 border-t border-white/10 pt-4">
+                  <p className="m-0 text-sm font-semibold text-white">
+                    Presenças confirmadas nesta aula
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {presencasConfirmadas.map((item) => (
+                      <span
+                        key={item.id}
+                        className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200"
+                      >
+                        {item.student?.nomeCompleto ?? "Aluno"}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
 
           <section className="rounded-xl border border-white/10 bg-white/[0.04] p-4 sm:p-5">
             <div className="mb-4">

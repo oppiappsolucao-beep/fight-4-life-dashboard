@@ -131,3 +131,7 @@ export const ownerLessonCreateSchema = professorLessonSchema.extend({
 export const professorPresencaActionSchema = z.object({
   action: z.enum(["validate", "reject"]),
 });
+
+export const professorPresencaCreateSchema = z.object({
+  studentId: z.string().uuid("Selecione o aluno."),
+});

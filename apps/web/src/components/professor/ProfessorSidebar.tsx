@@ -4,6 +4,7 @@ import OppiLogo from "../OppiLogo";
 import { sidebarShellClass } from "../DashboardShell";
 
 const MENU_ITEMS = [
+  { to: "/professor/visao-geral", label: "Visão Geral", icon: ChartIcon },
   { to: "/professor/cadastro-treino", label: "Cadastro de Treino", icon: DumbbellIcon },
   { to: "/professor/alunos", label: "Alunos", icon: UsersIcon },
   { to: "/professor/presenca", label: "Presença", icon: CheckIcon },
@@ -77,6 +78,18 @@ export default function ProfessorSidebar({ open, onClose }: ProfessorSidebarProp
         </button>
       </div>
     </aside>
+  );
+}
+
+function ChartIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M4 19V5" />
+      <path d="M4 19h16" />
+      <path d="M8 17V11" />
+      <path d="M12 17V7" />
+      <path d="M16 17v-4" />
+    </svg>
   );
 }
 

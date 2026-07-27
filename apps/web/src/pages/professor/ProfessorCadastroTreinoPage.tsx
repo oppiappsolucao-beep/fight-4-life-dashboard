@@ -1,7 +1,8 @@
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { apiFetch } from "../../lib/api";
-import WorkoutDateStrip from "../../components/student/WorkoutDateStrip";import {
+import WorkoutDateStrip from "../../components/student/WorkoutDateStrip";
+import {
   MEIO_TREINO_REGIONS,
   WORKOUT_PHASES,
   bodyRegionLabel,
@@ -18,7 +19,7 @@ import type {
   WorkoutExerciseDraft,
   WorkoutSummary,
 } from "../../types/workout";
-import type { ModalityItem, ProfessorModalitySchedule, WarmupMovementCatalogEntry } from "../../types/modality";
+import type { ModalityItem, ProfessorLessonItem, ProfessorModalitySchedule, WarmupMovementCatalogEntry } from "../../types/modality";
 import { LESSON_PHASES, type LessonPhase } from "../../lib/lesson";
 import LessonVideoUploadField from "../../components/professor/LessonVideoUploadField";
 import {
@@ -95,6 +96,7 @@ export default function ProfessorCadastroTreinoPage() {
   const [professorSchedules, setProfessorSchedules] = useState<ProfessorModalitySchedule[]>([]);
   const [selectedModalityId, setSelectedModalityId] = useState("");
   const [savedTreinos, setSavedTreinos] = useState<WorkoutSummary[]>([]);
+  const [savedAulas, setSavedAulas] = useState<ProfessorLessonItem[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [workoutDate, setWorkoutDate] = useState(todayDateInputValue());
   const [activePhase, setActivePhase] = useState<WorkoutPhase | null>(null);
@@ -166,27 +168,54 @@ export default function ProfessorCadastroTreinoPage() {
 
   const dateSummaries = useMemo(() => {
     const dates = new Set<string>();
-    for (const item of savedTreinos) dates.add(item.workoutDate);
+    const sourceItems = isMusculacao
+      ? savedTreinos
+      : savedAulas.filter((item) => item.modalityId === selectedModalityId);
+
+    for (const item of sourceItems) {
+      dates.add(isMusculacao ? item.workoutDate : item.classDate);
+    }
     if (workoutDate) dates.add(workoutDate);
 
     return Array.from(dates)
       .sort((a, b) => a.localeCompare(b))
-      .map(
-        (date): WorkoutSummary => {
+      .map((date): WorkoutSummary => {
+        if (isMusculacao) {
           const existing = savedTreinos.find((item) => item.workoutDate === date);
           return (
             existing ?? {
               id: date,
-              title: isMusculacao ? "Treino" : "Aula",
+              title: "Treino",
               workoutDate: date,
               updatedAt: "",
               source: "OWNER",
               exerciseCount: 0,
             }
           );
-        },
-      );
-  }, [savedTreinos, workoutDate, isMusculacao]);
+        }
+
+        const aulasNaData = savedAulas.filter(
+          (item) => item.classDate === date && item.modalityId === selectedModalityId,
+        );
+        return {
+          id: date,
+          title: aulasNaData[0]?.title ?? "Aula",
+          workoutDate: date,
+          updatedAt: aulasNaData[0]?.updatedAt ?? "",
+          source: "OWNER",
+          exerciseCount: aulasNaData.length,
+        };
+      });
+  }, [savedTreinos, savedAulas, workoutDate, isMusculacao, selectedModalityId]);
+
+  const professorScheduleWeekdays = useMemo(() => {
+    if (isMusculacao || !selectedModalityId) return [];
+    const professorSlots =
+      professorSchedules.find((entry) => entry.modalityId === selectedModalityId)?.slots ?? [];
+    const modalitySlots = selectedModality?.scheduleSlots ?? [];
+    const source = professorSlots.length > 0 ? professorSlots : modalitySlots;
+    return Array.from(new Set(source.map((slot) => slot.weekday))).sort((a, b) => a - b);
+  }, [isMusculacao, selectedModalityId, professorSchedules, selectedModality]);
   const savedCatalog = useMemo(
     () => selectedModality?.warmupMovementCatalog ?? [],
     [selectedModality],
@@ -300,6 +329,12 @@ export default function ProfessorCadastroTreinoPage() {
     }
   }, [alunosForModality, selectedStudentId]);
 
+  const loadSavedAulas = useCallback(() => {
+    apiFetch<{ aulas: ProfessorLessonItem[] }>("/professor/aulas")
+      .then((data) => setSavedAulas(data.aulas))
+      .catch(() => setSavedAulas([]));
+  }, []);
+
   const loadStudentTreinos = useCallback((studentId: string) => {
     if (!studentId) return;
     apiFetch<{ treinos: WorkoutSummary[] }>(`/professor/alunos/${studentId}/treinos`)
@@ -312,6 +347,10 @@ export default function ProfessorCadastroTreinoPage() {
   const loadStudentWorkout = useCallback((studentId: string, date: string) => {
     if (!studentId) return;
     setLoadingTreino(true);
+    setTitle(`Treino ${formatWorkoutDateLabel(date)}`);
+    setNotes("");
+    setDrafts([]);
+    setDraftMeta({});
     apiFetch<{ treino: StudentWorkout | null }>(
       `/professor/alunos/${studentId}/treino?date=${encodeURIComponent(date)}`,
     )
@@ -359,7 +398,40 @@ export default function ProfessorCadastroTreinoPage() {
 
   useEffect(() => {
     loadBase();
-  }, [loadBase]);
+    loadSavedAulas();
+  }, [loadBase, loadSavedAulas]);
+
+  useEffect(() => {
+    if (isMusculacao || !selectedModalityId || !workoutDate) return;
+
+    const aulasDoDia = savedAulas.filter(
+      (item) => item.classDate === workoutDate && item.modalityId === selectedModalityId,
+    );
+
+    if (aulasDoDia.length === 0) {
+      setTitle(`Aula ${formatWorkoutDateLabel(workoutDate)}`);
+      setLessonDescription("");
+      setVideoUrl("");
+      setSelectedSlotKey("");
+      setStartTime("");
+      setEndTime("");
+      return;
+    }
+
+    const aula = aulasDoDia[0];
+    setTitle(aula.title);
+    setLessonDescription(aula.description ?? "");
+    if (aula.startTime && aula.endTime) {
+      const slot = {
+        weekday: weekdayFromDateInput(workoutDate),
+        startTime: aula.startTime,
+        endTime: aula.endTime,
+      };
+      setSelectedSlotKey(scheduleSlotKey(slot));
+      setStartTime(aula.startTime);
+      setEndTime(aula.endTime);
+    }
+  }, [isMusculacao, selectedModalityId, workoutDate, savedAulas]);
 
   useEffect(() => {
     if (!muscleGroups.includes(muscleFilter)) {
@@ -378,10 +450,12 @@ export default function ProfessorCadastroTreinoPage() {
     setActivePhase(null);
     setActiveLessonPhase(null);
     setExpandedDraftKey(null);
-    setSelectedSlotKey("");
-    setStartTime("");
-    setEndTime("");
-  }, [selectedStudentId, workoutDate, selectedModalityId]);
+    if (isMusculacao) {
+      setSelectedSlotKey("");
+      setStartTime("");
+      setEndTime("");
+    }
+  }, [selectedStudentId, workoutDate, selectedModalityId, isMusculacao]);
 
   useEffect(() => {
     if (!selectedModality || isMusculacao) return;
@@ -670,6 +744,7 @@ export default function ProfessorCadastroTreinoPage() {
       });
 
       setSuccess(result.message);
+      loadSavedAulas();
       closeLessonPhaseEditor();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao publicar aula.");
@@ -766,9 +841,14 @@ export default function ProfessorCadastroTreinoPage() {
               closePhaseEditor();
               closeLessonPhaseEditor();
             }}
-            onCreateDate={setWorkoutDate}
+            onCreateDate={isMusculacao ? setWorkoutDate : undefined}
             sectionLabel={isMusculacao ? "Treinos do aluno" : "Datas da aula"}
             showLegend={false}
+            scheduleWeekdays={
+              !isMusculacao && professorScheduleWeekdays.length > 0
+                ? professorScheduleWeekdays
+                : undefined
+            }
           />
 
           <section className="grid gap-4 rounded-xl border border-white/10 bg-white/[0.04] p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5">
