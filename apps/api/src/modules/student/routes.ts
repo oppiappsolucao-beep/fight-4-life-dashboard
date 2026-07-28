@@ -27,6 +27,7 @@ import {
   workoutInclude,
 } from "../owner/workouts.js";
 import { saveStudentWorkoutSchema, saveWorkoutProgressSchema } from "./workouts.js";
+import { serializeDietMeal } from "../../lib/diet-catalog.js";
 import { registerStudentModalityRoutes } from "../modalities/routes.js";
 
 async function getTenantPlans(tenantId: string) {
@@ -633,6 +634,48 @@ export async function studentRoutes(app: FastifyInstance): Promise<void> {
       message: "Termo registrado.",
       signedAt: signedAt.toISOString(),
       ip: typeof body.ip === "string" ? body.ip : null,
+    });
+  });
+
+  app.get("/student/dieta", { preHandler: [requireStudent] }, async (request, reply) => {
+    const student = await prisma.student.findUnique({
+      where: { id: request.studentId },
+      select: {
+        dietPlan: {
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+            description: true,
+            goal: true,
+            targetCalories: true,
+            meals: {
+              orderBy: [{ dayOfWeek: "asc" }, { sortOrder: "asc" }],
+            },
+          },
+        },
+      },
+    });
+
+    if (!student) {
+      return reply.status(404).send({ error: "Aluno não encontrado." });
+    }
+
+    if (!student.dietPlan) {
+      return reply.send({ dieta: null });
+    }
+
+    const plan = student.dietPlan;
+    return reply.send({
+      dieta: {
+        id: plan.id,
+        slug: plan.slug,
+        name: plan.name,
+        description: plan.description,
+        goal: plan.goal,
+        targetCalories: plan.targetCalories,
+        meals: plan.meals.map(serializeDietMeal),
+      },
     });
   });
 

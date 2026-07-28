@@ -63,6 +63,12 @@ enum ModalityContentType {
   VIDEO_GALLERY
 }
 
+enum DietGoal {
+  EMAGRECIMENTO
+  MANUTENCAO
+  HIPERTROFIA
+}
+
 model Tenant {
   id         String        @id @default(uuid())
   slug       String        @unique
@@ -109,16 +115,19 @@ model Student {
   termoSaudeSignedIp   String?
   termoSaudeAnswers    Json?
   acessoLiberadoAte    String?
+  dietPlanId           String?
   active               Boolean  @default(true)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
   tenant               Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  dietPlan             DietPlan? @relation(fields: [dietPlanId], references: [id], onDelete: SetNull)
   workouts             StudentWorkout[]
   lessonAttendances    LessonAttendance[]
 
   @@unique([tenantId, cpf])
   @@index([tenantId, email])
   @@index([tenantId, active])
+  @@index([dietPlanId])
 }
 
 model TenantConfig {
@@ -393,4 +402,40 @@ model LessonAttendance {
   @@unique([lessonId, studentId])
   @@index([tenantId, studentId])
   @@index([tenantId, status])
+}
+
+model DietPlan {
+  id             String    @id @default(uuid())
+  slug           String    @unique
+  name           String
+  description    String?
+  goal           DietGoal
+  targetCalories Int
+  active         Boolean   @default(true)
+  sortOrder      Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  meals          DietMeal[]
+  students       Student[]
+}
+
+model DietMeal {
+  id            String   @id @default(uuid())
+  dietPlanId    String
+  dayOfWeek     Int
+  mealType      String
+  title         String
+  description   String?
+  calories      Int?
+  proteinG      Float?
+  carbsG        Float?
+  fatG          Float?
+  ingredients   Json
+  instructions  String?
+  imageUrl      String?
+  spoonacularId Int?
+  sortOrder     Int      @default(0)
+  dietPlan      DietPlan @relation(fields: [dietPlanId], references: [id], onDelete: Cascade)
+
+  @@index([dietPlanId, dayOfWeek])
 }

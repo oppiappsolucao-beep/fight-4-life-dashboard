@@ -32,14 +32,22 @@ interface StudentDetail {
   diaVencimento: string;
   formaPagamento: string | null;
   fotoUrl: string | null;
+  dietPlanId: string | null;
   active: boolean;
 }
 
 type StudentForm = {
-  [K in keyof Omit<StudentDetail, "id" | "active" | "fotoUrl">]: string;
+  [K in keyof Omit<StudentDetail, "id" | "active" | "fotoUrl" | "dietPlanId">]: string;
 } & {
   fotoUrl: string | null;
+  dietPlanId: string;
   active: boolean;
+};
+
+type DietPlanOption = {
+  id: string;
+  name: string;
+  targetCalories: number;
 };
 
 interface OwnerAlunoEditModalProps {
@@ -59,6 +67,7 @@ export default function OwnerAlunoEditModal({
 }: OwnerAlunoEditModalProps) {
   const [form, setForm] = useState<StudentForm | null>(null);
   const [planos, setPlanos] = useState<PlanItem[]>(DEFAULT_OWNER_PLANS);
+  const [dietas, setDietas] = useState<DietPlanOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -70,6 +79,14 @@ export default function OwnerAlunoEditModal({
       })
       .catch(() => {
         // Mantém defaults se a API falhar
+      });
+
+    apiFetch<{ dietas: DietPlanOption[] }>("/owner/dietas")
+      .then((data) => {
+        setDietas(data.dietas ?? []);
+      })
+      .catch(() => {
+        setDietas([]);
       });
   }, []);
 
@@ -101,6 +118,7 @@ export default function OwnerAlunoEditModal({
           diaVencimento: aluno.diaVencimento,
           formaPagamento: emptyToString(aluno.formaPagamento),
           fotoUrl: aluno.fotoUrl,
+          dietPlanId: aluno.dietPlanId ?? "",
           active: aluno.active,
         });
       })
@@ -132,7 +150,10 @@ export default function OwnerAlunoEditModal({
     try {
       await apiFetch(`/owner/alunos/${alunoId}`, {
         method: "PATCH",
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          dietPlanId: form.dietPlanId || null,
+        }),
       });
       onSaved();
       onClose();
@@ -335,6 +356,19 @@ export default function OwnerAlunoEditModal({
                   >
                     <option value="">Selecione</option>
                     {FORMAS_PAGAMENTO.map((item) => <option key={item}>{item}</option>)}
+                  </Select>
+                </Field>
+                <Field label="Plano de dieta" span>
+                  <Select
+                    value={form.dietPlanId}
+                    onChange={(e) => update("dietPlanId", e.target.value)}
+                  >
+                    <option value="">Sem dieta liberada</option>
+                    {dietas.map((dieta) => (
+                      <option key={dieta.id} value={dieta.id}>
+                        {dieta.name} — ~{dieta.targetCalories} kcal/dia
+                      </option>
+                    ))}
                   </Select>
                 </Field>
               </Section>

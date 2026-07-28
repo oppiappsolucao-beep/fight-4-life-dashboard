@@ -2,6 +2,7 @@ import { execSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { prisma } from "./prisma.js";
+import { ensureDietPlans } from "./diet-catalog.js";
 import { ensureExerciseCatalog } from "./exercise-catalog.js";
 import { ensureModalityTemplates } from "./modalities.js";
 
@@ -99,5 +100,12 @@ export async function bootstrapDatabase(): Promise<void> {
     console.log(`[modalities] Templates sincronizados: ${templateCount}.`);
   } catch (error) {
     console.error("[bootstrap] Falha ao carregar templates de modalidade:", error);
+  }
+
+  try {
+    const dietCount = await ensureDietPlans();
+    console.log(`[dietas] Planos sincronizados: ${dietCount}.`);
+  } catch (error) {
+    console.error("[bootstrap] Falha ao carregar planos de dieta:", error);
   }
 }

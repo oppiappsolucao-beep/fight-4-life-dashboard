@@ -41,11 +41,26 @@ const studentCreateSchema = z.object({
   diaVencimento: z.string().min(1),
   formaPagamento: z.string().optional(),
   fotoUrl: z.string().nullable().optional(),
+  dietPlanId: z.union([z.string().uuid(), z.literal(""), z.null()]).optional(),
 });
 
 const studentUpdateSchema = studentCreateSchema.extend({
   active: z.boolean().optional(),
 });
+
+async function resolveDietPlanId(
+  dietPlanId: string | null | undefined,
+): Promise<string | null | undefined> {
+  if (dietPlanId === undefined) return undefined;
+  if (!dietPlanId) return null;
+
+  const plan = await prisma.dietPlan.findFirst({
+    where: { id: dietPlanId, active: true },
+    select: { id: true },
+  });
+
+  return plan?.id ?? null;
+}
 
 const plansUpdateSchema = z.object({
   planos: z
@@ -246,6 +261,11 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
       return reply.status(409).send({ error: "Já existe um aluno com este CPF." });
     }
 
+    const dietPlanId = await resolveDietPlanId(data.dietPlanId ?? null);
+    if (data.dietPlanId && !dietPlanId) {
+      return reply.status(400).send({ error: "Plano de dieta inválido." });
+    }
+
     const aluno = await prisma.student.create({
       data: {
         tenantId,
@@ -268,6 +288,7 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
         diaVencimento: data.diaVencimento,
         formaPagamento: data.formaPagamento || null,
         fotoUrl: data.fotoUrl || null,
+        dietPlanId: dietPlanId ?? null,
       },
     });
 
@@ -289,6 +310,17 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
         where: {
           id: request.params.id,
           tenantId: request.user.tenantId,
+        },
+        include: {
+          dietPlan: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              goal: true,
+              targetCalories: true,
+            },
+          },
         },
       });
 
@@ -338,6 +370,11 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
         });
       }
 
+      const dietPlanId = await resolveDietPlanId(data.dietPlanId);
+      if (data.dietPlanId && dietPlanId === null) {
+        return reply.status(400).send({ error: "Plano de dieta inválido." });
+      }
+
       const aluno = await prisma.student.update({
         where: { id: current.id },
         data: {
@@ -360,6 +397,7 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
           diaVencimento: data.diaVencimento,
           formaPagamento: data.formaPagamento || null,
           fotoUrl: data.fotoUrl || null,
+          ...(dietPlanId === undefined ? {} : { dietPlanId }),
           ...(data.active === undefined ? {} : { active: data.active }),
         },
       });
@@ -426,6 +464,23 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
   app.get("/owner/planos", async (request, reply) => {
     const planos = await getOrCreateTenantPlans(request.user.tenantId);
     return reply.send({ planos });
+  });
+
+  app.get("/owner/dietas", async (_request, reply) => {
+    const dietas = await prisma.dietPlan.findMany({
+      where: { active: true },
+      orderBy: { sortOrder: "asc" },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        description: true,
+        goal: true,
+        targetCalories: true,
+      },
+    });
+
+    return reply.send({ dietas });
   });
 
   app.put("/owner/planos", async (request, reply) => {

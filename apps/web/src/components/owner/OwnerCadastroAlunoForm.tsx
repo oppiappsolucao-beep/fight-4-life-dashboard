@@ -32,9 +32,18 @@ const INITIAL_FORM = {
   dataInicio: "",
   diaVencimento: "",
   formaPagamento: "",
+  dietPlanId: "",
 };
 
 type FormData = typeof INITIAL_FORM;
+
+type DietPlanOption = {
+  id: string;
+  name: string;
+  description: string | null;
+  goal: string;
+  targetCalories: number;
+};
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -48,6 +57,7 @@ function fileToDataUrl(file: File): Promise<string> {
 export default function OwnerCadastroAlunoForm() {
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
   const [planos, setPlanos] = useState<PlanItem[]>(DEFAULT_OWNER_PLANS);
+  const [dietas, setDietas] = useState<DietPlanOption[]>([]);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [fotoFile, setFotoFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -61,6 +71,14 @@ export default function OwnerCadastroAlunoForm() {
       })
       .catch(() => {
         // Mantém defaults se a API falhar
+      });
+
+    apiFetch<{ dietas: DietPlanOption[] }>("/owner/dietas")
+      .then((data) => {
+        setDietas(data.dietas ?? []);
+      })
+      .catch(() => {
+        setDietas([]);
       });
   }, []);
 
@@ -119,7 +137,11 @@ export default function OwnerCadastroAlunoForm() {
 
       await apiFetch("/owner/alunos", {
         method: "POST",
-        body: JSON.stringify({ ...form, fotoUrl }),
+        body: JSON.stringify({
+          ...form,
+          fotoUrl,
+          dietPlanId: form.dietPlanId || null,
+        }),
       });
 
       setSuccess(true);
@@ -334,6 +356,22 @@ export default function OwnerCadastroAlunoForm() {
                 </option>
               ))}
             </Select>
+          </Field>
+          <Field label="Plano de Dieta (liberação para o aluno)" className="md:col-span-2">
+            <Select
+              value={form.dietPlanId}
+              onChange={(e) => updateField("dietPlanId", e.target.value)}
+            >
+              <option value="">Sem dieta liberada</option>
+              {dietas.map((dieta) => (
+                <option key={dieta.id} value={dieta.id}>
+                  {dieta.name} — ~{dieta.targetCalories} kcal/dia
+                </option>
+              ))}
+            </Select>
+            <p className="mt-1.5 text-[0.7rem] text-white/40">
+              O aluno verá as refeições na aba Dietas do app.
+            </p>
           </Field>
         </div>
       </FormSection>
