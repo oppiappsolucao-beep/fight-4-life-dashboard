@@ -196,7 +196,7 @@ export default function OwnerCadastroAlunoForm() {
               value={form.dataNascimento}
               onChange={(e) => updateField("dataNascimento", e.target.value)}
             />
-            <p className="mt-1 text-[0.65rem] text-white/40">
+            <p className="mt-1 text-xs text-white/40">
               Usado para controle de menores e cálculo automático de faixa etária.
             </p>
           </Field>
@@ -225,7 +225,7 @@ export default function OwnerCadastroAlunoForm() {
               onChange={(e) => updateField("email", e.target.value)}
               placeholder="aluno@email.com"
             />
-            <p className="mt-1 text-[0.65rem] text-white/40">
+            <p className="mt-1 text-xs text-white/40">
               Para o aluno acessar o app, receber treinos e cobranças.
             </p>
           </Field>
@@ -238,9 +238,7 @@ export default function OwnerCadastroAlunoForm() {
           </Field>
         </div>
 
-        <p className="mb-3 mt-5 text-[0.65rem] font-semibold uppercase tracking-[0.06rem] text-white/50">
-          Telefone de Emergência
-        </p>
+        <p className="mb-3 mt-5 text-xs font-medium text-white/45">Telefone de emergência</p>
         <div className="grid gap-4 md:grid-cols-3">
           <Field label="Nome do Contato">
             <Input
@@ -273,9 +271,7 @@ export default function OwnerCadastroAlunoForm() {
           </Field>
         </div>
 
-        <p className="mb-3 mt-5 text-[0.65rem] font-semibold uppercase tracking-[0.06rem] text-white/50">
-          Endereço Residencial
-        </p>
+        <p className="mb-3 mt-5 text-xs font-medium text-white/45">Endereço residencial</p>
         <div className="grid gap-4 md:grid-cols-4">
           <Field label="Rua" className="md:col-span-2">
             <Input
@@ -309,7 +305,7 @@ export default function OwnerCadastroAlunoForm() {
       </FormSection>
 
       <FormSection title="Dados da Matrícula">
-        <p className="mb-4 text-[0.65rem] text-white/40">Uso interno da academia.</p>
+        <p className="mb-4 text-xs text-white/40">Uso interno da academia.</p>
         <div className="grid gap-4 md:grid-cols-2">
           <Field label="Plano / Modalidade" required className="md:col-span-2">
             <Select
@@ -369,7 +365,7 @@ export default function OwnerCadastroAlunoForm() {
                 </option>
               ))}
             </Select>
-            <p className="mt-1.5 text-[0.7rem] text-white/40">
+            <p className="mt-1.5 text-xs text-white/40">
               O aluno verá as refeições na aba Dietas do app.
             </p>
           </Field>
@@ -399,14 +395,14 @@ export default function OwnerCadastroAlunoForm() {
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] px-6 py-2.5 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
+          className="rounded-lg bg-[#4a9fd8] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2f7fb8] disabled:opacity-60"
         >
-          {loading ? "Salvando..." : "Cadastrar Aluno"}
+          {loading ? "Salvando..." : "Cadastrar aluno"}
         </button>
         <button
           type="button"
           onClick={handleClear}
-          className="rounded-lg border border-white/15 px-6 py-2.5 text-[0.75rem] font-medium text-white/70 transition hover:border-[#4a9fd8]/40 hover:text-white"
+          className="rounded-lg border border-white/15 px-5 py-2.5 text-sm font-medium text-white/70 transition hover:border-[#4a9fd8]/40 hover:text-white"
         >
           Limpar formulário
         </button>
@@ -423,10 +419,8 @@ function FormSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-white/10 bg-white/[0.05] p-5 backdrop-blur-sm md:p-6">
-      <h2 className="mb-5 border-b border-white/10 pb-3 text-[0.8rem] font-bold uppercase tracking-wide text-white">
-        {title}
-      </h2>
+    <section className="rounded-xl border border-white/10 bg-white/[0.03] p-4 md:p-5">
+      <h2 className="mb-4 mt-0 text-sm font-semibold text-white/85">{title}</h2>
       {children}
     </section>
   );
@@ -445,9 +439,9 @@ function Field({
 }) {
   return (
     <label className={`block ${className}`}>
-      <span className="mb-1.5 block text-[0.65rem] font-semibold uppercase tracking-[0.06rem] text-white/75">
+      <span className="mb-1.5 block text-xs font-medium text-white/55">
         {label}
-        {required && <span className="text-[#4a9fd8]"> *</span>}
+        {required ? <span className="text-[#4a9fd8]"> *</span> : null}
       </span>
       {children}
     </label>
@@ -455,12 +449,12 @@ function Field({
 }
 
 const inputClass =
-  "w-full rounded-lg border border-white/20 bg-white px-3 py-2.5 text-[0.82rem] text-black outline-none transition focus:border-[#4a9fd8]/60 focus:ring-2 focus:ring-[#4a9fd8]/15";
+  "w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#4a9fd8]/60";
 
 function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={inputClass} />;
 }
 
 function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...props} className={inputClass} />;
+  return <select {...props} className={`${inputClass} [color-scheme:dark]`} />;
 }

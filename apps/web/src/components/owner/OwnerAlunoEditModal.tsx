@@ -430,7 +430,7 @@ function Field({
 }
 
 const controlClass =
-  "w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none transition focus:border-[#4a9fd8]/60";
+  "w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none transition focus:border-[#4a9fd8]/60 [color-scheme:dark]";
 
 function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={controlClass} />;

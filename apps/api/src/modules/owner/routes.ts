@@ -400,6 +400,17 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
           ...(dietPlanId === undefined ? {} : { dietPlanId }),
           ...(data.active === undefined ? {} : { active: data.active }),
         },
+        include: {
+          dietPlan: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              goal: true,
+              targetCalories: true,
+            },
+          },
+        },
       });
 
       return reply.send({

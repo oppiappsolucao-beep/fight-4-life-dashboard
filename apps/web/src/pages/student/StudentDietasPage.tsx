@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "../../lib/api";
+import { getStudentSession } from "../../lib/studentSession";
 import StudentSectionPage from "./StudentSectionPage";
 
 type DietMeal = {
@@ -48,6 +49,7 @@ function formatMacro(value: number | null | undefined, suffix: string) {
 }
 
 export default function StudentDietasPage() {
+  const session = getStudentSession();
   const [dieta, setDieta] = useState<DietPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -57,7 +59,13 @@ export default function StudentDietasPage() {
   useEffect(() => {
     let cancelled = false;
 
-    apiFetch<{ dieta: DietPlan | null }>("/student/dieta")
+    if (!session?.id) {
+      setLoading(false);
+      setError("Faça login novamente.");
+      return;
+    }
+
+    apiFetch<{ dieta: DietPlan | null }>("/student/dieta", {}, session.id)
       .then((data) => {
         if (cancelled) return;
         setDieta(data.dieta);
@@ -74,7 +82,7 @@ export default function StudentDietasPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [session?.id]);
 
   const dayMeals = useMemo(() => {
     if (!dieta) return [];
