@@ -422,6 +422,7 @@ model DietPlan {
 model DietMeal {
   id            String   @id @default(uuid())
   dietPlanId    String
+  weekIndex     Int      @default(0)
   dayOfWeek     Int
   mealType      String
   title         String
@@ -437,5 +438,5 @@ model DietMeal {
   sortOrder     Int      @default(0)
   dietPlan      DietPlan @relation(fields: [dietPlanId], references: [id], onDelete: Cascade)
 
-  @@index([dietPlanId, dayOfWeek])
+  @@index([dietPlanId, weekIndex, dayOfWeek])
 }

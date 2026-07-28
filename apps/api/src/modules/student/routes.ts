@@ -650,7 +650,11 @@ export async function studentRoutes(app: FastifyInstance): Promise<void> {
             goal: true,
             targetCalories: true,
             meals: {
-              orderBy: [{ dayOfWeek: "asc" }, { sortOrder: "asc" }],
+              orderBy: [
+                { weekIndex: "asc" },
+                { dayOfWeek: "asc" },
+                { sortOrder: "asc" },
+              ],
             },
           },
         },
@@ -674,6 +678,7 @@ export async function studentRoutes(app: FastifyInstance): Promise<void> {
         description: plan.description,
         goal: plan.goal,
         targetCalories: plan.targetCalories,
+        weekVariantCount: 4,
         meals: plan.meals.map(serializeDietMeal),
       },
     });

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "../../lib/api";
+import { DIET_WEEK_VARIANT_COUNT, resolveDietWeekIndex } from "../../lib/diet";
 import { getStudentSession } from "../../lib/studentSession";
 import {
   formatWorkoutDateLabel,
@@ -15,6 +16,7 @@ import StudentSectionPage from "./StudentSectionPage";
 
 type DietMeal = {
   id: string;
+  weekIndex: number;
   dayOfWeek: number;
   dayLabel: string;
   mealType: string;
@@ -38,6 +40,7 @@ type DietPlan = {
   description: string | null;
   goal: string;
   targetCalories: number;
+  weekVariantCount?: number;
   meals: DietMeal[];
 };
 
@@ -109,13 +112,23 @@ export default function StudentDietasPage() {
   );
 
   const selectedDay = weekdayFromIsoDate(selectedDate);
+  const activeWeekIndex = resolveDietWeekIndex(selectedDate);
+  const weekVariantCount = dieta?.weekVariantCount ?? DIET_WEEK_VARIANT_COUNT;
 
   const dayMeals = useMemo(() => {
     if (!dieta) return [];
-    return dieta.meals
-      .filter((meal) => meal.dayOfWeek === selectedDay)
-      .sort((a, b) => a.sortOrder - b.sortOrder);
-  }, [dieta, selectedDay]);
+
+    const forWeek = (weekIndex: number) =>
+      dieta.meals
+        .filter(
+          (meal) =>
+            (meal.weekIndex ?? 0) === weekIndex && meal.dayOfWeek === selectedDay,
+        )
+        .sort((a, b) => a.sortOrder - b.sortOrder);
+
+    const current = forWeek(activeWeekIndex);
+    return current.length > 0 ? current : forWeek(0);
+  }, [dieta, selectedDay, activeWeekIndex]);
 
   const dayTotals = useMemo(() => {
     return dayMeals.reduce(
@@ -188,6 +201,12 @@ export default function StudentDietasPage() {
             <div className="mt-4 flex flex-wrap gap-3 text-sm">
               <span className="rounded-lg border border-white/10 bg-black/20 px-3 py-1.5 text-white/80">
                 Meta diária: <strong className="text-white">{dieta.targetCalories} kcal</strong>
+              </span>
+              <span className="rounded-lg border border-white/10 bg-black/20 px-3 py-1.5 text-white/80">
+                Cardápio da semana:{" "}
+                <strong className="text-white">
+                  {activeWeekIndex + 1}/{weekVariantCount}
+                </strong>
               </span>
               <span className="rounded-lg border border-white/10 bg-black/20 px-3 py-1.5 text-white/80">
                 Dia selecionado:{" "}
