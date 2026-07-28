@@ -52,7 +52,7 @@ export default function ProfessorAlunosPage() {
   return (
     <div className="px-4 py-6 sm:px-6 md:px-10 md:py-8">
       <header className="mb-6">
-        <p className="mb-1 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#e85d6f]">
+        <p className="mb-1 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#7ebef0]">
           Professor
         </p>
         <h1 className="m-0 text-2xl font-semibold text-white">Alunos</h1>
@@ -84,7 +84,7 @@ export default function ProfessorAlunosPage() {
               <button
                 type="button"
                 onClick={load}
-                className="rounded-lg border border-white/15 px-3 py-2 text-sm text-white/70 transition hover:border-[#e85d6f]/40 hover:text-white"
+                className="rounded-lg border border-white/15 px-3 py-2 text-sm text-white/70 transition hover:border-[#4a9fd8]/50 hover:text-white"
               >
                 Atualizar
               </button>
@@ -97,8 +97,8 @@ export default function ProfessorAlunosPage() {
                   onClick={() => setSelectedModalityId("")}
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                     !selectedModalityId
-                      ? "bg-[#e85d6f] text-white"
-                      : "border border-white/15 text-white/70 hover:border-[#e85d6f]/40"
+                      ? "bg-[#4a9fd8] text-white"
+                      : "border border-white/15 text-white/70 hover:border-[#4a9fd8]/50"
                   }`}
                 >
                   Todas
@@ -110,8 +110,8 @@ export default function ProfessorAlunosPage() {
                     onClick={() => setSelectedModalityId(modality.id)}
                     className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                       selectedModalityId === modality.id
-                        ? "bg-[#e85d6f] text-white"
-                        : "border border-white/15 text-white/70 hover:border-[#e85d6f]/40"
+                        ? "bg-[#4a9fd8] text-white"
+                        : "border border-white/15 text-white/70 hover:border-[#4a9fd8]/50"
                     }`}
                   >
                     {modality.name}
@@ -136,36 +136,44 @@ export default function ProfessorAlunosPage() {
                 {filteredAlunos.map((aluno) => (
                   <article
                     key={aluno.id}
-                    className="flex flex-wrap items-center gap-4 rounded-xl border border-white/10 bg-black/25 p-4"
+                    className="flex flex-col gap-4 rounded-xl border border-white/10 bg-[#123055]/55 p-4 sm:flex-row sm:items-center"
                   >
-                    {aluno.fotoUrl ? (
-                      <img
-                        src={aluno.fotoUrl}
-                        alt={aluno.nomeCompleto}
-                        className="h-14 w-14 shrink-0 rounded-2xl object-cover ring-1 ring-white/10"
-                      />
-                    ) : (
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-lg font-semibold text-white/70">
-                        {aluno.nomeCompleto.charAt(0).toUpperCase()}
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                      {aluno.fotoUrl ? (
+                        <img
+                          src={aluno.fotoUrl}
+                          alt={aluno.nomeCompleto}
+                          className="h-14 w-14 shrink-0 rounded-2xl object-cover ring-1 ring-white/15"
+                        />
+                      ) : (
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#4a9fd8]/20 text-lg font-semibold text-[#7ebef0]">
+                          {aluno.nomeCompleto.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="m-0 break-words text-base font-semibold leading-snug text-white">
+                          {aluno.nomeCompleto}
+                        </p>
+                        <p className="m-0 mt-1 break-words text-sm text-white/55">
+                          Plano: {aluno.planoModalidade}
+                        </p>
+                        {aluno.modalityNames.length > 0 ? (
+                          <p className="m-0 mt-1 break-words text-xs text-white/40">
+                            {aluno.modalityNames.join(" • ")}
+                          </p>
+                        ) : null}
+                        <p className="m-0 mt-2 break-all text-xs text-white/45">{aluno.email}</p>
+                        {aluno.telefone ? (
+                          <p className="m-0 mt-0.5 whitespace-nowrap text-xs text-white/45">
+                            {aluno.telefone}
+                          </p>
+                        ) : null}
                       </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="m-0 font-semibold text-white">{aluno.nomeCompleto}</p>
-                      <p className="m-0 mt-1 text-sm text-white/50">
-                        Plano: {aluno.planoModalidade}
-                      </p>
-                      <p className="m-0 mt-1 text-xs text-white/40">
-                        {aluno.modalityNames.join(" • ")}
-                      </p>
-                      <p className="m-0 mt-1 text-xs text-white/40">
-                        {aluno.email}
-                        {aluno.telefone ? ` • ${aluno.telefone}` : ""}
-                      </p>
                     </div>
                     <Link
                       to="/professor/cadastro-treino"
                       state={{ studentId: aluno.id }}
-                      className="rounded-xl border border-white/15 px-4 py-2 text-sm font-semibold text-white/75 transition hover:border-[#e85d6f]/40 hover:text-white"
+                      className="inline-flex w-full shrink-0 items-center justify-center rounded-xl border border-[#4a9fd8]/40 bg-[#4a9fd8]/15 px-4 py-2.5 text-sm font-semibold text-[#d6e9f7] transition hover:bg-[#4a9fd8]/25 sm:w-auto"
                     >
                       Montar treino
                     </Link>

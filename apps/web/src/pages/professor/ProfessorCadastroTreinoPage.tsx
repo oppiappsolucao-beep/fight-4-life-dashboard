@@ -799,7 +799,7 @@ export default function ProfessorCadastroTreinoPage() {
   return (
     <div className="px-4 py-6 sm:px-6 md:px-10 md:py-8">
       <header className="mb-6">
-        <p className="mb-1 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#e85d6f]">
+        <p className="mb-1 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#4a9fd8]">
           Professor
         </p>
         <h1 className="m-0 text-2xl font-semibold text-white">Cadastro de Treino</h1>
@@ -860,7 +860,7 @@ export default function ProfessorCadastroTreinoPage() {
               <select
                 value={selectedStudentId}
                 onChange={(e) => setSelectedStudentId(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#e85d6f]/60"
+                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#4a9fd8]/60"
               >
                 {alunosForModality.length === 0 ? (
                   <option value="">Nenhum aluno nesta modalidade</option>
@@ -881,7 +881,7 @@ export default function ProfessorCadastroTreinoPage() {
               <select
                 value={selectedModalityId}
                 onChange={(event) => setSelectedModalityId(event.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#e85d6f]/60"
+                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#4a9fd8]/60"
                 required
               >
                 {modalidades.length === 0 ? (
@@ -902,7 +902,7 @@ export default function ProfessorCadastroTreinoPage() {
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#e85d6f]/60"
+                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#4a9fd8]/60"
                 required
               />
             </div>
@@ -920,7 +920,7 @@ export default function ProfessorCadastroTreinoPage() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={2}
-                  className="mt-2 w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#e85d6f]/60"
+                  className="mt-2 w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#4a9fd8]/60"
                 />
               ) : null}
             </div>
@@ -984,7 +984,7 @@ export default function ProfessorCadastroTreinoPage() {
                     ? drafts.length === 0
                     : !videoUrl.trim() || !selectedSlotKey)
                 }
-                className="rounded-lg bg-[#e85d6f] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#d44d5f] disabled:opacity-60"
+                className="rounded-lg bg-[#4a9fd8] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2f7fb8] disabled:opacity-60"
               >
                 {saving ? "Salvando..." : isMusculacao ? "Publicar treino" : "Publicar aula"}
               </button>
@@ -1004,9 +1004,9 @@ export default function ProfessorCadastroTreinoPage() {
                         key={phase.id}
                         type="button"
                         onClick={() => openPhaseEditor(phase.id)}
-                        className="rounded-xl border border-white/10 bg-black/20 px-4 py-4 text-left transition hover:border-[#e85d6f]/40 hover:bg-[#e85d6f]/10"
+                        className="rounded-xl border border-white/10 bg-black/20 px-4 py-4 text-left transition hover:border-[#4a9fd8]/40 hover:bg-[#4a9fd8]/10"
                       >
-                        <p className="m-0 text-xs font-semibold uppercase tracking-wide text-[#e85d6f]">
+                        <p className="m-0 text-xs font-semibold uppercase tracking-wide text-[#4a9fd8]">
                           {phase.label}
                         </p>
                         <p className="m-0 mt-2 text-sm text-white/55">{phase.description}</p>
@@ -1034,7 +1034,7 @@ export default function ProfessorCadastroTreinoPage() {
                   >
                     ← Voltar às etapas
                   </button>
-                  <span className="rounded-full bg-[#e85d6f]/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#f08a98]">
+                  <span className="rounded-full bg-[#4a9fd8]/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#7ebef0]">
                     Editando: {activePhaseMeta?.label}
                   </span>
                 </div>
@@ -1056,8 +1056,8 @@ export default function ProfessorCadastroTreinoPage() {
                           }}
                           className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                             meioRegion === region.id
-                              ? "bg-[#e85d6f] text-white"
-                              : "border border-white/15 text-white/70 hover:border-[#e85d6f]/40"
+                              ? "bg-[#4a9fd8] text-white"
+                              : "border border-white/15 text-white/70 hover:border-[#4a9fd8]/40"
                           }`}
                         >
                           {region.label}
@@ -1128,7 +1128,7 @@ export default function ProfessorCadastroTreinoPage() {
                               <button
                                 type="button"
                                 onClick={() => addExercise(exercise)}
-                                className="mt-2 rounded-md bg-[#e85d6f]/20 px-3 py-1 text-xs font-semibold text-[#f08a98]"
+                                className="mt-2 rounded-md bg-[#4a9fd8]/20 px-3 py-1 text-xs font-semibold text-[#7ebef0]"
                               >
                                 Adicionar
                               </button>
@@ -1290,9 +1290,9 @@ export default function ProfessorCadastroTreinoPage() {
                         key={phase.id}
                         type="button"
                         onClick={() => openLessonPhaseEditor(phase.id)}
-                        className="rounded-xl border border-white/10 bg-black/20 px-4 py-4 text-left transition hover:border-[#e85d6f]/40 hover:bg-[#e85d6f]/10"
+                        className="rounded-xl border border-white/10 bg-black/20 px-4 py-4 text-left transition hover:border-[#4a9fd8]/40 hover:bg-[#4a9fd8]/10"
                       >
-                        <p className="m-0 text-xs font-semibold uppercase tracking-wide text-[#e85d6f]">
+                        <p className="m-0 text-xs font-semibold uppercase tracking-wide text-[#4a9fd8]">
                           {phase.label}
                         </p>
                         <p className="m-0 mt-2 text-sm text-white/55">{phase.description}</p>
@@ -1318,7 +1318,7 @@ export default function ProfessorCadastroTreinoPage() {
                   >
                     ← Voltar às etapas
                   </button>
-                  <span className="rounded-full bg-[#e85d6f]/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#f08a98]">
+                  <span className="rounded-full bg-[#4a9fd8]/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#7ebef0]">
                     Editando: Aula
                   </span>
                 </div>
@@ -1349,7 +1349,7 @@ export default function ProfessorCadastroTreinoPage() {
                   >
                     ← Voltar às etapas
                   </button>
-                  <span className="rounded-full bg-[#e85d6f]/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#f08a98]">
+                  <span className="rounded-full bg-[#4a9fd8]/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#7ebef0]">
                     Editando: Aquecimento
                   </span>
                 </div>
@@ -1373,7 +1373,7 @@ export default function ProfessorCadastroTreinoPage() {
                         type="button"
                         onClick={() => void addCustomMovement()}
                         disabled={savingCatalog}
-                        className="shrink-0 rounded-lg bg-[#e85d6f] px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
+                        className="shrink-0 rounded-lg bg-[#4a9fd8] px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
                       >
                         {savingCatalog ? "Salvando..." : "Salvar"}
                       </button>
@@ -1404,7 +1404,7 @@ export default function ProfessorCadastroTreinoPage() {
                                 <button
                                   type="button"
                                   onClick={() => addFromSavedCatalog(entry)}
-                                  className="rounded-md bg-[#e85d6f]/20 px-3 py-1 text-xs font-semibold text-[#f08a98]"
+                                  className="rounded-md bg-[#4a9fd8]/20 px-3 py-1 text-xs font-semibold text-[#7ebef0]"
                                 >
                                   Adicionar
                                 </button>
@@ -1435,7 +1435,7 @@ export default function ProfessorCadastroTreinoPage() {
                                   setActivePhase("INICIO");
                                   addExercise(exercise);
                                 }}
-                                className="rounded-md bg-[#e85d6f]/20 px-3 py-1 text-xs font-semibold text-[#f08a98]"
+                                className="rounded-md bg-[#4a9fd8]/20 px-3 py-1 text-xs font-semibold text-[#7ebef0]"
                               >
                                 Adicionar
                               </button>

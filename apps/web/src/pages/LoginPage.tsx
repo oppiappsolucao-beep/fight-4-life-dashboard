@@ -54,7 +54,7 @@ export default function LoginPage() {
           <h1 className="m-0 max-w-[580px] text-[clamp(1.75rem,3.2vw,2.75rem)] font-bold uppercase leading-[1.05] tracking-[-0.04rem] text-white">
             Gestão <span className="text-white/35">•</span> Processos{" "}
             <span className="text-white/35">•</span>{" "}
-            <span className="bg-gradient-to-r from-[#e85d6f] to-[#b84d6a] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#4a9fd8] to-[#b84d6a] bg-clip-text text-transparent">
               Resultados
             </span>
           </h1>
@@ -68,8 +68,8 @@ export default function LoginPage() {
         </section>
 
         <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] px-5 pb-4 pt-5 shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur-sm">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#e85d6f]/40 to-transparent" />
-          <div className="absolute -right-16 -top-16 h-32 w-32 rounded-full bg-[#e85d6f]/5" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#4a9fd8]/40 to-transparent" />
+          <div className="absolute -right-16 -top-16 h-32 w-32 rounded-full bg-[#4a9fd8]/5" />
 
           <div className="relative z-10">
             <h2 className="m-0 text-center text-[0.9rem] font-bold uppercase tracking-wide text-white">
@@ -90,7 +90,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Digite seu usuário"
-                  className="w-full rounded-lg border border-white/20 bg-white px-3 py-2 text-[0.82rem] text-black outline-none transition focus:border-[#e85d6f]/60 focus:ring-2 focus:ring-[#e85d6f]/15"
+                  className="w-full rounded-lg border border-white/20 bg-white px-3 py-2 text-[0.82rem] text-black outline-none transition focus:border-[#4a9fd8]/60 focus:ring-2 focus:ring-[#4a9fd8]/15"
                   required
                 />
               </div>
@@ -105,7 +105,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Digite sua senha"
-                    className="w-full rounded-lg border border-white/20 bg-white px-3 py-2 pr-10 text-[0.82rem] text-black outline-none transition focus:border-[#e85d6f]/60 focus:ring-2 focus:ring-[#e85d6f]/15"
+                    className="w-full rounded-lg border border-white/20 bg-white px-3 py-2 pr-10 text-[0.82rem] text-black outline-none transition focus:border-[#4a9fd8]/60 focus:ring-2 focus:ring-[#4a9fd8]/15"
                     required
                   />
                   <button
@@ -128,13 +128,13 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-lg bg-gradient-to-r from-[#e85d6f] to-[#d44d62] py-2.5 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
+                className="w-full rounded-lg bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] py-2.5 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
               >
                 {loading ? "Entrando..." : "Entrar"}
               </button>
             </form>
 
-            <p className="mt-4 border-l-2 border-[#e85d6f]/30 pl-3 text-[0.65rem] leading-snug text-[#7a7a7a]">
+            <p className="mt-4 border-l-2 border-[#4a9fd8]/30 pl-3 text-[0.65rem] leading-snug text-[#7a7a7a]">
               Painel exclusivo para acesso interno.
               <br />
               Utilize suas credenciais para continuar.

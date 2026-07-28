@@ -15,7 +15,7 @@ export default function LessonVideoUploadField({
       <input
         type="file"
         accept="video/*"
-        className="mt-1 block w-full text-sm text-white/70 file:mr-3 file:rounded-lg file:border-0 file:bg-[#e85d6f]/20 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[#f08a98]"
+        className="mt-1 block w-full text-sm text-white/70 file:mr-3 file:rounded-lg file:border-0 file:bg-[#4a9fd8]/20 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[#7ebef0]"
         onChange={(event) => {
           const file = event.target.files?.[0];
           if (!file) return;

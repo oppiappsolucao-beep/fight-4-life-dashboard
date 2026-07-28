@@ -12,7 +12,7 @@ export function OverviewHero({
   subtitle: string;
 }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#e85d6f]/20 via-black/30 to-black/40 p-5">
+    <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#4a9fd8]/20 via-black/30 to-black/40 p-5">
       <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
         {eyebrow}
       </p>
@@ -86,7 +86,7 @@ export function OverviewGoalsGrid({ metas }: { metas: OverviewGoalMetric[] }) {
             <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-black/30">
               <div
                 className={`h-full rounded-full transition-all ${
-                  emBreve ? "bg-white/20" : onTrack ? "bg-emerald-400" : "bg-[#e85d6f]"
+                  emBreve ? "bg-white/20" : onTrack ? "bg-emerald-400" : "bg-[#4a9fd8]"
                 }`}
                 style={{ width: `${percent}%` }}
               />
@@ -109,7 +109,7 @@ export function OverviewQuickLinks({
         <Link
           key={link.to}
           to={link.to}
-          className="rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-center text-sm font-semibold text-white/80 transition hover:border-[#e85d6f]/40 hover:text-white"
+          className="rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-center text-sm font-semibold text-white/80 transition hover:border-[#4a9fd8]/40 hover:text-white"
         >
           {link.label}
         </Link>

@@ -144,7 +144,7 @@ export default function WorkoutDateStrip({
                     <button
                       type="button"
                       onClick={() => shiftWeek(-weekOffset)}
-                      className="ml-2 text-xs font-semibold text-[#f08a98] hover:text-[#e85d6f]"
+                      className="ml-2 text-xs font-semibold text-[#7ebef0] hover:text-[#4a9fd8]"
                     >
                       Hoje
                     </button>
@@ -189,7 +189,7 @@ export default function WorkoutDateStrip({
               onClick={() => onSelect(item.workoutDate)}
               className={`relative min-w-[5.5rem] shrink-0 snap-start rounded-2xl border px-3 py-3 text-left transition ${
                 selected
-                  ? "border-[#e85d6f] bg-[#e85d6f]/15 shadow-[0_0_0_1px_rgba(232,93,111,0.35)]"
+                  ? "border-[#4a9fd8] bg-[#4a9fd8]/15 shadow-[0_0_0_1px_rgba(74,159,216,0.35)]"
                   : "border-white/10 bg-black/25 hover:border-white/20"
               }`}
             >
@@ -208,7 +208,7 @@ export default function WorkoutDateStrip({
                   Hoje
                 </span>
               ) : item.source === "STUDENT" ? (
-                <span className="mt-2 inline-flex rounded-full bg-[#e85d6f]/15 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-[#f08a98]">
+                <span className="mt-2 inline-flex rounded-full bg-[#4a9fd8]/15 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-[#7ebef0]">
                   Meu
                 </span>
               ) : item.exerciseCount > 0 ? (
@@ -224,7 +224,7 @@ export default function WorkoutDateStrip({
             <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
               Nova
             </span>
-            <span className="mt-3 block text-2xl font-semibold text-[#e85d6f]">+</span>
+            <span className="mt-3 block text-2xl font-semibold text-[#4a9fd8]">+</span>
             <input
               type="date"
               min={week.start}

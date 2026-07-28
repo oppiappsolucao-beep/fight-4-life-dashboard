@@ -142,7 +142,7 @@ export default function OwnerModalityWarmupPanel({ modality }: OwnerModalityWarm
             key={exercise.id}
             type="button"
             onClick={() => addExercise(exercise)}
-            className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-black/15 px-3 py-2 text-left text-sm text-white/80 hover:border-[#e85d6f]/40"
+            className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-black/15 px-3 py-2 text-left text-sm text-white/80 hover:border-[#4a9fd8]/40"
           >
             <span>{exercise.name}</span>
             <span className="text-xs text-white/40">{exercise.muscleGroup}</span>
@@ -180,7 +180,7 @@ export default function OwnerModalityWarmupPanel({ modality }: OwnerModalityWarm
         type="button"
         onClick={saveWarmup}
         disabled={saving}
-        className="mt-4 rounded-xl bg-[#e85d6f] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+        className="mt-4 rounded-xl bg-[#4a9fd8] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
       >
         {saving ? "Salvando..." : "Salvar aquecimento"}
       </button>

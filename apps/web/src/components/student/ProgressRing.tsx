@@ -11,7 +11,7 @@ export default function ProgressRing({
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percent / 100) * circumference;
   const stroke =
-    status === "done" ? "#34d399" : status === "partial" ? "#fbbf24" : "#e85d6f";
+    status === "done" ? "#34d399" : status === "partial" ? "#fbbf24" : "#4a9fd8";
 
   return (
     <div className="relative flex h-[4.75rem] w-[4.75rem] shrink-0 items-center justify-center">

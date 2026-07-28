@@ -369,7 +369,7 @@ export default function OwnerProfessoresPage() {
                         onClick={() => selectFormModality(item.id)}
                         className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                           editing
-                            ? "bg-[#e85d6f] text-white ring-2 ring-[#e85d6f]/40"
+                            ? "bg-[#4a9fd8] text-white ring-2 ring-[#4a9fd8]/40"
                             : selected
                               ? "bg-emerald-500/20 text-emerald-300"
                               : "border border-white/15 text-white/60"
@@ -440,7 +440,7 @@ export default function OwnerProfessoresPage() {
             <button
               type="submit"
               disabled={saving}
-              className="mt-4 w-full rounded-xl bg-[#e85d6f] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
+              className="mt-4 w-full rounded-xl bg-[#4a9fd8] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
             >
               {saving
                 ? "Salvando..."

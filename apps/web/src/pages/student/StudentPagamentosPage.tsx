@@ -55,14 +55,14 @@ export default function StudentPagamentosPage() {
         </div>
       ) : billing ? (
         <div className="space-y-4 pb-8">
-          <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#e85d6f]/20 via-black/30 to-black/40 p-5">
+          <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#4a9fd8]/20 via-black/30 to-black/40 p-5">
             <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
               Plano contratado
             </p>
             <h2 className="m-0 mt-2 text-2xl font-semibold text-white">
               {billing.planoModalidade}
             </h2>
-            <p className="m-0 mt-3 text-3xl font-semibold text-[#f08a98]">
+            <p className="m-0 mt-3 text-3xl font-semibold text-[#7ebef0]">
               {formatPlanCurrency(billing.valorMensalidade)}
             </p>
             <p className="m-0 mt-1 text-sm text-white/50">Valor da mensalidade</p>

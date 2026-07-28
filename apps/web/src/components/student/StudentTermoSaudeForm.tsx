@@ -197,7 +197,7 @@ export default function StudentTermoSaudeForm() {
               className="rounded-lg border border-white/10 bg-black/20 p-4"
             >
               <p className="text-[0.82rem] leading-relaxed text-white/90">
-                <span className="mr-1 font-semibold text-[#e85d6f]">{index + 1}.</span>
+                <span className="mr-1 font-semibold text-[#4a9fd8]">{index + 1}.</span>
                 {question.text}
               </p>
               <div className="mt-3 flex gap-3">
@@ -249,7 +249,7 @@ export default function StudentTermoSaudeForm() {
               type="checkbox"
               checked={gravida}
               onChange={(e) => setGravida(e.target.checked)}
-              className="h-4 w-4 accent-[#e85d6f]"
+              className="h-4 w-4 accent-[#4a9fd8]"
             />
             <span className="text-[0.82rem] text-white/90">Está grávida?</span>
           </label>
@@ -265,13 +265,13 @@ export default function StudentTermoSaudeForm() {
             type="checkbox"
             checked={termoAceito}
             onChange={(e) => setTermoAceito(e.target.checked)}
-            className="mt-0.5 h-4 w-4 shrink-0 accent-[#e85d6f]"
+            className="mt-0.5 h-4 w-4 shrink-0 accent-[#4a9fd8]"
             required
           />
           <span className="text-[0.82rem] leading-relaxed text-white/80">
             Declaro que as informações acima são verdadeiras e assumo total
             responsabilidade por omitir qualquer condição médica preexistente.
-            <span className="text-[#e85d6f]"> *</span>
+            <span className="text-[#4a9fd8]"> *</span>
           </span>
         </label>
         <p className="mt-4 text-[0.65rem] text-white/40">
@@ -289,7 +289,7 @@ export default function StudentTermoSaudeForm() {
       <button
         type="submit"
         disabled={loading}
-        className="rounded-lg bg-gradient-to-r from-[#e85d6f] to-[#d44d62] px-6 py-2.5 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
+        className="rounded-lg bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] px-6 py-2.5 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
       >
         {loading ? "Registrando..." : "Assinar e Aceitar"}
       </button>
@@ -312,8 +312,8 @@ function YesNoButton({
       onClick={onClick}
       className={`min-w-[72px] rounded-lg px-4 py-2 text-[0.75rem] font-semibold uppercase tracking-wide transition ${
         selected
-          ? "bg-gradient-to-r from-[#e85d6f] to-[#d44d62] text-white"
-          : "border border-white/15 bg-black/20 text-white/60 hover:border-[#e85d6f]/40 hover:text-white"
+          ? "bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] text-white"
+          : "border border-white/15 bg-black/20 text-white/60 hover:border-[#4a9fd8]/40 hover:text-white"
       }`}
     >
       {label}
@@ -339,7 +339,7 @@ function Field({
 }
 
 const textareaClass =
-  "w-full resize-none rounded-lg border border-white/20 bg-white px-3 py-2.5 text-[0.82rem] text-black outline-none transition focus:border-[#e85d6f]/60 focus:ring-2 focus:ring-[#e85d6f]/15";
+  "w-full resize-none rounded-lg border border-white/20 bg-white px-3 py-2.5 text-[0.82rem] text-black outline-none transition focus:border-[#4a9fd8]/60 focus:ring-2 focus:ring-[#4a9fd8]/15";
 
 function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return <textarea rows={2} {...props} className={textareaClass} />;

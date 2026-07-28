@@ -39,7 +39,7 @@ export default function HomePage() {
         </main>
 
         <footer className="flex items-center gap-2 text-[0.72rem] text-white/50">
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#e85d6f] to-[#d44d62] text-[0.6rem] font-bold text-white">
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#4a9fd8] to-[#d44d62] text-[0.6rem] font-bold text-white">
             H
           </span>
           Home

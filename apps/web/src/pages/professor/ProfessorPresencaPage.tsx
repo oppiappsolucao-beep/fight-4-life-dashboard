@@ -212,7 +212,7 @@ export default function ProfessorPresencaPage() {
   return (
     <div className="px-4 py-6 sm:px-6 md:px-10 md:py-8">
       <header className="mb-6">
-        <p className="mb-1 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#e85d6f]">
+        <p className="mb-1 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#4a9fd8]">
           Professor
         </p>
         <h1 className="m-0 text-2xl font-semibold text-white">Presença</h1>
@@ -259,7 +259,7 @@ export default function ProfessorPresencaPage() {
               <button
                 type="button"
                 onClick={load}
-                className="rounded-lg border border-white/15 px-3 py-2 text-sm text-white/70 transition hover:border-[#e85d6f]/40 hover:text-white"
+                className="rounded-lg border border-white/15 px-3 py-2 text-sm text-white/70 transition hover:border-[#4a9fd8]/40 hover:text-white"
               >
                 Atualizar
               </button>
@@ -276,8 +276,8 @@ export default function ProfessorPresencaPage() {
                   onClick={() => setSelectedLessonId("")}
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                     !selectedLessonId
-                      ? "bg-[#e85d6f] text-white"
-                      : "border border-white/15 text-white/70 hover:border-[#e85d6f]/40"
+                      ? "bg-[#4a9fd8] text-white"
+                      : "border border-white/15 text-white/70 hover:border-[#4a9fd8]/40"
                   }`}
                 >
                   Todas
@@ -289,8 +289,8 @@ export default function ProfessorPresencaPage() {
                     onClick={() => setSelectedLessonId(aula.id)}
                     className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                       selectedLessonId === aula.id
-                        ? "bg-[#e85d6f] text-white"
-                        : "border border-white/15 text-white/70 hover:border-[#e85d6f]/40"
+                        ? "bg-[#4a9fd8] text-white"
+                        : "border border-white/15 text-white/70 hover:border-[#4a9fd8]/40"
                     }`}
                   >
                     {aula.title}
@@ -327,7 +327,7 @@ export default function ProfessorPresencaPage() {
                     <select
                       value={manualStudentId}
                       onChange={(event) => setManualStudentId(event.target.value)}
-                      className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#e85d6f]/60"
+                      className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#4a9fd8]/60"
                     >
                       <option value="">Selecione o aluno</option>
                       {alunosParaPresencaManual.map((aluno) => (
@@ -341,7 +341,7 @@ export default function ProfessorPresencaPage() {
                     type="button"
                     disabled={!manualStudentId || registeringManual}
                     onClick={handleManualPresenca}
-                    className="rounded-xl bg-[#e85d6f] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                    className="rounded-xl bg-[#4a9fd8] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
                   >
                     {registeringManual ? "Registrando..." : "Confirmar presença"}
                   </button>

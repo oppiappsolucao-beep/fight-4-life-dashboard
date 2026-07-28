@@ -196,7 +196,7 @@ export default function OwnerLessonCadastroPanel({
           <select
             value={selectedModalityId}
             onChange={(event) => onModalityChange(event.target.value)}
-            className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#e85d6f]/60"
+            className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#4a9fd8]/60"
             required
           >
             {modalidades
@@ -216,7 +216,7 @@ export default function OwnerLessonCadastroPanel({
             type="date"
             value={classDate}
             onChange={(event) => onClassDateChange(event.target.value)}
-            className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#e85d6f]/60"
+            className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#4a9fd8]/60"
             required
           />
         </div>
@@ -364,7 +364,7 @@ export default function OwnerLessonCadastroPanel({
           <button
             type="submit"
             disabled={saving || availableProfessors.length === 0}
-            className="rounded-lg bg-[#e85d6f] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#d44d5f] disabled:opacity-60"
+            className="rounded-lg bg-[#4a9fd8] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2f7fb8] disabled:opacity-60"
           >
             {saving ? "Publicando..." : "Publicar aula"}
           </button>

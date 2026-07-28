@@ -106,7 +106,7 @@ export default function StudentGaleriaPage() {
         </div>
       ) : gallery ? (
         <div className="space-y-4 pb-8">
-          <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-[#e85d6f]/20 via-black/30 to-black/40 p-4">
+          <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-[#4a9fd8]/20 via-black/30 to-black/40 p-4">
             <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
               Seu plano
             </p>
@@ -129,7 +129,7 @@ export default function StudentGaleriaPage() {
                   }}
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                     selectedModalityId === item.id
-                      ? "bg-[#e85d6f] text-white"
+                      ? "bg-[#4a9fd8] text-white"
                       : "border border-white/15 text-white/70"
                   }`}
                 >

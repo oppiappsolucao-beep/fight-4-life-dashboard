@@ -390,7 +390,7 @@ export default function OwnerCadastroTreinoPage() {
                   onClick={() => setSelectedModalityId(item.id)}
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                     selectedModalityId === item.id
-                      ? "bg-[#e85d6f] text-white"
+                      ? "bg-[#4a9fd8] text-white"
                       : "border border-white/15 text-white/70"
                   }`}
                 >
@@ -433,7 +433,7 @@ export default function OwnerCadastroTreinoPage() {
               <select
                 value={selectedStudentId}
                 onChange={(e) => setSelectedStudentId(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#e85d6f]/60"
+                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#4a9fd8]/60"
               >
                 {alunos.map((aluno) => (
                   <option key={aluno.id} value={aluno.id} className="bg-zinc-900">
@@ -449,7 +449,7 @@ export default function OwnerCadastroTreinoPage() {
               <select
                 value={selectedModalityId}
                 onChange={(event) => setSelectedModalityId(event.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#e85d6f]/60"
+                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#4a9fd8]/60"
                 required
               >
                 {modalidades.length === 0 ? (
@@ -471,7 +471,7 @@ export default function OwnerCadastroTreinoPage() {
                 type="date"
                 value={workoutDate}
                 onChange={(e) => setWorkoutDate(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#e85d6f]/60"
+                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#4a9fd8]/60"
                 required
               />
             </div>
@@ -482,7 +482,7 @@ export default function OwnerCadastroTreinoPage() {
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#e85d6f]/60"
+                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#4a9fd8]/60"
                 required
               />
             </div>
@@ -500,7 +500,7 @@ export default function OwnerCadastroTreinoPage() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={2}
-                  className="mt-2 w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#e85d6f]/60"
+                  className="mt-2 w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#4a9fd8]/60"
                 />
               ) : null}
             </div>
@@ -528,8 +528,8 @@ export default function OwnerCadastroTreinoPage() {
                         }}
                         className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
                           item.workoutDate === workoutDate
-                            ? "bg-[#e85d6f] text-white"
-                            : "border border-white/15 text-white/70 hover:border-[#e85d6f]/40"
+                            ? "bg-[#4a9fd8] text-white"
+                            : "border border-white/15 text-white/70 hover:border-[#4a9fd8]/40"
                         }`}
                       >
                         {formatWorkoutDateLabel(item.workoutDate)} • {item.title}
@@ -556,7 +556,7 @@ export default function OwnerCadastroTreinoPage() {
               <button
                 type="submit"
                 disabled={saving || drafts.length === 0}
-                className="rounded-lg bg-[#e85d6f] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#d44d5f] disabled:opacity-60"
+                className="rounded-lg bg-[#4a9fd8] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2f7fb8] disabled:opacity-60"
               >
                 {saving ? "Salvando..." : "Publicar treino"}
               </button>
@@ -575,9 +575,9 @@ export default function OwnerCadastroTreinoPage() {
                         key={phase.id}
                         type="button"
                         onClick={() => openPhaseEditor(phase.id)}
-                        className="rounded-xl border border-white/10 bg-black/20 px-4 py-4 text-left transition hover:border-[#e85d6f]/40 hover:bg-[#e85d6f]/10"
+                        className="rounded-xl border border-white/10 bg-black/20 px-4 py-4 text-left transition hover:border-[#4a9fd8]/40 hover:bg-[#4a9fd8]/10"
                       >
-                        <p className="m-0 text-xs font-semibold uppercase tracking-wide text-[#e85d6f]">
+                        <p className="m-0 text-xs font-semibold uppercase tracking-wide text-[#4a9fd8]">
                           {phase.label}
                         </p>
                         <p className="m-0 mt-2 text-sm text-white/55">{phase.description}</p>
@@ -605,7 +605,7 @@ export default function OwnerCadastroTreinoPage() {
                   >
                     ← Voltar às etapas
                   </button>
-                  <span className="rounded-full bg-[#e85d6f]/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#f08a98]">
+                  <span className="rounded-full bg-[#4a9fd8]/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#7ebef0]">
                     Editando: {activePhaseMeta?.label}
                   </span>
                 </div>
@@ -627,8 +627,8 @@ export default function OwnerCadastroTreinoPage() {
                           }}
                           className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                             meioRegion === region.id
-                              ? "bg-[#e85d6f] text-white"
-                              : "border border-white/15 text-white/70 hover:border-[#e85d6f]/40"
+                              ? "bg-[#4a9fd8] text-white"
+                              : "border border-white/15 text-white/70 hover:border-[#4a9fd8]/40"
                           }`}
                         >
                           {region.label}
@@ -699,7 +699,7 @@ export default function OwnerCadastroTreinoPage() {
                               <button
                                 type="button"
                                 onClick={() => addExercise(exercise)}
-                                className="mt-2 rounded-md bg-[#e85d6f]/20 px-3 py-1 text-xs font-semibold text-[#f08a98]"
+                                className="mt-2 rounded-md bg-[#4a9fd8]/20 px-3 py-1 text-xs font-semibold text-[#7ebef0]"
                               >
                                 Adicionar
                               </button>

@@ -90,7 +90,7 @@ export default function ProfessorAulasPage() {
   return (
     <div className="px-4 py-6 sm:px-6 md:px-10 md:py-8">
       <header className="mb-6">
-        <p className="mb-1 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#e85d6f]">
+        <p className="mb-1 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#4a9fd8]">
           Professor
         </p>
         <h1 className="m-0 text-2xl font-semibold text-white">Minhas Aulas</h1>
@@ -224,7 +224,7 @@ export default function ProfessorAulasPage() {
             <button
               type="submit"
               disabled={saving}
-              className="mt-4 w-full rounded-xl bg-[#e85d6f] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
+              className="mt-4 w-full rounded-xl bg-[#4a9fd8] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
             >
               {saving ? "Publicando..." : "Publicar aula"}
             </button>

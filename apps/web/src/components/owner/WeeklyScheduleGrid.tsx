@@ -76,7 +76,7 @@ export default function WeeklyScheduleGrid({
                               entry.colorClass ??
                               (entry.tone === "professor"
                                 ? professorEntryClassName()
-                                : "bg-[#e85d6f]/15 text-[#f08a98]")
+                                : "bg-[#4a9fd8]/15 text-[#7ebef0]")
                             }`}
                           >
                             <p className="m-0 truncate text-[0.7rem] font-semibold">{entry.label}</p>

@@ -159,7 +159,7 @@ export default function StudentTreinoBuilder({
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="mt-3 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#e85d6f]/60"
+          className="mt-3 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#4a9fd8]/60"
           required
         />
       </section>
@@ -172,7 +172,7 @@ export default function StudentTreinoBuilder({
             onClick={() => setActivePhase(phase.id)}
             className={`rounded-xl px-2 py-3 text-left ${
               activePhase === phase.id
-                ? "bg-[#e85d6f] text-white"
+                ? "bg-[#4a9fd8] text-white"
                 : "bg-white/[0.04] text-white/70"
             }`}
           >
@@ -193,7 +193,7 @@ export default function StudentTreinoBuilder({
               onClick={() => setMeioRegion(region.id)}
               className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                 meioRegion === region.id
-                  ? "bg-[#e85d6f] text-white"
+                  ? "bg-[#4a9fd8] text-white"
                   : "border border-white/15 text-white/70"
               }`}
             >
@@ -223,7 +223,7 @@ export default function StudentTreinoBuilder({
                 <button
                   type="button"
                   onClick={() => addExercise(exercise)}
-                  className="shrink-0 rounded-lg bg-[#e85d6f]/20 px-3 py-1.5 text-xs font-semibold text-[#f08a98]"
+                  className="shrink-0 rounded-lg bg-[#4a9fd8]/20 px-3 py-1.5 text-xs font-semibold text-[#7ebef0]"
                 >
                   +
                 </button>
@@ -313,7 +313,7 @@ export default function StudentTreinoBuilder({
         <button
           type="submit"
           disabled={saving || drafts.length === 0}
-          className="flex-1 rounded-xl bg-[#e85d6f] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
+          className="flex-1 rounded-xl bg-[#4a9fd8] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
         >
           {saving ? "Salvando..." : "Salvar meu treino"}
         </button>

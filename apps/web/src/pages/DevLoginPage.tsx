@@ -68,10 +68,10 @@ export default function DevLoginPage() {
           </div>
 
           <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05] shadow-[0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur-md">
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#e85d6f]/40 to-transparent" />
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#4a9fd8]/40 to-transparent" />
 
             <div className="px-5 pt-6 text-center sm:px-6">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#e85d6f]/15 text-[#e85d6f]">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#4a9fd8]/15 text-[#4a9fd8]">
                 <CodeIcon />
               </div>
               <h2 className="m-0 text-[0.9rem] font-bold uppercase tracking-wide text-white">
@@ -89,7 +89,7 @@ export default function DevLoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Digite seu e-mail"
                 autoComplete="username"
-                className="mb-3 w-full rounded-lg border border-white/20 bg-white px-3 py-3 text-[0.9rem] text-black outline-none transition focus:border-[#e85d6f]/60 focus:ring-2 focus:ring-[#e85d6f]/15"
+                className="mb-3 w-full rounded-lg border border-white/20 bg-white px-3 py-3 text-[0.9rem] text-black outline-none transition focus:border-[#4a9fd8]/60 focus:ring-2 focus:ring-[#4a9fd8]/15"
                 required
               />
 
@@ -103,7 +103,7 @@ export default function DevLoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Digite sua senha"
                   autoComplete="current-password"
-                  className="mb-2 w-full rounded-lg border border-white/20 bg-white px-3 py-3 pr-16 text-[0.9rem] text-black outline-none transition focus:border-[#e85d6f]/60 focus:ring-2 focus:ring-[#e85d6f]/15"
+                  className="mb-2 w-full rounded-lg border border-white/20 bg-white px-3 py-3 pr-16 text-[0.9rem] text-black outline-none transition focus:border-[#4a9fd8]/60 focus:ring-2 focus:ring-[#4a9fd8]/15"
                   required
                 />
                 <button
@@ -124,7 +124,7 @@ export default function DevLoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="mt-4 w-full rounded-lg bg-gradient-to-r from-[#e85d6f] to-[#d44d62] py-3 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
+                className="mt-4 w-full rounded-lg bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] py-3 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
               >
                 {loading ? "Entrando..." : "Entrar"}
               </button>

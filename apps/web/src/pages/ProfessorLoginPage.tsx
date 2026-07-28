@@ -79,7 +79,7 @@ export default function ProfessorLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-[#e85d6f] py-3 text-sm font-semibold text-white disabled:opacity-60"
+              className="w-full rounded-lg bg-[#4a9fd8] py-3 text-sm font-semibold text-white disabled:opacity-60"
             >
               {loading ? "Entrando..." : "Entrar como professor"}
             </button>

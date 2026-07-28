@@ -148,7 +148,7 @@ export default function OwnerAlunoEditModal({
       <div className="relative my-auto w-full max-w-4xl rounded-2xl border border-white/10 bg-[#171717] shadow-2xl">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[#171717]/95 px-6 py-4 backdrop-blur">
           <div>
-            <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#e85d6f]">
+            <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#4a9fd8]">
               Editar aluno
             </p>
             <h2 className="m-0 mt-1 text-lg font-semibold text-white">
@@ -350,7 +350,7 @@ export default function OwnerAlunoEditModal({
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-lg bg-[#e85d6f] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                  className="rounded-lg bg-[#4a9fd8] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
                 >
                   {saving ? "Salvando..." : "Salvar alterações"}
                 </button>
@@ -396,7 +396,7 @@ function Field({
 }
 
 const controlClass =
-  "w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none transition focus:border-[#e85d6f]/60";
+  "w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none transition focus:border-[#4a9fd8]/60";
 
 function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={controlClass} />;

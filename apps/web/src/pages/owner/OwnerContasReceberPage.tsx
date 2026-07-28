@@ -136,7 +136,7 @@ export default function OwnerContasReceberPage() {
           </p>
           <Link
             to="/dono/cadastro-aluno"
-            className="mt-4 inline-block text-sm font-medium text-[#e85d6f] hover:underline"
+            className="mt-4 inline-block text-sm font-medium text-[#4a9fd8] hover:underline"
           >
             Cadastrar aluno →
           </Link>

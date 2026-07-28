@@ -31,7 +31,7 @@ export default function DashboardShell({
 
   return (
     <div className="relative z-10 flex min-h-screen min-w-0 items-stretch">
-      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-3 border-b border-white/10 bg-black/85 px-4 backdrop-blur-md md:hidden">
+      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-3 border-b border-white/10 bg-[#0b1f3a]/92 px-4 backdrop-blur-md md:hidden">
         <button
           type="button"
           onClick={onOpenMenu}
@@ -43,7 +43,7 @@ export default function DashboardShell({
         <div className="min-w-0 flex-1">
           <OppiLogo size="sm" />
         </div>
-        <p className="max-w-[40%] truncate text-[0.65rem] font-semibold uppercase tracking-[0.08rem] text-[#e85d6f]">
+        <p className="max-w-[40%] truncate text-[0.65rem] font-semibold uppercase tracking-[0.08rem] text-[#7ebef0]">
           {title}
         </p>
       </header>
@@ -52,7 +52,7 @@ export default function DashboardShell({
         <button
           type="button"
           aria-label="Fechar menu"
-          className="fixed inset-0 z-40 bg-black/65 md:hidden"
+          className="fixed inset-0 z-40 bg-[#071525]/70 md:hidden"
           onClick={onCloseMenu}
         />
       ) : null}
@@ -69,9 +69,9 @@ export default function DashboardShell({
 export function sidebarShellClass(open: boolean): string {
   return [
     "fixed inset-y-0 left-0 z-50 flex h-dvh w-[min(280px,86vw)] shrink-0 flex-col",
-    "border-r border-white/10 bg-black/95 backdrop-blur-md transition-transform duration-200",
+    "border-r border-white/10 bg-[#0b1f3a]/98 backdrop-blur-md transition-transform duration-200",
     open ? "translate-x-0" : "-translate-x-full",
-    "md:static md:z-auto md:h-screen md:w-[280px] md:translate-x-0 md:bg-black/45",
+    "md:static md:z-auto md:h-screen md:w-[280px] md:translate-x-0 md:bg-[#0b1f3a]/75",
   ].join(" ");
 }
 

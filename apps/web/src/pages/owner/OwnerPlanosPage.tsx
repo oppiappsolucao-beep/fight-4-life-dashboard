@@ -148,7 +148,7 @@ export default function OwnerPlanosPage() {
             <button
               type="button"
               onClick={addPlan}
-              className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-white/80 transition hover:border-[#e85d6f]/50 hover:text-white"
+              className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-white/80 transition hover:border-[#4a9fd8]/50 hover:text-white"
             >
               Adicionar plano
             </button>
@@ -183,7 +183,7 @@ export default function OwnerPlanosPage() {
                       <input
                         value={plan.nome}
                         onChange={(e) => updatePlanName(index, e.target.value)}
-                        className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-[#e85d6f]/60"
+                        className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-[#4a9fd8]/60"
                         required
                       />
                     </td>
@@ -195,7 +195,7 @@ export default function OwnerPlanosPage() {
                           value={valorInputs[index] ?? ""}
                           onChange={(e) => updateValorInput(index, e.target.value)}
                           placeholder="0,00"
-                          className="w-36 rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-[#e85d6f]/60"
+                          className="w-36 rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-[#4a9fd8]/60"
                           required
                         />
                         <span className="text-xs text-white/40">
@@ -241,7 +241,7 @@ export default function OwnerPlanosPage() {
             <button
               type="submit"
               disabled={saving}
-              className="rounded-lg bg-[#e85d6f] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#d44d5f] disabled:opacity-60"
+              className="rounded-lg bg-[#4a9fd8] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2f7fb8] disabled:opacity-60"
             >
               {saving ? "Salvando..." : "Salvar planos"}
             </button>

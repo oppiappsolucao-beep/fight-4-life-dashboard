@@ -99,10 +99,10 @@ export default function StudentLoginForm() {
         </div>
 
         <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05] shadow-[0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur-md">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#e85d6f]/40 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#4a9fd8]/40 to-transparent" />
 
           <div className="px-5 pt-6 text-center sm:px-6">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#e85d6f]/15 text-[#e85d6f]">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#4a9fd8]/15 text-[#4a9fd8]">
               <UserIcon />
             </div>
             <h2 className="m-0 text-[0.9rem] font-bold uppercase tracking-wide text-white">
@@ -119,7 +119,7 @@ export default function StudentLoginForm() {
                   onClick={() => handleTabChange(key)}
                   className={`flex-1 rounded-md px-2 py-2.5 text-[0.68rem] font-semibold uppercase tracking-wide transition ${
                     tab === key
-                      ? "bg-gradient-to-r from-[#e85d6f] to-[#d44d62] text-white"
+                      ? "bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] text-white"
                       : "text-white/50 hover:text-white/80"
                   }`}
                 >
@@ -137,7 +137,7 @@ export default function StudentLoginForm() {
               value={identifier}
               onChange={(e) => handleInputChange(e.target.value)}
               placeholder={TAB_CONFIG[tab].placeholder}
-              className="mb-2 w-full rounded-lg border border-white/20 bg-white px-3 py-3 text-[0.9rem] text-black outline-none transition focus:border-[#e85d6f]/60 focus:ring-2 focus:ring-[#e85d6f]/15"
+              className="mb-2 w-full rounded-lg border border-white/20 bg-white px-3 py-3 text-[0.9rem] text-black outline-none transition focus:border-[#4a9fd8]/60 focus:ring-2 focus:ring-[#4a9fd8]/15"
             />
 
             {error && (
@@ -147,14 +147,14 @@ export default function StudentLoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-4 w-full rounded-lg bg-gradient-to-r from-[#e85d6f] to-[#d44d62] py-3 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
+              className="mt-4 w-full rounded-lg bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] py-3 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
             >
               {loading ? "Verificando..." : "Continuar"}
             </button>
 
             <p className="mt-4 text-center text-[0.65rem] leading-snug text-[#7a7a7a]">
               Primeiro acesso?{" "}
-              <span className="text-[#e85d6f]">Fale com a recepção</span>
+              <span className="text-[#4a9fd8]">Fale com a recepção</span>
             </p>
           </form>
         </div>

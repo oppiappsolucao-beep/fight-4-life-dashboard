@@ -83,7 +83,7 @@ export default function OwnerVisaoGeralPage() {
               <p className="m-0 text-sm font-semibold text-white">Últimos alunos cadastrados</p>
               <Link
                 to="/dono/alunos"
-                className="text-xs font-semibold text-[#f08a98] hover:text-[#e85d6f]"
+                className="text-xs font-semibold text-[#7ebef0] hover:text-[#4a9fd8]"
               >
                 Ver todos
               </Link>

@@ -15,7 +15,7 @@ export default function PlaceholderPage({
       <p className="mt-3 max-w-md text-sm text-zinc-400">{description}</p>
       <Link
         to="/"
-        className="mt-8 rounded-lg bg-gradient-to-r from-[#e85d6f] to-[#d44d62] px-6 py-2.5 text-sm font-bold uppercase tracking-wide text-white transition hover:brightness-105"
+        className="mt-8 rounded-lg bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] px-6 py-2.5 text-sm font-bold uppercase tracking-wide text-white transition hover:brightness-105"
       >
         Voltar ao início
       </Link>

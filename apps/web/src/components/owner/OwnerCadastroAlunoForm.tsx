@@ -361,14 +361,14 @@ export default function OwnerCadastroAlunoForm() {
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg bg-gradient-to-r from-[#e85d6f] to-[#d44d62] px-6 py-2.5 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
+          className="rounded-lg bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] px-6 py-2.5 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
         >
           {loading ? "Salvando..." : "Cadastrar Aluno"}
         </button>
         <button
           type="button"
           onClick={handleClear}
-          className="rounded-lg border border-white/15 px-6 py-2.5 text-[0.75rem] font-medium text-white/70 transition hover:border-[#e85d6f]/40 hover:text-white"
+          className="rounded-lg border border-white/15 px-6 py-2.5 text-[0.75rem] font-medium text-white/70 transition hover:border-[#4a9fd8]/40 hover:text-white"
         >
           Limpar formulário
         </button>
@@ -409,7 +409,7 @@ function Field({
     <label className={`block ${className}`}>
       <span className="mb-1.5 block text-[0.65rem] font-semibold uppercase tracking-[0.06rem] text-white/75">
         {label}
-        {required && <span className="text-[#e85d6f]"> *</span>}
+        {required && <span className="text-[#4a9fd8]"> *</span>}
       </span>
       {children}
     </label>
@@ -417,7 +417,7 @@ function Field({
 }
 
 const inputClass =
-  "w-full rounded-lg border border-white/20 bg-white px-3 py-2.5 text-[0.82rem] text-black outline-none transition focus:border-[#e85d6f]/60 focus:ring-2 focus:ring-[#e85d6f]/15";
+  "w-full rounded-lg border border-white/20 bg-white px-3 py-2.5 text-[0.82rem] text-black outline-none transition focus:border-[#4a9fd8]/60 focus:ring-2 focus:ring-[#4a9fd8]/15";
 
 function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={inputClass} />;

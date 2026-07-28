@@ -217,7 +217,7 @@ export default function StudentLoginPage() {
           </div>
 
           <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05] shadow-[0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur-md">
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#e85d6f]/40 to-transparent" />
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#4a9fd8]/40 to-transparent" />
 
             {step === "identify" ? (
               <form onSubmit={handleIdentify} className="px-5 py-6 sm:px-6">
@@ -227,7 +227,7 @@ export default function StudentLoginPage() {
                   onChange={(e) => handleIdentifierChange(e.target.value)}
                   placeholder="000.000.000-00 ou seu@email.com"
                   autoComplete="username"
-                  className="mb-2 w-full rounded-lg border border-white/20 bg-white px-3 py-3 text-[0.9rem] text-black outline-none transition focus:border-[#e85d6f]/60 focus:ring-2 focus:ring-[#e85d6f]/15"
+                  className="mb-2 w-full rounded-lg border border-white/20 bg-white px-3 py-3 text-[0.9rem] text-black outline-none transition focus:border-[#4a9fd8]/60 focus:ring-2 focus:ring-[#4a9fd8]/15"
                 />
 
                 {error && (
@@ -239,7 +239,7 @@ export default function StudentLoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="mt-4 w-full rounded-lg bg-gradient-to-r from-[#e85d6f] to-[#d44d62] py-3 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
+                  className="mt-4 w-full rounded-lg bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] py-3 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
                 >
                   {loading ? "Verificando..." : "Continuar"}
                 </button>
@@ -254,7 +254,7 @@ export default function StudentLoginPage() {
                     placeholder="Digite sua senha"
                     autoComplete="current-password"
                     autoFocus
-                    className="mb-2 w-full rounded-lg border border-white/20 bg-white px-3 py-3 pr-16 text-[0.9rem] text-black outline-none transition focus:border-[#e85d6f]/60 focus:ring-2 focus:ring-[#e85d6f]/15"
+                    className="mb-2 w-full rounded-lg border border-white/20 bg-white px-3 py-3 pr-16 text-[0.9rem] text-black outline-none transition focus:border-[#4a9fd8]/60 focus:ring-2 focus:ring-[#4a9fd8]/15"
                   />
                   <button
                     type="button"
@@ -274,7 +274,7 @@ export default function StudentLoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="mt-4 w-full rounded-lg bg-gradient-to-r from-[#e85d6f] to-[#d44d62] py-3 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
+                  className="mt-4 w-full rounded-lg bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] py-3 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
                 >
                   {loading ? "Entrando..." : "Entrar"}
                 </button>

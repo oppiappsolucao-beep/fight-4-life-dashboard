@@ -362,7 +362,7 @@ export default function StudentLessonTreinoFlow({
         </div>
       ) : (
         <>
-          <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#e85d6f]/20 via-black/30 to-black/40 p-4 sm:p-5">
+          <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#4a9fd8]/20 via-black/30 to-black/40 p-4 sm:p-5">
             <div className="flex items-start gap-4">
               <ProgressRing percent={completionPercent} status={completionStatus} />
               <div className="min-w-0 flex-1">
@@ -396,10 +396,10 @@ export default function StudentLessonTreinoFlow({
                       onClick={() => selectSlot(slot)}
                       className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                         selected
-                          ? "bg-[#e85d6f] text-white"
+                          ? "bg-[#4a9fd8] text-white"
                           : disabled
                             ? "cursor-not-allowed border border-white/10 text-white/30"
-                            : "border border-white/15 text-white/70 hover:border-[#e85d6f]/40"
+                            : "border border-white/15 text-white/70 hover:border-[#4a9fd8]/40"
                       }`}
                     >
                       {slot.label}
@@ -438,7 +438,7 @@ export default function StudentLessonTreinoFlow({
                     onClick={() => setActivePhase(phase.id)}
                     className={`rounded-xl px-2 py-3 text-left transition ${
                       selected
-                        ? "bg-[#e85d6f] text-white shadow-[0_8px_24px_rgba(232,93,111,0.25)]"
+                        ? "bg-[#4a9fd8] text-white shadow-[0_8px_24px_rgba(74,159,216,0.25)]"
                         : hasContent
                           ? "bg-white/[0.04] text-white/70 hover:bg-white/[0.07]"
                           : "bg-white/[0.04] text-white/45 hover:bg-white/[0.07]"
@@ -493,7 +493,7 @@ export default function StudentLessonTreinoFlow({
                 className={`w-full rounded-xl px-4 py-3 text-sm font-semibold ${
                   aulaCompleted
                     ? "border border-emerald-400/30 bg-emerald-500/10 text-emerald-200"
-                    : "bg-[#e85d6f] text-white"
+                    : "bg-[#4a9fd8] text-white"
                 }`}
               >
                 {aulaCompleted ? "Aula marcada como assistida" : "Marcar aula como assistida"}

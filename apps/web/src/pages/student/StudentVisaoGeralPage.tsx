@@ -57,7 +57,7 @@ export default function StudentVisaoGeralPage() {
         </div>
       ) : overview ? (
         <div className="space-y-4 pb-8">
-          <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#e85d6f]/20 via-black/30 to-black/40 p-5">
+          <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#4a9fd8]/20 via-black/30 to-black/40 p-5">
             <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
               Bem-vindo de volta
             </p>
@@ -108,7 +108,7 @@ export default function StudentVisaoGeralPage() {
                   <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-black/30">
                     <div
                       className={`h-full rounded-full transition-all ${
-                        emBreve ? "bg-white/20" : onTrack ? "bg-emerald-400" : "bg-[#e85d6f]"
+                        emBreve ? "bg-white/20" : onTrack ? "bg-emerald-400" : "bg-[#4a9fd8]"
                       }`}
                       style={{ width: `${percent}%` }}
                     />
@@ -131,7 +131,7 @@ export default function StudentVisaoGeralPage() {
               </div>
               <Link
                 to="/treino"
-                className="rounded-full bg-[#e85d6f]/20 px-3 py-1.5 text-xs font-semibold text-[#f08a98]"
+                className="rounded-full bg-[#4a9fd8]/20 px-3 py-1.5 text-xs font-semibold text-[#7ebef0]"
               >
                 Ver treinos
               </Link>
@@ -147,7 +147,7 @@ export default function StudentVisaoGeralPage() {
                   <Link
                     key={item.id}
                     to={`/treino?date=${item.workoutDate}`}
-                    className="min-w-[5.5rem] shrink-0 snap-start rounded-2xl border border-white/10 bg-black/25 px-3 py-3 transition hover:border-[#e85d6f]/40"
+                    className="min-w-[5.5rem] shrink-0 snap-start rounded-2xl border border-white/10 bg-black/25 px-3 py-3 transition hover:border-[#4a9fd8]/40"
                   >
                     <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
                       {formatWorkoutWeekdayShort(item.workoutDate)}
@@ -191,7 +191,7 @@ export default function StudentVisaoGeralPage() {
               </div>
               <Link
                 to={`/treino?date=${overview.proximoTreino.workoutDate}`}
-                className="mt-4 inline-flex rounded-xl bg-[#e85d6f] px-4 py-2.5 text-sm font-semibold text-white"
+                className="mt-4 inline-flex rounded-xl bg-[#4a9fd8] px-4 py-2.5 text-sm font-semibold text-white"
               >
                 Abrir treino
               </Link>
@@ -214,7 +214,7 @@ function QuickLink({ to, label }: { to: string; label: string }) {
   return (
     <Link
       to={to}
-      className="rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-center text-sm font-semibold text-white/80 transition hover:border-[#e85d6f]/40 hover:text-white"
+      className="rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-center text-sm font-semibold text-white/80 transition hover:border-[#4a9fd8]/40 hover:text-white"
     >
       {label}
     </Link>

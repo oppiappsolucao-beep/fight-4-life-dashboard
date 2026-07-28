@@ -110,7 +110,7 @@ export default function DevModalidadesPage() {
           <button
             type="submit"
             disabled={saving}
-            className="mt-4 w-full rounded-xl bg-[#e85d6f] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
+            className="mt-4 w-full rounded-xl bg-[#4a9fd8] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
           >
             {saving ? "Salvando..." : "Adicionar modalidade"}
           </button>

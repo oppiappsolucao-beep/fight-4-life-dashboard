@@ -334,7 +334,7 @@ export default function DevAcademiaEditModal({
 
           <div>
 
-            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#e85d6f]">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#4a9fd8]">
 
               Editar academia
 
@@ -350,7 +350,7 @@ export default function DevAcademiaEditModal({
 
             onClick={onClose}
 
-            className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-white/70 transition hover:border-[#e85d6f]/40 hover:text-white"
+            className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-white/70 transition hover:border-[#4a9fd8]/40 hover:text-white"
 
           >
 
@@ -400,7 +400,7 @@ export default function DevAcademiaEditModal({
 
                     onChange={(e) => updateField("active", e.target.checked)}
 
-                    className="h-4 w-4 rounded border-white/30 accent-[#e85d6f]"
+                    className="h-4 w-4 rounded border-white/30 accent-[#4a9fd8]"
 
                   />
 
@@ -786,7 +786,7 @@ export default function DevAcademiaEditModal({
 
                   disabled={saving}
 
-                  className="rounded-lg bg-gradient-to-r from-[#e85d6f] to-[#d44d62] px-6 py-2.5 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
+                  className="rounded-lg bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] px-6 py-2.5 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
 
                 >
 
@@ -800,7 +800,7 @@ export default function DevAcademiaEditModal({
 
                   onClick={onClose}
 
-                  className="rounded-lg border border-white/15 px-6 py-2.5 text-[0.75rem] font-medium text-white/70 transition hover:border-[#e85d6f]/40 hover:text-white"
+                  className="rounded-lg border border-white/15 px-6 py-2.5 text-[0.75rem] font-medium text-white/70 transition hover:border-[#4a9fd8]/40 hover:text-white"
 
                 >
 
@@ -878,7 +878,7 @@ function Field({
 
         {label}
 
-        {required && <span className="text-[#e85d6f]"> *</span>}
+        {required && <span className="text-[#4a9fd8]"> *</span>}
 
       </span>
 
@@ -894,7 +894,7 @@ function Field({
 
 const inputClass =
 
-  "w-full rounded-lg border border-white/20 bg-white px-3 py-2.5 text-[0.82rem] text-black outline-none transition focus:border-[#e85d6f]/60 focus:ring-2 focus:ring-[#e85d6f]/15";
+  "w-full rounded-lg border border-white/20 bg-white px-3 py-2.5 text-[0.82rem] text-black outline-none transition focus:border-[#4a9fd8]/60 focus:ring-2 focus:ring-[#4a9fd8]/15";
 
 
 

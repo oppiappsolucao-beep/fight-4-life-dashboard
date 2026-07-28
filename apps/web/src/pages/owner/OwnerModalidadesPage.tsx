@@ -325,7 +325,7 @@ export default function OwnerModalidadesPage() {
             <button
               type="submit"
               disabled={creating}
-              className="mt-4 rounded-xl bg-[#e85d6f] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
+              className="mt-4 rounded-xl bg-[#4a9fd8] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
             >
               {creating ? "Adicionando..." : "Adicionar modalidade"}
             </button>
@@ -379,7 +379,7 @@ export default function OwnerModalidadesPage() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="rounded-xl bg-[#e85d6f] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
+            className="rounded-xl bg-[#4a9fd8] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
           >
             {saving ? "Salvando..." : "Salvar modalidades ofertadas"}
           </button>
@@ -405,8 +405,8 @@ export default function OwnerModalidadesPage() {
                     }
                     className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                       editingScheduleId === modality.id
-                        ? "bg-[#e85d6f] text-white"
-                        : "border border-white/15 text-white/70 hover:border-[#e85d6f]/40"
+                        ? "bg-[#4a9fd8] text-white"
+                        : "border border-white/15 text-white/70 hover:border-[#4a9fd8]/40"
                     }`}
                   >
                     {modality.name}

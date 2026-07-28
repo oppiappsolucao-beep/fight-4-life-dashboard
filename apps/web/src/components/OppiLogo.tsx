@@ -21,7 +21,7 @@ export default function OppiLogo({ size = "md", showText = true }: OppiLogoProps
       />
       {showText && (
         <div className={`${s.text} font-extrabold uppercase tracking-[0.12rem] text-white`}>
-          <span className="text-[#e85d6f]">Oppi</span> Tech
+          <span className="text-[#4a9fd8]">Oppi</span> Tech
         </div>
       )}
     </div>

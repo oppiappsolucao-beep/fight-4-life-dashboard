@@ -59,7 +59,7 @@ export default function DevContasReceberPage() {
           </p>
           <Link
             to="/dev/cadastro-academias"
-            className="mt-4 inline-block text-sm font-medium text-[#e85d6f] hover:underline"
+            className="mt-4 inline-block text-sm font-medium text-[#4a9fd8] hover:underline"
           >
             Cadastrar academia →
           </Link>
@@ -134,7 +134,7 @@ export default function DevContasReceberPage() {
                             <button
                               type="button"
                               onClick={() => setEditingAcademia(academia)}
-                              className="rounded-lg border border-white/15 px-3 py-1.5 text-[0.72rem] font-medium text-white/80 transition hover:border-[#e85d6f]/50 hover:text-[#e85d6f]"
+                              className="rounded-lg border border-white/15 px-3 py-1.5 text-[0.72rem] font-medium text-white/80 transition hover:border-[#4a9fd8]/50 hover:text-[#4a9fd8]"
                             >
                               Editar
                             </button>

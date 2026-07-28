@@ -63,7 +63,7 @@ export default function StudentSidebar({ open, onClose }: StudentSidebarProps) {
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
                 isActive
-                  ? "bg-[#e85d6f]/20 text-[#e85d6f]"
+                  ? "bg-[#4a9fd8]/20 text-[#4a9fd8]"
                   : "text-white/70 hover:bg-white/5 hover:text-white"
               }`
             }
@@ -78,7 +78,7 @@ export default function StudentSidebar({ open, onClose }: StudentSidebarProps) {
         <button
           type="button"
           onClick={handleLogout}
-          className="w-full rounded-lg border border-white/15 px-3 py-2 text-sm font-medium text-white/70 transition hover:border-[#e85d6f]/40 hover:text-[#e85d6f]"
+          className="w-full rounded-lg border border-white/15 px-3 py-2 text-sm font-medium text-white/70 transition hover:border-[#4a9fd8]/40 hover:text-[#4a9fd8]"
         >
           Sair
         </button>

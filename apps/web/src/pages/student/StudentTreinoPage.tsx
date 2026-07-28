@@ -401,7 +401,7 @@ export default function StudentTreinoPage() {
                   onClick={() => setSelectedModalityId(item.id)}
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                     selectedModalityId === item.id
-                      ? "bg-[#e85d6f] text-white"
+                      ? "bg-[#4a9fd8] text-white"
                       : "border border-white/15 text-white/70"
                   }`}
                 >
@@ -485,7 +485,7 @@ export default function StudentTreinoPage() {
                         onClick={() => setActivePhase(phase.id)}
                         className={`rounded-xl px-2 py-3 text-left transition ${
                           selected
-                            ? "bg-[#e85d6f] text-white shadow-[0_8px_24px_rgba(232,93,111,0.25)]"
+                            ? "bg-[#4a9fd8] text-white shadow-[0_8px_24px_rgba(74,159,216,0.25)]"
                             : "bg-white/[0.04] text-white/70 hover:bg-white/[0.07]"
                         }`}
                       >
@@ -508,7 +508,7 @@ export default function StudentTreinoPage() {
                 <button
                   type="button"
                   onClick={() => setMode("build")}
-                  className="mt-4 rounded-xl bg-[#e85d6f] px-4 py-3 text-sm font-semibold text-white"
+                  className="mt-4 rounded-xl bg-[#4a9fd8] px-4 py-3 text-sm font-semibold text-white"
                 >
                   Criar meu treino
                 </button>
@@ -516,7 +516,7 @@ export default function StudentTreinoPage() {
             </>
           ) : (
             <>
-              <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#e85d6f]/20 via-black/30 to-black/40 p-4 sm:p-5">
+              <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#4a9fd8]/20 via-black/30 to-black/40 p-4 sm:p-5">
                 <div className="flex items-start gap-4">
                   <ProgressRing percent={completionPercent} status={completionStatus} />
                   <div className="min-w-0 flex-1">
@@ -569,7 +569,7 @@ export default function StudentTreinoPage() {
                         onClick={() => setActivePhase(phase.id)}
                         className={`rounded-xl px-2 py-3 text-left transition ${
                           selected
-                            ? "bg-[#e85d6f] text-white shadow-[0_8px_24px_rgba(232,93,111,0.25)]"
+                            ? "bg-[#4a9fd8] text-white shadow-[0_8px_24px_rgba(74,159,216,0.25)]"
                             : disabled
                               ? "cursor-not-allowed bg-white/[0.02] text-white/25"
                               : "bg-white/[0.04] text-white/70 hover:bg-white/[0.07]"
@@ -596,7 +596,7 @@ export default function StudentTreinoPage() {
                   activeMeioGroups.map((group) => (
                     <div key={group.region} className="space-y-3">
                       <div className="flex items-center gap-2 px-1">
-                        <span className="rounded-full bg-[#e85d6f]/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#f08a98]">
+                        <span className="rounded-full bg-[#4a9fd8]/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#7ebef0]">
                           {group.label}
                         </span>
                       </div>

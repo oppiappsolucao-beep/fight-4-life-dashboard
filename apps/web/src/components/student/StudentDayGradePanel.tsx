@@ -81,7 +81,7 @@ export default function StudentDayGradePanel({
               onClick={() => onSelectModality?.(item.modalityId)}
               className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition ${
                 selected
-                  ? "border-[#e85d6f] bg-[#e85d6f]/10"
+                  ? "border-[#4a9fd8] bg-[#4a9fd8]/10"
                   : "border-white/10 bg-black/20 hover:border-white/20"
               }`}
             >

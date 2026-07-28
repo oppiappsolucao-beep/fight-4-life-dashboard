@@ -54,7 +54,7 @@ export default function WorkoutExerciseCard({
                 #{index}
               </span>
               {regionBadge ? (
-                <span className="rounded-full bg-[#e85d6f]/80 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-white">
+                <span className="rounded-full bg-[#4a9fd8]/80 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-white">
                   {regionBadge}
                 </span>
               ) : null}
@@ -71,7 +71,7 @@ export default function WorkoutExerciseCard({
               #{index}
             </span>
             {regionBadge ? (
-              <span className="rounded-full bg-[#e85d6f]/20 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-[#f08a98]">
+              <span className="rounded-full bg-[#4a9fd8]/20 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-[#7ebef0]">
                 {regionBadge}
               </span>
             ) : null}
@@ -109,7 +109,7 @@ export default function WorkoutExerciseCard({
                   className={`min-w-[3rem] rounded-xl px-3 py-2 text-sm font-semibold transition ${
                     checked
                       ? "bg-emerald-500/20 text-emerald-300"
-                      : "border border-white/10 bg-black/20 text-white/70 hover:border-[#e85d6f]/40"
+                      : "border border-white/10 bg-black/20 text-white/70 hover:border-[#4a9fd8]/40"
                   }`}
                 >
                   S{setNumber}

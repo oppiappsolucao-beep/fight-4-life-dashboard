@@ -30,7 +30,7 @@ export default function ProfessorSidebar({ open, onClose }: ProfessorSidebarProp
       <div className="flex items-start justify-between gap-3 border-b border-white/10 px-5 py-5">
         <div className="min-w-0">
           <OppiLogo size="sm" />
-          <p className="mt-3 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#e85d6f]">
+          <p className="mt-3 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#4a9fd8]">
             Professor
           </p>
           {tenant?.name ? (
@@ -57,7 +57,7 @@ export default function ProfessorSidebar({ open, onClose }: ProfessorSidebarProp
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
                 isActive
-                  ? "bg-[#e85d6f]/20 text-[#e85d6f]"
+                  ? "bg-[#4a9fd8]/20 text-[#4a9fd8]"
                   : "text-white/70 hover:bg-white/5 hover:text-white"
               }`
             }
@@ -72,7 +72,7 @@ export default function ProfessorSidebar({ open, onClose }: ProfessorSidebarProp
         <button
           type="button"
           onClick={handleLogout}
-          className="w-full rounded-lg border border-white/15 px-3 py-2 text-sm font-medium text-white/70 transition hover:border-[#e85d6f]/40 hover:text-[#e85d6f]"
+          className="w-full rounded-lg border border-white/15 px-3 py-2 text-sm font-medium text-white/70 transition hover:border-[#4a9fd8]/40 hover:text-[#4a9fd8]"
         >
           Sair
         </button>

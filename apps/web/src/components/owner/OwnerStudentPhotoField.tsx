@@ -74,14 +74,14 @@ export default function OwnerStudentPhotoField({
             <button
               type="button"
               onClick={handleTakePhoto}
-              className="rounded-lg border border-[#e85d6f]/40 bg-[#e85d6f]/15 px-4 py-2 text-[0.75rem] font-medium text-[#e85d6f] transition hover:bg-[#e85d6f]/25"
+              className="rounded-lg border border-[#4a9fd8]/40 bg-[#4a9fd8]/15 px-4 py-2 text-[0.75rem] font-medium text-[#4a9fd8] transition hover:bg-[#4a9fd8]/25"
             >
               Tirar foto
             </button>
             <button
               type="button"
               onClick={() => galleryInputRef.current?.click()}
-              className="rounded-lg border border-white/15 px-4 py-2 text-[0.75rem] font-medium text-white/70 transition hover:border-[#e85d6f]/40 hover:text-white"
+              className="rounded-lg border border-white/15 px-4 py-2 text-[0.75rem] font-medium text-white/70 transition hover:border-[#4a9fd8]/40 hover:text-white"
             >
               Escolher da galeria
             </button>
@@ -227,7 +227,7 @@ function CameraCaptureModal({
       <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#1a1a1a] shadow-2xl">
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
           <div>
-            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#e85d6f]">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#4a9fd8]">
               Câmera
             </p>
             <h3 className="m-0 text-base font-semibold text-white">Tirar foto do aluno</h3>
@@ -298,7 +298,7 @@ function CameraCaptureModal({
                 type="button"
                 onClick={handleCapture}
                 disabled={!ready}
-                className="rounded-lg bg-gradient-to-r from-[#e85d6f] to-[#d44d62] px-4 py-2 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-50"
+                className="rounded-lg bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] px-4 py-2 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-50"
               >
                 Capturar foto
               </button>

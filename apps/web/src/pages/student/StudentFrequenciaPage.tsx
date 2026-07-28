@@ -118,7 +118,7 @@ export default function StudentFrequenciaPage() {
                       type="button"
                       disabled={markingId === aula.id}
                       onClick={() => markPresence(aula)}
-                      className="rounded-xl bg-[#e85d6f] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                      className="rounded-xl bg-[#4a9fd8] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
                     >
                       {markingId === aula.id ? "Enviando..." : "Confirmar presença"}
                     </button>
