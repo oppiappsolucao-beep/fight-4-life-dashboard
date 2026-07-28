@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "../../lib/api";
 import { getStudentSession } from "../../lib/studentSession";
+import {
+  formatWorkoutDateLabel,
+  formatWorkoutDay,
+  formatWorkoutMonthShort,
+  formatWorkoutWeekdayShort,
+  getWeekRange,
+  isTodayWorkoutDate,
+  listDatesInWeekForWeekdays,
+  todayDateInputValue,
+} from "../../lib/workout";
 import StudentSectionPage from "./StudentSectionPage";
 
 type DietMeal = {
@@ -31,7 +41,7 @@ type DietPlan = {
   meals: DietMeal[];
 };
 
-const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"] as const;
+const ALL_WEEKDAYS = [0, 1, 2, 3, 4, 5, 6];
 
 const GOAL_LABELS: Record<string, string> = {
   EMAGRECIMENTO: "Emagrecimento",
@@ -39,8 +49,8 @@ const GOAL_LABELS: Record<string, string> = {
   HIPERTROFIA: "Ganho de massa",
 };
 
-function todayWeekday(): number {
-  return new Date().getDay();
+function weekdayFromIsoDate(value: string): number {
+  return new Date(`${value}T12:00:00`).getDay();
 }
 
 function formatMacro(value: number | null | undefined, suffix: string) {
@@ -53,7 +63,8 @@ export default function StudentDietasPage() {
   const [dieta, setDieta] = useState<DietPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedDay, setSelectedDay] = useState(todayWeekday);
+  const [selectedDate, setSelectedDate] = useState(todayDateInputValue);
+  const [weekOffset, setWeekOffset] = useState(0);
   const [selectedMealId, setSelectedMealId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -84,6 +95,21 @@ export default function StudentDietasPage() {
     };
   }, [session?.id]);
 
+  const weekReference = useMemo(() => {
+    const reference = new Date();
+    reference.setHours(12, 0, 0, 0);
+    reference.setDate(reference.getDate() + weekOffset * 7);
+    return reference;
+  }, [weekOffset]);
+
+  const week = useMemo(() => getWeekRange(weekReference), [weekReference]);
+  const weekDates = useMemo(
+    () => listDatesInWeekForWeekdays(ALL_WEEKDAYS, weekReference),
+    [weekReference],
+  );
+
+  const selectedDay = weekdayFromIsoDate(selectedDate);
+
   const dayMeals = useMemo(() => {
     if (!dieta) return [];
     return dieta.meals
@@ -110,7 +136,24 @@ export default function StudentDietasPage() {
 
   useEffect(() => {
     setSelectedMealId(null);
-  }, [selectedDay]);
+  }, [selectedDate]);
+
+  useEffect(() => {
+    if (weekDates.includes(selectedDate)) return;
+    const today = todayDateInputValue();
+    setSelectedDate(weekDates.includes(today) ? today : (weekDates[0] ?? today));
+  }, [weekDates, selectedDate]);
+
+  function shiftWeek(delta: number) {
+    const nextOffset = weekOffset + delta;
+    const reference = new Date();
+    reference.setHours(12, 0, 0, 0);
+    reference.setDate(reference.getDate() + nextOffset * 7);
+    const nextDates = listDatesInWeekForWeekdays(ALL_WEEKDAYS, reference);
+    const today = todayDateInputValue();
+    setWeekOffset(nextOffset);
+    setSelectedDate(nextDates.includes(today) ? today : (nextDates[0] ?? today));
+  }
 
   return (
     <StudentSectionPage
@@ -153,25 +196,79 @@ export default function StudentDietasPage() {
             </div>
           </section>
 
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {WEEKDAYS.map((label, day) => {
-              const active = selectedDay === day;
-              return (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => setSelectedDay(day)}
-                  className={`min-w-[3.1rem] rounded-lg px-3 py-2.5 text-center text-xs font-semibold transition ${
-                    active
-                      ? "bg-[#4a9fd8] text-white"
-                      : "border border-white/10 bg-white/[0.04] text-white/65 hover:border-[#4a9fd8]/40 hover:text-white"
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
+          <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-3 backdrop-blur-md sm:p-4">
+            <div className="mb-3 flex items-center justify-between gap-3 px-1">
+              <div className="min-w-0 flex-1">
+                <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
+                  Sua dieta
+                </p>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => shiftWeek(-1)}
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/15 text-sm text-white/75 transition hover:border-white/30 hover:text-white"
+                    aria-label="Semana anterior"
+                  >
+                    ←
+                  </button>
+                  <p className="m-0 min-w-0 text-sm text-white/70">
+                    {formatWorkoutDateLabel(week.start)} a {formatWorkoutDateLabel(week.end)}
+                    {weekOffset !== 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => shiftWeek(-weekOffset)}
+                        className="ml-2 text-xs font-semibold text-[#7ebef0] hover:text-[#4a9fd8]"
+                      >
+                        Hoje
+                      </button>
+                    ) : null}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => shiftWeek(1)}
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/15 text-sm text-white/75 transition hover:border-white/30 hover:text-white"
+                    aria-label="Próxima semana"
+                  >
+                    →
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {weekDates.map((date) => {
+                const selected = date === selectedDate;
+                const today = isTodayWorkoutDate(date);
+                return (
+                  <button
+                    key={date}
+                    type="button"
+                    onClick={() => setSelectedDate(date)}
+                    className={`relative min-w-[5.5rem] shrink-0 snap-start rounded-2xl border px-3 py-3 text-left transition ${
+                      selected
+                        ? "border-[#4a9fd8] bg-[#4a9fd8]/15 shadow-[0_0_0_1px_rgba(74,159,216,0.35)]"
+                        : "border-white/10 bg-black/25 hover:border-white/20"
+                    }`}
+                  >
+                    <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
+                      {formatWorkoutWeekdayShort(date)}
+                    </p>
+                    <p className="m-0 mt-1 text-2xl font-semibold leading-none text-white">
+                      {formatWorkoutDay(date)}
+                    </p>
+                    <p className="m-0 mt-1 text-xs text-white/55">
+                      {formatWorkoutMonthShort(date)}
+                    </p>
+                    {today ? (
+                      <span className="mt-2 inline-flex rounded-full bg-white/10 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-white/70">
+                        Hoje
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
 
           <div className="grid gap-3 sm:grid-cols-4">
             {(
