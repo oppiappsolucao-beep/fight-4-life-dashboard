@@ -11,7 +11,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
-    "db:import-exercises": "tsx src/scripts/import-exercisedb.ts"
+    "db:import-exercises": "tsx src/scripts/import-exercisedb.ts",
+    "db:translate-exercises": "tsx src/scripts/translate-exercises-pt.ts"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.2",

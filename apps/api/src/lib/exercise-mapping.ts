@@ -1,4 +1,8 @@
 import { ExerciseBodyRegion } from "@prisma/client";
+import {
+  translateExerciseInstructions,
+  translateExerciseName,
+} from "./exercise-i18n-pt.js";
 
 export interface ExerciseSeedItem {
   slug: string;
@@ -188,10 +192,10 @@ export function mapExerciseDbItem(item: ExerciseDbApiItem): ExerciseSeedItem {
   const id = item.exerciseId?.trim() || slugify(item.name);
   return {
     slug: `edb-${slugify(id)}`,
-    name: titleCaseName(item.name),
+    name: translateExerciseName(item.name),
     muscleGroup: mapMuscleGroup(item),
     equipment: mapEquipment(item),
-    instructions: cleanInstructions(item.instructions),
+    instructions: translateExerciseInstructions(cleanInstructions(item.instructions)),
     imageUrl: item.gifUrl ?? null,
     gifUrl: item.gifUrl ?? null,
     phases: mapPhases(bodyRegion, item.bodyParts?.[0]),
