@@ -13,23 +13,23 @@ export function OverviewHero({
   title: string;
   subtitle: string;
 }) {
+  const brandLabel = brand?.replace(/^\$+\s*/, "").trim() || undefined;
+
   return (
     <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#4a9fd8]/25 via-[#123055]/50 to-[#0b1f3a]/70 p-5 sm:p-6">
       <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[#7ebef0]/80">
         {eyebrow}
       </p>
-      {brand ? (
-        <h2 className="m-0 mt-2 break-words text-2xl font-semibold leading-tight text-white sm:text-3xl">
-          {brand}
-        </h2>
-      ) : null}
-      <p
-        className={`m-0 font-semibold text-white/90 ${
-          brand ? "mt-2 text-lg sm:text-xl" : "mt-1 text-2xl"
-        }`}
-      >
-        {title}
-      </p>
+      {brandLabel ? (
+        <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h2 className="m-0 break-words text-xl font-semibold leading-snug text-white sm:text-2xl">
+            {brandLabel}
+          </h2>
+          <p className="m-0 text-base font-medium text-white/75 sm:text-lg">{title}</p>
+        </div>
+      ) : (
+        <h2 className="m-0 mt-1 text-2xl font-semibold text-white">{title}</h2>
+      )}
       <p className="m-0 mt-2 text-sm text-white/55">{subtitle}</p>
     </section>
   );
