@@ -48,8 +48,9 @@ export default function OwnerVisaoGeralPage() {
         <div className="space-y-4 pb-8">
           <OverviewHero
             eyebrow="Painel da academia"
+            brand={academyName}
             title={`Olá, ${displayName}`}
-            subtitle={`${academyName} • semana ${formatWorkoutDateLabel(overview.semana.start)} a ${formatWorkoutDateLabel(overview.semana.end)}`}
+            subtitle={`Semana ${formatWorkoutDateLabel(overview.semana.start)} a ${formatWorkoutDateLabel(overview.semana.end)}`}
           />
 
           <OverviewMetricGrid

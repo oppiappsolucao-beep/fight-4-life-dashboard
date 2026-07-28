@@ -4,20 +4,33 @@ import type { OverviewGoalMetric } from "../../types/overview";
 
 export function OverviewHero({
   eyebrow,
+  brand,
   title,
   subtitle,
 }: {
   eyebrow: string;
+  brand?: string;
   title: string;
   subtitle: string;
 }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#4a9fd8]/20 via-black/30 to-black/40 p-5">
-      <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
+    <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#4a9fd8]/25 via-[#123055]/50 to-[#0b1f3a]/70 p-5 sm:p-6">
+      <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[#7ebef0]/80">
         {eyebrow}
       </p>
-      <h2 className="m-0 mt-1 text-2xl font-semibold text-white">{title}</h2>
-      <p className="m-0 mt-2 text-sm text-white/60">{subtitle}</p>
+      {brand ? (
+        <h2 className="m-0 mt-2 break-words text-2xl font-semibold leading-tight text-white sm:text-3xl">
+          {brand}
+        </h2>
+      ) : null}
+      <p
+        className={`m-0 font-semibold text-white/90 ${
+          brand ? "mt-2 text-lg sm:text-xl" : "mt-1 text-2xl"
+        }`}
+      >
+        {title}
+      </p>
+      <p className="m-0 mt-2 text-sm text-white/55">{subtitle}</p>
     </section>
   );
 }

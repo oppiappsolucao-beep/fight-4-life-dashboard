@@ -51,8 +51,9 @@ export default function ProfessorVisaoGeralPage() {
         <div className="space-y-4 pb-8">
           <OverviewHero
             eyebrow="Painel do professor"
+            brand={academyName}
             title={`Olá, ${displayName}`}
-            subtitle={`${academyName} • ${formatWorkoutDateLabel(overview.mes.start)} a ${formatWorkoutDateLabel(overview.mes.end)}`}
+            subtitle={`${formatWorkoutDateLabel(overview.mes.start)} a ${formatWorkoutDateLabel(overview.mes.end)}`}
           />
 
           <OverviewMetricGrid
