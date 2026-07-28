@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { formatAcademyName } from "../../lib/format";
 import OppiLogo from "../OppiLogo";
 import { sidebarShellClass } from "../DashboardShell";
 
@@ -36,11 +37,11 @@ export default function OwnerSidebar({ open, onClose }: OwnerSidebarProps) {
           <p className="mt-3 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#4a9fd8]">
             Dono da Academia
           </p>
-          {tenant?.name && (
+          {formatAcademyName(tenant?.name) ? (
             <p className="mt-1 truncate text-sm font-medium text-white/90">
-              {tenant.name}
+              {formatAcademyName(tenant?.name)}
             </p>
-          )}
+          ) : null}
           {user?.name && (
             <p className="mt-0.5 truncate text-xs text-white/50">{user.name}</p>
           )}

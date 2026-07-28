@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { formatPlanCurrency } from "../../lib/plans";
+import { formatAcademyName } from "../../lib/format";
 import type { OverviewGoalMetric } from "../../types/overview";
 
 export function OverviewHero({
@@ -13,7 +14,7 @@ export function OverviewHero({
   title: string;
   subtitle: string;
 }) {
-  const brandLabel = brand?.replace(/^\$+\s*/, "").trim() || undefined;
+  const brandLabel = formatAcademyName(brand) || undefined;
 
   return (
     <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#4a9fd8]/25 via-[#123055]/50 to-[#0b1f3a]/70 p-5 sm:p-6">

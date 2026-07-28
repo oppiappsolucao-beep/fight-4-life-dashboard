@@ -42,3 +42,8 @@ export function formatPhone(value: string): string {
   if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
+
+/** Remove cifrão e espaços extras do nome da academia na exibição. */
+export function formatAcademyName(value: string | null | undefined): string {
+  return (value ?? "").replace(/^\$+\s*/, "").trim();
+}
