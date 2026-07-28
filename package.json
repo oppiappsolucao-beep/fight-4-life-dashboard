@@ -11,9 +11,10 @@
     "dev:web": "npm run dev -w @oppi/web",
     "build": "npm run build -w @oppi/api && npm run build -w @oppi/web",
     "start": "npm run start -w @oppi/api",
-    "db:push": "npm run db:push -w @oppi/api",
-    "db:seed": "npm run db:seed -w @oppi/api",
-    "db:studio": "npm run db:studio -w @oppi/api"
+  "db:push": "npm run db:push -w @oppi/api",
+  "db:seed": "npm run db:seed -w @oppi/api",
+  "db:studio": "npm run db:studio -w @oppi/api",
+  "db:import-exercises": "npm run db:import-exercises -w @oppi/api"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

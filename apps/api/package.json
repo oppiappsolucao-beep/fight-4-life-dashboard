@@ -10,7 +10,8 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "db:import-exercises": "tsx src/scripts/import-exercisedb.ts"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.2",

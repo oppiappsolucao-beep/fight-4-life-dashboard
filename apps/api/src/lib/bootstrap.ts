@@ -81,6 +81,18 @@ export async function bootstrapDatabase(): Promise<void> {
   }
 
   try {
+    const { syncExerciseDbCatalog } = await import("./exercise-import.js");
+    const sync = await syncExerciseDbCatalog();
+    if (sync.skipped) {
+      console.log(`[exercises] ExerciseDB sync pulado: ${sync.reason}`);
+    } else {
+      console.log(`[exercises] ExerciseDB importado: ${sync.imported} exercícios.`);
+    }
+  } catch (error) {
+    console.error("[bootstrap] Falha ao sincronizar ExerciseDB:", error);
+  }
+
+  try {
     const templateCount = await ensureModalityTemplates();
     console.log(`[modalities] Templates sincronizados: ${templateCount}.`);
   } catch (error) {
