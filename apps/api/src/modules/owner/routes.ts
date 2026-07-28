@@ -471,7 +471,7 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
 
   app.get("/owner/exercises", async (request, reply) => {
     try {
-      await ensureExerciseCatalog();
+      await ensureExerciseCatalog({ syncRemote: false });
 
       const exercises = await prisma.exercise.findMany({
         where: { active: true },

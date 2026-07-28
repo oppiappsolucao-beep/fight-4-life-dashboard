@@ -95,7 +95,7 @@ export async function studentRoutes(app: FastifyInstance): Promise<void> {
     { preHandler: [requireStudent] },
     async (request, reply) => {
       try {
-        await ensureExerciseCatalog();
+        await ensureExerciseCatalog({ syncRemote: false });
         const exercises = await prisma.exercise.findMany({
           where: { active: true },
           orderBy: [{ muscleGroup: "asc" }, { name: "asc" }],

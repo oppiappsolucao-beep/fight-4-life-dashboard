@@ -160,10 +160,15 @@ function mapBodyRegion(item: ExerciseDbApiItem): keyof typeof ExerciseBodyRegion
   return "GERAL";
 }
 
-function mapPhases(bodyRegion: keyof typeof ExerciseBodyRegion): string[] {
-  if (bodyRegion === "CARDIO") return ["INICIO", "MEIO", "FIM"];
+function mapPhases(
+  bodyRegion: keyof typeof ExerciseBodyRegion,
+  bodyPart?: string,
+): string[] {
+  const part = (bodyPart ?? "").toLowerCase();
+  if (bodyRegion === "CARDIO" || part === "cardio") return ["INICIO", "MEIO", "FIM"];
   if (bodyRegion === "AQUECIMENTO") return ["INICIO"];
-  if (bodyRegion === "ALONGAMENTO") return ["FIM"];
+  if (bodyRegion === "ALONGAMENTO") return ["INICIO", "FIM"];
+  // Força/hipertrofia: disponível no meio do treino
   return ["MEIO"];
 }
 
@@ -189,7 +194,7 @@ export function mapExerciseDbItem(item: ExerciseDbApiItem): ExerciseSeedItem {
     instructions: cleanInstructions(item.instructions),
     imageUrl: item.gifUrl ?? null,
     gifUrl: item.gifUrl ?? null,
-    phases: mapPhases(bodyRegion),
+    phases: mapPhases(bodyRegion, item.bodyParts?.[0]),
     bodyRegion,
   };
 }

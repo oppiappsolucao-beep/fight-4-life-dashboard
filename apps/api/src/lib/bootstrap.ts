@@ -70,11 +70,13 @@ export async function bootstrapDatabase(): Promise<void> {
   }
 
   try {
-    const count = await ensureExerciseCatalog();
+    const count = await ensureExerciseCatalog({ syncRemote: false, forceSeed: true });
     if (count === 0) {
       console.warn(
         "[bootstrap] Catálogo de exercícios vazio. Confira DATABASE_URL e db:push.",
       );
+    } else {
+      console.log(`[exercises] Catálogo ativo: ${count} exercícios.`);
     }
   } catch (error) {
     console.error("[bootstrap] Falha ao carregar exercícios:", error);
@@ -84,12 +86,12 @@ export async function bootstrapDatabase(): Promise<void> {
     const { syncExerciseDbCatalog } = await import("./exercise-import.js");
     const sync = await syncExerciseDbCatalog();
     if (sync.skipped) {
-      console.log(`[exercises] ExerciseDB sync pulado: ${sync.reason}`);
+      console.log(`[exercises] ExerciseDB remoto pulado: ${sync.reason}`);
     } else {
-      console.log(`[exercises] ExerciseDB importado: ${sync.imported} exercícios.`);
+      console.log(`[exercises] ExerciseDB remoto importado: ${sync.imported} exercícios.`);
     }
   } catch (error) {
-    console.error("[bootstrap] Falha ao sincronizar ExerciseDB:", error);
+    console.error("[bootstrap] Falha ao sincronizar ExerciseDB remoto:", error);
   }
 
   try {

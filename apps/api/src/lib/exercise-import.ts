@@ -28,6 +28,10 @@ function getRapidApiKey(): string {
   );
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function fetchExerciseDbPage(params: {
   limit: number;
   after?: string;
@@ -43,23 +47,31 @@ async function fetchExerciseDbPage(params: {
     headers["X-RapidAPI-Host"] = RAPIDAPI_HOST;
   }
 
-  const response = await fetch(url, { headers });
-  if (!response.ok) {
-    const body = await response.text().catch(() => "");
-    throw new Error(
-      `ExerciseDB HTTP ${response.status}: ${body.slice(0, 200) || response.statusText}`,
-    );
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const response = await fetch(url, { headers });
+    if (response.status === 429) {
+      await sleep(1200 * (attempt + 1));
+      continue;
+    }
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      throw new Error(
+        `ExerciseDB HTTP ${response.status}: ${body.slice(0, 200) || response.statusText}`,
+      );
+    }
+    return (await response.json()) as ExerciseDbPage;
   }
 
-  return (await response.json()) as ExerciseDbPage;
+  throw new Error("ExerciseDB rate limit (429) após várias tentativas.");
 }
 
 export async function fetchAllExerciseDbItems(options?: {
   pageSize?: number;
   maxPages?: number;
 }): Promise<ExerciseSeedItem[]> {
-  const pageSize = options?.pageSize ?? 100;
-  const maxPages = options?.maxPages ?? 40;
+  // API pública costuma devolver no máximo 25 por página.
+  const pageSize = options?.pageSize ?? 25;
+  const maxPages = options?.maxPages ?? 80;
   const mapped: ExerciseSeedItem[] = [];
   const seen = new Set<string>();
   let after: string | undefined;
@@ -80,6 +92,7 @@ export async function fetchAllExerciseDbItems(options?: {
 
     if (!payload.meta?.hasNextPage || !payload.meta.nextCursor) break;
     after = payload.meta.nextCursor;
+    await sleep(650);
   }
 
   return mapped;
@@ -89,6 +102,7 @@ export async function upsertExerciseSeeds(items: ExerciseSeedItem[]): Promise<nu
   let saved = 0;
 
   for (const item of items) {
+    const bodyRegion = ExerciseBodyRegion[item.bodyRegion];
     await prisma.exercise.upsert({
       where: { slug: item.slug },
       update: {
@@ -97,9 +111,9 @@ export async function upsertExerciseSeeds(items: ExerciseSeedItem[]): Promise<nu
         equipment: item.equipment ?? null,
         instructions: item.instructions,
         imageUrl: item.imageUrl ?? null,
-        gifUrl: item.gifUrl ?? null,
+        ...(item.gifUrl ? { gifUrl: item.gifUrl } : {}),
         phases: item.phases,
-        bodyRegion: ExerciseBodyRegion[item.bodyRegion],
+        bodyRegion,
         active: true,
       },
       create: {
@@ -111,7 +125,7 @@ export async function upsertExerciseSeeds(items: ExerciseSeedItem[]): Promise<nu
         imageUrl: item.imageUrl ?? null,
         gifUrl: item.gifUrl ?? null,
         phases: item.phases,
-        bodyRegion: ExerciseBodyRegion[item.bodyRegion],
+        bodyRegion,
         active: true,
       },
     });
@@ -136,6 +150,7 @@ export async function syncExerciseDbCatalog(options?: {
   const withGif = await prisma.exercise.count({
     where: { active: true, gifUrl: { not: null } },
   });
+  const total = await prisma.exercise.count({ where: { active: true } });
 
   if (!force && withGif >= 200) {
     return {
@@ -145,11 +160,22 @@ export async function syncExerciseDbCatalog(options?: {
     };
   }
 
-  const items = await fetchAllExerciseDbItems();
-  if (items.length === 0) {
-    return { imported: 0, skipped: true, reason: "API retornou lista vazia" };
+  // Se já temos catálogo local grande, o remoto vira enriquecimento opcional.
+  if (!force && total >= 400 && withGif < 200) {
+    // Continua para tentar trazer GIFs, mas não bloqueia se falhar.
   }
 
-  const imported = await upsertExerciseSeeds(items);
-  return { imported, skipped: false };
+  try {
+    const items = await fetchAllExerciseDbItems();
+    if (items.length === 0) {
+      return { imported: 0, skipped: true, reason: "API retornou lista vazia" };
+    }
+
+    const imported = await upsertExerciseSeeds(items);
+    return { imported, skipped: false };
+  } catch (error) {
+    // Catálogo local expandido já cobre o uso; remoto é best-effort.
+    const message = error instanceof Error ? error.message : String(error);
+    return { imported: 0, skipped: true, reason: message };
+  }
 }

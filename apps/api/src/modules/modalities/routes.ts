@@ -1740,7 +1740,7 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
   });
 
   app.get("/professor/exercises", async (request, reply) => {
-    await ensureExerciseCatalog();
+    await ensureExerciseCatalog({ syncRemote: false });
     const exercises = await prisma.exercise.findMany({
       where: { active: true },
       orderBy: [{ muscleGroup: "asc" }, { name: "asc" }],
@@ -1757,7 +1757,21 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
         bodyRegion: true,
       },
     });
-    return reply.send({ exercises });
+    return reply.send({ exercises, total: exercises.length });
+  });
+
+  app.post("/professor/exercises/sync", async (_request, reply) => {
+    await ensureExerciseCatalog({ syncRemote: false });
+    const { syncExerciseDbCatalog } = await import("../../lib/exercise-import.js");
+    const sync = await syncExerciseDbCatalog({ force: true });
+    const total = await prisma.exercise.count({ where: { active: true } });
+    return reply.send({
+      ...sync,
+      total,
+      message: sync.skipped
+        ? `Sync remoto não aplicado: ${sync.reason}`
+        : `${sync.imported} exercícios atualizados do ExerciseDB.`,
+    });
   });
 
   app.patch<{ Params: { id: string } }>(
