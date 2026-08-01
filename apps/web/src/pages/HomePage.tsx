@@ -13,12 +13,11 @@ export default function HomePage() {
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${GYM_BG})` }}
       />
-      <div className="absolute inset-0 bg-[#071525]/78" />
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0b1f3a]/40 via-transparent to-[#071525]/90" />
+      <div className="absolute inset-0 bg-black/70" />
 
       <div className="relative z-10 flex min-h-screen flex-col px-6 py-6 md:px-10">
         <header className="flex items-center justify-between">
-          <OppiLogo size="sm" />
+          <OppiLogo size="md" />
           <Link
             to="/login"
             className="text-[0.8rem] font-medium text-white/50 transition hover:text-white/80"
@@ -28,21 +27,9 @@ export default function HomePage() {
         </header>
 
         <main className="flex flex-1 flex-col items-center justify-center pb-16 pt-8">
-          <div className="mb-8 flex flex-col items-center text-center">
-            <OppiLogo size="lg" className="mb-6" />
-            <p className="m-0 text-[0.7rem] font-semibold uppercase tracking-[0.18rem] text-[#7ebef0]">
-              Plataforma de gestão fitness
-            </p>
-            <h1 className="m-0 mt-3 max-w-md text-[clamp(1.55rem,4vw,2.35rem)] font-semibold leading-tight text-white">
-              Seja bem-vindo à{" "}
-              <span className="bg-gradient-to-r from-[#3b9eff] to-[#ff2bd6] bg-clip-text text-transparent">
-                OPPI Fit
-              </span>
-            </h1>
-            <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/60">
-              Treinos, dietas e gestão da academia em um só lugar.
-            </p>
-          </div>
+          <h1 className="mb-14 text-center text-[clamp(1.5rem,3vw,2.2rem)] font-normal text-white/95">
+            Seja bem vindo!
+          </h1>
 
           <MenuCard
             icon={<UserIcon />}
