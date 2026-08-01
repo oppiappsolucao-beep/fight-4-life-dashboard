@@ -1,9 +1,10 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand: #4a9fd8;
+  --color-brand: #3b9eff;
   --color-brand-soft: #7ebef0;
   --color-brand-deep: #2f7fb8;
+  --color-brand-pink: #ff2bd6;
   --color-navy: #0b1f3a;
   --color-navy-mid: #123055;
   --color-sky: #d6e9f7;
@@ -29,8 +30,8 @@ body {
   margin: 0;
   font-family: var(--font-sans);
   background:
-    radial-gradient(circle at 12% 18%, rgba(74, 159, 216, 0.22), transparent 22rem),
-    radial-gradient(circle at 88% 78%, rgba(214, 233, 247, 0.12), transparent 26rem),
+    radial-gradient(circle at 12% 18%, rgba(59, 158, 255, 0.22), transparent 22rem),
+    radial-gradient(circle at 88% 78%, rgba(255, 43, 214, 0.1), transparent 26rem),
     linear-gradient(165deg, #071525 0%, #0b1f3a 42%, #123055 100%);
   color: #f4f8fc;
   -webkit-text-size-adjust: 100%;

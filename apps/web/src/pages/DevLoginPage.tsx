@@ -63,7 +63,7 @@ export default function DevLoginPage() {
               Desenvolvimento
             </h1>
             <p className="mt-2 text-[0.78rem] leading-relaxed text-[#9a9a9a] sm:text-[0.82rem]">
-              Acesso exclusivo da equipe Oppi Tech
+              Acesso exclusivo da equipe OPPI Fit
             </p>
           </div>
 

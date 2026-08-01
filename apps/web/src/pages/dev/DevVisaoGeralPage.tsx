@@ -43,13 +43,13 @@ export default function DevVisaoGeralPage() {
   return (
     <DevSectionPage
       title="Visão Geral"
-      description="Painel executivo da plataforma Oppi Tech com academias, receita e metas."
+      description="Painel executivo da plataforma OPPI Fit com academias, receita e metas."
     >
       <OverviewState loading={loading} error={error} />
       {!loading && !error && overview ? (
         <div className="space-y-4 pb-8">
           <OverviewHero
-            eyebrow="Painel Oppi Tech"
+            eyebrow="Painel OPPI Fit"
             title={`Olá, ${displayName}`}
             subtitle="Acompanhe academias, receita da plataforma e evolução operacional."
           />

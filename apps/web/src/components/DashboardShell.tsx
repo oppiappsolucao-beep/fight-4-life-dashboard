@@ -31,19 +31,19 @@ export default function DashboardShell({
 
   return (
     <div className="relative z-10 flex min-h-screen min-w-0 items-stretch">
-      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-3 border-b border-white/10 bg-[#0b1f3a]/92 px-4 backdrop-blur-md md:hidden">
+      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-3 border-b border-white/10 bg-[#0b1f3a]/92 px-3 backdrop-blur-md sm:px-4 md:hidden">
         <button
           type="button"
           onClick={onOpenMenu}
           aria-label="Abrir menu"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 text-white"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/15 text-white"
         >
           <MenuIcon />
         </button>
         <div className="min-w-0 flex-1">
-          <OppiLogo size="sm" />
+          <OppiLogo size="sm" className="max-w-[160px]" />
         </div>
-        <p className="max-w-[40%] truncate text-[0.65rem] font-semibold uppercase tracking-[0.08rem] text-[#7ebef0]">
+        <p className="max-w-[32%] shrink-0 truncate text-[0.65rem] font-semibold uppercase tracking-[0.08rem] text-[#7ebef0]">
           {title}
         </p>
       </header>

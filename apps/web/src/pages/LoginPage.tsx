@@ -49,18 +49,18 @@ export default function LoginPage() {
       <div className="grid items-start gap-10 lg:grid-cols-[1.4fr_0.9fr] lg:gap-12">
         <section>
           <p className="mb-3 text-[0.65rem] font-semibold uppercase tracking-[0.16rem] text-[#c9c9c9]">
-            Oppi Tech • Dashboard
+            OPPI Fit • Dashboard
           </p>
           <h1 className="m-0 max-w-[580px] text-[clamp(1.75rem,3.2vw,2.75rem)] font-bold uppercase leading-[1.05] tracking-[-0.04rem] text-white">
-            Gestão <span className="text-white/35">•</span> Processos{" "}
+            Gestão <span className="text-white/35">•</span> Treinos{" "}
             <span className="text-white/35">•</span>{" "}
-            <span className="bg-gradient-to-r from-[#4a9fd8] to-[#b84d6a] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#3b9eff] to-[#ff2bd6] bg-clip-text text-transparent">
               Resultados
             </span>
           </h1>
           <p className="mt-3 max-w-[520px] text-[0.82rem] leading-relaxed text-[#9a9a9a]">
-            Tecnologia, organização e dados em um painel interno preparado
-            para acompanhar a operação em tempo real.
+            Plataforma fitness para academias e personal — operação, alunos e
+            resultados em um só painel.
           </p>
           <div className="mt-6">
             <ModalityCards />
@@ -76,8 +76,7 @@ export default function LoginPage() {
               Acesse o dashboard
             </h2>
             <p className="mx-auto mt-2 max-w-[300px] text-center text-[0.72rem] leading-snug text-[#8f8f8f]">
-              Entre com suas credenciais para visualizar o painel interno da
-              Oppi Tech.
+              Entre com suas credenciais para acessar o painel da OPPI Fit.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-5 space-y-3">
@@ -128,7 +127,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-lg bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] py-2.5 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
+                className="w-full rounded-lg bg-gradient-to-r from-[#3b9eff] to-[#ff2bd6] py-2.5 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
               >
                 {loading ? "Entrando..." : "Entrar"}
               </button>
