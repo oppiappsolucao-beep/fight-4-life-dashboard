@@ -8,7 +8,10 @@ export const academyFieldsSchema = z.object({
   subdominio: z
     .string()
     .optional()
-    .transform((value) => (value ?? "").trim().toLowerCase())
+    .transform((value) => {
+      const normalized = (value ?? "").trim().toLowerCase();
+      return normalized || undefined;
+    })
     .refine((value) => !value || /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value), {
       message: "Subdomínio inválido. Use apenas letras minúsculas, números e hífen.",
     }),
@@ -83,6 +86,7 @@ export function brandingToForm(
   return {
     razaoSocial: data.razaoSocial ?? "",
     nomeFantasia: tenantName,
+    subdominio: undefined,
     cnpj: data.cnpj ?? "",
     inscricaoMunicipal: data.inscricaoMunicipal ?? "",
     inscricaoEstadual: data.inscricaoEstadual ?? "",
