@@ -4,6 +4,7 @@ import { formatCep, formatCnpj, formatCpf, formatPhone } from "../../lib/format"
 
 import { apiFetch } from "../../lib/api";
 import { notifyDevAcademiasChanged } from "../../lib/devAcademias";
+import { academyPublicUrl, primaryAppBaseDomain } from "../../lib/tenantHost";
 
 
 
@@ -32,6 +33,8 @@ interface AcademyFormData {
   razaoSocial: string;
 
   nomeFantasia: string;
+
+  subdominio: string;
 
   cnpj: string;
 
@@ -85,9 +88,13 @@ interface AcademyDetailResponse {
 
   slug: string;
 
+  subdomain?: string;
+
   active: boolean;
 
-  form: Omit<AcademyFormData, "senha" | "confirmarSenha" | "active">;
+  form: Omit<AcademyFormData, "senha" | "confirmarSenha" | "active"> & {
+    subdominio?: string;
+  };
 
   owner: { id: string; email: string; name: string | null; active: boolean } | null;
 
@@ -148,6 +155,8 @@ export default function DevAcademiaEditModal({
         setForm({
 
           ...data.form,
+
+          subdominio: data.form.subdominio ?? data.slug ?? "",
 
           senha: "",
 
@@ -441,6 +450,41 @@ export default function DevAcademiaEditModal({
                       onChange={(e) => updateField("nomeFantasia", e.target.value)}
 
                     />
+
+                  </Field>
+
+                  <Field label="Subdomínio" className="md:col-span-2">
+
+                    <Input
+
+                      value={form.subdominio}
+
+                      onChange={(e) =>
+                        updateField(
+                          "subdominio",
+                          e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
+                        )
+                      }
+
+                      placeholder="Ex: dojotakeda"
+
+                    />
+
+                    <p className="mt-1.5 text-xs text-white/40">
+
+                      URL da academia:{" "}
+
+                      <span className="text-[#7ebef0]">
+
+                        {form.subdominio.trim()
+                          ? academyPublicUrl(form.subdominio.trim())
+                          : `https://[subdomínio].${primaryAppBaseDomain()}`}
+
+                      </span>
+
+                      . Academias antigas: preencha e salve para liberar o domínio.
+
+                    </p>
 
                   </Field>
 

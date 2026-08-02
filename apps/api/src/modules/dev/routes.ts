@@ -342,26 +342,19 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
 
       const owner = tenant.users[0] ?? null;
 
-      const form = brandingToForm(tenant.branding, tenant.name);
-
-
+      const form = brandingToForm(tenant.branding, tenant.name, {
+        subdominio: tenant.subdomain ?? tenant.slug,
+      });
 
       if (owner && !form.emailLogin) {
-
         form.emailLogin = owner.email;
-
       }
 
-
-
       return reply.send({
-
         id: tenant.id,
-
         slug: tenant.slug,
-
+        subdomain: tenant.subdomain ?? tenant.slug,
         active: tenant.active,
-
         form,
 
         owner: owner
@@ -481,77 +474,62 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
 
 
       if (data.senha) {
-
         ownerUpdate.passwordHash = await bcrypt.hash(data.senha, 10);
-
       }
 
-
+      let nextSubdomain = tenant.subdomain;
+      if (data.subdominio) {
+        const customSub = slugify(data.subdominio);
+        const taken = await prisma.tenant.findFirst({
+          where: {
+            id: { not: tenant.id },
+            OR: [{ slug: customSub }, { subdomain: customSub }],
+          },
+          select: { id: true },
+        });
+        if (taken) {
+          return reply.status(409).send({
+            error: "Este subdomínio já está em uso por outra academia.",
+          });
+        }
+        nextSubdomain = customSub;
+      }
 
       const updated = await prisma.tenant.update({
-
         where: { id: tenant.id },
-
         data: {
-
           name: data.nomeFantasia,
-
           active: data.active,
-
+          subdomain: nextSubdomain,
           branding: formToBranding(data, emailLogin),
-
           users: {
-
             update: {
-
               where: { id: owner.id },
-
               data: ownerUpdate,
-
             },
-
           },
-
         },
-
         include: {
-
           users: {
-
             where: { role: UserRole.PROPRIETARIO },
-
             select: { id: true, email: true, name: true, role: true, active: true },
-
           },
-
         },
-
       });
-
-
 
       const updatedOwner = updated.users[0];
 
-
-
       return reply.send({
-
         tenant: {
-
           id: updated.id,
-
           slug: updated.slug,
-
+          subdomain: updated.subdomain ?? updated.slug,
           name: updated.name,
-
           active: updated.active,
-
+          url: academyPublicUrl(updated.subdomain ?? updated.slug),
         },
-
         owner: updatedOwner,
-
         message: "Academia atualizada com sucesso.",
-
       });
 
     },

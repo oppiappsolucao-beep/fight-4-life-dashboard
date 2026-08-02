@@ -11,6 +11,12 @@ const GENEROS = ["Masculino", "Feminino", "Outro", "Prefiro não informar"];
 const FORMAS_PAGAMENTO = ["Dinheiro", "Cartão", "Pix", "Débito"];
 const PARENTESCOS = ["Pai", "Mãe", "Cônjuge", "Irmão(ã)", "Amigo(a)", "Outro"];
 
+const STEPS = [
+  { id: 0, label: "Pessoal" },
+  { id: 1, label: "Contato" },
+  { id: 2, label: "Matrícula" },
+] as const;
+
 interface StudentDetail {
   id: string;
   nomeCompleto: string;
@@ -66,6 +72,7 @@ export default function OwnerAlunoEditModal({
   onSaved,
 }: OwnerAlunoEditModalProps) {
   const [form, setForm] = useState<StudentForm | null>(null);
+  const [step, setStep] = useState(0);
   const [planos, setPlanos] = useState<PlanItem[]>(DEFAULT_OWNER_PLANS);
   const [dietas, setDietas] = useState<DietPlanOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -145,6 +152,22 @@ export default function OwnerAlunoEditModal({
     event.preventDefault();
     if (!form) return;
 
+    if (!form.nomeCompleto.trim() || !form.cpf.trim() || !form.dataNascimento) {
+      setStep(0);
+      setError("Preencha nome, CPF e data de nascimento.");
+      return;
+    }
+    if (!form.email.trim()) {
+      setStep(1);
+      setError("Informe o e-mail do aluno.");
+      return;
+    }
+    if (!form.planoModalidade || !form.dataInicio || !form.diaVencimento) {
+      setStep(2);
+      setError("Preencha os dados da matrícula.");
+      return;
+    }
+
     setSaving(true);
     setError("");
     try {
@@ -166,40 +189,82 @@ export default function OwnerAlunoEditModal({
 
   return (
     <div className="fixed inset-0 z-50 flex overflow-y-auto bg-black/75 p-4 backdrop-blur-sm">
-      <div className="relative my-auto w-full max-w-4xl rounded-2xl border border-white/10 bg-[#171717] shadow-2xl">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[#171717]/95 px-6 py-4 backdrop-blur">
-          <div>
-            <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#4a9fd8]">
-              Editar aluno
-            </p>
-            <h2 className="m-0 mt-1 text-lg font-semibold text-white">
-              {form?.nomeCompleto ?? "Carregando..."}
-            </h2>
+      <div className="relative my-auto w-full max-w-3xl overflow-hidden rounded-2xl border border-white/10 bg-[#12161c] shadow-2xl">
+        <div className="sticky top-0 z-10 border-b border-white/10 bg-[#12161c]/95 px-5 py-4 backdrop-blur md:px-6">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#4a9fd8]">
+                Editar aluno
+              </p>
+              <h2 className="m-0 mt-1 truncate text-lg font-semibold text-white">
+                {form?.nomeCompleto ?? "Carregando..."}
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-white/70 hover:text-white"
+            >
+              Fechar
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-white/70 hover:text-white"
-          >
-            Fechar
-          </button>
+
+          {!loading && form ? (
+            <ol className="mt-4 flex gap-2">
+              {STEPS.map((item) => {
+                const active = item.id === step;
+                const done = item.id < step;
+                return (
+                  <li key={item.id} className="flex-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setError("");
+                        setStep(item.id);
+                      }}
+                      className={[
+                        "flex w-full items-center justify-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold transition sm:text-sm",
+                        active
+                          ? "bg-[#4a9fd8]/20 text-white ring-1 ring-[#4a9fd8]/45"
+                          : done
+                            ? "bg-white/[0.05] text-white/80"
+                            : "bg-white/[0.03] text-white/45",
+                      ].join(" ")}
+                    >
+                      <span
+                        className={[
+                          "flex h-5 w-5 items-center justify-center rounded-full text-[0.65rem]",
+                          active || done
+                            ? "bg-[#4a9fd8] text-white"
+                            : "bg-white/10 text-white/50",
+                        ].join(" ")}
+                      >
+                        {done ? "✓" : item.id + 1}
+                      </span>
+                      {item.label}
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          ) : null}
         </div>
 
-        <div className="max-h-[calc(100vh-8rem)] overflow-y-auto p-6">
+        <div className="max-h-[calc(100vh-10rem)] overflow-y-auto p-5 md:p-6">
           {loading ? (
             <p className="py-10 text-center text-sm text-white/50">Carregando...</p>
           ) : null}
 
           {error ? (
-            <div className="mb-4 rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            <div className="mb-4 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
               {error}
             </div>
           ) : null}
 
           {form ? (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {form.fotoUrl ? (
-                <div className="flex items-center gap-4 rounded-xl border border-white/10 bg-black/20 p-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {form.fotoUrl && step === 0 ? (
+                <div className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
                   <img
                     src={form.fotoUrl}
                     alt=""
@@ -215,200 +280,229 @@ export default function OwnerAlunoEditModal({
                   </div>
                 </div>
               ) : null}
-              <Section title="Dados pessoais">
-                <Field label="Nome completo" span>
-                  <Input
-                    required
-                    value={form.nomeCompleto}
-                    onChange={(e) => update("nomeCompleto", e.target.value)}
-                  />
-                </Field>
-                <Field label="CPF">
-                  <Input
-                    required
-                    value={form.cpf}
-                    onChange={(e) => update("cpf", formatCpf(e.target.value))}
-                  />
-                </Field>
-                <Field label="RG">
-                  <Input value={form.rg} onChange={(e) => update("rg", e.target.value)} />
-                </Field>
-                <Field label="Data de nascimento">
-                  <Input
-                    required
-                    type="date"
-                    value={form.dataNascimento}
-                    onChange={(e) => update("dataNascimento", e.target.value)}
-                  />
-                </Field>
-                <Field label="Gênero">
-                  <Select
-                    value={form.genero}
-                    onChange={(e) => update("genero", e.target.value)}
-                  >
-                    <option value="">Selecione</option>
-                    {GENEROS.map((item) => <option key={item}>{item}</option>)}
-                  </Select>
-                </Field>
-              </Section>
 
-              <Section title="Contato">
-                <Field label="E-mail">
-                  <Input
-                    required
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => update("email", e.target.value)}
-                  />
-                </Field>
-                <Field label="Telefone">
-                  <Input
-                    value={form.telefone}
-                    onChange={(e) => update("telefone", formatPhone(e.target.value))}
-                  />
-                </Field>
-                <Field label="Contato de emergência">
-                  <Input
-                    value={form.emergenciaNome}
-                    onChange={(e) => update("emergenciaNome", e.target.value)}
-                  />
-                </Field>
-                <Field label="Parentesco">
-                  <Select
-                    value={form.emergenciaParentesco}
-                    onChange={(e) => update("emergenciaParentesco", e.target.value)}
-                  >
-                    <option value="">Selecione</option>
-                    {PARENTESCOS.map((item) => <option key={item}>{item}</option>)}
-                  </Select>
-                </Field>
-                <Field label="Telefone de emergência">
-                  <Input
-                    value={form.emergenciaTelefone}
-                    onChange={(e) =>
-                      update("emergenciaTelefone", formatPhone(e.target.value))
-                    }
-                  />
-                </Field>
-              </Section>
+              {step === 0 ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Nome completo" span>
+                    <Input
+                      required
+                      value={form.nomeCompleto}
+                      onChange={(e) => update("nomeCompleto", e.target.value)}
+                    />
+                  </Field>
+                  <Field label="CPF">
+                    <Input
+                      required
+                      value={form.cpf}
+                      onChange={(e) => update("cpf", formatCpf(e.target.value))}
+                    />
+                  </Field>
+                  <Field label="RG">
+                    <Input value={form.rg} onChange={(e) => update("rg", e.target.value)} />
+                  </Field>
+                  <Field label="Data de nascimento">
+                    <Input
+                      required
+                      type="date"
+                      value={form.dataNascimento}
+                      onChange={(e) => update("dataNascimento", e.target.value)}
+                    />
+                  </Field>
+                  <Field label="Gênero">
+                    <Select
+                      value={form.genero}
+                      onChange={(e) => update("genero", e.target.value)}
+                    >
+                      <option value="">Selecione</option>
+                      {GENEROS.map((item) => (
+                        <option key={item}>{item}</option>
+                      ))}
+                    </Select>
+                  </Field>
+                </div>
+              ) : null}
 
-              <Section title="Endereço">
-                <Field label="Rua" span>
-                  <Input value={form.rua} onChange={(e) => update("rua", e.target.value)} />
-                </Field>
-                <Field label="Número">
-                  <Input
-                    value={form.numero}
-                    onChange={(e) => update("numero", e.target.value)}
-                  />
-                </Field>
-                <Field label="CEP">
-                  <Input
-                    value={form.cep}
-                    onChange={(e) => update("cep", formatCep(e.target.value))}
-                  />
-                </Field>
-                <Field label="Cidade">
-                  <Input
-                    value={form.cidade}
-                    onChange={(e) => update("cidade", e.target.value)}
-                  />
-                </Field>
-              </Section>
+              {step === 1 ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="E-mail">
+                    <Input
+                      required
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => update("email", e.target.value)}
+                    />
+                  </Field>
+                  <Field label="Telefone">
+                    <Input
+                      value={form.telefone}
+                      onChange={(e) => update("telefone", formatPhone(e.target.value))}
+                    />
+                  </Field>
+                  <Field label="Contato de emergência">
+                    <Input
+                      value={form.emergenciaNome}
+                      onChange={(e) => update("emergenciaNome", e.target.value)}
+                    />
+                  </Field>
+                  <Field label="Parentesco">
+                    <Select
+                      value={form.emergenciaParentesco}
+                      onChange={(e) => update("emergenciaParentesco", e.target.value)}
+                    >
+                      <option value="">Selecione</option>
+                      {PARENTESCOS.map((item) => (
+                        <option key={item}>{item}</option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label="Telefone de emergência">
+                    <Input
+                      value={form.emergenciaTelefone}
+                      onChange={(e) =>
+                        update("emergenciaTelefone", formatPhone(e.target.value))
+                      }
+                    />
+                  </Field>
+                  <Field label="Rua" span>
+                    <Input value={form.rua} onChange={(e) => update("rua", e.target.value)} />
+                  </Field>
+                  <Field label="Número">
+                    <Input
+                      value={form.numero}
+                      onChange={(e) => update("numero", e.target.value)}
+                    />
+                  </Field>
+                  <Field label="CEP">
+                    <Input
+                      value={form.cep}
+                      onChange={(e) => update("cep", formatCep(e.target.value))}
+                    />
+                  </Field>
+                  <Field label="Cidade">
+                    <Input
+                      value={form.cidade}
+                      onChange={(e) => update("cidade", e.target.value)}
+                    />
+                  </Field>
+                </div>
+              ) : null}
 
-              <Section title="Matrícula">
-                <Field label="Plano / modalidade">
-                  <Select
-                    required
-                    value={form.planoModalidade}
-                    onChange={(e) => update("planoModalidade", e.target.value)}
-                  >
-                    {(planos.some((plan) => plan.nome === form.planoModalidade)
-                      ? planos
-                      : [{ nome: form.planoModalidade, valor: 0 }, ...planos]
-                    ).map((plan) => (
-                      <option key={plan.nome} value={plan.nome}>
-                        {plan.nome}
-                        {plan.valor > 0 ? ` — ${formatPlanCurrency(plan.valor)}` : ""}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label="Data de início">
-                  <Input
-                    required
-                    type="date"
-                    value={form.dataInicio}
-                    onChange={(e) => update("dataInicio", e.target.value)}
-                  />
-                </Field>
-                <Field label="Dia do vencimento">
-                  <Input
-                    required
-                    value={form.diaVencimento}
-                    onChange={(e) => update("diaVencimento", e.target.value)}
-                  />
-                </Field>
-                <Field label="Forma de pagamento">
-                  <Select
-                    value={form.formaPagamento}
-                    onChange={(e) => update("formaPagamento", e.target.value)}
-                  >
-                    <option value="">Selecione</option>
-                    {FORMAS_PAGAMENTO.map((item) => <option key={item}>{item}</option>)}
-                  </Select>
-                </Field>
-                <Field label="Plano de dieta" span>
-                  <Select
-                    value={form.dietPlanId}
-                    onChange={(e) => update("dietPlanId", e.target.value)}
-                  >
-                    <option value="">Sem dieta liberada</option>
-                    {dietas.map((dieta) => (
-                      <option key={dieta.id} value={dieta.id}>
-                        {dieta.name} — ~{dieta.targetCalories} kcal/dia
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-              </Section>
+              {step === 2 ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Plano / modalidade">
+                    <Select
+                      required
+                      value={form.planoModalidade}
+                      onChange={(e) => update("planoModalidade", e.target.value)}
+                    >
+                      {(planos.some((plan) => plan.nome === form.planoModalidade)
+                        ? planos
+                        : [{ nome: form.planoModalidade, valor: 0 }, ...planos]
+                      ).map((plan) => (
+                        <option key={plan.nome} value={plan.nome}>
+                          {plan.nome}
+                          {plan.valor > 0 ? ` — ${formatPlanCurrency(plan.valor)}` : ""}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label="Data de início">
+                    <Input
+                      required
+                      type="date"
+                      value={form.dataInicio}
+                      onChange={(e) => update("dataInicio", e.target.value)}
+                    />
+                  </Field>
+                  <Field label="Dia do vencimento">
+                    <Select
+                      required
+                      value={form.diaVencimento}
+                      onChange={(e) => update("diaVencimento", e.target.value)}
+                    >
+                      <option value="">Selecione</option>
+                      {Array.from({ length: 28 }, (_, i) => i + 1).map((dia) => (
+                        <option key={dia} value={String(dia)}>
+                          Dia {dia}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label="Forma de pagamento">
+                    <Select
+                      value={form.formaPagamento}
+                      onChange={(e) => update("formaPagamento", e.target.value)}
+                    >
+                      <option value="">Selecione</option>
+                      {FORMAS_PAGAMENTO.map((item) => (
+                        <option key={item}>{item}</option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label="Plano de dieta" span>
+                    <Select
+                      value={form.dietPlanId}
+                      onChange={(e) => update("dietPlanId", e.target.value)}
+                    >
+                      <option value="">Sem dieta liberada</option>
+                      {dietas.map((dieta) => (
+                        <option key={dieta.id} value={dieta.id}>
+                          {dieta.name} — ~{dieta.targetCalories} kcal/dia
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                </div>
+              ) : null}
 
-              <div className="flex justify-end gap-3 border-t border-white/10 pt-5">
+              <div className="flex flex-wrap justify-between gap-3 border-t border-white/10 pt-5">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-lg border border-white/15 px-5 py-2.5 text-sm text-white/70"
+                  className="rounded-lg border border-white/15 px-4 py-2.5 text-sm text-white/70"
                 >
                   Cancelar
                 </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="rounded-lg bg-[#4a9fd8] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
-                >
-                  {saving ? "Salvando..." : "Salvar alterações"}
-                </button>
+                <div className="flex gap-2">
+                  {step > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setError("");
+                        setStep((value) => value - 1);
+                      }}
+                      className="rounded-lg border border-white/15 px-4 py-2.5 text-sm text-white/75"
+                    >
+                      Voltar
+                    </button>
+                  ) : null}
+                  {step < STEPS.length - 1 ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setError("");
+                        setStep((value) => value + 1);
+                      }}
+                      className="rounded-lg bg-[#4a9fd8] px-5 py-2.5 text-sm font-semibold text-white"
+                    >
+                      Continuar
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="rounded-lg bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                    >
+                      {saving ? "Salvando..." : "Salvar alterações"}
+                    </button>
+                  )}
+                </div>
               </div>
             </form>
           ) : null}
         </div>
       </div>
     </div>
-  );
-}
-
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-      <h3 className="mb-4 mt-0 text-sm font-semibold text-white/85">{title}</h3>
-      <div className="grid gap-4 md:grid-cols-2">{children}</div>
-    </section>
   );
 }
 
@@ -430,7 +524,7 @@ function Field({
 }
 
 const controlClass =
-  "w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none transition focus:border-[#4a9fd8]/60 [color-scheme:dark]";
+  "w-full rounded-xl border border-white/12 bg-[#0d1117] px-3.5 py-2.5 text-sm text-white outline-none transition focus:border-[#4a9fd8]/70 focus:ring-2 focus:ring-[#4a9fd8]/20 [color-scheme:dark]";
 
 function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={controlClass} />;

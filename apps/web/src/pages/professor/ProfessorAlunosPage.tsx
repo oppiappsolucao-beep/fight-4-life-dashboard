@@ -29,7 +29,9 @@ export default function ProfessorAlunosPage() {
   const load = useCallback(() => {
     setLoading(true);
     setError("");
-    apiFetch<{ alunos: ProfessorAlunoItem[]; modalidades: ModalityOption[] }>("/professor/alunos")
+    apiFetch<{ alunos: ProfessorAlunoItem[]; modalidades: ModalityOption[] }>(
+      "/professor/alunos?withFoto=1",
+    )
       .then((data) => {
         setAlunos(data.alunos);
         setModalidades(data.modalidades);

@@ -1640,35 +1640,38 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
     const tenantPlans = await getTenantPlans(tenantId);
     const studentIds = new Set<string>();
 
-    const modalidades = await Promise.all(
-      modalities.map(async (modality) => {
-        const alunos = students.filter((student) =>
-          modalityMatchesPlan(modality, student.planoModalidade, tenantPlans),
-        );
-        alunos.forEach((student) => studentIds.add(student.id));
-
-        const aulas = await prisma.professorLesson.count({
-          where: {
-            tenantId,
-            professorId,
-            modalityId: modality.id,
-            active: true,
-            classDate: {
-              gte: parseClassDate(monthStart),
-              lte: parseClassDate(monthEnd),
-            },
-          },
-        });
-
-        return {
-          id: modality.id,
-          name: modality.name,
-          contentType: modality.contentType,
-          alunos: alunos.length,
-          aulasMes: aulas,
-        };
-      }),
+    const lessonCounts = await prisma.professorLesson.groupBy({
+      by: ["modalityId"],
+      where: {
+        tenantId,
+        professorId,
+        modalityId: { in: modalities.map((item) => item.id) },
+        active: true,
+        classDate: {
+          gte: parseClassDate(monthStart),
+          lte: parseClassDate(monthEnd),
+        },
+      },
+      _count: { _all: true },
+    });
+    const aulasByModality = new Map(
+      lessonCounts.map((row) => [row.modalityId, row._count._all]),
     );
+
+    const modalidades = modalities.map((modality) => {
+      const alunos = students.filter((student) =>
+        modalityMatchesPlan(modality, student.planoModalidade, tenantPlans),
+      );
+      alunos.forEach((student) => studentIds.add(student.id));
+
+      return {
+        id: modality.id,
+        name: modality.name,
+        contentType: modality.contentType,
+        alunos: alunos.length,
+        aulasMes: aulasByModality.get(modality.id) ?? 0,
+      };
+    });
 
     const week = getWeekRange();
 
@@ -1692,6 +1695,8 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
     const tenantId = request.user.tenantId;
     const modalityIds = await getProfessorModalityIds(request.user.sub, tenantId);
     const tenantPlans = await getTenantPlans(tenantId);
+    const query = request.query as { withFoto?: string };
+    const withFoto = query.withFoto === "1" || query.withFoto === "true";
 
     const [modalities, students] = await Promise.all([
       prisma.modality.findMany({
@@ -1714,8 +1719,8 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
           planoModalidade: true,
           email: true,
           telefone: true,
-          fotoUrl: true,
           dataInicio: true,
+          ...(withFoto ? { fotoUrl: true } : {}),
         },
       }),
     ]);
@@ -1727,6 +1732,9 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
         );
         return {
           ...student,
+          fotoUrl: withFoto
+            ? (("fotoUrl" in student ? student.fotoUrl : null) as string | null)
+            : null,
           modalityIds: matchingModalities.map((item) => item.id),
           modalityNames: matchingModalities.map((item) => item.name),
         };
@@ -1739,8 +1747,7 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
     });
   });
 
-  app.get("/professor/exercises", async (request, reply) => {
-    await ensureExerciseCatalog({ syncRemote: false });
+  app.get("/professor/exercises", async (_request, reply) => {
     const exercises = await prisma.exercise.findMany({
       where: { active: true },
       orderBy: [{ muscleGroup: "asc" }, { name: "asc" }],
@@ -1750,14 +1757,16 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
         name: true,
         muscleGroup: true,
         equipment: true,
-        instructions: true,
         imageUrl: true,
         gifUrl: true,
         phases: true,
         bodyRegion: true,
       },
     });
-    return reply.send({ exercises, total: exercises.length });
+    return reply.send({
+      exercises: exercises.map((item) => ({ ...item, instructions: "" })),
+      total: exercises.length,
+    });
   });
 
   app.post("/professor/exercises/sync", async (_request, reply) => {

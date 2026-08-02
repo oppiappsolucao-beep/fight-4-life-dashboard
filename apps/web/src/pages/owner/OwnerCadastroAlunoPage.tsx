@@ -4,8 +4,8 @@ import OwnerCadastroAlunoForm from "../../components/owner/OwnerCadastroAlunoFor
 export default function OwnerCadastroAlunoPage() {
   return (
     <OwnerSectionPage
-      title="Cadastro Aluno"
-      description="Cadastre novos alunos com dados pessoais, contato, matrícula, dieta e foto."
+      title="Cadastro de aluno"
+      description="Preencha em etapas: dados pessoais, contato, matrícula e foto."
     >
       <OwnerCadastroAlunoForm />
     </OwnerSectionPage>

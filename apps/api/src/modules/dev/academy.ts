@@ -77,16 +77,18 @@ interface BrandingJson {
 export function brandingToForm(
   branding: unknown,
   tenantName: string,
+  options?: { subdominio?: string | null },
 ): AcademyFields {
   const data = (branding ?? {}) as BrandingJson;
   const endereco = data.endereco ?? {};
   const responsavel = data.responsavel ?? {};
   const plano = data.plano ?? {};
+  const subdominio = (options?.subdominio ?? "").trim().toLowerCase() || undefined;
 
   return {
     razaoSocial: data.razaoSocial ?? "",
     nomeFantasia: tenantName,
-    subdominio: undefined,
+    subdominio,
     cnpj: data.cnpj ?? "",
     inscricaoMunicipal: data.inscricaoMunicipal ?? "",
     inscricaoEstadual: data.inscricaoEstadual ?? "",
