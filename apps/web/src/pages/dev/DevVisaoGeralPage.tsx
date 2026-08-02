@@ -17,11 +17,25 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR");
 }
 
+type AsaasStatusResponse = {
+  ok: boolean;
+  env: string;
+  envConfigured: boolean;
+  missingEnv: string[];
+  apiReachable: boolean;
+  walletMatch?: boolean;
+  accountName?: string | null;
+  accountEmail?: string | null;
+  message: string;
+};
+
 export default function DevVisaoGeralPage() {
   const { user } = useAuth();
   const [overview, setOverview] = useState<DevOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [asaasStatus, setAsaasStatus] = useState<AsaasStatusResponse | null>(null);
+  const [asaasLoading, setAsaasLoading] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -33,6 +47,26 @@ export default function DevVisaoGeralPage() {
       )
       .finally(() => setLoading(false));
   }, []);
+
+  async function testAsaas() {
+    setAsaasLoading(true);
+    setAsaasStatus(null);
+    try {
+      const data = await apiFetch<AsaasStatusResponse>("/dev/asaas/status");
+      setAsaasStatus(data);
+    } catch (err) {
+      setAsaasStatus({
+        ok: false,
+        env: "?",
+        envConfigured: false,
+        missingEnv: [],
+        apiReachable: false,
+        message: err instanceof Error ? err.message : "Erro ao testar Asaas.",
+      });
+    } finally {
+      setAsaasLoading(false);
+    }
+  }
 
   useEffect(() => {
     load();
@@ -54,13 +88,42 @@ export default function DevVisaoGeralPage() {
             subtitle="Receita = taxa por aluno que pagou (R$ 1,90 até 100 / R$ 1,49 acima), por academia e mês da academia."
           />
 
-          {overview.asaas && !overview.asaas.configured ? (
-            <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100/90">
-              Asaas ainda não configurado. No EasyPanel, defina:{" "}
-              <strong>{(overview.asaas.missingEnv ?? []).join(", ") || "ASAAS_API_KEY, ASAAS_WALLET_ID"}</strong>
-              .
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="m-0 text-sm font-semibold text-white">Asaas (conta master)</p>
+                <p className="m-0 mt-1 text-xs text-white/45">
+                  {overview.asaas?.configured
+                    ? "Variáveis encontradas no servidor. Clique para validar na API."
+                    : `Faltando: ${(overview.asaas?.missingEnv ?? []).join(", ") || "ASAAS_API_KEY, ASAAS_WALLET_ID"}`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void testAsaas()}
+                disabled={asaasLoading}
+                className="rounded-lg bg-[#4a9fd8] px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
+              >
+                {asaasLoading ? "Testando..." : "Testar conexão Asaas"}
+              </button>
             </div>
-          ) : null}
+            {asaasStatus ? (
+              <div
+                className={`mt-3 rounded-lg border px-3 py-2 text-sm ${
+                  asaasStatus.ok
+                    ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-200"
+                    : "border-red-400/30 bg-red-500/10 text-red-200"
+                }`}
+              >
+                <p className="m-0 font-medium">{asaasStatus.message}</p>
+                <p className="m-0 mt-1 text-xs opacity-80">
+                  Ambiente: {asaasStatus.env}
+                  {asaasStatus.accountName ? ` · Conta: ${asaasStatus.accountName}` : ""}
+                  {asaasStatus.accountEmail ? ` (${asaasStatus.accountEmail})` : ""}
+                </p>
+              </div>
+            ) : null}
+          </div>
 
           <OverviewMetricGrid
             items={[

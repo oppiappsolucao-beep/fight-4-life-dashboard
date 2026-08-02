@@ -31,7 +31,13 @@ import { registerDevModalityRoutes } from "../modalities/routes.js";
 import { PLATFORM_TENANT_SLUGS } from "../../middleware/tenant.js";
 import { sumPlatformRevenueForOpenCycles } from "../../lib/charge-payments.js";
 import { centsToBrl } from "../../lib/platform-fees.js";
-import { asaasSetupChecklist, isAsaasConfigured } from "../../lib/asaas/config.js";
+import {
+  asaasSetupChecklist,
+  getAsaasEnv,
+  getAsaasPlatformWalletId,
+  isAsaasConfigured,
+} from "../../lib/asaas/config.js";
+import { AsaasError, asaasRequest } from "../../lib/asaas/client.js";
 
 
 
@@ -97,6 +103,80 @@ async function isOwnerEmailTaken(email: string, excludeUserId?: string) {
 
 
 export async function devRoutes(app: FastifyInstance): Promise<void> {
+
+  /** Valida env + chama a API Asaas (conta master). */
+  app.get(
+    "/dev/asaas/status",
+    { preHandler: [requireAuth, requireRole(UserRole.DESENVOLVIMENTO)] },
+    async (_request, reply) => {
+      const missingEnv = asaasSetupChecklist();
+      const envConfigured = isAsaasConfigured();
+      const walletConfigured = getAsaasPlatformWalletId();
+
+      if (!envConfigured) {
+        return reply.send({
+          ok: false,
+          env: getAsaasEnv(),
+          envConfigured: false,
+          missingEnv,
+          apiReachable: false,
+          walletMatch: false,
+          message: "Variáveis Asaas incompletas no EasyPanel.",
+        });
+      }
+
+      try {
+        const account = await asaasRequest<{
+          name?: string;
+          email?: string;
+          personType?: string;
+        }>("/myAccount");
+
+        const wallets = await asaasRequest<{
+          data?: Array<{ id?: string }>;
+        }>("/myAccount/wallets");
+
+        const walletIds = (wallets.data ?? [])
+          .map((item) => item.id)
+          .filter((id): id is string => Boolean(id));
+        const walletMatch = walletConfigured
+          ? walletIds.includes(walletConfigured)
+          : false;
+
+        return reply.send({
+          ok: walletMatch,
+          env: getAsaasEnv(),
+          envConfigured: true,
+          missingEnv: [],
+          apiReachable: true,
+          accountName: account.name ?? null,
+          accountEmail: account.email ?? null,
+          walletMatch,
+          walletConfigured: Boolean(walletConfigured),
+          message: walletMatch
+            ? "Asaas produção/sandbox OK: API respondeu e o ASAAS_WALLET_ID confere."
+            : "API Asaas OK, mas ASAAS_WALLET_ID não aparece nas carteiras desta conta. Confira o valor colado.",
+        });
+      } catch (error) {
+        const message =
+          error instanceof AsaasError
+            ? error.message
+            : error instanceof Error
+              ? error.message
+              : "Falha ao falar com o Asaas.";
+
+        return reply.send({
+          ok: false,
+          env: getAsaasEnv(),
+          envConfigured: true,
+          missingEnv: [],
+          apiReachable: false,
+          walletMatch: false,
+          message: `Variáveis existem, mas a API Asaas falhou: ${message}`,
+        });
+      }
+    },
+  );
 
   app.get(
     "/dev/overview",
