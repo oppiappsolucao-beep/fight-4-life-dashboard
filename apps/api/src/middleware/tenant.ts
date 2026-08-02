@@ -48,11 +48,12 @@ export function isPlatformTenantSlug(slug: string | null | undefined): boolean {
 }
 
 function appBaseDomains(): string[] {
-  const raw = process.env.APP_BASE_DOMAIN || "oppifit.com.br";
-  return raw
+  const raw = process.env.APP_BASE_DOMAIN?.trim() || "oppifit.com.br";
+  const domains = raw
     .split(",")
     .map((item) => item.trim().toLowerCase())
     .filter(Boolean);
+  return domains.length > 0 ? domains : ["oppifit.com.br"];
 }
 
 function firstHeaderValue(value: string | string[] | undefined): string | undefined {

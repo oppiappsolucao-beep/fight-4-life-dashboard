@@ -13,11 +13,12 @@ const RESERVED_SUBDOMAINS = new Set([
 ]);
 
 function appBaseDomains(): string[] {
-  const raw = import.meta.env.VITE_APP_BASE_DOMAIN || "oppifit.com.br";
-  return raw
+  const raw = (import.meta.env.VITE_APP_BASE_DOMAIN || "oppifit.com.br").trim();
+  const domains = raw
     .split(",")
     .map((item) => item.trim().toLowerCase())
     .filter(Boolean);
+  return domains.length > 0 ? domains : ["oppifit.com.br"];
 }
 
 /** Domínio base principal para URLs exibidas no painel (ex.: oppifit.com.br). */

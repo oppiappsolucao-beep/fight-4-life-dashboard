@@ -8,16 +8,20 @@ import {
   STUDENT_BILLING_BLOCKED_MESSAGE,
 } from "../../lib/billing.js";
 import {
+  extractSubdomainFromHost,
   getRequestHost,
-  isLocalRequestHost,
   resolveAcademyTenant,
   resolveTenant,
   resolveTenantFromHost,
 } from "../../middleware/tenant.js";
 import { requireAuth } from "../../middleware/auth.js";
 
-const ACADEMY_LOGIN_HINT =
-  "Acesse pelo endereço da sua academia (ex.: suaacademia.oppifit.com.br).";
+function tenantMatchesHost(
+  tenant: { slug: string; subdomain?: string | null },
+  hostSub: string,
+): boolean {
+  return tenant.slug === hostSub || tenant.subdomain === hostSub;
+}
 
 const loginSchema = z.object({
   email: z.string().email("E-mail inválido."),
@@ -399,14 +403,11 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
 
     const { email, password, tenantSlug } = parsed.data;
     const normalizedEmail = email.toLowerCase();
-
-    const academyTenant = await resolveAcademyTenant(request, tenantSlug);
-    const allowUnscoped =
-      !academyTenant && isLocalRequestHost(getRequestHost(request));
-
-    if (!academyTenant && !allowUnscoped) {
-      return reply.status(400).send({ error: ACADEMY_LOGIN_HINT });
-    }
+    const hostSub = extractSubdomainFromHost(getRequestHost(request));
+    const academyTenant = await resolveAcademyTenant(
+      request,
+      tenantSlug ?? hostSub,
+    );
 
     const owners = await prisma.user.findMany({
       where: {
@@ -454,6 +455,27 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
       });
     }
 
+    // No subdomínio público: vincula ou valida a academia (academias antigas sem subdomain)
+    if (hostSub && !tenantMatchesHost(matchedOwner.tenant, hostSub)) {
+      const conflict = await prisma.tenant.findFirst({
+        where: {
+          id: { not: matchedOwner.tenant.id },
+          OR: [{ subdomain: hostSub }, { slug: hostSub }],
+        },
+        select: { id: true },
+      });
+      if (conflict || matchedOwner.tenant.subdomain) {
+        return reply.status(403).send({
+          error: "Esta conta não pertence a esta academia.",
+        });
+      }
+      await prisma.tenant.update({
+        where: { id: matchedOwner.tenant.id },
+        data: { subdomain: hostSub },
+      });
+      matchedOwner.tenant.subdomain = hostSub;
+    }
+
     const token = app.jwt.sign(
       {
         sub: matchedOwner.id,
@@ -487,14 +509,11 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
 
     const { email, password, tenantSlug } = parsed.data;
     const normalizedEmail = email.toLowerCase();
-
-    const academyTenant = await resolveAcademyTenant(request, tenantSlug);
-    const allowUnscoped =
-      !academyTenant && isLocalRequestHost(getRequestHost(request));
-
-    if (!academyTenant && !allowUnscoped) {
-      return reply.status(400).send({ error: ACADEMY_LOGIN_HINT });
-    }
+    const hostSub = extractSubdomainFromHost(getRequestHost(request));
+    const academyTenant = await resolveAcademyTenant(
+      request,
+      tenantSlug ?? hostSub,
+    );
 
     const candidates = await prisma.user.findMany({
       where: {
@@ -544,6 +563,26 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
       return reply.status(403).send({
         error: "Acesso bloqueado. Entre em contato com a academia.",
       });
+    }
+
+    if (hostSub && !tenantMatchesHost(matched.tenant, hostSub)) {
+      const conflict = await prisma.tenant.findFirst({
+        where: {
+          id: { not: matched.tenant.id },
+          OR: [{ subdomain: hostSub }, { slug: hostSub }],
+        },
+        select: { id: true },
+      });
+      if (conflict || matched.tenant.subdomain) {
+        return reply.status(403).send({
+          error: "Esta conta não pertence a esta academia.",
+        });
+      }
+      await prisma.tenant.update({
+        where: { id: matched.tenant.id },
+        data: { subdomain: hostSub },
+      });
+      matched.tenant.subdomain = hostSub;
     }
 
     const token = app.jwt.sign(

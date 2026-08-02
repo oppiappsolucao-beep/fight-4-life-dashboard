@@ -82,9 +82,7 @@ export default function OwnerLoginPage() {
             <p className="mt-2 text-[0.78rem] leading-relaxed text-[#9a9a9a] sm:text-[0.82rem]">
               {academyName
                 ? `Acesso de ${academyName}`
-                : hostSub
-                  ? "Entre com e-mail e senha desta academia"
-                  : "Use o link da sua academia (ex.: suaacademia.oppifit.com.br/dono/login)"}
+                : "Entre com e-mail e senha do cadastro da academia"}
             </p>
           </div>
 

@@ -70,9 +70,7 @@ export default function ProfessorLoginPage() {
             <p className="mt-2 text-sm text-white/55">
               {academyName
                 ? `Acesso de ${academyName}`
-                : hostSub
-                  ? "Entre com o e-mail liberado nesta academia"
-                  : "Use o link da sua academia (ex.: suaacademia.oppifit.com.br/professor/login)"}
+                : "Entre com o e-mail e senha liberados pelo dono"}
             </p>
           </div>
 
