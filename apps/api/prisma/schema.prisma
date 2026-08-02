@@ -70,23 +70,37 @@ enum DietGoal {
 }
 
 model Tenant {
-  id         String        @id @default(uuid())
-  slug       String        @unique
-  name       String
-  subdomain  String?       @unique
-  branding   Json?
-  active     Boolean       @default(true)
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
-  users      User[]
-  leads      Lead[]
-  students   Student[]
-  config     TenantConfig?
-  workouts   StudentWorkout[]
-  modalities Modality[]
-  lessons    ProfessorLesson[]
-  attendances LessonAttendance[]
+  id              String        @id @default(uuid())
+  slug            String        @unique
+  name            String
+  subdomain       String?       @unique
+  branding        Json?
+  active          Boolean       @default(true)
+  /// Dia 1–28 do "mês da academia" (ciclo de taxa OPPI). Null = dia do createdAt.
+  billingCycleDay Int?
+  /// ID da subconta/wallet Asaas da academia
+  asaasAccountId  String?
+  asaasWalletId   String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  users           User[]
+  leads           Lead[]
+  students        Student[]
+  charges         StudentCharge[]
+  config          TenantConfig?
+  workouts        StudentWorkout[]
+  modalities      Modality[]
+  lessons         ProfessorLesson[]
+  attendances     LessonAttendance[]
   scheduleCancellations ModalityScheduleCancellation[]
+}
+
+enum ChargeStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+  REFUNDED
 }
 
 model Student {
@@ -102,6 +116,12 @@ model Student {
   emergenciaNome       String?
   emergenciaParentesco String?
   emergenciaTelefone   String?
+  /// Pagador Asaas quando o aluno é menor de 18 anos
+  responsavelNome      String?
+  responsavelCpf       String?
+  responsavelEmail     String?
+  responsavelTelefone  String?
+  responsavelParentesco String?
   rua                  String?
   numero               String?
   cep                  String?
@@ -116,6 +136,8 @@ model Student {
   termoSaudeAnswers    Json?
   acessoLiberadoAte    String?
   dietPlanId           String?
+  /// Cliente Asaas (pagador: aluno adulto ou responsável)
+  asaasCustomerId      String?
   active               Boolean  @default(true)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
@@ -123,11 +145,42 @@ model Student {
   dietPlan             DietPlan? @relation(fields: [dietPlanId], references: [id], onDelete: SetNull)
   workouts             StudentWorkout[]
   lessonAttendances    LessonAttendance[]
+  charges              StudentCharge[]
 
   @@unique([tenantId, cpf])
   @@index([tenantId, email])
   @@index([tenantId, active])
   @@index([dietPlanId])
+}
+
+/// Cobrança de mensalidade do aluno (Asaas) + taxa OPPI no momento do pagamento.
+model StudentCharge {
+  id               String       @id @default(uuid())
+  tenantId         String
+  studentId        String
+  /// Valor da mensalidade da academia (centavos)
+  amountCents      Int
+  /// Taxa OPPI Fit gravada na confirmação do pagamento (centavos)
+  platformFeeCents Int          @default(0)
+  status           ChargeStatus @default(PENDING)
+  dueDate          String
+  paidAt           DateTime?
+  /// Início do ciclo da academia (YYYY-MM-DD) — usado na faixa 100
+  billingCycleKey  String
+  asaasPaymentId   String?      @unique
+  payerName        String?
+  payerCpf         String?
+  isMinorStudent   Boolean      @default(false)
+  description      String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  tenant           Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  student          Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+  @@index([tenantId, billingCycleKey, status])
+  @@index([studentId, status])
+  @@index([paidAt])
 }
 
 model TenantConfig {

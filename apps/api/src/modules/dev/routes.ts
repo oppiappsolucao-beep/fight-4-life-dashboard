@@ -29,6 +29,9 @@ import { getPlatformPlanValue } from "./billing.js";
 import { DEV_NEW_ACADEMIES_GOAL, percentValue } from "../../lib/goals.js";
 import { registerDevModalityRoutes } from "../modalities/routes.js";
 import { PLATFORM_TENANT_SLUGS } from "../../middleware/tenant.js";
+import { sumPlatformRevenueForOpenCycles } from "../../lib/charge-payments.js";
+import { centsToBrl } from "../../lib/platform-fees.js";
+import { asaasSetupChecklist, isAsaasConfigured } from "../../lib/asaas/config.js";
 
 
 
@@ -120,13 +123,13 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
       let academiasAtivas = 0;
       let academiasInativas = 0;
       let donosCadastrados = 0;
-      let receitaPlataforma = 0;
+      let receitaPlanosLegado = 0;
 
       for (const tenant of tenants) {
         if (tenant.active) {
           academiasAtivas += 1;
           const billing = parseBilling(tenant.branding);
-          receitaPlataforma += getPlatformPlanValue(billing.plano, billing.periodo);
+          receitaPlanosLegado += getPlatformPlanValue(billing.plano, billing.periodo);
         } else {
           academiasInativas += 1;
         }
@@ -136,6 +139,9 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
         }
       }
 
+      const feeRevenue = await sumPlatformRevenueForOpenCycles();
+      const receitaPlataforma = centsToBrl(feeRevenue.receitaPlataformaCents);
+
       return reply.send({
         user: { name: request.user.name ?? null },
         metrics: {
@@ -144,6 +150,19 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
           academiasInativas,
           donosCadastrados,
           receitaPlataforma,
+          cobrancasPagasCiclo: feeRevenue.cobrancasPagas,
+          academiasComPagamento: feeRevenue.academiasComPagamento,
+          receitaPlanosLegado,
+        },
+        billingModel: {
+          tier1Fee: 1.9,
+          tier2Fee: 1.49,
+          tier1Limit: 100,
+          basis: "por academia · mês da academia · só cobranças pagas",
+        },
+        asaas: {
+          configured: isAsaasConfigured(),
+          missingEnv: asaasSetupChecklist(),
         },
         recentAcademias: tenants.slice(0, 5).map((tenant) => {
           const billing = parseBilling(tenant.branding);
@@ -161,17 +180,25 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
             id: "academias-ativas",
             label: "Academias ativas",
             atual: academiasAtivas,
-            meta: tenants.length,
+            meta: Math.max(tenants.length, 1),
             unidade: "academias",
             status: "ativo",
           },
           {
             id: "receita-plataforma",
-            label: "Receita da plataforma",
+            label: "Receita taxas (ciclos abertos)",
             atual: receitaPlataforma,
-            meta: receitaPlataforma,
+            meta: Math.max(receitaPlataforma, 1),
             unidade: "R$",
             status: "ativo",
+          },
+          {
+            id: "cobrancas-pagas",
+            label: "Cobranças pagas (ciclos)",
+            atual: feeRevenue.cobrancasPagas,
+            meta: Math.max(feeRevenue.cobrancasPagas, 1),
+            unidade: "pagamentos",
+            status: feeRevenue.cobrancasPagas > 0 ? "ativo" : "em_breve",
           },
           {
             id: "novas-academias-mes",

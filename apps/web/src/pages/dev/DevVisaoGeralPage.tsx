@@ -43,7 +43,7 @@ export default function DevVisaoGeralPage() {
   return (
     <DevSectionPage
       title="Visão Geral"
-      description="Painel executivo da plataforma OPPI Fit com academias, receita e metas."
+      description="Painel da OPPI Fit: academias e receita por taxa em cobranças pagas."
     >
       <OverviewState loading={loading} error={error} />
       {!loading && !error && overview ? (
@@ -51,8 +51,16 @@ export default function DevVisaoGeralPage() {
           <OverviewHero
             eyebrow="Painel OPPI Fit"
             title={`Olá, ${displayName}`}
-            subtitle="Acompanhe academias, receita da plataforma e evolução operacional."
+            subtitle="Receita = taxa por aluno que pagou (R$ 1,90 até 100 / R$ 1,49 acima), por academia e mês da academia."
           />
+
+          {overview.asaas && !overview.asaas.configured ? (
+            <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100/90">
+              Asaas ainda não configurado. No EasyPanel, defina:{" "}
+              <strong>{(overview.asaas.missingEnv ?? []).join(", ") || "ASAAS_API_KEY, ASAAS_WALLET_ID"}</strong>
+              .
+            </div>
+          ) : null}
 
           <OverviewMetricGrid
             items={[
@@ -63,13 +71,14 @@ export default function DevVisaoGeralPage() {
                 hint: `${overview.metrics.academiasInativas} inativa(s)`,
               },
               {
-                label: "Donos cadastrados",
-                value: String(overview.metrics.donosCadastrados),
+                label: "Cobranças pagas (ciclos)",
+                value: String(overview.metrics.cobrancasPagasCiclo ?? 0),
+                hint: `${overview.metrics.academiasComPagamento ?? 0} academia(s) com pagamento`,
               },
               {
-                label: "Receita da plataforma",
+                label: "Receita taxas OPPI",
                 value: formatPlanCurrency(overview.metrics.receitaPlataforma),
-                hint: "Com base nos planos das academias ativas",
+                hint: "Só pagamentos confirmados · faixa por academia",
               },
             ]}
           />

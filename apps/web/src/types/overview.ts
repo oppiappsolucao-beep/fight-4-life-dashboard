@@ -58,7 +58,21 @@ export interface DevOverview {
     academiasAtivas: number;
     academiasInativas: number;
     donosCadastrados: number;
+    /** Soma das taxas OPPI (R$ 1,90 / R$ 1,49) nos ciclos abertos das academias */
     receitaPlataforma: number;
+    cobrancasPagasCiclo?: number;
+    academiasComPagamento?: number;
+    receitaPlanosLegado?: number;
+  };
+  billingModel?: {
+    tier1Fee: number;
+    tier2Fee: number;
+    tier1Limit: number;
+    basis: string;
+  };
+  asaas?: {
+    configured: boolean;
+    missingEnv: string[];
   };
   recentAcademias: Array<{
     id: string;

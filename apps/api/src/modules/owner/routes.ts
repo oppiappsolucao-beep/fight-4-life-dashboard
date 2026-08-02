@@ -20,6 +20,7 @@ import {
 } from "./workouts.js";
 import { ensureExerciseCatalog } from "../../lib/exercise-catalog.js";
 import { registerOwnerModalityRoutes } from "../modalities/routes.js";
+import { isMinorStudent } from "../../lib/student-age.js";
 
 const studentCreateSchema = z.object({
   nomeCompleto: z.string().min(1),
@@ -32,6 +33,11 @@ const studentCreateSchema = z.object({
   emergenciaNome: z.string().optional(),
   emergenciaParentesco: z.string().optional(),
   emergenciaTelefone: z.string().optional(),
+  responsavelNome: z.string().optional(),
+  responsavelCpf: z.string().optional(),
+  responsavelEmail: z.string().email().optional().or(z.literal("")),
+  responsavelTelefone: z.string().optional(),
+  responsavelParentesco: z.string().optional(),
   rua: z.string().optional(),
   numero: z.string().optional(),
   cep: z.string().optional(),
@@ -266,6 +272,19 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
       return reply.status(400).send({ error: "Plano de dieta inválido." });
     }
 
+    if (isMinorStudent(data.dataNascimento)) {
+      const hasResponsible =
+        Boolean(data.responsavelNome?.trim()) &&
+        Boolean(data.responsavelCpf?.replace(/\D/g, "")) &&
+        Boolean(data.responsavelEmail?.trim());
+      if (!hasResponsible) {
+        return reply.status(400).send({
+          error:
+            "Aluno menor de 18 anos: informe responsável (nome, CPF e e-mail) para cobranças.",
+        });
+      }
+    }
+
     const aluno = await prisma.student.create({
       data: {
         tenantId,
@@ -279,6 +298,11 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
         emergenciaNome: data.emergenciaNome || null,
         emergenciaParentesco: data.emergenciaParentesco || null,
         emergenciaTelefone: data.emergenciaTelefone || null,
+        responsavelNome: data.responsavelNome?.trim() || null,
+        responsavelCpf: data.responsavelCpf?.replace(/\D/g, "") || null,
+        responsavelEmail: data.responsavelEmail?.trim().toLowerCase() || null,
+        responsavelTelefone: data.responsavelTelefone || null,
+        responsavelParentesco: data.responsavelParentesco || null,
         rua: data.rua || null,
         numero: data.numero || null,
         cep: data.cep || null,
@@ -375,6 +399,19 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
         return reply.status(400).send({ error: "Plano de dieta inválido." });
       }
 
+      if (isMinorStudent(data.dataNascimento)) {
+        const hasResponsible =
+          Boolean(data.responsavelNome?.trim()) &&
+          Boolean(data.responsavelCpf?.replace(/\D/g, "")) &&
+          Boolean(data.responsavelEmail?.trim());
+        if (!hasResponsible) {
+          return reply.status(400).send({
+            error:
+              "Aluno menor de 18 anos: informe responsável (nome, CPF e e-mail) para cobranças.",
+          });
+        }
+      }
+
       const aluno = await prisma.student.update({
         where: { id: current.id },
         data: {
@@ -388,6 +425,11 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
           emergenciaNome: data.emergenciaNome || null,
           emergenciaParentesco: data.emergenciaParentesco || null,
           emergenciaTelefone: data.emergenciaTelefone || null,
+          responsavelNome: data.responsavelNome?.trim() || null,
+          responsavelCpf: data.responsavelCpf?.replace(/\D/g, "") || null,
+          responsavelEmail: data.responsavelEmail?.trim().toLowerCase() || null,
+          responsavelTelefone: data.responsavelTelefone || null,
+          responsavelParentesco: data.responsavelParentesco || null,
           rua: data.rua || null,
           numero: data.numero || null,
           cep: data.cep || null,
