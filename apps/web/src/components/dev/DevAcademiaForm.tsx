@@ -155,27 +155,37 @@ export default function DevAcademiaForm() {
               placeholder="Ex: Iron Pulse Fitness"
             />
           </Field>
-          <Field label="Subdomínio" className="md:col-span-2">
-            <Input
-              value={form.subdominio}
-              onChange={(e) =>
-                updateField(
-                  "subdominio",
-                  e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
-                )
-              }
-              placeholder="Ex: dojotakeda"
-            />
-            <p className="mt-1.5 text-xs text-white/40">
-              URL da academia:{" "}
-              <span className="text-[#7ebef0]">
+          <div className="md:col-span-2 rounded-xl border border-[#4a9fd8]/25 bg-[#4a9fd8]/10 p-4">
+            <Field label="Subdomínio">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Input
+                  value={form.subdominio}
+                  onChange={(e) =>
+                    updateField(
+                      "subdominio",
+                      e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
+                    )
+                  }
+                  placeholder="Ex: fourarbjj"
+                  className="sm:max-w-xs"
+                />
+                <span className="text-sm text-white/50">.{primaryAppBaseDomain()}</span>
+              </div>
+            </Field>
+            <p className="mt-2 text-xs text-white/55">
+              URL:{" "}
+              <span className="font-medium text-[#7ebef0]">
                 {form.subdominio.trim()
-                  ? academyPublicUrl(form.subdominio.trim())
-                  : `https://[gerado].${primaryAppBaseDomain()}`}
+                  ? academyPublicUrl(form.subdominio.trim()).replace(/^https?:\/\//, "")
+                  : `[gerado].${primaryAppBaseDomain()}`}
               </span>
               . Se vazio, geramos a partir do nome fantasia.
             </p>
-          </Field>
+            <p className="mt-2 text-[0.7rem] leading-relaxed text-amber-100/80">
+              No EasyPanel, cadastre o host (ou o wildcard{" "}
+              <code className="text-amber-50">*.oppifit.com.br</code>) no serviço da aplicação.
+            </p>
+          </div>
           <Field label="CNPJ" required>
             <Input
               value={form.cnpj}
@@ -469,10 +479,13 @@ function Field({
 }
 
 const inputClass =
-  "w-full rounded-lg border border-white/20 bg-white px-3 py-2.5 text-[0.82rem] text-black outline-none transition focus:border-[#4a9fd8]/60 focus:ring-2 focus:ring-[#4a9fd8]/15";
+  "w-full rounded-xl border border-white/12 bg-[#0d1117] px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#4a9fd8]/70 focus:ring-2 focus:ring-[#4a9fd8]/20 [color-scheme:dark]";
 
-function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...props} className={inputClass} />;
+function Input({
+  className = "",
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement>) {
+  return <input {...props} className={`${inputClass} ${className}`.trim()} />;
 }
 
 function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
