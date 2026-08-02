@@ -9,6 +9,7 @@ import {
 } from "../../lib/billing.js";
 import {
   extractSubdomainFromHost,
+  findAcademyTenantByKey,
   getRequestHost,
   resolveAcademyTenant,
   resolveTenant,
@@ -21,6 +22,36 @@ function tenantMatchesHost(
   hostSub: string,
 ): boolean {
   return tenant.slug === hostSub || tenant.subdomain === hostSub;
+}
+
+/** Garante que a academia autenticada fique ligada ao subdomínio da URL. */
+async function bindTenantToHostSubdomain<
+  T extends { id: string; slug: string; subdomain?: string | null },
+>(tenant: T, hostSub: string): Promise<T> {
+  if (tenantMatchesHost(tenant, hostSub)) return tenant;
+
+  // Libera o campo subdomain em outro tenant (não altera slug de ninguém)
+  await prisma.tenant.updateMany({
+    where: {
+      id: { not: tenant.id },
+      subdomain: hostSub,
+    },
+    data: { subdomain: null },
+  });
+
+  const updated = await prisma.tenant.update({
+    where: { id: tenant.id },
+    data: { subdomain: hostSub },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      active: true,
+      subdomain: true,
+    },
+  });
+
+  return { ...tenant, ...updated };
 }
 
 const loginSchema = z.object({
@@ -404,30 +435,46 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
     const { email, password, tenantSlug } = parsed.data;
     const normalizedEmail = email.toLowerCase();
     const hostSub = extractSubdomainFromHost(getRequestHost(request));
-    const academyTenant = await resolveAcademyTenant(
-      request,
-      tenantSlug ?? hostSub,
-    );
+    // Só isola pelo Host quando a academia já existe com esse subdomínio/slug no banco
+    const hostTenant = hostSub ? await findAcademyTenantByKey(hostSub) : null;
+    const preferredTenant = !hostTenant && tenantSlug
+      ? await findAcademyTenantByKey(tenantSlug)
+      : null;
+    const scopedTenant = hostTenant ?? preferredTenant;
 
-    const owners = await prisma.user.findMany({
+    const ownerInclude = {
+      tenant: {
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          active: true,
+          subdomain: true,
+        },
+      },
+    } as const;
+
+    let owners = await prisma.user.findMany({
       where: {
         email: normalizedEmail,
         role: "PROPRIETARIO",
         active: true,
-        ...(academyTenant ? { tenantId: academyTenant.id } : {}),
+        ...(scopedTenant ? { tenantId: scopedTenant.id } : {}),
       },
-      include: {
-        tenant: {
-          select: {
-            id: true,
-            slug: true,
-            name: true,
-            active: true,
-            subdomain: true,
-          },
-        },
-      },
+      include: ownerInclude,
     });
+
+    // Academia antiga: host ainda não está no banco — busca global e vincula depois
+    if (owners.length === 0) {
+      owners = await prisma.user.findMany({
+        where: {
+          email: normalizedEmail,
+          role: "PROPRIETARIO",
+          active: true,
+        },
+        include: ownerInclude,
+      });
+    }
 
     if (owners.length === 0) {
       return reply.status(401).send({
@@ -455,25 +502,31 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
       });
     }
 
-    // No subdomínio público: vincula ou valida a academia (academias antigas sem subdomain)
-    if (hostSub && !tenantMatchesHost(matchedOwner.tenant, hostSub)) {
-      const conflict = await prisma.tenant.findFirst({
+    // Host já é de outra academia COM dono → bloqueia. Sem dono → libera subdomain.
+    if (hostTenant && hostTenant.id !== matchedOwner.tenant.id) {
+      const hostOwnerCount = await prisma.user.count({
         where: {
-          id: { not: matchedOwner.tenant.id },
-          OR: [{ subdomain: hostSub }, { slug: hostSub }],
+          tenantId: hostTenant.id,
+          role: "PROPRIETARIO",
+          active: true,
         },
-        select: { id: true },
       });
-      if (conflict || matchedOwner.tenant.subdomain) {
+      if (hostOwnerCount > 0) {
         return reply.status(403).send({
           error: "Esta conta não pertence a esta academia.",
         });
       }
       await prisma.tenant.update({
-        where: { id: matchedOwner.tenant.id },
-        data: { subdomain: hostSub },
+        where: { id: hostTenant.id },
+        data: { subdomain: null },
       });
-      matchedOwner.tenant.subdomain = hostSub;
+    }
+
+    if (hostSub) {
+      matchedOwner.tenant = await bindTenantToHostSubdomain(
+        matchedOwner.tenant,
+        hostSub,
+      );
     }
 
     const token = app.jwt.sign(
@@ -510,37 +563,51 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
     const { email, password, tenantSlug } = parsed.data;
     const normalizedEmail = email.toLowerCase();
     const hostSub = extractSubdomainFromHost(getRequestHost(request));
-    const academyTenant = await resolveAcademyTenant(
-      request,
-      tenantSlug ?? hostSub,
-    );
+    const hostTenant = hostSub ? await findAcademyTenantByKey(hostSub) : null;
+    const preferredTenant = !hostTenant && tenantSlug
+      ? await findAcademyTenantByKey(tenantSlug)
+      : null;
+    const scopedTenant = hostTenant ?? preferredTenant;
 
-    const candidates = await prisma.user.findMany({
-      where: {
-        email: normalizedEmail,
-        active: true,
-        ...(academyTenant ? { tenantId: academyTenant.id } : {}),
-        OR: [
-          { role: UserRole.PROFESSOR },
-          {
-            role: UserRole.PROPRIETARIO,
-            professorModalities: { some: { active: true } },
-          },
-        ],
-      },
-      include: {
-        tenant: {
-          select: {
-            id: true,
-            slug: true,
-            name: true,
-            active: true,
-            subdomain: true,
-          },
+    const professorInclude = {
+      tenant: {
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          active: true,
+          subdomain: true,
         },
-        professorModalities: { where: { active: true }, select: { id: true } },
       },
+      professorModalities: { where: { active: true }, select: { id: true } },
+    } as const;
+
+    const professorWhere = {
+      email: normalizedEmail,
+      active: true as const,
+      OR: [
+        { role: UserRole.PROFESSOR },
+        {
+          role: UserRole.PROPRIETARIO,
+          professorModalities: { some: { active: true } },
+        },
+      ],
+    };
+
+    let candidates = await prisma.user.findMany({
+      where: {
+        ...professorWhere,
+        ...(scopedTenant ? { tenantId: scopedTenant.id } : {}),
+      },
+      include: professorInclude,
     });
+
+    if (candidates.length === 0) {
+      candidates = await prisma.user.findMany({
+        where: professorWhere,
+        include: professorInclude,
+      });
+    }
 
     if (candidates.length === 0) {
       return reply.status(401).send({ error: "E-mail ou senha incorretos." });
@@ -565,24 +632,27 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
       });
     }
 
-    if (hostSub && !tenantMatchesHost(matched.tenant, hostSub)) {
-      const conflict = await prisma.tenant.findFirst({
+    if (hostTenant && hostTenant.id !== matched.tenant.id) {
+      const hostOwnerCount = await prisma.user.count({
         where: {
-          id: { not: matched.tenant.id },
-          OR: [{ subdomain: hostSub }, { slug: hostSub }],
+          tenantId: hostTenant.id,
+          role: "PROPRIETARIO",
+          active: true,
         },
-        select: { id: true },
       });
-      if (conflict || matched.tenant.subdomain) {
+      if (hostOwnerCount > 0) {
         return reply.status(403).send({
           error: "Esta conta não pertence a esta academia.",
         });
       }
       await prisma.tenant.update({
-        where: { id: matched.tenant.id },
-        data: { subdomain: hostSub },
+        where: { id: hostTenant.id },
+        data: { subdomain: null },
       });
-      matched.tenant.subdomain = hostSub;
+    }
+
+    if (hostSub) {
+      matched.tenant = await bindTenantToHostSubdomain(matched.tenant, hostSub);
     }
 
     const token = app.jwt.sign(
