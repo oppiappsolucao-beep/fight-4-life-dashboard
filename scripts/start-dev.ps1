@@ -1,11 +1,11 @@
-# Inicia o ambiente de desenvolvimento Oppi Tech Dashboard
+# Inicia o ambiente de desenvolvimento Oppi Fit Dashboard
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 
 # Corrige erro de certificado SSL em algumas redes Windows
 $env:NODE_OPTIONS = "--use-system-ca"
 
-Write-Host "=== Oppi Tech Dashboard - Dev Setup ===" -ForegroundColor Cyan
+Write-Host "=== Oppi Fit Dashboard - Dev Setup ===" -ForegroundColor Cyan
 Set-Location $Root
 
 # 1. Dependencias

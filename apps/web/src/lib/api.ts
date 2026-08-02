@@ -1,5 +1,5 @@
 ﻿const API_BASE = import.meta.env.VITE_API_URL ?? "/api";
-const DEFAULT_TENANT_SLUG = import.meta.env.VITE_TENANT_SLUG ?? "oppi-tech";
+const DEFAULT_TENANT_SLUG = import.meta.env.VITE_TENANT_SLUG ?? "oppifit";
 
 export function getTenantSlug(): string {
   return localStorage.getItem("tenantSlug") ?? DEFAULT_TENANT_SLUG;

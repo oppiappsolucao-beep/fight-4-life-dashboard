@@ -1,6 +1,6 @@
-# Oppi Tech Dashboard
+# Oppi Fit Dashboard
 
-Dashboard SaaS para gestão de academias de artes marciais.
+Dashboard SaaS para gestão de academias (OPPI Fit).
 
 ## Stack
 
@@ -62,9 +62,10 @@ Copie para `apps/web/public/`:
 
 | E-mail | Senha | Perfil |
 |--------|-------|--------|
-| admin@oppitech.com.br | admin123 | ADMIN |
-| comercial@oppitech.com.br | comercial123 | COMERCIAL |
-| diretoria@oppitech.com.br | diretoria123 | DIRETORIA |
+| admin@oppifit.com.br | 100316* | ADMIN |
+| comercial@oppifit.com.br | comercial123 | COMERCIAL |
+| diretoria@oppifit.com.br | diretoria123 | DIRETORIA |
+| dev@oppifit.com.br | 100316* | DESENVOLVIMENTO |
 
 ## Troubleshooting
 
@@ -134,5 +135,5 @@ O `.env` já pode usar `localhost:5432` (veja `docker-compose.yml`).
 | `npm run dev:api` | Só backend |
 | `npm run dev:web` | Só frontend |
 | `npm run db:push` | Sincroniza schema no Neon |
-| `npm run db:seed` | Cria tenant Oppi Tech + usuários |
+| `npm run db:seed` | Cria tenant Oppi Fit + usuários |
 | `npm run db:studio` | UI visual do banco |

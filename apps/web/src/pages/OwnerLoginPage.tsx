@@ -3,8 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import OppiLogo from "../components/OppiLogo";
 import HeroBackground from "../components/HeroBackground";
 import { useAuth } from "../contexts/AuthContext";
+import { apiFetch } from "../lib/api";
 import { canAccessOwner } from "../lib/access";
 import { clearStudentSession } from "../lib/studentSession";
+import { getHostSubdomain } from "../lib/tenantHost";
 
 export default function OwnerLoginPage() {
   const { ownerLogin, logout, isAuthenticated, user } = useAuth();
@@ -14,6 +16,20 @@ export default function OwnerLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [academyName, setAcademyName] = useState<string | null>(null);
+  const hostSub = getHostSubdomain();
+
+  useEffect(() => {
+    apiFetch<{ mode: string; tenant: { name: string } | null }>("/public/tenant-context")
+      .then((data) => {
+        if (data.mode === "tenant" && data.tenant) {
+          setAcademyName(data.tenant.name);
+        }
+      })
+      .catch(() => {
+        // Hub ou API indisponível — login ainda pode funcionar via header/local
+      });
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -64,7 +80,11 @@ export default function OwnerLoginPage() {
               Dono da Academia
             </h1>
             <p className="mt-2 text-[0.78rem] leading-relaxed text-[#9a9a9a] sm:text-[0.82rem]">
-              Entre com e-mail e senha do cadastro da academia
+              {academyName
+                ? `Acesso de ${academyName}`
+                : hostSub
+                  ? "Entre com e-mail e senha desta academia"
+                  : "Use o link da sua academia (ex.: suaacademia.oppifit.com.br/dono/login)"}
             </p>
           </div>
 
@@ -90,7 +110,7 @@ export default function OwnerLoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Digite seu e-mail"
                 autoComplete="username"
-                className="mb-3 w-full rounded-lg border border-white/20 bg-white px-3 py-3 text-[0.9rem] text-black outline-none transition focus:border-[#4a9fd8]/60 focus:ring-2 focus:ring-[#4a9fd8]/15"
+                className="mb-3 w-full rounded-xl border border-white/12 bg-[#0d1117] px-3 py-3 text-[0.9rem] text-white outline-none transition placeholder:text-white/30 focus:border-[#4a9fd8]/70 focus:ring-2 focus:ring-[#4a9fd8]/20"
                 required
               />
 
@@ -104,13 +124,13 @@ export default function OwnerLoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Digite sua senha"
                   autoComplete="current-password"
-                  className="mb-2 w-full rounded-lg border border-white/20 bg-white px-3 py-3 pr-16 text-[0.9rem] text-black outline-none transition focus:border-[#4a9fd8]/60 focus:ring-2 focus:ring-[#4a9fd8]/15"
+                  className="mb-2 w-full rounded-xl border border-white/12 bg-[#0d1117] px-3 py-3 pr-16 text-[0.9rem] text-white outline-none transition placeholder:text-white/30 focus:border-[#4a9fd8]/70 focus:ring-2 focus:ring-[#4a9fd8]/20"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.68rem] font-medium text-zinc-500"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.68rem] font-medium text-white/45"
                 >
                   {showPassword ? "Ocultar" : "Ver"}
                 </button>

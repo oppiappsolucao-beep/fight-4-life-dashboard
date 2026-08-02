@@ -8,10 +8,16 @@ import {
   STUDENT_BILLING_BLOCKED_MESSAGE,
 } from "../../lib/billing.js";
 import {
+  getRequestHost,
+  isLocalRequestHost,
+  resolveAcademyTenant,
   resolveTenant,
   resolveTenantFromHost,
 } from "../../middleware/tenant.js";
 import { requireAuth } from "../../middleware/auth.js";
+
+const ACADEMY_LOGIN_HINT =
+  "Acesse pelo endereço da sua academia (ex.: suaacademia.oppifit.com.br).";
 
 const loginSchema = z.object({
   email: z.string().email("E-mail inválido."),
@@ -161,7 +167,7 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
     async (request, reply) => {
       const tenant = await prisma.tenant.findUnique({
         where: { id: request.user.tenantId },
-        select: { id: true, slug: true, name: true },
+        select: { id: true, slug: true, name: true, subdomain: true },
       });
 
       if (!tenant) {
@@ -197,6 +203,8 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
 
     const rawIdentifier = parsed.data.identifier.trim();
 
+    const hostTenant = await resolveTenantFromHost(request);
+
     if (isEmailIdentifier(rawIdentifier)) {
       const email = normalizeEmail(rawIdentifier);
 
@@ -218,7 +226,7 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
       if (devUser) {
         if (!devUser.tenant.active) {
           return reply.status(403).send({
-            error: "Acesso bloqueado. Entre em contato com a equipe Oppi Tech.",
+            error: "Acesso bloqueado. Entre em contato com a equipe Oppi Fit.",
           });
         }
 
@@ -239,6 +247,7 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
           role: UserRole.PROPRIETARIO,
           active: true,
           tenant: { active: true },
+          ...(hostTenant ? { tenantId: hostTenant.id } : {}),
         },
         select: {
           name: true,
@@ -268,6 +277,7 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
           active: true,
           tenant: { active: true },
           professorModalities: { some: { active: true } },
+          ...(hostTenant ? { tenantId: hostTenant.id } : {}),
         },
         select: {
           name: true,
@@ -289,7 +299,6 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
       }
     }
 
-    const hostTenant = await resolveTenantFromHost(request);
     const student = await findActiveStudent(rawIdentifier, hostTenant?.id);
 
     if (!student) {
@@ -321,12 +330,12 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
     }
 
     const { type, identifier } = parsed.data;
-    const hostTenant = await resolveTenantFromHost(request);
+    const academyTenant = await resolveAcademyTenant(request);
 
     let student;
 
     try {
-      student = await findActiveStudent(identifier, hostTenant?.id);
+      student = await findActiveStudent(identifier, academyTenant?.id);
     } catch (error) {
       request.log.error(error);
       return reply.status(503).send({
@@ -389,18 +398,30 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
     const { email, password } = parsed.data;
     const normalizedEmail = email.toLowerCase();
 
-    const hostTenant = await resolveTenantFromHost(request);
+    const academyTenant = await resolveAcademyTenant(request);
+    const allowUnscoped =
+      !academyTenant && isLocalRequestHost(getRequestHost(request));
+
+    if (!academyTenant && !allowUnscoped) {
+      return reply.status(400).send({ error: ACADEMY_LOGIN_HINT });
+    }
 
     const owners = await prisma.user.findMany({
       where: {
         email: normalizedEmail,
         role: "PROPRIETARIO",
         active: true,
-        ...(hostTenant ? { tenantId: hostTenant.id } : {}),
+        ...(academyTenant ? { tenantId: academyTenant.id } : {}),
       },
       include: {
         tenant: {
-          select: { id: true, slug: true, name: true, active: true },
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+            active: true,
+            subdomain: true,
+          },
         },
       },
     });
@@ -427,7 +448,7 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
 
     if (!matchedOwner.tenant.active) {
       return reply.status(403).send({
-        error: "Acesso bloqueado. Entre em contato com a equipe Oppi Tech.",
+        error: "Acesso bloqueado. Entre em contato com a equipe Oppi Fit.",
       });
     }
 
@@ -465,13 +486,19 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
     const { email, password } = parsed.data;
     const normalizedEmail = email.toLowerCase();
 
-    const hostTenant = await resolveTenantFromHost(request);
+    const academyTenant = await resolveAcademyTenant(request);
+    const allowUnscoped =
+      !academyTenant && isLocalRequestHost(getRequestHost(request));
+
+    if (!academyTenant && !allowUnscoped) {
+      return reply.status(400).send({ error: ACADEMY_LOGIN_HINT });
+    }
 
     const candidates = await prisma.user.findMany({
       where: {
         email: normalizedEmail,
         active: true,
-        ...(hostTenant ? { tenantId: hostTenant.id } : {}),
+        ...(academyTenant ? { tenantId: academyTenant.id } : {}),
         OR: [
           { role: UserRole.PROFESSOR },
           {
@@ -481,7 +508,15 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
         ],
       },
       include: {
-        tenant: { select: { id: true, slug: true, name: true, active: true } },
+        tenant: {
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+            active: true,
+            subdomain: true,
+          },
+        },
         professorModalities: { where: { active: true }, select: { id: true } },
       },
     });

@@ -17,6 +17,7 @@ export interface Tenant {
   id: string;
   slug: string;
   name: string;
+  subdomain?: string | null;
 }
 
 export interface LoginResponse {

@@ -6,32 +6,36 @@ import { ensureExerciseCatalog } from "../src/lib/exercise-catalog.js";
 const prisma = new PrismaClient();
 
 const DEFAULT_TENANT = {
-  slug: "oppi-tech",
-  name: "Oppi Tech",
-  subdomain: "oppitech",
+  slug: "oppifit",
+  name: "Oppi Fit",
+  subdomain: null as string | null,
 };
 
 const DEFAULT_USERS = [
   {
-    email: "admin@oppitech.com.br",
+    email: "admin@oppifit.com.br",
+    legacyEmail: "admin@oppitech.com.br",
     password: "100316*",
     name: "Administrador",
     role: UserRole.ADMIN,
   },
   {
-    email: "comercial@oppitech.com.br",
+    email: "comercial@oppifit.com.br",
+    legacyEmail: "comercial@oppitech.com.br",
     password: "comercial123",
     name: "Equipe Comercial",
     role: UserRole.COMERCIAL,
   },
   {
-    email: "diretoria@oppitech.com.br",
+    email: "diretoria@oppifit.com.br",
+    legacyEmail: "diretoria@oppitech.com.br",
     password: "diretoria123",
     name: "Diretoria",
     role: UserRole.DIRETORIA,
   },
   {
-    email: "dev@oppitech.com.br",
+    email: "dev@oppifit.com.br",
+    legacyEmail: "dev@oppitech.com.br",
     password: "100316*",
     name: "Equipe Desenvolvimento",
     role: UserRole.DESENVOLVIMENTO,
@@ -45,27 +49,141 @@ const DEFAULT_PLANOS = {
   Anual: 199,
 };
 
-async function main() {
-  const tenant = await prisma.tenant.upsert({
+async function ensurePlatformTenant() {
+  const legacy = await prisma.tenant.findUnique({
+    where: { slug: "oppi-tech" },
+  });
+  const current = await prisma.tenant.findUnique({
+    where: { slug: DEFAULT_TENANT.slug },
+  });
+
+  if (legacy && !current) {
+    await prisma.tenant.update({
+      where: { id: legacy.id },
+      data: {
+        slug: DEFAULT_TENANT.slug,
+        name: DEFAULT_TENANT.name,
+        subdomain: null,
+        branding: {
+          primaryColor: "#4a9fd8",
+          logo: "/oppi_logo.png",
+        },
+      },
+    });
+    return prisma.tenant.findUniqueOrThrow({
+      where: { slug: DEFAULT_TENANT.slug },
+    });
+  }
+
+  if (legacy && current && legacy.id !== current.id) {
+    // Mantém oppifit; remove marca antiga do tenant legado sem apagar academias.
+    await prisma.tenant.update({
+      where: { id: legacy.id },
+      data: {
+        name: "Oppi Fit (legado)",
+        subdomain: null,
+        active: false,
+      },
+    });
+  }
+
+  return prisma.tenant.upsert({
     where: { slug: DEFAULT_TENANT.slug },
     update: {
       name: DEFAULT_TENANT.name,
-      subdomain: DEFAULT_TENANT.subdomain,
+      subdomain: null,
       branding: {
-        primaryColor: "#ff1f3d",
+        primaryColor: "#4a9fd8",
         logo: "/oppi_logo.png",
       },
     },
     create: {
       slug: DEFAULT_TENANT.slug,
       name: DEFAULT_TENANT.name,
-      subdomain: DEFAULT_TENANT.subdomain,
+      subdomain: null,
       branding: {
-        primaryColor: "#ff1f3d",
+        primaryColor: "#4a9fd8",
         logo: "/oppi_logo.png",
       },
     },
   });
+}
+
+async function upsertPlatformUser(
+  tenantId: string,
+  user: (typeof DEFAULT_USERS)[number],
+) {
+  const passwordHash = await bcrypt.hash(user.password, 10);
+
+  const legacyUser = await prisma.user.findUnique({
+    where: {
+      tenantId_email: {
+        tenantId,
+        email: user.legacyEmail,
+      },
+    },
+  });
+
+  if (legacyUser) {
+    const emailTaken = await prisma.user.findUnique({
+      where: {
+        tenantId_email: {
+          tenantId,
+          email: user.email,
+        },
+      },
+    });
+
+    if (!emailTaken) {
+      await prisma.user.update({
+        where: { id: legacyUser.id },
+        data: {
+          email: user.email,
+          passwordHash,
+          name: user.name,
+          role: user.role,
+          active: true,
+        },
+      });
+      return;
+    }
+
+    await prisma.user.update({
+      where: { id: legacyUser.id },
+      data: {
+        passwordHash,
+        name: user.name,
+        role: user.role,
+        active: false,
+      },
+    });
+  }
+
+  await prisma.user.upsert({
+    where: {
+      tenantId_email: {
+        tenantId,
+        email: user.email,
+      },
+    },
+    update: {
+      passwordHash,
+      name: user.name,
+      role: user.role,
+      active: true,
+    },
+    create: {
+      tenantId,
+      email: user.email,
+      passwordHash,
+      name: user.name,
+      role: user.role,
+    },
+  });
+}
+
+async function main() {
+  const tenant = await ensurePlatformTenant();
 
   await prisma.tenantConfig.upsert({
     where: { tenantId: tenant.id },
@@ -79,29 +197,7 @@ async function main() {
   });
 
   for (const user of DEFAULT_USERS) {
-    const passwordHash = await bcrypt.hash(user.password, 10);
-
-    await prisma.user.upsert({
-      where: {
-        tenantId_email: {
-          tenantId: tenant.id,
-          email: user.email,
-        },
-      },
-      update: {
-        passwordHash,
-        name: user.name,
-        role: user.role,
-        active: true,
-      },
-      create: {
-        tenantId: tenant.id,
-        email: user.email,
-        passwordHash,
-        name: user.name,
-        role: user.role,
-      },
-    });
+    await upsertPlatformUser(tenant.id, user);
   }
 
   const exerciseCount = await ensureExerciseCatalog();

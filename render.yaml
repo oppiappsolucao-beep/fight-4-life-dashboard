@@ -32,7 +32,7 @@ services:
       - key: VITE_API_URL
         sync: false
       - key: VITE_TENANT_SLUG
-        value: oppi-tech
+        value: oppifit
     routes:
       - type: rewrite
         source: /*

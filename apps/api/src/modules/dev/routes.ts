@@ -28,10 +28,7 @@ import {
 import { getPlatformPlanValue } from "./billing.js";
 import { DEV_NEW_ACADEMIES_GOAL, percentValue } from "../../lib/goals.js";
 import { registerDevModalityRoutes } from "../modalities/routes.js";
-
-
-
-const OPPITECH_SLUG = "oppi-tech";
+import { PLATFORM_TENANT_SLUGS } from "../../middleware/tenant.js";
 
 
 
@@ -57,10 +54,11 @@ async function findAcademyOr404(id: string) {
 
 
 
-  if (!tenant || tenant.slug === OPPITECH_SLUG) {
-
+  if (
+    !tenant ||
+    (PLATFORM_TENANT_SLUGS as readonly string[]).includes(tenant.slug)
+  ) {
     return null;
-
   }
 
 
@@ -102,7 +100,7 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
     { preHandler: [requireAuth, requireRole(UserRole.DESENVOLVIMENTO)] },
     async (request, reply) => {
       const tenants = await prisma.tenant.findMany({
-        where: { slug: { not: OPPITECH_SLUG } },
+        where: { slug: { notIn: [...PLATFORM_TENANT_SLUGS] } },
         orderBy: { createdAt: "desc" },
         select: {
           id: true,
@@ -216,7 +214,7 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
 
         where: {
 
-          slug: { not: OPPITECH_SLUG },
+          slug: { notIn: [...PLATFORM_TENANT_SLUGS] },
 
         },
 

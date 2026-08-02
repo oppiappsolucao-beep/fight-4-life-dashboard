@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useAcademyHostGuard } from "../../hooks/useAcademyHostGuard";
 import { canAccessDev, canAccessOwner } from "../../lib/access";
 import DashboardShell from "../DashboardShell";
 import OwnerSidebar from "./OwnerSidebar";
@@ -10,6 +11,7 @@ const GYM_BG = "/hero-gym.png?v=3";
 export default function OwnerLayout() {
   const { isAuthenticated, loading, user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  useAcademyHostGuard();
 
   if (loading) {
     return (

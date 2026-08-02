@@ -13,7 +13,7 @@ const RESERVED_SUBDOMAINS = new Set([
 ]);
 
 function appBaseDomains(): string[] {
-  const raw = import.meta.env.VITE_APP_BASE_DOMAIN || "oppifit.com.br,oppitech.com.br";
+  const raw = import.meta.env.VITE_APP_BASE_DOMAIN || "oppifit.com.br";
   return raw
     .split(",")
     .map((item) => item.trim().toLowerCase())

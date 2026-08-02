@@ -5,6 +5,7 @@ export interface TenantContext {
   id: string;
   slug: string;
   name: string;
+  subdomain?: string | null;
 }
 
 declare module "fastify" {
@@ -26,12 +27,56 @@ const RESERVED_SUBDOMAINS = new Set([
   "static",
 ]);
 
+/** Slugs do tenant da plataforma (hub / painel OPPI Fit). */
+export const PLATFORM_TENANT_SLUGS = ["oppifit", "oppi-tech"] as const;
+
+export function platformTenantSlug(): string {
+  return (
+    process.env.PLATFORM_TENANT_SLUG ||
+    process.env.DEFAULT_TENANT_SLUG ||
+    "oppifit"
+  );
+}
+
+export function isPlatformTenantSlug(slug: string | null | undefined): boolean {
+  if (!slug) return false;
+  const normalized = slug.trim().toLowerCase();
+  return (
+    normalized === platformTenantSlug().toLowerCase() ||
+    (PLATFORM_TENANT_SLUGS as readonly string[]).includes(normalized)
+  );
+}
+
 function appBaseDomains(): string[] {
-  const raw = process.env.APP_BASE_DOMAIN || "oppifit.com.br,oppitech.com.br";
+  const raw = process.env.APP_BASE_DOMAIN || "oppifit.com.br";
   return raw
     .split(",")
     .map((item) => item.trim().toLowerCase())
     .filter(Boolean);
+}
+
+function firstHeaderValue(value: string | string[] | undefined): string | undefined {
+  if (!value) return undefined;
+  const raw = Array.isArray(value) ? value[0] : value;
+  return raw.split(",")[0]?.trim();
+}
+
+/** Host efetivo (respeita proxy com X-Forwarded-Host). */
+export function getRequestHost(request: FastifyRequest): string | undefined {
+  return (
+    firstHeaderValue(request.headers["x-forwarded-host"]) ||
+    firstHeaderValue(request.headers.host)
+  );
+}
+
+export function isLocalRequestHost(hostHeader: string | undefined): boolean {
+  const host = hostHeader?.split(":")[0]?.toLowerCase().trim() ?? "";
+  return (
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host.endsWith(".local") ||
+    host.endsWith(".localhost")
+  );
 }
 
 /** Extrai o subdomínio do Host (ex.: dojotakeda.oppifit.com.br → dojotakeda). */
@@ -57,10 +102,17 @@ export function extractSubdomainFromHost(hostHeader: string | undefined): string
   return null;
 }
 
+const tenantSelect = {
+  id: true,
+  slug: true,
+  name: true,
+  subdomain: true,
+} as const;
+
 export async function resolveTenantFromHost(
   request: FastifyRequest,
 ): Promise<TenantContext | null> {
-  const subdomain = extractSubdomainFromHost(request.headers.host);
+  const subdomain = extractSubdomainFromHost(getRequestHost(request));
   if (!subdomain) return null;
 
   return prisma.tenant.findFirst({
@@ -68,7 +120,35 @@ export async function resolveTenantFromHost(
       active: true,
       OR: [{ subdomain }, { slug: subdomain }],
     },
-    select: { id: true, slug: true, name: true },
+    select: tenantSelect,
+  });
+}
+
+/**
+ * Resolve academia para login dono/professor/aluno:
+ * 1) Host / X-Forwarded-Host
+ * 2) Header X-Tenant-Slug (quando não for hub/plataforma)
+ */
+export async function resolveAcademyTenant(
+  request: FastifyRequest,
+): Promise<TenantContext | null> {
+  const fromHost = await resolveTenantFromHost(request);
+  if (fromHost) return fromHost;
+
+  const slug = (request.headers["x-tenant-slug"] as string | undefined)
+    ?.trim()
+    .toLowerCase();
+
+  if (!slug || RESERVED_SUBDOMAINS.has(slug) || isPlatformTenantSlug(slug)) {
+    return null;
+  }
+
+  return prisma.tenant.findFirst({
+    where: {
+      active: true,
+      OR: [{ subdomain: slug }, { slug }],
+    },
+    select: tenantSelect,
   });
 }
 
@@ -81,11 +161,11 @@ export async function resolveTenant(
   const slug =
     (request.headers["x-tenant-slug"] as string | undefined) ??
     process.env.DEFAULT_TENANT_SLUG ??
-    "oppi-tech";
+    platformTenantSlug();
 
   return prisma.tenant.findUnique({
     where: { slug },
-    select: { id: true, slug: true, name: true },
+    select: tenantSelect,
   });
 }
 
