@@ -20,7 +20,12 @@ const PORT = Number(process.env.PORT || 80);
 const HOST = "0.0.0.0";
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 
-const app = Fastify({ logger: true, bodyLimit: 25 * 1024 * 1024 });
+const app = Fastify({
+  logger: true,
+  bodyLimit: 25 * 1024 * 1024,
+  // EasyPanel/Traefik: usa X-Forwarded-* para Host real do subdomínio
+  trustProxy: true,
+});
 
 await bootstrapDatabase();
 

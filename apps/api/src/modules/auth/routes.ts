@@ -22,6 +22,8 @@ const ACADEMY_LOGIN_HINT =
 const loginSchema = z.object({
   email: z.string().email("E-mail inválido."),
   password: z.string().min(1, "Senha obrigatória."),
+  /** Fallback quando o proxy não repassa o Host do subdomínio. */
+  tenantSlug: z.string().min(1).optional(),
 });
 
 const studentLoginSchema = z.object({
@@ -395,10 +397,10 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
       });
     }
 
-    const { email, password } = parsed.data;
+    const { email, password, tenantSlug } = parsed.data;
     const normalizedEmail = email.toLowerCase();
 
-    const academyTenant = await resolveAcademyTenant(request);
+    const academyTenant = await resolveAcademyTenant(request, tenantSlug);
     const allowUnscoped =
       !academyTenant && isLocalRequestHost(getRequestHost(request));
 
@@ -483,10 +485,10 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
       });
     }
 
-    const { email, password } = parsed.data;
+    const { email, password, tenantSlug } = parsed.data;
     const normalizedEmail = email.toLowerCase();
 
-    const academyTenant = await resolveAcademyTenant(request);
+    const academyTenant = await resolveAcademyTenant(request, tenantSlug);
     const allowUnscoped =
       !academyTenant && isLocalRequestHost(getRequestHost(request));
 

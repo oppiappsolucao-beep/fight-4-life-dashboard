@@ -15,8 +15,16 @@ interface AuthContextValue {
   tenant: Tenant | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  ownerLogin: (email: string, password: string) => Promise<void>;
-  professorLogin: (email: string, password: string) => Promise<void>;
+  ownerLogin: (
+    email: string,
+    password: string,
+    tenantSlug?: string,
+  ) => Promise<void>;
+  professorLogin: (
+    email: string,
+    password: string,
+    tenantSlug?: string,
+  ) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -51,27 +59,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setTenant(data.tenant);
   }, []);
 
-  const ownerLogin = useCallback(async (email: string, password: string) => {
-    const data = await apiFetch<LoginResponse>("/auth/owner-login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    });
+  const ownerLogin = useCallback(
+    async (email: string, password: string, tenantSlug?: string) => {
+      if (tenantSlug) setTenantSlug(tenantSlug);
 
-    persistSession(data);
-    setUser(data.user);
-    setTenant(data.tenant);
-  }, []);
+      const data = await apiFetch<LoginResponse>("/auth/owner-login", {
+        method: "POST",
+        body: JSON.stringify({
+          email,
+          password,
+          ...(tenantSlug ? { tenantSlug } : {}),
+        }),
+      });
 
-  const professorLogin = useCallback(async (email: string, password: string) => {
-    const data = await apiFetch<LoginResponse>("/auth/professor-login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    });
+      persistSession(data);
+      setUser(data.user);
+      setTenant(data.tenant);
+    },
+    [],
+  );
 
-    persistSession(data);
-    setUser(data.user);
-    setTenant(data.tenant);
-  }, []);
+  const professorLogin = useCallback(
+    async (email: string, password: string, tenantSlug?: string) => {
+      if (tenantSlug) setTenantSlug(tenantSlug);
+
+      const data = await apiFetch<LoginResponse>("/auth/professor-login", {
+        method: "POST",
+        body: JSON.stringify({
+          email,
+          password,
+          ...(tenantSlug ? { tenantSlug } : {}),
+        }),
+      });
+
+      persistSession(data);
+      setUser(data.user);
+      setTenant(data.tenant);
+    },
+    [],
+  );
 
   useEffect(() => {
     const token = localStorage.getItem("token");

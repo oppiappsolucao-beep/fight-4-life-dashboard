@@ -160,20 +160,22 @@ export default function StudentLoginPage() {
       logout();
       clearStudentSession();
 
+      // logout() limpa o tenantSlug — reaplicar o da academia antes do login
+      const academySlug = profile.tenant?.slug;
+      if (academySlug) {
+        setTenantSlug(academySlug);
+      }
+
       if (profile.type === "owner") {
-        await ownerLogin(profile.email, password);
+        await ownerLogin(profile.email, password, academySlug);
         navigate("/dono/visao-geral");
         return;
       }
 
       if (profile.type === "professor") {
-        await professorLogin(profile.email, password);
+        await professorLogin(profile.email, password, academySlug);
         navigate("/professor/aulas");
         return;
-      }
-
-      if (profile.tenant?.slug) {
-        setTenantSlug(profile.tenant.slug);
       }
 
       await login(profile.email, password);
@@ -185,16 +187,21 @@ export default function StudentLoginPage() {
     }
   }
 
+  const academyLabel = profile?.tenant?.name?.replace(/^\$+/, "").trim();
   const headerSubtitle =
     step === "identify"
       ? "Informe CPF ou e-mail — reconhecemos seu perfil automaticamente"
       : profile?.type === "owner"
-        ? `Entre na ${profile.tenant?.name ?? "sua academia"}`
+        ? academyLabel
+          ? `Acesso de dono · ${academyLabel}`
+          : "Digite a senha de dono da academia"
         : profile?.type === "professor"
-          ? `Professor • ${profile.tenant?.name ?? "academia"}`
+          ? academyLabel
+            ? `Professor · ${academyLabel}`
+            : "Digite a senha de professor"
           : profile?.email
-          ? `${PROFILE_LABELS[profile.type]} • ${profile.email}`
-          : "Digite sua senha para continuar";
+            ? `${PROFILE_LABELS[profile.type]} · ${profile.email}`
+            : "Digite sua senha para continuar";
 
   return (
     <div className="relative min-h-dvh overflow-hidden">

@@ -61,12 +61,50 @@ function firstHeaderValue(value: string | string[] | undefined): string | undefi
   return raw.split(",")[0]?.trim();
 }
 
-/** Host efetivo (respeita proxy com X-Forwarded-Host). */
+/** Host efetivo (respeita proxy EasyPanel/Traefik). */
 export function getRequestHost(request: FastifyRequest): string | undefined {
+  const forwarded = firstHeaderValue(request.headers.forwarded);
+  const forwardedHost = forwarded
+    ?.split(";")
+    .map((part) => part.trim())
+    .find((part) => part.toLowerCase().startsWith("host="))
+    ?.slice(5)
+    ?.replace(/^"|"$/g, "");
+
   return (
     firstHeaderValue(request.headers["x-forwarded-host"]) ||
+    firstHeaderValue(request.headers["x-original-host"]) ||
+    forwardedHost ||
+    // Com trustProxy, Fastify expõe o host público aqui
+    (typeof request.hostname === "string" && request.hostname
+      ? request.hostname
+      : undefined) ||
     firstHeaderValue(request.headers.host)
   );
+}
+
+const tenantSelect = {
+  id: true,
+  slug: true,
+  name: true,
+  subdomain: true,
+} as const;
+
+export async function findAcademyTenantByKey(
+  key: string | null | undefined,
+): Promise<TenantContext | null> {
+  const normalized = key?.trim().toLowerCase();
+  if (!normalized || RESERVED_SUBDOMAINS.has(normalized) || isPlatformTenantSlug(normalized)) {
+    return null;
+  }
+
+  return prisma.tenant.findFirst({
+    where: {
+      active: true,
+      OR: [{ subdomain: normalized }, { slug: normalized }],
+    },
+    select: tenantSelect,
+  });
 }
 
 export function isLocalRequestHost(hostHeader: string | undefined): boolean {
@@ -102,13 +140,6 @@ export function extractSubdomainFromHost(hostHeader: string | undefined): string
   return null;
 }
 
-const tenantSelect = {
-  id: true,
-  slug: true,
-  name: true,
-  subdomain: true,
-} as const;
-
 export async function resolveTenantFromHost(
   request: FastifyRequest,
 ): Promise<TenantContext | null> {
@@ -127,29 +158,23 @@ export async function resolveTenantFromHost(
 /**
  * Resolve academia para login dono/professor/aluno:
  * 1) Host / X-Forwarded-Host
- * 2) Header X-Tenant-Slug (quando não for hub/plataforma)
+ * 2) Header X-Tenant-Slug
+ * 3) slug explícito (body/query) — fallback quando o proxy não envia Host
  */
 export async function resolveAcademyTenant(
   request: FastifyRequest,
+  explicitSlug?: string | null,
 ): Promise<TenantContext | null> {
   const fromHost = await resolveTenantFromHost(request);
   if (fromHost) return fromHost;
 
-  const slug = (request.headers["x-tenant-slug"] as string | undefined)
+  const headerSlug = (request.headers["x-tenant-slug"] as string | undefined)
     ?.trim()
     .toLowerCase();
+  const fromHeader = await findAcademyTenantByKey(headerSlug);
+  if (fromHeader) return fromHeader;
 
-  if (!slug || RESERVED_SUBDOMAINS.has(slug) || isPlatformTenantSlug(slug)) {
-    return null;
-  }
-
-  return prisma.tenant.findFirst({
-    where: {
-      active: true,
-      OR: [{ subdomain: slug }, { slug }],
-    },
-    select: tenantSelect,
-  });
+  return findAcademyTenantByKey(explicitSlug);
 }
 
 export async function resolveTenant(

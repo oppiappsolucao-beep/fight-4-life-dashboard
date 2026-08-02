@@ -44,7 +44,7 @@ export default function ProfessorLoginPage() {
     try {
       logout();
       clearStudentSession();
-      await professorLogin(email, password);
+      await professorLogin(email, password, hostSub ?? undefined);
       navigate("/professor/visao-geral");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar.");

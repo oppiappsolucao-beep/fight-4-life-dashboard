@@ -50,7 +50,7 @@ export default function OwnerLoginPage() {
     try {
       logout();
       clearStudentSession();
-      await ownerLogin(email, password);
+      await ownerLogin(email, password, hostSub ?? undefined);
       navigate("/dono/visao-geral");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar.");
