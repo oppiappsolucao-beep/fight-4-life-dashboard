@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { formatCep, formatCnpj, formatCpf, formatPhone } from "../../lib/format";
 import { apiFetch } from "../../lib/api";
 import { notifyDevAcademiasChanged } from "../../lib/devAcademias";
+import { academyPublicUrl, primaryAppBaseDomain } from "../../lib/tenantHost";
 
 const UF_LIST = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
@@ -17,6 +18,7 @@ const FORMAS_PAGAMENTO = ["Cartão de Crédito", "Boleto", "Pix"];
 const INITIAL_FORM = {
   razaoSocial: "",
   nomeFantasia: "",
+  subdominio: "",
   cnpj: "",
   inscricaoMunicipal: "",
   inscricaoEstadual: "",
@@ -44,6 +46,7 @@ type FormData = typeof INITIAL_FORM;
 interface RegisterResult {
   tenantName: string;
   emailLogin: string;
+  url: string;
 }
 
 export default function DevAcademiaForm() {
@@ -107,16 +110,23 @@ export default function DevAcademiaForm() {
       void confirmarSenha;
 
       const result = await apiFetch<{
-        tenant: { name: string };
+        tenant: { name: string; url?: string; subdomain?: string; slug: string };
         owner: { email: string };
       }>("/dev/academias", {
         method: "POST",
-        body: JSON.stringify({ ...payload, senha }),
+        body: JSON.stringify({
+          ...payload,
+          senha,
+          subdominio: form.subdominio.trim() || undefined,
+        }),
       });
 
       setSuccess({
         tenantName: result.tenant.name,
         emailLogin: result.owner.email,
+        url:
+          result.tenant.url ||
+          academyPublicUrl(result.tenant.subdomain || result.tenant.slug),
       });
       setForm(INITIAL_FORM);
       notifyDevAcademiasChanged();
@@ -144,6 +154,27 @@ export default function DevAcademiaForm() {
               onChange={(e) => updateField("nomeFantasia", e.target.value)}
               placeholder="Ex: Iron Pulse Fitness"
             />
+          </Field>
+          <Field label="Subdomínio" className="md:col-span-2">
+            <Input
+              value={form.subdominio}
+              onChange={(e) =>
+                updateField(
+                  "subdominio",
+                  e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
+                )
+              }
+              placeholder="Ex: dojotakeda"
+            />
+            <p className="mt-1.5 text-xs text-white/40">
+              URL da academia:{" "}
+              <span className="text-[#7ebef0]">
+                {form.subdominio.trim()
+                  ? academyPublicUrl(form.subdominio.trim())
+                  : `https://[gerado].${primaryAppBaseDomain()}`}
+              </span>
+              . Se vazio, geramos a partir do nome fantasia.
+            </p>
           </Field>
           <Field label="CNPJ" required>
             <Input
@@ -352,8 +383,17 @@ export default function DevAcademiaForm() {
       {success && (
         <div className="rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
           Academia <strong>{success.tenantName}</strong> cadastrada com sucesso!
-          O dono pode entrar em <strong>/dono/login</strong> com o e-mail{" "}
-          <strong>{success.emailLogin}</strong> e a senha definida acima.
+          URL:{" "}
+          <a
+            href={success.url}
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold underline hover:text-emerald-200"
+          >
+            {success.url}
+          </a>
+          . O dono entra em <strong>{success.url}/dono/login</strong> com{" "}
+          <strong>{success.emailLogin}</strong>.
           {" "}
           <Link to="/dev/donos-academias" className="font-semibold underline hover:text-emerald-200">
             Ver em Donos de Academias

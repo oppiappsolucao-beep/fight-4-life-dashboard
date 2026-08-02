@@ -19,6 +19,8 @@ export interface AcademiaOwner {
 export interface DevAcademia {
   id: string;
   slug: string;
+  subdomain?: string;
+  url?: string;
   name: string;
   active: boolean;
   createdAt: string;

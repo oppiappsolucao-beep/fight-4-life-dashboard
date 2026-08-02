@@ -7,7 +7,10 @@ import {
   isStudentBillingBlocked,
   STUDENT_BILLING_BLOCKED_MESSAGE,
 } from "../../lib/billing.js";
-import { resolveTenant } from "../../middleware/tenant.js";
+import {
+  resolveTenant,
+  resolveTenantFromHost,
+} from "../../middleware/tenant.js";
 import { requireAuth } from "../../middleware/auth.js";
 
 const loginSchema = z.object({
@@ -50,7 +53,7 @@ const activeStudentSelect = {
   },
 } as const;
 
-async function findActiveStudent(identifier: string) {
+async function findActiveStudent(identifier: string, tenantId?: string | null) {
   const byEmail = isEmailIdentifier(identifier);
 
   return prisma.student.findFirst({
@@ -58,12 +61,12 @@ async function findActiveStudent(identifier: string) {
       ? {
           active: true,
           email: normalizeEmail(identifier),
-          tenant: { active: true },
+          ...(tenantId ? { tenantId } : { tenant: { active: true } }),
         }
       : {
           active: true,
           cpf: normalizeCpf(identifier),
-          tenant: { active: true },
+          ...(tenantId ? { tenantId } : { tenant: { active: true } }),
         },
     select: activeStudentSelect,
     orderBy: { createdAt: "desc" },
@@ -71,6 +74,14 @@ async function findActiveStudent(identifier: string) {
 }
 
 export async function authRoutes(app: FastifyInstance): Promise<void> {
+  app.get("/public/tenant-context", async (request, reply) => {
+    const tenant = await resolveTenantFromHost(request);
+    if (!tenant) {
+      return reply.send({ mode: "platform" as const, tenant: null });
+    }
+    return reply.send({ mode: "tenant" as const, tenant });
+  });
+
   app.post("/auth/login", async (request, reply) => {
     let tenant;
 
@@ -278,7 +289,8 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
       }
     }
 
-    const student = await findActiveStudent(rawIdentifier);
+    const hostTenant = await resolveTenantFromHost(request);
+    const student = await findActiveStudent(rawIdentifier, hostTenant?.id);
 
     if (!student) {
       return reply.status(404).send({
@@ -309,11 +321,12 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
     }
 
     const { type, identifier } = parsed.data;
+    const hostTenant = await resolveTenantFromHost(request);
 
     let student;
 
     try {
-      student = await findActiveStudent(identifier);
+      student = await findActiveStudent(identifier, hostTenant?.id);
     } catch (error) {
       request.log.error(error);
       return reply.status(503).send({
@@ -376,11 +389,14 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
     const { email, password } = parsed.data;
     const normalizedEmail = email.toLowerCase();
 
+    const hostTenant = await resolveTenantFromHost(request);
+
     const owners = await prisma.user.findMany({
       where: {
         email: normalizedEmail,
         role: "PROPRIETARIO",
         active: true,
+        ...(hostTenant ? { tenantId: hostTenant.id } : {}),
       },
       include: {
         tenant: {
@@ -449,10 +465,13 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
     const { email, password } = parsed.data;
     const normalizedEmail = email.toLowerCase();
 
+    const hostTenant = await resolveTenantFromHost(request);
+
     const candidates = await prisma.user.findMany({
       where: {
         email: normalizedEmail,
         active: true,
+        ...(hostTenant ? { tenantId: hostTenant.id } : {}),
         OR: [
           { role: UserRole.PROFESSOR },
           {

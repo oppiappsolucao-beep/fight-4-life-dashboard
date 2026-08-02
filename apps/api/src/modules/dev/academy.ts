@@ -4,6 +4,14 @@ import { z } from "zod";
 export const academyFieldsSchema = z.object({
   razaoSocial: z.string().min(1),
   nomeFantasia: z.string().min(1),
+  /** Subdomínio desejado (ex.: dojotakeda → dojotakeda.oppifit.com.br). Opcional. */
+  subdominio: z
+    .string()
+    .optional()
+    .transform((value) => (value ?? "").trim().toLowerCase())
+    .refine((value) => !value || /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value), {
+      message: "Subdomínio inválido. Use apenas letras minúsculas, números e hífen.",
+    }),
   cnpj: z.string().min(1),
   inscricaoMunicipal: z.string().optional(),
   inscricaoEstadual: z.string().optional(),

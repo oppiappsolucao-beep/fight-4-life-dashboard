@@ -6,7 +6,8 @@ import { UserRole } from "@prisma/client";
 
 import { prisma } from "../../lib/prisma.js";
 
-import { uniqueTenantSlug } from "../../lib/slug.js";
+import { slugify, uniqueTenantSlug } from "../../lib/slug.js";
+import { academyPublicUrl } from "../../middleware/tenant.js";
 
 import { requireAuth, requireRole } from "../../middleware/auth.js";
 
@@ -227,6 +228,8 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
 
           slug: true,
 
+          subdomain: true,
+
           name: true,
 
           active: true,
@@ -265,11 +268,17 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
 
         const owner = tenant.users[0] ?? null;
 
+        const hostKey = tenant.subdomain || tenant.slug;
+
         return {
 
           id: tenant.id,
 
           slug: tenant.slug,
+
+          subdomain: hostKey,
+
+          url: academyPublicUrl(hostKey),
 
           name: tenant.name,
 
@@ -617,17 +626,36 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
 
       const emailLogin = data.emailLogin.toLowerCase();
 
+      const customSub = data.subdominio ? slugify(data.subdominio) : "";
 
+      let slug: string;
 
-      const slug = await uniqueTenantSlug(data.nomeFantasia, async (candidate) => {
+      if (customSub) {
+        const taken = await prisma.tenant.findFirst({
+          where: {
+            OR: [{ slug: customSub }, { subdomain: customSub }],
+          },
+          select: { id: true },
+        });
 
-        const found = await prisma.tenant.findUnique({ where: { slug: candidate } });
+        if (taken) {
+          return reply.status(409).send({
+            error: `O subdomínio "${customSub}" já está em uso.`,
+          });
+        }
 
-        return Boolean(found);
-
-      });
-
-
+        slug = customSub;
+      } else {
+        slug = await uniqueTenantSlug(data.nomeFantasia, async (candidate) => {
+          const found = await prisma.tenant.findFirst({
+            where: {
+              OR: [{ slug: candidate }, { subdomain: candidate }],
+            },
+            select: { id: true },
+          });
+          return Boolean(found);
+        });
+      }
 
       if (await isOwnerEmailTaken(emailLogin)) {
 
@@ -716,6 +744,10 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
           id: tenant.id,
 
           slug: tenant.slug,
+
+          subdomain: tenant.subdomain ?? tenant.slug,
+
+          url: academyPublicUrl(tenant.subdomain ?? tenant.slug),
 
           name: tenant.name,
 

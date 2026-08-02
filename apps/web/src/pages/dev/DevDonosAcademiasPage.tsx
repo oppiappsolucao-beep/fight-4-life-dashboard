@@ -65,6 +65,16 @@ export default function DevDonosAcademiasPage() {
                     <td className="px-5 py-4">
                       <p className="font-medium text-white">{academia.name}</p>
                       <p className="mt-0.5 text-xs text-white/40">{academia.slug}</p>
+                      {academia.url ? (
+                        <a
+                          href={academia.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-1 inline-block text-xs text-[#7ebef0] hover:underline"
+                        >
+                          {academia.url.replace(/^https?:\/\//, "")}
+                        </a>
+                      ) : null}
                     </td>
                     <td className="px-5 py-4">
                       {academia.owner ? (
