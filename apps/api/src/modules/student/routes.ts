@@ -431,6 +431,12 @@ export async function studentRoutes(app: FastifyInstance): Promise<void> {
           select: {
             nomeCompleto: true,
             planoModalidade: true,
+            tenant: {
+              select: {
+                name: true,
+                slug: true,
+              },
+            },
           },
         });
 
@@ -500,6 +506,10 @@ export async function studentRoutes(app: FastifyInstance): Promise<void> {
           aluno: {
             nomeCompleto: student.nomeCompleto,
             planoModalidade: student.planoModalidade,
+          },
+          academia: {
+            name: student.tenant.name,
+            slug: student.tenant.slug,
           },
           semana: week,
           treinosSemana: treinosSemanaSummaries,

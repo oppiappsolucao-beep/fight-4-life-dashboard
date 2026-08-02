@@ -95,6 +95,7 @@ export default function StudentLoginPage() {
         loginType === "cpf" ? formatCpf(data.student.cpf) : data.student.email,
       loginType,
       tenantSlug: data.tenant.slug,
+      tenantName: data.tenant.name,
     });
     navigate("/inicio");
   }

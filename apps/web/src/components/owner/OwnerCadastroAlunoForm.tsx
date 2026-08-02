@@ -366,7 +366,7 @@ export default function OwnerCadastroAlunoForm() {
               ))}
             </Select>
             <p className="mt-1.5 text-xs text-white/40">
-              O aluno verá as refeições na aba Dietas do app.
+              O aluno verá as refeições na aba Dicas do app.
             </p>
           </Field>
         </div>

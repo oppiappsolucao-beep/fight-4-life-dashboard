@@ -1,7 +1,15 @@
+import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { apiFetch } from "../../lib/api";
+import { formatAcademyName } from "../../lib/format";
+import {
+  clearStudentSession,
+  getStudentSession,
+  setStudentSession,
+} from "../../lib/studentSession";
+import type { StudentOverview } from "../../types/student";
 import OppiLogo from "../OppiLogo";
 import { sidebarShellClass } from "../DashboardShell";
-import { clearStudentSession, getStudentSession } from "../../lib/studentSession";
 
 const MENU_ITEMS = [
   { to: "/inicio", label: "Visão Geral", icon: HomeIcon },
@@ -9,7 +17,7 @@ const MENU_ITEMS = [
   { to: "/pagamentos", label: "Pagamentos", icon: PaymentIcon },
   { to: "/frequencia", label: "Frequência", icon: CalendarIcon },
   { to: "/atendimento", label: "Atendimento", icon: SupportIcon },
-  { to: "/dietas", label: "Dietas", icon: DietIcon },
+  { to: "/dicas", label: "Dicas", icon: DietIcon },
   { to: "/termo-saude", label: "Termo de Saúde", icon: HealthIcon },
   { to: "/perfil", label: "Perfil", icon: UserIcon },
 ];
@@ -23,6 +31,33 @@ export default function StudentSidebar({ open, onClose }: StudentSidebarProps) {
   const navigate = useNavigate();
   const session = getStudentSession();
   const displayName = session?.nomeCompleto ?? session?.identifier;
+  const [academyName, setAcademyName] = useState(
+    () => formatAcademyName(session?.tenantName) || "",
+  );
+
+  useEffect(() => {
+    if (!session?.id) return;
+    if (formatAcademyName(session.tenantName)) {
+      setAcademyName(formatAcademyName(session.tenantName));
+      return;
+    }
+
+    let cancelled = false;
+    apiFetch<StudentOverview>("/student/overview", {}, session.id)
+      .then((data) => {
+        const name = formatAcademyName(data.academia?.name);
+        if (!name || cancelled) return;
+        setAcademyName(name);
+        setStudentSession({ ...session, tenantName: name });
+      })
+      .catch(() => {
+        // Mantém sem nome se a API falhar
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.id, session?.tenantName]);
 
   function handleLogout() {
     clearStudentSession();
@@ -43,6 +78,9 @@ export default function StudentSidebar({ open, onClose }: StudentSidebarProps) {
               {displayName}
             </p>
           )}
+          {academyName ? (
+            <p className="mt-1 truncate text-xs text-white/55">{academyName}</p>
+          ) : null}
         </div>
         <button
           type="button"

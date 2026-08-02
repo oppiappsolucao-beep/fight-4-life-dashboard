@@ -170,8 +170,8 @@ export default function StudentDietasPage() {
 
   return (
     <StudentSectionPage
-      title="Dietas"
-      description="Plano alimentar liberado pela academia para acompanhar seu objetivo."
+      title="Dicas"
+      description="Orientações alimentares liberadas pela academia para acompanhar seu objetivo."
     >
       {loading ? (
         <p className="text-sm text-white/50">Carregando plano alimentar...</p>
@@ -182,7 +182,7 @@ export default function StudentDietasPage() {
       ) : !dieta ? (
         <div className="rounded-xl border border-white/10 bg-white/[0.05] p-6 text-center sm:p-10">
           <p className="m-0 text-sm text-white/60">
-            Nenhuma dieta liberada ainda. Peça ao responsável da academia para vincular um
+            Nenhuma dica liberada ainda. Peça ao responsável da academia para vincular um
             plano no seu cadastro.
           </p>
         </div>
@@ -219,7 +219,7 @@ export default function StudentDietasPage() {
             <div className="mb-3 flex items-center justify-between gap-3 px-1">
               <div className="min-w-0 flex-1">
                 <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
-                  Sua dieta
+                  Suas dicas
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
                   <button

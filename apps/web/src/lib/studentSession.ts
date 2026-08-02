@@ -8,6 +8,8 @@ export interface StudentSession {
   identifier: string;
   loginType: StudentLoginType;
   tenantSlug: string;
+  /** Nome da academia (tenant) em que o aluno está matriculado. */
+  tenantName?: string;
 }
 
 const STORAGE_KEY = "studentSession";

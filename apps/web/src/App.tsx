@@ -57,7 +57,8 @@ export default function App() {
         <Route path="pagamentos" element={<StudentPagamentosPage />} />
         <Route path="frequencia" element={<StudentFrequenciaPage />} />
         <Route path="atendimento" element={<StudentAtendimentoPage />} />
-        <Route path="dietas" element={<StudentDietasPage />} />
+        <Route path="dicas" element={<StudentDietasPage />} />
+        <Route path="dietas" element={<Navigate to="/dicas" replace />} />
         <Route path="termo-saude" element={<StudentTermoSaudePage />} />
         <Route path="perfil" element={<StudentPerfilPage />} />
       </Route>

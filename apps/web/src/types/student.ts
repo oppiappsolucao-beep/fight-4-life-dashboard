@@ -15,6 +15,10 @@ export interface StudentOverview {
     nomeCompleto: string;
     planoModalidade: string;
   };
+  academia?: {
+    name: string;
+    slug: string;
+  };
   semana: {
     start: string;
     end: string;
