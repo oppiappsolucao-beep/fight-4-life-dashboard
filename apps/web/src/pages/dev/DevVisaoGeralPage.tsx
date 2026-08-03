@@ -19,14 +19,35 @@ function formatDate(iso: string) {
 
 type AsaasStatusResponse = {
   ok: boolean;
-  env: string;
+  env?: string;
   envConfigured: boolean;
   missingEnv: string[];
   apiReachable: boolean;
   walletMatch?: boolean;
   accountName?: string | null;
   accountEmail?: string | null;
+  walletsFound?: number;
   message: string;
+  tip?: string;
+  diagnostics?: {
+    probeVersion?: string;
+    env?: string;
+    baseUrl?: string;
+    keyFormat?: string;
+    keyLength?: number;
+    rawKeyLength?: number;
+    keyPreview?: string;
+    rawPrefix?: string;
+    dollarCountAtStart?: number;
+    keyStartsWithDollar?: boolean;
+    rawKeyStartsWithDollar?: boolean;
+    likelyEnvInterpolation?: boolean;
+    walletPreview?: string | null;
+    lastUrl?: string | null;
+    lastStatus?: number | null;
+    lastBody?: string | null;
+    pingOk?: boolean;
+  };
 };
 
 export default function DevVisaoGeralPage() {
@@ -94,7 +115,7 @@ export default function DevVisaoGeralPage() {
                 <p className="m-0 text-sm font-semibold text-white">Asaas (conta master)</p>
                 <p className="m-0 mt-1 text-xs text-white/45">
                   {overview.asaas?.configured
-                    ? "Variáveis encontradas no servidor. Clique para validar na API."
+                    ? "Variáveis encontradas. No EasyPanel a chave deve ser aact_prod_... sem $."
                     : `Faltando: ${(overview.asaas?.missingEnv ?? []).join(", ") || "ASAAS_API_KEY, ASAAS_WALLET_ID"}`}
                 </p>
               </div>
@@ -117,10 +138,47 @@ export default function DevVisaoGeralPage() {
               >
                 <p className="m-0 font-medium">{asaasStatus.message}</p>
                 <p className="m-0 mt-1 text-xs opacity-80">
-                  Ambiente: {asaasStatus.env}
+                  Ambiente: {asaasStatus.diagnostics?.env ?? asaasStatus.env ?? "?"}
                   {asaasStatus.accountName ? ` · Conta: ${asaasStatus.accountName}` : ""}
                   {asaasStatus.accountEmail ? ` (${asaasStatus.accountEmail})` : ""}
                 </p>
+                {asaasStatus.diagnostics ? (
+                  <>
+                    <p className="m-0 mt-1 text-xs opacity-80">
+                      Probe: {asaasStatus.diagnostics.probeVersion ?? "antigo"}
+                      {" · "}
+                      Chave: {asaasStatus.diagnostics.keyFormat}
+                      {asaasStatus.diagnostics.keyLength
+                        ? ` (${asaasStatus.diagnostics.keyLength} chars)`
+                        : ""}
+                      {typeof asaasStatus.diagnostics.dollarCountAtStart === "number"
+                        ? ` · $ no início: ${asaasStatus.diagnostics.dollarCountAtStart}`
+                        : ""}
+                      {asaasStatus.diagnostics.rawPrefix
+                        ? ` · raw: ${asaasStatus.diagnostics.rawPrefix}`
+                        : ""}
+                      {asaasStatus.diagnostics.baseUrl
+                        ? ` · URL: ${asaasStatus.diagnostics.baseUrl}`
+                        : ""}
+                      {asaasStatus.diagnostics.lastStatus
+                        ? ` · HTTP ${asaasStatus.diagnostics.lastStatus}`
+                        : ""}
+                    </p>
+                    {asaasStatus.diagnostics.lastUrl ? (
+                      <p className="m-0 mt-1 break-all text-xs opacity-70">
+                        lastUrl: {asaasStatus.diagnostics.lastUrl}
+                      </p>
+                    ) : null}
+                    {asaasStatus.diagnostics.lastBody ? (
+                      <p className="m-0 mt-1 break-all text-xs opacity-70">
+                        lastBody: {asaasStatus.diagnostics.lastBody}
+                      </p>
+                    ) : null}
+                  </>
+                ) : null}
+                {asaasStatus.tip ? (
+                  <p className="m-0 mt-2 text-xs opacity-90">{asaasStatus.tip}</p>
+                ) : null}
               </div>
             ) : null}
           </div>

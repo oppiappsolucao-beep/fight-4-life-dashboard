@@ -33,11 +33,18 @@ import { sumPlatformRevenueForOpenCycles } from "../../lib/charge-payments.js";
 import { centsToBrl } from "../../lib/platform-fees.js";
 import {
   asaasSetupChecklist,
+  getAsaasApiKey,
+  getAsaasBaseUrl,
   getAsaasEnv,
   getAsaasPlatformWalletId,
   isAsaasConfigured,
 } from "../../lib/asaas/config.js";
-import { AsaasError, asaasRequest } from "../../lib/asaas/client.js";
+import {
+  AsaasError,
+  asaasRequest,
+  describeAsaasApiKey,
+  normalizeAsaasApiKey,
+} from "../../lib/asaas/client.js";
 
 
 
@@ -109,72 +116,239 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
     "/dev/asaas/status",
     { preHandler: [requireAuth, requireRole(UserRole.DESENVOLVIMENTO)] },
     async (_request, reply) => {
+      const PROBE_VERSION = "asaas-status-v5";
+      const usingKeyB64 = Boolean(process.env.ASAAS_API_KEY_B64?.trim());
       const missingEnv = asaasSetupChecklist();
       const envConfigured = isAsaasConfigured();
-      const walletConfigured = getAsaasPlatformWalletId();
+      const walletConfigured = getAsaasPlatformWalletId()?.trim() || null;
+      const keyInfo = describeAsaasApiKey(getAsaasApiKey());
+      const baseUrl = getAsaasBaseUrl();
+      const normalizedKey = normalizeAsaasApiKey(getAsaasApiKey());
+
+      const diagnostics: Record<string, unknown> = {
+        probeVersion: PROBE_VERSION,
+        env: getAsaasEnv(),
+        baseUrl,
+        keyFormat: keyInfo.format,
+        keyLength: keyInfo.length,
+        rawKeyLength: keyInfo.rawLength,
+        keyPreview: keyInfo.preview,
+        rawPrefix: keyInfo.rawPrefix,
+        dollarCountAtStart: keyInfo.dollarCountAtStart,
+        keyStartsWithDollar: Boolean(normalizedKey?.startsWith("$")),
+        rawKeyStartsWithDollar: keyInfo.rawStartsWithDollar,
+        likelyEnvInterpolation: keyInfo.likelyEnvInterpolation,
+        keyTooShort: keyInfo.keyTooShort,
+        usingKeyB64,
+        walletConfigured: Boolean(walletConfigured),
+        walletPreview: walletConfigured
+          ? `${walletConfigured.slice(0, 8)}…${walletConfigured.slice(-4)}`
+          : null,
+      };
 
       if (!envConfigured) {
         return reply.send({
           ok: false,
-          env: getAsaasEnv(),
           envConfigured: false,
           missingEnv,
           apiReachable: false,
           walletMatch: false,
           message: "Variáveis Asaas incompletas no EasyPanel.",
+          tip: "No EasyPanel: ASAAS_API_KEY=aact_prod_... (SEM nenhum $), ASAAS_WALLET_ID, ASAAS_ENV=production.",
+          diagnostics,
         });
       }
 
-      try {
-        const account = await asaasRequest<{
-          name?: string;
-          email?: string;
-          personType?: string;
-        }>("/myAccount");
-
-        const wallets = await asaasRequest<{
-          data?: Array<{ id?: string }>;
-        }>("/myAccount/wallets");
-
-        const walletIds = (wallets.data ?? [])
-          .map((item) => item.id)
-          .filter((id): id is string => Boolean(id));
-        const walletMatch = walletConfigured
-          ? walletIds.includes(walletConfigured)
-          : false;
-
-        return reply.send({
-          ok: walletMatch,
-          env: getAsaasEnv(),
-          envConfigured: true,
-          missingEnv: [],
-          apiReachable: true,
-          accountName: account.name ?? null,
-          accountEmail: account.email ?? null,
-          walletMatch,
-          walletConfigured: Boolean(walletConfigured),
-          message: walletMatch
-            ? "Asaas produção/sandbox OK: API respondeu e o ASAAS_WALLET_ID confere."
-            : "API Asaas OK, mas ASAAS_WALLET_ID não aparece nas carteiras desta conta. Confira o valor colado.",
-        });
-      } catch (error) {
-        const message =
-          error instanceof AsaasError
-            ? error.message
-            : error instanceof Error
-              ? error.message
-              : "Falha ao falar com o Asaas.";
-
+      if (keyInfo.likelyEnvInterpolation || keyInfo.format === "mangled_by_env") {
         return reply.send({
           ok: false,
-          env: getAsaasEnv(),
           envConfigured: true,
           missingEnv: [],
           apiReachable: false,
           walletMatch: false,
-          message: `Variáveis existem, mas a API Asaas falhou: ${message}`,
+          message:
+            "A ASAAS_API_KEY chegou corrompida (o EasyPanel engoliu o $ da chave).",
+          tip: "Apague ASAAS_API_KEY. Cole SEM cifrão, só o que começa com aact_prod_... (apague o $ que o Asaas mostra). Salve + redeploy.",
+          diagnostics,
         });
       }
+
+      if (!normalizedKey) {
+        return reply.send({
+          ok: false,
+          envConfigured: true,
+          missingEnv: [],
+          apiReachable: false,
+          walletMatch: false,
+          message: "Não foi possível ler um token aact_prod_ / aact_hmlg_ na ASAAS_API_KEY.",
+          tip: "Cole a chave sem $: aact_prod_.... Confira se não ficou cortada no EasyPanel.",
+          diagnostics,
+        });
+      }
+
+      if (getAsaasEnv() === "production" && keyInfo.format === "sandbox") {
+        return reply.send({
+          ok: false,
+          envConfigured: true,
+          missingEnv: [],
+          apiReachable: false,
+          walletMatch: false,
+          message:
+            "ASAAS_ENV=production, mas a chave é de sandbox (aact_hmlg_).",
+          tip: "Ou mude ASAAS_ENV=sandbox, ou gere chave de Produção (aact_prod_) no Asaas.",
+          diagnostics,
+        });
+      }
+
+      if (getAsaasEnv() === "sandbox" && keyInfo.format === "production") {
+        return reply.send({
+          ok: false,
+          envConfigured: true,
+          missingEnv: [],
+          apiReachable: false,
+          walletMatch: false,
+          message:
+            "ASAAS_ENV=sandbox, mas a chave é de produção (aact_prod_).",
+          tip: "Para produção real: ASAAS_ENV=production. Para testes: use chave aact_hmlg_ do sandbox.",
+          diagnostics,
+        });
+      }
+
+      // 1) Ping documentado — se falhar, problema é chave/ambiente.
+      try {
+        await asaasRequest<{ data?: unknown[] }>("/customers?limit=1");
+        diagnostics.pingPath = "/customers?limit=1";
+        diagnostics.pingOk = true;
+      } catch (error) {
+        const asaasError = error instanceof AsaasError ? error : null;
+        diagnostics.pingPath = "/customers?limit=1";
+        diagnostics.pingOk = false;
+        diagnostics.lastUrl = asaasError?.url ?? null;
+        diagnostics.lastStatus = asaasError?.status ?? null;
+        diagnostics.lastBody =
+          asaasError?.body != null
+            ? JSON.stringify(asaasError.body).slice(0, 240)
+            : null;
+
+        // Se 401 em produção, testa se a chave funciona no sandbox (diagnóstico).
+        if (asaasError?.status === 401 && getAsaasEnv() === "production") {
+          try {
+            await asaasRequest("/customers?limit=1", { asaasEnv: "sandbox" });
+            diagnostics.worksInSandbox = true;
+            return reply.send({
+              ok: false,
+              envConfigured: true,
+              missingEnv: [],
+              apiReachable: false,
+              walletMatch: false,
+              message:
+                "Essa chave funciona no SANDBOX, não em produção.",
+              tip: "Gere uma chave em https://www.asaas.com (Produção), não no sandbox. Cole sem $: aact_prod_...",
+              diagnostics,
+            });
+          } catch {
+            diagnostics.worksInSandbox = false;
+          }
+        }
+
+        return reply.send({
+          ok: false,
+          envConfigured: true,
+          missingEnv: [],
+          apiReachable: false,
+          walletMatch: false,
+          message: `Variáveis existem, mas a API Asaas falhou: ${
+            asaasError?.message ??
+            (error instanceof Error ? error.message : "erro desconhecido")
+          }`,
+          tip:
+            asaasError?.status === 401
+              ? "Chave ainda inválida. Use ASAAS_API_KEY_B64 (Base64 da chave COM $). No PowerShell: [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes('$aact_prod_SUA_CHAVE')). Cole o resultado em ASAAS_API_KEY_B64, apague ASAAS_API_KEY, implante."
+              : "Confira redeploy com código novo (probeVersion asaas-status-v5) e ASAAS_ENV=production.",
+          diagnostics,
+        });
+      }
+
+      // 2) Wallet id (docs: GET /v3/wallets/)
+      let lastError: AsaasError | Error | null = null;
+      for (const path of ["/wallets/", "/wallets"]) {
+        try {
+          const wallets = await asaasRequest<{
+            data?: Array<{ id?: string }>;
+          }>(path);
+
+          const walletIds = (wallets.data ?? [])
+            .map((item) => item.id?.trim())
+            .filter((id): id is string => Boolean(id));
+          const walletMatch = walletConfigured
+            ? walletIds.includes(walletConfigured)
+            : false;
+
+          let accountName: string | null = null;
+          let accountEmail: string | null = null;
+          try {
+            const account = await asaasRequest<{
+              name?: string;
+              email?: string;
+            }>("/myAccount/commercialInfo/");
+            accountName = account.name ?? null;
+            accountEmail = account.email ?? null;
+          } catch {
+            // opcional
+          }
+
+          return reply.send({
+            ok: walletMatch,
+            envConfigured: true,
+            missingEnv: [],
+            apiReachable: true,
+            accountName,
+            accountEmail,
+            walletMatch,
+            walletsFound: walletIds.length,
+            triedPath: path,
+            message: walletMatch
+              ? "Asaas OK: API respondeu e o ASAAS_WALLET_ID confere."
+              : walletIds.length > 0
+                ? `API OK (${walletIds.length} carteira(s)), mas ASAAS_WALLET_ID não bate.`
+                : "API OK, porém nenhuma carteira retornada.",
+            tip:
+              !walletMatch && walletIds.length > 0
+                ? "Copie de novo o wallet id via GET /v3/wallets/ com a mesma chave de produção."
+                : undefined,
+            diagnostics: {
+              ...diagnostics,
+              walletPath: path,
+            },
+          });
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error(String(error));
+          if (error instanceof AsaasError) {
+            diagnostics.lastUrl = error.url ?? null;
+            diagnostics.lastStatus = error.status;
+            diagnostics.lastBody =
+              error.body != null ? JSON.stringify(error.body).slice(0, 240) : null;
+          }
+        }
+      }
+
+      const message =
+        lastError instanceof AsaasError
+          ? lastError.message
+          : lastError instanceof Error
+            ? lastError.message
+            : "Falha ao falar com o Asaas.";
+
+      return reply.send({
+        ok: false,
+        envConfigured: true,
+        missingEnv: [],
+        apiReachable: true,
+        walletMatch: false,
+        message: `API autenticou (customers OK), mas /wallets falhou: ${message}`,
+        tip: "A chave funciona. Confira ASAAS_WALLET_ID no painel Asaas → Integrações / Wallet.",
+        diagnostics,
+      });
     },
   );
 
