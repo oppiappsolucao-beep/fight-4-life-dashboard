@@ -85,6 +85,9 @@ export default function DevAcademiaEditModal({
   const [hasAsaasApiKey, setHasAsaasApiKey] = useState(false);
   const [asaasApiKeyInput, setAsaasApiKeyInput] = useState("");
   const [asaasLoading, setAsaasLoading] = useState(false);
+  const [onboardingUrl, setOnboardingUrl] = useState<string | null>(null);
+  const [onboardingStatus, setOnboardingStatus] = useState<string | null>(null);
+  const [onboardingPending, setOnboardingPending] = useState<number | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -159,6 +162,35 @@ export default function DevAcademiaEditModal({
       setSuccess(result.message);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Falha ao salvar chave Asaas.");
+    } finally {
+      setAsaasLoading(false);
+    }
+  }
+
+  async function buscarLinkAtivacao() {
+    setAsaasLoading(true);
+    setError("");
+    setSuccess("");
+    try {
+      const result = await apiFetch<{
+        message: string;
+        primaryOnboardingUrl: string | null;
+        accountStatus: string | null;
+        pendingCount: number;
+        documents: Array<{ title: string | null; status: string | null; onboardingUrl: string | null }>;
+      }>(`/dev/academias/${academiaId}/asaas-onboarding`);
+
+      setOnboardingUrl(result.primaryOnboardingUrl);
+      setOnboardingStatus(result.accountStatus);
+      setOnboardingPending(result.pendingCount);
+      setSuccess(result.message);
+
+      if (result.primaryOnboardingUrl && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(result.primaryOnboardingUrl);
+        setSuccess(`${result.message} Link copiado para a área de transferência.`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Falha ao buscar link de ativação.");
     } finally {
       setAsaasLoading(false);
     }
@@ -645,7 +677,40 @@ export default function DevAcademiaEditModal({
                           Forçar nova subconta
                         </button>
                       ) : null}
+                      {hasAsaasApiKey ? (
+                        <button
+                          type="button"
+                          disabled={asaasLoading}
+                          onClick={() => void buscarLinkAtivacao()}
+                          className="rounded-lg border border-violet-400/40 px-3 py-1.5 text-xs font-semibold text-violet-100 hover:bg-violet-500/10 disabled:opacity-50"
+                        >
+                          {asaasLoading ? "Buscando..." : "Link de ativação Asaas"}
+                        </button>
+                      ) : null}
                     </div>
+
+                    {onboardingStatus || onboardingUrl ? (
+                      <div className="mt-3 space-y-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+                        {onboardingStatus ? (
+                          <p className="m-0 text-xs text-white/70">
+                            Status Asaas: <span className="text-white">{onboardingStatus}</span>
+                            {typeof onboardingPending === "number"
+                              ? ` · ${onboardingPending} pendência(s)`
+                              : ""}
+                          </p>
+                        ) : null}
+                        {onboardingUrl ? (
+                          <a
+                            href={onboardingUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block break-all text-xs text-[#9fd0f0] underline"
+                          >
+                            {onboardingUrl}
+                          </a>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="grid gap-4 md:grid-cols-3">

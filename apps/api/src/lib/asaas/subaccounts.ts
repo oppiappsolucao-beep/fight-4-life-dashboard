@@ -271,3 +271,117 @@ export async function ensureAsaasSubaccountQuiet(
     return { ok: false, error: message };
   }
 }
+
+export type AsaasOnboardingDocument = {
+  id: string | null;
+  type: string | null;
+  title: string | null;
+  status: string | null;
+  onboardingUrl: string | null;
+  onboardingUrlExpirationDate: string | null;
+};
+
+export type AsaasOnboardingInfo = {
+  accountStatus: string | null;
+  commercialInfoStatus: string | null;
+  documents: AsaasOnboardingDocument[];
+  primaryOnboardingUrl: string | null;
+  pendingCount: number;
+};
+
+/** Busca status + links de onboarding da subconta (chave da academia). */
+export async function getTenantAsaasOnboarding(
+  tenantId: string,
+): Promise<AsaasOnboardingInfo> {
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: {
+      asaasAccountId: true,
+      asaasWalletId: true,
+      asaasApiKey: true,
+      name: true,
+    },
+  });
+
+  if (!tenant) {
+    throw new Error("Academia não encontrada.");
+  }
+
+  const apiKey = normalizeAsaasApiKey(tenant.asaasApiKey);
+  if (!apiKey) {
+    throw new AsaasError(
+      "Subconta sem apiKey salva. Vincule/cole a chave da subconta no Dev antes de gerar o link.",
+      400,
+      null,
+    );
+  }
+
+  let accountStatus: string | null = null;
+  let commercialInfoStatus: string | null = null;
+  try {
+    const status = await asaasRequest<{
+      general?: string;
+      commercialInfo?: string;
+      documentation?: string;
+    }>("/myAccount/status/", { apiKey });
+    accountStatus = status.general ?? status.documentation ?? null;
+    commercialInfoStatus = status.commercialInfo ?? null;
+  } catch {
+    // endpoint pode variar; documentos bastam
+  }
+
+  const docsResponse = await asaasRequest<{
+    data?: Array<{
+      id?: string;
+      type?: string;
+      title?: string;
+      status?: string;
+      onboardingUrl?: string;
+      onboardingUrlExpirationDate?: string;
+      documents?: Array<{
+        id?: string;
+        type?: string;
+        title?: string;
+        status?: string;
+        onboardingUrl?: string;
+        onboardingUrlExpirationDate?: string;
+      }>;
+    }>;
+  }>("/myAccount/documents", { apiKey });
+
+  const documents: AsaasOnboardingDocument[] = [];
+  for (const group of docsResponse.data ?? []) {
+    const nested = group.documents?.length ? group.documents : [group];
+    for (const doc of nested) {
+      documents.push({
+        id: doc.id ?? group.id ?? null,
+        type: doc.type ?? group.type ?? null,
+        title: doc.title ?? group.title ?? null,
+        status: doc.status ?? group.status ?? null,
+        onboardingUrl: doc.onboardingUrl ?? group.onboardingUrl ?? null,
+        onboardingUrlExpirationDate:
+          doc.onboardingUrlExpirationDate ?? group.onboardingUrlExpirationDate ?? null,
+      });
+    }
+  }
+
+  const withLink = documents.filter((item) => Boolean(item.onboardingUrl));
+  const pending = documents.filter((item) => {
+    const status = (item.status ?? "").toUpperCase();
+    return status === "PENDING" || status === "REJECTED" || !status;
+  });
+
+  const primaryOnboardingUrl =
+    withLink.find((item) => (item.status ?? "").toUpperCase() === "PENDING")
+      ?.onboardingUrl ??
+    withLink[0]?.onboardingUrl ??
+    null;
+
+  return {
+    accountStatus,
+    commercialInfoStatus,
+    documents,
+    primaryOnboardingUrl,
+    pendingCount: pending.length,
+  };
+}

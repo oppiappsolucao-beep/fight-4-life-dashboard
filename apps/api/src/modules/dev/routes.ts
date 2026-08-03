@@ -48,6 +48,7 @@ import {
 import {
   createAsaasSubaccountForTenant,
   ensureAsaasSubaccountQuiet,
+  getTenantAsaasOnboarding,
   saveTenantAsaasApiKey,
 } from "../../lib/asaas/subaccounts.js";
 
@@ -1067,6 +1068,38 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
             : error instanceof Error
               ? error.message
               : "Falha ao vincular Asaas.";
+        return reply.status(400).send({ error: message });
+      }
+    },
+  );
+
+  app.get<{ Params: { id: string } }>(
+    "/dev/academias/:id/asaas-onboarding",
+    { preHandler: [requireAuth, requireRole(UserRole.DESENVOLVIMENTO)] },
+    async (request, reply) => {
+      const tenant = await findAcademyOr404(request.params.id);
+      if (!tenant) {
+        return reply.status(404).send({ error: "Academia não encontrada." });
+      }
+
+      try {
+        const info = await getTenantAsaasOnboarding(tenant.id);
+        return reply.send({
+          academyName: tenant.name,
+          ...info,
+          message: info.primaryOnboardingUrl
+            ? "Link de ativação disponível. Envie ao dono da academia."
+            : info.accountStatus === "APPROVED"
+              ? "Subconta já aprovada — sem documentos pendentes."
+              : "Nenhum link de onboarding retornado. Confira no Asaas se a subconta já enviou os documentos.",
+        });
+      } catch (error) {
+        const message =
+          error instanceof AsaasError
+            ? error.message
+            : error instanceof Error
+              ? error.message
+              : "Falha ao buscar onboarding Asaas.";
         return reply.status(400).send({ error: message });
       }
     },
