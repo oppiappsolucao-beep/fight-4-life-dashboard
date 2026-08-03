@@ -54,6 +54,7 @@ interface AcademyDetailResponse {
   active: boolean;
   asaasAccountId?: string | null;
   asaasWalletId?: string | null;
+  hasAsaasApiKey?: boolean;
   form: Omit<AcademyFormData, "senha" | "confirmarSenha" | "active"> & {
     subdominio?: string;
   };
@@ -81,6 +82,8 @@ export default function DevAcademiaEditModal({
   const [success, setSuccess] = useState("");
   const [asaasAccountId, setAsaasAccountId] = useState<string | null>(null);
   const [asaasWalletId, setAsaasWalletId] = useState<string | null>(null);
+  const [hasAsaasApiKey, setHasAsaasApiKey] = useState(false);
+  const [asaasApiKeyInput, setAsaasApiKeyInput] = useState("");
   const [asaasLoading, setAsaasLoading] = useState(false);
 
   useEffect(() => {
@@ -98,6 +101,7 @@ export default function DevAcademiaEditModal({
         });
         setAsaasAccountId(data.asaasAccountId ?? null);
         setAsaasWalletId(data.asaasWalletId ?? null);
+        setHasAsaasApiKey(Boolean(data.hasAsaasApiKey));
       })
       .catch((err) => {
         setError(err instanceof Error ? err.message : "Erro ao carregar academia.");
@@ -105,7 +109,7 @@ export default function DevAcademiaEditModal({
       .finally(() => setLoading(false));
   }, [academiaId]);
 
-  async function vincularAsaas() {
+  async function vincularAsaas(force = false) {
     setAsaasLoading(true);
     setError("");
     setSuccess("");
@@ -114,12 +118,47 @@ export default function DevAcademiaEditModal({
         message: string;
         asaasAccountId: string;
         asaasWalletId: string;
-      }>(`/dev/academias/${academiaId}/asaas-subaccount`, { method: "POST" });
+        hasAsaasApiKey?: boolean;
+      }>(`/dev/academias/${academiaId}/asaas-subaccount`, {
+        method: "POST",
+        body: JSON.stringify({ force }),
+      });
       setAsaasAccountId(result.asaasAccountId);
       setAsaasWalletId(result.asaasWalletId);
+      setHasAsaasApiKey(Boolean(result.hasAsaasApiKey));
       setSuccess(result.message);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Falha ao vincular Asaas.");
+    } finally {
+      setAsaasLoading(false);
+    }
+  }
+
+  async function salvarChaveAsaas() {
+    if (!asaasApiKeyInput.trim()) {
+      setError("Cole a chave de API da subconta Asaas.");
+      return;
+    }
+    setAsaasLoading(true);
+    setError("");
+    setSuccess("");
+    try {
+      const result = await apiFetch<{
+        message: string;
+        asaasAccountId: string;
+        asaasWalletId: string;
+        hasAsaasApiKey?: boolean;
+      }>(`/dev/academias/${academiaId}/asaas-subaccount`, {
+        method: "POST",
+        body: JSON.stringify({ apiKey: asaasApiKeyInput.trim() }),
+      });
+      setAsaasAccountId(result.asaasAccountId);
+      setAsaasWalletId(result.asaasWalletId);
+      setHasAsaasApiKey(true);
+      setAsaasApiKeyInput("");
+      setSuccess(result.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Falha ao salvar chave Asaas.");
     } finally {
       setAsaasLoading(false);
     }
@@ -552,26 +591,61 @@ export default function DevAcademiaEditModal({
                     <p className="m-0 text-sm font-medium text-white">Asaas (subconta)</p>
                     <p className="m-0 mt-1 text-xs text-white/45">
                       {asaasWalletId
-                        ? `Vinculada · wallet ${asaasWalletId.slice(0, 8)}…`
-                        : "Ainda sem subconta. Necessário para split das mensalidades."}
+                        ? hasAsaasApiKey
+                          ? `Pronta para cobrar no nome da academia · wallet ${asaasWalletId.slice(0, 8)}…`
+                          : `Wallet ok, mas falta a chave da subconta (necessária para a fatura sair no nome da academia).`
+                        : "Ainda sem subconta. Necessário para cobranças no nome da academia."}
                     </p>
                     {asaasAccountId ? (
                       <p className="m-0 mt-1 text-[0.65rem] text-white/35">
                         account {asaasAccountId}
                       </p>
                     ) : null}
-                    <button
-                      type="button"
-                      disabled={asaasLoading || Boolean(asaasWalletId)}
-                      onClick={() => void vincularAsaas()}
-                      className="mt-3 rounded-lg border border-[#4a9fd8]/40 px-3 py-1.5 text-xs font-semibold text-[#9fd0f0] hover:bg-[#4a9fd8]/10 disabled:opacity-50"
-                    >
-                      {asaasLoading
-                        ? "Vinculando..."
-                        : asaasWalletId
-                          ? "Já vinculada"
-                          : "Criar / vincular subconta Asaas"}
-                    </button>
+
+                    {asaasWalletId && !hasAsaasApiKey ? (
+                      <div className="mt-3 space-y-2">
+                        <input
+                          type="password"
+                          value={asaasApiKeyInput}
+                          onChange={(e) => setAsaasApiKeyInput(e.target.value)}
+                          placeholder="Cole a API Key da subconta (aact_prod_... sem $)"
+                          className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-xs text-white"
+                        />
+                        <button
+                          type="button"
+                          disabled={asaasLoading}
+                          onClick={() => void salvarChaveAsaas()}
+                          className="rounded-lg border border-emerald-400/40 px-3 py-1.5 text-xs font-semibold text-emerald-200 hover:bg-emerald-500/10 disabled:opacity-50"
+                        >
+                          {asaasLoading ? "Validando..." : "Salvar chave da subconta"}
+                        </button>
+                      </div>
+                    ) : null}
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        disabled={asaasLoading || (Boolean(asaasWalletId) && hasAsaasApiKey)}
+                        onClick={() => void vincularAsaas(false)}
+                        className="rounded-lg border border-[#4a9fd8]/40 px-3 py-1.5 text-xs font-semibold text-[#9fd0f0] hover:bg-[#4a9fd8]/10 disabled:opacity-50"
+                      >
+                        {asaasLoading
+                          ? "Vinculando..."
+                          : asaasWalletId && hasAsaasApiKey
+                            ? "Já vinculada"
+                            : "Criar / vincular subconta Asaas"}
+                      </button>
+                      {asaasWalletId && !hasAsaasApiKey ? (
+                        <button
+                          type="button"
+                          disabled={asaasLoading}
+                          onClick={() => void vincularAsaas(true)}
+                          className="rounded-lg border border-amber-400/40 px-3 py-1.5 text-xs font-semibold text-amber-100 hover:bg-amber-500/10 disabled:opacity-50"
+                        >
+                          Forçar nova subconta
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
 
                   <div className="grid gap-4 md:grid-cols-3">

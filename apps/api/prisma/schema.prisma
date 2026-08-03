@@ -81,6 +81,8 @@ model Tenant {
   /// ID da subconta/wallet Asaas da academia
   asaasAccountId  String?
   asaasWalletId   String?
+  /// Chave de API da subconta (retornada 1x na criação; usada para emitir cobranças no nome da academia)
+  asaasApiKey     String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   users           User[]

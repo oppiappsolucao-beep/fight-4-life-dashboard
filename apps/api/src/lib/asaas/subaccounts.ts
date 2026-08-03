@@ -1,16 +1,17 @@
 /**
  * Criação / vínculo de subconta Asaas por academia.
- * Cobranças usam a chave master + split para o wallet da academia.
+ * Cobranças são emitidas com a apiKey da subconta (nome da academia na fatura).
  */
 
 import { prisma } from "../prisma.js";
-import { asaasRequest, AsaasError } from "./client.js";
+import { asaasRequest, AsaasError, normalizeAsaasApiKey } from "./client.js";
 import { getAsaasWebhookToken, isAsaasConfigured } from "./config.js";
 import { brandingToForm } from "../../modules/dev/academy.js";
 
 export type AsaasSubaccountResult = {
   accountId: string;
   walletId: string;
+  apiKey: string;
 };
 
 function digitsOnly(value: string | null | undefined): string {
@@ -28,6 +29,7 @@ function publicWebhookUrl(): string | null {
 
 export async function createAsaasSubaccountForTenant(
   tenantId: string,
+  options?: { force?: boolean },
 ): Promise<AsaasSubaccountResult> {
   if (!isAsaasConfigured()) {
     throw new AsaasError(
@@ -44,8 +46,10 @@ export async function createAsaasSubaccountForTenant(
       name: true,
       branding: true,
       subdomain: true,
+      slug: true,
       asaasAccountId: true,
       asaasWalletId: true,
+      asaasApiKey: true,
     },
   });
 
@@ -53,11 +57,42 @@ export async function createAsaasSubaccountForTenant(
     throw new Error("Academia não encontrada.");
   }
 
-  if (tenant.asaasAccountId && tenant.asaasWalletId) {
+  const existingKey = normalizeAsaasApiKey(tenant.asaasApiKey);
+  if (
+    !options?.force &&
+    tenant.asaasAccountId &&
+    tenant.asaasWalletId &&
+    existingKey
+  ) {
     return {
       accountId: tenant.asaasAccountId,
       walletId: tenant.asaasWalletId,
+      apiKey: existingKey,
     };
+  }
+
+  if (
+    !options?.force &&
+    tenant.asaasAccountId &&
+    tenant.asaasWalletId &&
+    !existingKey
+  ) {
+    throw new AsaasError(
+      "Subconta já vinculada, mas sem chave de API salva (o Asaas só devolve a chave na criação). Cole a chave da subconta no painel Dev ou force uma nova vinculação.",
+      400,
+      null,
+    );
+  }
+
+  if (options?.force) {
+    await prisma.tenant.update({
+      where: { id: tenantId },
+      data: {
+        asaasAccountId: null,
+        asaasWalletId: null,
+        asaasApiKey: null,
+      },
+    });
   }
 
   const form = brandingToForm(tenant.branding, tenant.name, {
@@ -93,10 +128,22 @@ export async function createAsaasSubaccountForTenant(
 
   const webhookToken = getAsaasWebhookToken();
   const webhookUrl = publicWebhookUrl();
+  // E-mail único por academia evita colisão ao recriar subconta
+  const accountEmail =
+    form.emailCorporativo.includes("+")
+      ? form.emailCorporativo
+      : form.emailCorporativo.replace(
+          "@",
+          `+${(tenant.subdomain || tenant.slug).replace(/[^a-z0-9]/gi, "")}@`,
+        );
+
+  const displayName =
+    form.nomeFantasia?.trim() || form.razaoSocial?.trim() || tenant.name;
 
   const body: Record<string, unknown> = {
-    name: form.razaoSocial || form.nomeFantasia || tenant.name,
-    email: form.emailCorporativo,
+    name: displayName,
+    email: accountEmail,
+    loginEmail: accountEmail,
     cpfCnpj,
     companyType: cpfCnpj.length > 11 ? "LIMITED" : undefined,
     phone: phone || undefined,
@@ -135,6 +182,7 @@ export async function createAsaasSubaccountForTenant(
     id?: string;
     walletId?: string;
     apiKey?: string;
+    accessToken?: string;
   }>("/accounts", {
     method: "POST",
     body: JSON.stringify(body),
@@ -142,10 +190,18 @@ export async function createAsaasSubaccountForTenant(
 
   const accountId = created.id?.trim();
   const walletId = created.walletId?.trim();
+  const apiKey = normalizeAsaasApiKey(created.apiKey || created.accessToken);
 
   if (!accountId || !walletId) {
     throw new AsaasError(
       "Asaas criou a subconta sem id/walletId na resposta.",
+      502,
+      created,
+    );
+  }
+  if (!apiKey) {
+    throw new AsaasError(
+      "Asaas criou a subconta sem apiKey. Não será possível emitir cobranças no nome da academia.",
       502,
       created,
     );
@@ -156,10 +212,46 @@ export async function createAsaasSubaccountForTenant(
     data: {
       asaasAccountId: accountId,
       asaasWalletId: walletId,
+      asaasApiKey: apiKey,
     },
   });
 
-  return { accountId, walletId };
+  return { accountId, walletId, apiKey };
+}
+
+/** Salva a chave de uma subconta já existente (quando a criação anterior não guardou a key). */
+export async function saveTenantAsaasApiKey(
+  tenantId: string,
+  rawApiKey: string,
+): Promise<AsaasSubaccountResult> {
+  const apiKey = normalizeAsaasApiKey(rawApiKey);
+  if (!apiKey) {
+    throw new AsaasError("Chave de API inválida.", 400, null);
+  }
+
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { asaasAccountId: true, asaasWalletId: true },
+  });
+  if (!tenant?.asaasAccountId || !tenant.asaasWalletId) {
+    throw new Error(
+      "Vincule a subconta Asaas antes de colar a chave (ou force uma nova criação).",
+    );
+  }
+
+  // Valida a chave com um ping simples na subconta
+  await asaasRequest("/customers?limit=1", { apiKey });
+
+  await prisma.tenant.update({
+    where: { id: tenantId },
+    data: { asaasApiKey: apiKey },
+  });
+
+  return {
+    accountId: tenant.asaasAccountId,
+    walletId: tenant.asaasWalletId,
+    apiKey,
+  };
 }
 
 /** Tenta criar se ainda não houver; não falha o cadastro da academia se Asaas estiver off. */

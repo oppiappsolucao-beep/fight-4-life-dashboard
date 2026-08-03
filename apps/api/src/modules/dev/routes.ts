@@ -48,6 +48,7 @@ import {
 import {
   createAsaasSubaccountForTenant,
   ensureAsaasSubaccountQuiet,
+  saveTenantAsaasApiKey,
 } from "../../lib/asaas/subaccounts.js";
 
 
@@ -640,6 +641,7 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
         active: tenant.active,
         asaasAccountId: tenant.asaasAccountId,
         asaasWalletId: tenant.asaasWalletId,
+        hasAsaasApiKey: Boolean(tenant.asaasApiKey),
         form,
 
         owner: owner
@@ -1033,12 +1035,30 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
         return reply.status(404).send({ error: "Academia não encontrada." });
       }
 
+      const body = (request.body ?? {}) as {
+        force?: boolean;
+        apiKey?: string;
+      };
+
       try {
-        const result = await createAsaasSubaccountForTenant(tenant.id);
+        if (body.apiKey?.trim()) {
+          const result = await saveTenantAsaasApiKey(tenant.id, body.apiKey);
+          return reply.send({
+            message: "Chave da subconta Asaas salva e validada.",
+            asaasAccountId: result.accountId,
+            asaasWalletId: result.walletId,
+            hasAsaasApiKey: true,
+          });
+        }
+
+        const result = await createAsaasSubaccountForTenant(tenant.id, {
+          force: Boolean(body.force),
+        });
         return reply.send({
           message: "Subconta Asaas vinculada com sucesso.",
           asaasAccountId: result.accountId,
           asaasWalletId: result.walletId,
+          hasAsaasApiKey: true,
         });
       } catch (error) {
         const message =
