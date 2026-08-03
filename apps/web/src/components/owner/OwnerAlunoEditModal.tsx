@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "../../lib/api";
 import { formatCep, formatCpf, formatPhone } from "../../lib/format";
 import {
@@ -6,10 +6,12 @@ import {
   formatPlanCurrency,
   type PlanItem,
 } from "../../lib/plans";
+import { isMinorStudent } from "../../lib/studentAge";
 
 const GENEROS = ["Masculino", "Feminino", "Outro", "Prefiro não informar"];
 const FORMAS_PAGAMENTO = ["Dinheiro", "Cartão", "Pix", "Débito"];
 const PARENTESCOS = ["Pai", "Mãe", "Cônjuge", "Irmão(ã)", "Amigo(a)", "Outro"];
+const RESPONSAVEL_PARENTESCOS = ["Pai", "Mãe", "Tutor(a)", "Avô(ó)", "Outro"];
 
 const STEPS = [
   { id: 0, label: "Pessoal" },
@@ -29,6 +31,11 @@ interface StudentDetail {
   emergenciaNome: string | null;
   emergenciaParentesco: string | null;
   emergenciaTelefone: string | null;
+  responsavelNome: string | null;
+  responsavelCpf: string | null;
+  responsavelEmail: string | null;
+  responsavelTelefone: string | null;
+  responsavelParentesco: string | null;
   rua: string | null;
   numero: string | null;
   cep: string | null;
@@ -78,6 +85,10 @@ export default function OwnerAlunoEditModal({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const isMinor = useMemo(
+    () => Boolean(form?.dataNascimento) && isMinorStudent(form!.dataNascimento),
+    [form?.dataNascimento],
+  );
 
   useEffect(() => {
     apiFetch<{ planos: PlanItem[] }>("/owner/planos")
@@ -116,6 +127,13 @@ export default function OwnerAlunoEditModal({
           emergenciaTelefone: aluno.emergenciaTelefone
             ? formatPhone(aluno.emergenciaTelefone)
             : "",
+          responsavelNome: emptyToString(aluno.responsavelNome),
+          responsavelCpf: aluno.responsavelCpf ? formatCpf(aluno.responsavelCpf) : "",
+          responsavelEmail: emptyToString(aluno.responsavelEmail),
+          responsavelTelefone: aluno.responsavelTelefone
+            ? formatPhone(aluno.responsavelTelefone)
+            : "",
+          responsavelParentesco: emptyToString(aluno.responsavelParentesco),
           rua: emptyToString(aluno.rua),
           numero: emptyToString(aluno.numero),
           cep: aluno.cep ? formatCep(aluno.cep) : "",
@@ -161,6 +179,17 @@ export default function OwnerAlunoEditModal({
       setStep(1);
       setError("Informe o e-mail do aluno.");
       return;
+    }
+    if (isMinor) {
+      if (
+        !form.responsavelNome.trim() ||
+        !form.responsavelCpf.trim() ||
+        !form.responsavelEmail.trim()
+      ) {
+        setStep(1);
+        setError("Aluno menor de 18 anos: informe nome, CPF e e-mail do responsável.");
+        return;
+      }
     }
     if (!form.planoModalidade || !form.dataInicio || !form.diaVencimento) {
       setStep(2);
@@ -363,6 +392,56 @@ export default function OwnerAlunoEditModal({
                       }
                     />
                   </Field>
+                  {isMinor ? (
+                    <>
+                      <div className="md:col-span-2 rounded-lg border border-amber-400/20 bg-amber-500/5 px-3 py-2 text-xs text-amber-100/90">
+                        Menor de 18 anos: cobranças Asaas usam os dados do responsável.
+                      </div>
+                      <Field label="Nome do responsável">
+                        <Input
+                          required
+                          value={form.responsavelNome}
+                          onChange={(e) => update("responsavelNome", e.target.value)}
+                        />
+                      </Field>
+                      <Field label="CPF do responsável">
+                        <Input
+                          required
+                          value={form.responsavelCpf}
+                          onChange={(e) =>
+                            update("responsavelCpf", formatCpf(e.target.value))
+                          }
+                        />
+                      </Field>
+                      <Field label="E-mail do responsável">
+                        <Input
+                          required
+                          type="email"
+                          value={form.responsavelEmail}
+                          onChange={(e) => update("responsavelEmail", e.target.value)}
+                        />
+                      </Field>
+                      <Field label="Telefone do responsável">
+                        <Input
+                          value={form.responsavelTelefone}
+                          onChange={(e) =>
+                            update("responsavelTelefone", formatPhone(e.target.value))
+                          }
+                        />
+                      </Field>
+                      <Field label="Parentesco do responsável">
+                        <Select
+                          value={form.responsavelParentesco}
+                          onChange={(e) => update("responsavelParentesco", e.target.value)}
+                        >
+                          <option value="">Selecione</option>
+                          {RESPONSAVEL_PARENTESCOS.map((item) => (
+                            <option key={item}>{item}</option>
+                          ))}
+                        </Select>
+                      </Field>
+                    </>
+                  ) : null}
                   <Field label="Rua" span>
                     <Input value={form.rua} onChange={(e) => update("rua", e.target.value)} />
                   </Field>

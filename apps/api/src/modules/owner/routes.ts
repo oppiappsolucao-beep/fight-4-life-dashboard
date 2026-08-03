@@ -21,6 +21,9 @@ import {
 import { ensureExerciseCatalog } from "../../lib/exercise-catalog.js";
 import { registerOwnerModalityRoutes } from "../modalities/routes.js";
 import { isMinorStudent } from "../../lib/student-age.js";
+import { createStudentAsaasCharge } from "../../lib/asaas/charges.js";
+import { AsaasError } from "../../lib/asaas/client.js";
+import { centsToBrl } from "../../lib/platform-fees.js";
 
 const studentCreateSchema = z.object({
   nomeCompleto: z.string().min(1),
@@ -239,10 +242,50 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
         acessoLiberadoAte: true,
         fotoUrl: true,
         createdAt: true,
+        charges: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: {
+            id: true,
+            status: true,
+            dueDate: true,
+            amountCents: true,
+            asaasPaymentId: true,
+            paidAt: true,
+          },
+        },
       },
     });
 
-    return reply.send({ alunos });
+    return reply.send({
+      alunos: alunos.map((aluno) => {
+        const latest = aluno.charges[0] ?? null;
+        return {
+          id: aluno.id,
+          nomeCompleto: aluno.nomeCompleto,
+          cpf: aluno.cpf,
+          email: aluno.email,
+          telefone: aluno.telefone,
+          planoModalidade: aluno.planoModalidade,
+          dataInicio: aluno.dataInicio,
+          diaVencimento: aluno.diaVencimento,
+          formaPagamento: aluno.formaPagamento,
+          acessoLiberadoAte: aluno.acessoLiberadoAte,
+          fotoUrl: aluno.fotoUrl,
+          createdAt: aluno.createdAt,
+          latestCharge: latest
+            ? {
+                id: latest.id,
+                status: latest.status,
+                dueDate: latest.dueDate,
+                amountBrl: centsToBrl(latest.amountCents),
+                asaasPaymentId: latest.asaasPaymentId,
+                paidAt: latest.paidAt,
+              }
+            : null,
+        };
+      }),
+    });
   });
 
   app.post("/owner/alunos", async (request, reply) => {
@@ -493,6 +536,100 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
       });
     },
   );
+
+  app.post<{ Params: { id: string } }>(
+    "/owner/alunos/:id/cobrancas",
+    async (request, reply) => {
+      try {
+        const result = await createStudentAsaasCharge({
+          tenantId: request.user.tenantId,
+          studentId: request.params.id,
+        });
+        return reply.status(201).send({
+          message: "Cobrança Asaas gerada com sucesso.",
+          charge: {
+            id: result.charge.id,
+            status: result.charge.status,
+            dueDate: result.charge.dueDate,
+            amountBrl: centsToBrl(result.charge.amountCents),
+            asaasPaymentId: result.charge.asaasPaymentId,
+          },
+          invoiceUrl: result.invoiceUrl,
+          estimatedFeeBrl: centsToBrl(result.estimatedFeeCents),
+        });
+      } catch (error) {
+        const message =
+          error instanceof AsaasError
+            ? error.message
+            : error instanceof Error
+              ? error.message
+              : "Falha ao gerar cobrança.";
+        const status = error instanceof AsaasError ? Math.min(error.status, 502) : 400;
+        return reply.status(status >= 400 ? status : 400).send({ error: message });
+      }
+    },
+  );
+
+  app.post("/owner/cobrancas/lote", async (request, reply) => {
+    const body = z
+      .object({
+        studentIds: z.array(z.string().uuid()).min(1).max(100),
+      })
+      .safeParse(request.body);
+
+    if (!body.success) {
+      return reply.status(400).send({ error: "Informe studentIds (1–100)." });
+    }
+
+    const tenantId = request.user.tenantId;
+    const created: Array<{ studentId: string; chargeId: string }> = [];
+    const errors: Array<{ studentId: string; error: string }> = [];
+
+    for (const studentId of body.data.studentIds) {
+      try {
+        const result = await createStudentAsaasCharge({ tenantId, studentId });
+        created.push({ studentId, chargeId: result.charge.id });
+      } catch (error) {
+        errors.push({
+          studentId,
+          error:
+            error instanceof Error ? error.message : "Falha ao gerar cobrança.",
+        });
+      }
+    }
+
+    return reply.send({
+      message: `Geradas ${created.length} cobrança(s). ${errors.length} falha(s).`,
+      created,
+      errors,
+    });
+  });
+
+  app.get("/owner/cobrancas", async (request, reply) => {
+    const charges = await prisma.studentCharge.findMany({
+      where: { tenantId: request.user.tenantId },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+      include: {
+        student: {
+          select: { id: true, nomeCompleto: true, email: true, cpf: true },
+        },
+      },
+    });
+
+    return reply.send({
+      cobrancas: charges.map((charge) => ({
+        id: charge.id,
+        status: charge.status,
+        dueDate: charge.dueDate,
+        amountBrl: centsToBrl(charge.amountCents),
+        platformFeeBrl: centsToBrl(charge.platformFeeCents),
+        asaasPaymentId: charge.asaasPaymentId,
+        paidAt: charge.paidAt,
+        student: charge.student,
+      })),
+    });
+  });
 
   app.delete<{ Params: { id: string } }>(
     "/owner/alunos/:id",

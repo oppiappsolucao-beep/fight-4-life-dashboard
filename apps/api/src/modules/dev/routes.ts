@@ -45,6 +45,10 @@ import {
   describeAsaasApiKey,
   normalizeAsaasApiKey,
 } from "../../lib/asaas/client.js";
+import {
+  createAsaasSubaccountForTenant,
+  ensureAsaasSubaccountQuiet,
+} from "../../lib/asaas/subaccounts.js";
 
 
 
@@ -634,6 +638,8 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
         slug: tenant.slug,
         subdomain: tenant.subdomain ?? tenant.slug,
         active: tenant.active,
+        asaasAccountId: tenant.asaasAccountId,
+        asaasWalletId: tenant.asaasWalletId,
         form,
 
         owner: owner
@@ -992,34 +998,59 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
 
       const owner = tenant.users[0];
 
-
+      const asaasLink = await ensureAsaasSubaccountQuiet(tenant.id);
 
       return reply.status(201).send({
-
         tenant: {
-
           id: tenant.id,
-
           slug: tenant.slug,
-
-          subdomain: tenant.subdomain ?? tenant.slug,
-
-          url: academyPublicUrl(tenant.subdomain ?? tenant.slug),
-
+          subdomain: tenant.subdomain,
           name: tenant.name,
-
+          active: tenant.active,
+          asaasAccountId: asaasLink.ok ? asaasLink.result.accountId : null,
+          asaasWalletId: asaasLink.ok ? asaasLink.result.walletId : null,
         },
-
-        owner,
-
-        message: "Academia cadastrada e acesso do dono liberado.",
-
+        owner: owner
+          ? { id: owner.id, email: owner.email, name: owner.name, role: owner.role }
+          : null,
+        asaas: asaasLink.ok
+          ? { linked: true, walletId: asaasLink.result.walletId }
+          : { linked: false, error: asaasLink.error },
+        message: asaasLink.ok
+          ? "Academia criada e subconta Asaas vinculada."
+          : `Academia criada. Subconta Asaas pendente: ${asaasLink.error}`,
+        publicUrl: academyPublicUrl(tenant.subdomain ?? tenant.slug),
       });
-
     },
+  );
 
+  app.post<{ Params: { id: string } }>(
+    "/dev/academias/:id/asaas-subaccount",
+    { preHandler: [requireAuth, requireRole(UserRole.DESENVOLVIMENTO)] },
+    async (request, reply) => {
+      const tenant = await findAcademyOr404(request.params.id);
+      if (!tenant) {
+        return reply.status(404).send({ error: "Academia não encontrada." });
+      }
+
+      try {
+        const result = await createAsaasSubaccountForTenant(tenant.id);
+        return reply.send({
+          message: "Subconta Asaas vinculada com sucesso.",
+          asaasAccountId: result.accountId,
+          asaasWalletId: result.walletId,
+        });
+      } catch (error) {
+        const message =
+          error instanceof AsaasError
+            ? error.message
+            : error instanceof Error
+              ? error.message
+              : "Falha ao vincular Asaas.";
+        return reply.status(400).send({ error: message });
+      }
+    },
   );
 
   await registerDevModalityRoutes(app);
 }
-

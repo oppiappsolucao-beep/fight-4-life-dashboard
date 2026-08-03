@@ -52,6 +52,8 @@ interface AcademyDetailResponse {
   slug: string;
   subdomain?: string;
   active: boolean;
+  asaasAccountId?: string | null;
+  asaasWalletId?: string | null;
   form: Omit<AcademyFormData, "senha" | "confirmarSenha" | "active"> & {
     subdominio?: string;
   };
@@ -77,6 +79,9 @@ export default function DevAcademiaEditModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [asaasAccountId, setAsaasAccountId] = useState<string | null>(null);
+  const [asaasWalletId, setAsaasWalletId] = useState<string | null>(null);
+  const [asaasLoading, setAsaasLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -91,6 +96,8 @@ export default function DevAcademiaEditModal({
           confirmarSenha: "",
           active: data.active,
         });
+        setAsaasAccountId(data.asaasAccountId ?? null);
+        setAsaasWalletId(data.asaasWalletId ?? null);
       })
       .catch((err) => {
         setError(err instanceof Error ? err.message : "Erro ao carregar academia.");
@@ -98,6 +105,25 @@ export default function DevAcademiaEditModal({
       .finally(() => setLoading(false));
   }, [academiaId]);
 
+  async function vincularAsaas() {
+    setAsaasLoading(true);
+    setError("");
+    setSuccess("");
+    try {
+      const result = await apiFetch<{
+        message: string;
+        asaasAccountId: string;
+        asaasWalletId: string;
+      }>(`/dev/academias/${academiaId}/asaas-subaccount`, { method: "POST" });
+      setAsaasAccountId(result.asaasAccountId);
+      setAsaasWalletId(result.asaasWalletId);
+      setSuccess(result.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Falha ao vincular Asaas.");
+    } finally {
+      setAsaasLoading(false);
+    }
+  }
   function updateField<K extends keyof AcademyFormData>(
     field: K,
     value: AcademyFormData[K],
@@ -521,6 +547,32 @@ export default function DevAcademiaEditModal({
                       </span>
                     </span>
                   </label>
+
+                  <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                    <p className="m-0 text-sm font-medium text-white">Asaas (subconta)</p>
+                    <p className="m-0 mt-1 text-xs text-white/45">
+                      {asaasWalletId
+                        ? `Vinculada · wallet ${asaasWalletId.slice(0, 8)}…`
+                        : "Ainda sem subconta. Necessário para split das mensalidades."}
+                    </p>
+                    {asaasAccountId ? (
+                      <p className="m-0 mt-1 text-[0.65rem] text-white/35">
+                        account {asaasAccountId}
+                      </p>
+                    ) : null}
+                    <button
+                      type="button"
+                      disabled={asaasLoading || Boolean(asaasWalletId)}
+                      onClick={() => void vincularAsaas()}
+                      className="mt-3 rounded-lg border border-[#4a9fd8]/40 px-3 py-1.5 text-xs font-semibold text-[#9fd0f0] hover:bg-[#4a9fd8]/10 disabled:opacity-50"
+                    >
+                      {asaasLoading
+                        ? "Vinculando..."
+                        : asaasWalletId
+                          ? "Já vinculada"
+                          : "Criar / vincular subconta Asaas"}
+                    </button>
+                  </div>
 
                   <div className="grid gap-4 md:grid-cols-3">
                     <Field label="Plano" required>

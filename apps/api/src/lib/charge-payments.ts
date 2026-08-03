@@ -1,6 +1,7 @@
 import { ChargeStatus } from "@prisma/client";
 import { prisma } from "./prisma.js";
 import { getAcademyBillingCycle } from "./academy-billing-cycle.js";
+import { formatIsoDate, getNextDueDate } from "./billing.js";
 import { PLATFORM_TENANT_SLUGS } from "../middleware/tenant.js";
 import { platformFeeCentsForPaidIndex } from "./platform-fees.js";
 import { isMinorStudent, resolveBillingPayer } from "./student-age.js";
@@ -74,6 +75,20 @@ export async function confirmStudentChargePaid(options: {
         platformFeeCents,
       },
     });
+
+    const student = await tx.student.findUnique({
+      where: { id: charge.studentId },
+      select: { diaVencimento: true, acessoLiberadoAte: true },
+    });
+
+    if (student) {
+      const nextDue = getNextDueDate(student.diaVencimento, paidAt);
+      const liberadoAte = formatIsoDate(nextDue);
+      await tx.student.update({
+        where: { id: charge.studentId },
+        data: { acessoLiberadoAte: liberadoAte },
+      });
+    }
 
     return {
       chargeId: charge.id,

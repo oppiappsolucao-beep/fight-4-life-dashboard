@@ -11,6 +11,7 @@ import { devRoutes } from "./modules/dev/routes.js";
 import { ownerRoutes } from "./modules/owner/routes.js";
 import { studentRoutes } from "./modules/student/routes.js";
 import { registerProfessorRoutes } from "./modules/modalities/routes.js";
+import { webhookRoutes } from "./modules/webhooks/routes.js";
 import { bootstrapDatabase } from "./lib/bootstrap.js";
 
 // EasyPanel injeta PORT (muitas vezes 80). A Porta do serviço no painel
@@ -44,6 +45,7 @@ await app.register(authRoutes, { prefix: "/api" });
 await app.register(devRoutes, { prefix: "/api" });
 await app.register(ownerRoutes, { prefix: "/api" });
 await app.register(studentRoutes, { prefix: "/api" });
+await app.register(webhookRoutes, { prefix: "/api" });
 await app.register(async (apiScope) => {
   await registerProfessorRoutes(apiScope);
 }, { prefix: "/api" });

@@ -43,6 +43,12 @@ ASAAS_WALLET_ID=seu-uuid-da-carteira
 ## Próximos passos da integração
 
 1. Colar as variáveis acima no EasyPanel e redeploy.
-2. Criar subconta Asaas por academia (`asaasAccountId` / `asaasWalletId` no Tenant).
+2. Criar subconta Asaas por academia (`asaasAccountId` / `asaasWalletId` no Tenant) — automático no cadastro Dev + botão retry.
 3. Webhook `PAYMENT_RECEIVED` / `PAYMENT_CONFIRMED` → `confirmStudentChargePaid`.
-4. Split: valor academia − taxa OPPI → wallet da academia; taxa → `ASAAS_WALLET_ID`.
+4. Split: valor academia − taxa OPPI → wallet da academia; taxa → fica na master.
+
+### Webhook (após deploy)
+
+URL: `https://academia.oppifit.com.br/api/webhooks/asaas`  
+Eventos: `PAYMENT_CONFIRMED`, `PAYMENT_RECEIVED`  
+Token: mesmo valor de `ASAAS_WEBHOOK_TOKEN` no EasyPanel.

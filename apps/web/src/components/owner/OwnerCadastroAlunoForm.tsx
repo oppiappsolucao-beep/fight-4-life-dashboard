@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { formatCep, formatCpf, formatPhone } from "../../lib/format";
 import { apiFetch } from "../../lib/api";
@@ -7,11 +7,13 @@ import {
   formatPlanCurrency,
   type PlanItem,
 } from "../../lib/plans";
+import { isMinorStudent } from "../../lib/studentAge";
 import OwnerStudentPhotoField from "./OwnerStudentPhotoField";
 
 const GENEROS = ["Masculino", "Feminino", "Outro", "Prefiro não informar"];
 const FORMAS_PAGAMENTO = ["Dinheiro", "Cartão", "Pix", "Débito"];
 const PARENTESCOS = ["Pai", "Mãe", "Cônjuge", "Irmão(ã)", "Amigo(a)", "Outro"];
+const RESPONSAVEL_PARENTESCOS = ["Pai", "Mãe", "Tutor(a)", "Avô(ó)", "Outro"];
 
 const STEPS = [
   { id: 0, label: "Pessoal", hint: "Identificação" },
@@ -31,6 +33,11 @@ const INITIAL_FORM = {
   emergenciaNome: "",
   emergenciaParentesco: "",
   emergenciaTelefone: "",
+  responsavelNome: "",
+  responsavelCpf: "",
+  responsavelEmail: "",
+  responsavelTelefone: "",
+  responsavelParentesco: "",
   rua: "",
   numero: "",
   cep: "",
@@ -71,6 +78,10 @@ export default function OwnerCadastroAlunoForm() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const isMinor = useMemo(
+    () => Boolean(form.dataNascimento) && isMinorStudent(form.dataNascimento),
+    [form.dataNascimento],
+  );
 
   useEffect(() => {
     apiFetch<{ planos: PlanItem[] }>("/owner/planos")
@@ -121,6 +132,15 @@ export default function OwnerCadastroAlunoForm() {
     }
     if (current === 1) {
       if (!form.email.trim()) return "Informe o e-mail para acesso do aluno.";
+      if (isMinor) {
+        if (
+          !form.responsavelNome.trim() ||
+          !form.responsavelCpf.trim() ||
+          !form.responsavelEmail.trim()
+        ) {
+          return "Aluno menor de 18 anos: informe nome, CPF e e-mail do responsável.";
+        }
+      }
     }
     if (current === 2) {
       if (!form.planoModalidade || !form.dataInicio || !form.diaVencimento) {
@@ -362,6 +382,63 @@ export default function OwnerCadastroAlunoForm() {
                 />
               </Field>
             </div>
+
+            {isMinor ? (
+              <>
+                <Divider label="Responsável financeiro (obrigatório — menor de 18)" />
+                <p className="m-0 -mt-2 mb-3 text-xs text-amber-200/80">
+                  Cobranças Asaas serão emitidas em nome do responsável, não do aluno.
+                </p>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Nome do responsável" required>
+                    <Input
+                      value={form.responsavelNome}
+                      onChange={(e) => updateField("responsavelNome", e.target.value)}
+                      placeholder="Nome completo"
+                    />
+                  </Field>
+                  <Field label="CPF do responsável" required>
+                    <Input
+                      value={form.responsavelCpf}
+                      onChange={(e) =>
+                        handleMaskedChange("responsavelCpf", e.target.value, formatCpf)
+                      }
+                      placeholder="000.000.000-00"
+                    />
+                  </Field>
+                  <Field label="E-mail do responsável" required>
+                    <Input
+                      type="email"
+                      value={form.responsavelEmail}
+                      onChange={(e) => updateField("responsavelEmail", e.target.value)}
+                      placeholder="responsavel@email.com"
+                    />
+                  </Field>
+                  <Field label="Telefone do responsável">
+                    <Input
+                      value={form.responsavelTelefone}
+                      onChange={(e) =>
+                        handleMaskedChange("responsavelTelefone", e.target.value, formatPhone)
+                      }
+                      placeholder="(00) 00000-0000"
+                    />
+                  </Field>
+                  <Field label="Parentesco">
+                    <Select
+                      value={form.responsavelParentesco}
+                      onChange={(e) => updateField("responsavelParentesco", e.target.value)}
+                    >
+                      <option value="">Selecione</option>
+                      {RESPONSAVEL_PARENTESCOS.map((p) => (
+                        <option key={p} value={p}>
+                          {p}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                </div>
+              </>
+            ) : null}
 
             <Divider label="Endereço residencial" />
             <div className="grid gap-4 md:grid-cols-4">

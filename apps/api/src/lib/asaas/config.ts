@@ -50,6 +50,11 @@ export function getAsaasPlatformWalletId(): string | null {
   return id || null;
 }
 
+export function getAsaasWebhookToken(): string | null {
+  const token = process.env.ASAAS_WEBHOOK_TOKEN?.trim();
+  return token || null;
+}
+
 export function isAsaasConfigured(): boolean {
   return Boolean(getAsaasApiKey() && getAsaasPlatformWalletId());
 }
