@@ -222,7 +222,18 @@ export default function OwnerCadastroAlunoForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-6">
+    <form
+      onSubmit={handleSubmit}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" && step < STEPS.length - 1) {
+          const target = event.target as HTMLElement;
+          if (target.tagName === "TEXTAREA") return;
+          event.preventDefault();
+          goNext();
+        }
+      }}
+      className="mx-auto max-w-3xl space-y-6"
+    >
       <nav aria-label="Etapas do cadastro" className="overflow-x-auto">
         <ol className="flex min-w-max items-stretch gap-2 sm:min-w-0 sm:gap-0">
           {STEPS.map((item, index) => {

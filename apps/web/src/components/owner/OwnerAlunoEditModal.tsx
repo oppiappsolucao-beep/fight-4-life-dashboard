@@ -166,35 +166,54 @@ export default function OwnerAlunoEditModal({
     setError("");
   }
 
+  function validateStep(current: number): string | null {
+    if (!form) return "Formulário não carregado.";
+    if (current === 0) {
+      if (!form.nomeCompleto.trim() || !form.cpf.trim() || !form.dataNascimento) {
+        return "Preencha nome, CPF e data de nascimento.";
+      }
+    }
+    if (current === 1) {
+      if (!form.email.trim()) return "Informe o e-mail do aluno.";
+      if (isMinor) {
+        if (
+          !form.responsavelNome.trim() ||
+          !form.responsavelCpf.trim() ||
+          !form.responsavelEmail.trim()
+        ) {
+          return "Aluno menor de 18 anos: informe nome, CPF e e-mail do responsável.";
+        }
+      }
+    }
+    if (current === 2) {
+      if (!form.planoModalidade || !form.dataInicio || !form.diaVencimento) {
+        return "Preencha os dados da matrícula.";
+      }
+    }
+    return null;
+  }
+
+  function goNext() {
+    const message = validateStep(step);
+    if (message) {
+      setError(message);
+      return;
+    }
+    setError("");
+    setStep((value) => Math.min(value + 1, STEPS.length - 1));
+  }
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (!form) return;
 
-    if (!form.nomeCompleto.trim() || !form.cpf.trim() || !form.dataNascimento) {
-      setStep(0);
-      setError("Preencha nome, CPF e data de nascimento.");
-      return;
-    }
-    if (!form.email.trim()) {
-      setStep(1);
-      setError("Informe o e-mail do aluno.");
-      return;
-    }
-    if (isMinor) {
-      if (
-        !form.responsavelNome.trim() ||
-        !form.responsavelCpf.trim() ||
-        !form.responsavelEmail.trim()
-      ) {
-        setStep(1);
-        setError("Aluno menor de 18 anos: informe nome, CPF e e-mail do responsável.");
+    for (let index = 0; index < STEPS.length; index += 1) {
+      const message = validateStep(index);
+      if (message) {
+        setStep(index);
+        setError(message);
         return;
       }
-    }
-    if (!form.planoModalidade || !form.dataInicio || !form.diaVencimento) {
-      setStep(2);
-      setError("Preencha os dados da matrícula.");
-      return;
     }
 
     setSaving(true);
@@ -291,7 +310,18 @@ export default function OwnerAlunoEditModal({
           ) : null}
 
           {form ? (
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form
+              onSubmit={handleSubmit}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && step < STEPS.length - 1) {
+                  const target = event.target as HTMLElement;
+                  if (target.tagName === "TEXTAREA") return;
+                  event.preventDefault();
+                  goNext();
+                }
+              }}
+              className="space-y-5"
+            >
               {form.fotoUrl && step === 0 ? (
                 <div className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
                   <img
@@ -558,10 +588,7 @@ export default function OwnerAlunoEditModal({
                   {step < STEPS.length - 1 ? (
                     <button
                       type="button"
-                      onClick={() => {
-                        setError("");
-                        setStep((value) => value + 1);
-                      }}
+                      onClick={goNext}
                       className="rounded-lg bg-[#4a9fd8] px-5 py-2.5 text-sm font-semibold text-white"
                     >
                       Continuar

@@ -18,6 +18,7 @@ import {
 } from "./config.js";
 import { asaasRequest, AsaasError } from "./client.js";
 import { ensureAsaasSubaccountQuiet } from "./subaccounts.js";
+import { normalizePlans, plansToPriceMap } from "../../modules/owner/plans.js";
 
 function digitsOnly(value: string): string {
   return value.replace(/\D/g, "");
@@ -145,8 +146,8 @@ export async function createStudentAsaasCharge(options: {
       where: { tenantId: options.tenantId },
       select: { planosPrecos: true },
     });
-    const planos = (config?.planosPrecos ?? {}) as Record<string, number>;
-    const price = planos[student.planoModalidade];
+    const priceMap = plansToPriceMap(normalizePlans(config?.planosPrecos ?? null));
+    const price = priceMap[student.planoModalidade.trim()];
     if (typeof price !== "number" || !(price > 0)) {
       throw new Error(
         `Plano "${student.planoModalidade}" sem preço cadastrado. Defina o valor em Planos.`,
