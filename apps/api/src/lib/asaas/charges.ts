@@ -186,10 +186,15 @@ export async function createStudentAsaasCharge(options: {
     cycle.key,
   );
   const feeCents = Math.min(estimatedFeeCents, amountCents - 100);
-  const academyShareCents = amountCents - feeCents;
-  if (academyShareCents <= 0) {
+  // Split por % do valor líquido (Asaas desconta a taxa própria antes do split).
+  // Assim o valor fixo nunca estoura o líquido da cobrança.
+  const academyPercent =
+    Math.round(((amountCents - feeCents) / amountCents) * 10000) / 100;
+  if (academyPercent <= 0 || academyPercent >= 100) {
     throw new Error("Valor insuficiente para split da taxa OPPI.");
   }
+
+  const billingType = options.billingType ?? "PIX";
 
   const payer = resolveBillingPayer(student);
   const customerId = await upsertAsaasCustomer({
@@ -212,8 +217,7 @@ export async function createStudentAsaasCharge(options: {
     options.description?.trim() ||
     `Mensalidade ${student.planoModalidade} — ${student.tenant.name}`;
 
-  // Cobrança na conta master; split envia o líquido para a academia.
-  // A taxa OPPI permanece na master (não vai no split).
+  // Cobrança na conta master; % do líquido → academia; resto (≈ taxa OPPI) → master.
   const payment = await asaasRequest<{
     id?: string;
     invoiceUrl?: string;
@@ -223,7 +227,7 @@ export async function createStudentAsaasCharge(options: {
     method: "POST",
     body: JSON.stringify({
       customer: customerId,
-      billingType: options.billingType ?? "UNDEFINED",
+      billingType,
       value: centsToBrl(amountCents),
       dueDate: dueDateIso,
       description,
@@ -231,7 +235,7 @@ export async function createStudentAsaasCharge(options: {
       split: [
         {
           walletId: academyWalletId,
-          fixedValue: centsToBrl(academyShareCents),
+          percentualValue: academyPercent,
         },
       ],
     }),
@@ -262,6 +266,6 @@ export async function createStudentAsaasCharge(options: {
     charge,
     invoiceUrl: payment.invoiceUrl ?? payment.bankSlipUrl ?? null,
     estimatedFeeCents: feeCents,
-    academyShareCents,
+    academySharePercent: academyPercent,
   };
 }
