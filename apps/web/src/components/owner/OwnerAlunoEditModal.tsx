@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { apiFetch } from "../../lib/api";
 import { formatCep, formatCpf, formatPhone } from "../../lib/format";
 import {
@@ -7,6 +7,7 @@ import {
   type PlanItem,
 } from "../../lib/plans";
 import { isMinorStudent } from "../../lib/studentAge";
+import OwnerStudentPhotoField from "./OwnerStudentPhotoField";
 
 const GENEROS = ["Masculino", "Feminino", "Outro", "Prefiro não informar"];
 const FORMAS_PAGAMENTO = ["Dinheiro", "Cartão", "Pix", "Débito"];
@@ -17,6 +18,7 @@ const STEPS = [
   { id: 0, label: "Pessoal" },
   { id: 1, label: "Contato" },
   { id: 2, label: "Matrícula" },
+  { id: 3, label: "Foto" },
 ] as const;
 
 interface StudentDetail {
@@ -52,7 +54,6 @@ interface StudentDetail {
 type StudentForm = {
   [K in keyof Omit<StudentDetail, "id" | "active" | "fotoUrl" | "dietPlanId">]: string;
 } & {
-  fotoUrl: string | null;
   dietPlanId: string;
   active: boolean;
 };
@@ -73,6 +74,15 @@ function emptyToString(value: string | null): string {
   return value ?? "";
 }
 
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Falha ao ler a foto."));
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function OwnerAlunoEditModal({
   alunoId,
   onClose,
@@ -82,6 +92,9 @@ export default function OwnerAlunoEditModal({
   const [step, setStep] = useState(0);
   const [planos, setPlanos] = useState<PlanItem[]>(DEFAULT_OWNER_PLANS);
   const [dietas, setDietas] = useState<DietPlanOption[]>([]);
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const [fotoFile, setFotoFile] = useState<File | null>(null);
+  const fotoPreviewRef = useRef<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -89,6 +102,17 @@ export default function OwnerAlunoEditModal({
     () => Boolean(form?.dataNascimento) && isMinorStudent(form!.dataNascimento),
     [form?.dataNascimento],
   );
+
+  useEffect(() => {
+    fotoPreviewRef.current = fotoPreview;
+  }, [fotoPreview]);
+
+  useEffect(() => {
+    return () => {
+      const preview = fotoPreviewRef.current;
+      if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
+    };
+  }, []);
 
   useEffect(() => {
     apiFetch<{ planos: PlanItem[] }>("/owner/planos")
@@ -142,10 +166,11 @@ export default function OwnerAlunoEditModal({
           dataInicio: aluno.dataInicio,
           diaVencimento: aluno.diaVencimento,
           formaPagamento: emptyToString(aluno.formaPagamento),
-          fotoUrl: aluno.fotoUrl,
           dietPlanId: aluno.dietPlanId ?? "",
           active: aluno.active,
         });
+        setFotoPreview(aluno.fotoUrl);
+        setFotoFile(null);
       })
       .catch((err: unknown) => {
         if (!cancelled) {
@@ -163,6 +188,13 @@ export default function OwnerAlunoEditModal({
 
   function update<K extends keyof StudentForm>(field: K, value: StudentForm[K]) {
     setForm((current) => (current ? { ...current, [field]: value } : current));
+    setError("");
+  }
+
+  function handlePhotoChange(preview: string | null, file?: File) {
+    if (fotoPreview?.startsWith("blob:")) URL.revokeObjectURL(fotoPreview);
+    setFotoPreview(preview);
+    setFotoFile(file ?? null);
     setError("");
   }
 
@@ -207,7 +239,13 @@ export default function OwnerAlunoEditModal({
     event.preventDefault();
     if (!form) return;
 
-    for (let index = 0; index < STEPS.length; index += 1) {
+    // Enter/submit acidental nos passos anteriores não pode salvar direto
+    if (step < STEPS.length - 1) {
+      goNext();
+      return;
+    }
+
+    for (let index = 0; index < STEPS.length - 1; index += 1) {
       const message = validateStep(index);
       if (message) {
         setStep(index);
@@ -219,10 +257,18 @@ export default function OwnerAlunoEditModal({
     setSaving(true);
     setError("");
     try {
+      let fotoUrl: string | null = fotoPreview;
+      if (fotoFile) {
+        fotoUrl = await fileToDataUrl(fotoFile);
+      } else if (fotoPreview?.startsWith("blob:")) {
+        fotoUrl = null;
+      }
+
       await apiFetch(`/owner/alunos/${alunoId}`, {
         method: "PATCH",
         body: JSON.stringify({
           ...form,
+          fotoUrl,
           dietPlanId: form.dietPlanId || null,
         }),
       });
@@ -313,33 +359,16 @@ export default function OwnerAlunoEditModal({
             <form
               onSubmit={handleSubmit}
               onKeyDown={(event) => {
-                if (event.key === "Enter" && step < STEPS.length - 1) {
-                  const target = event.target as HTMLElement;
-                  if (target.tagName === "TEXTAREA") return;
+                if (event.key !== "Enter") return;
+                const target = event.target as HTMLElement;
+                if (target.tagName === "TEXTAREA") return;
+                if (step < STEPS.length - 1) {
                   event.preventDefault();
                   goNext();
                 }
               }}
               className="space-y-5"
             >
-              {form.fotoUrl && step === 0 ? (
-                <div className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-                  <img
-                    src={form.fotoUrl}
-                    alt=""
-                    className="h-16 w-16 rounded-full object-cover ring-2 ring-white/10"
-                  />
-                  <div>
-                    <p className="m-0 text-xs font-semibold uppercase tracking-wide text-white/45">
-                      Foto do cadastro
-                    </p>
-                    <p className="m-0 mt-1 text-sm text-white/70">
-                      Imagem registrada no momento da matrícula.
-                    </p>
-                  </div>
-                </div>
-              ) : null}
-
               {step === 0 ? (
                 <div className="grid gap-4 md:grid-cols-2">
                   <Field label="Nome completo" span>
@@ -564,6 +593,21 @@ export default function OwnerAlunoEditModal({
                 </div>
               ) : null}
 
+              {step === 3 ? (
+                <div className="space-y-3">
+                  <div>
+                    <p className="m-0 text-sm font-semibold text-white">Foto do aluno</p>
+                    <p className="m-0 mt-1 text-sm text-white/55">
+                      Opcional. Tire uma nova foto ou escolha da galeria.
+                    </p>
+                  </div>
+                  <OwnerStudentPhotoField
+                    preview={fotoPreview}
+                    onPreviewChange={handlePhotoChange}
+                  />
+                </div>
+              ) : null}
+
               <div className="flex flex-wrap justify-between gap-3 border-t border-white/10 pt-5">
                 <button
                   type="button"
@@ -588,7 +632,11 @@ export default function OwnerAlunoEditModal({
                   {step < STEPS.length - 1 ? (
                     <button
                       type="button"
-                      onClick={goNext}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        goNext();
+                      }}
                       className="rounded-lg bg-[#4a9fd8] px-5 py-2.5 text-sm font-semibold text-white"
                     >
                       Continuar

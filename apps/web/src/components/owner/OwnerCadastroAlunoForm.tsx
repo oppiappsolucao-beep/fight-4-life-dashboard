@@ -168,6 +168,12 @@ export default function OwnerCadastroAlunoForm() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    // Enter/submit acidental nos passos anteriores não pode cadastrar direto
+    if (step < STEPS.length - 1) {
+      goNext();
+      return;
+    }
+
     setError("");
     setSuccess(false);
 
@@ -225,9 +231,11 @@ export default function OwnerCadastroAlunoForm() {
     <form
       onSubmit={handleSubmit}
       onKeyDown={(event) => {
-        if (event.key === "Enter" && step < STEPS.length - 1) {
-          const target = event.target as HTMLElement;
-          if (target.tagName === "TEXTAREA") return;
+        if (event.key !== "Enter") return;
+        const target = event.target as HTMLElement;
+        if (target.tagName === "TEXTAREA") return;
+        // Nunca deixa Enter enviar o form antes da última etapa
+        if (step < STEPS.length - 1) {
           event.preventDefault();
           goNext();
         }
@@ -603,7 +611,11 @@ export default function OwnerCadastroAlunoForm() {
             {step < STEPS.length - 1 ? (
               <button
                 type="button"
-                onClick={goNext}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  goNext();
+                }}
                 className="rounded-lg bg-[#4a9fd8] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2f7fb8]"
               >
                 Continuar
