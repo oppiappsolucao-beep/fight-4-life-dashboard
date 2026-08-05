@@ -236,3 +236,8 @@ apps/web/dist/
 # Prisma
 apps/api/prisma/*.db
 apps/api/prisma/*.db-journal
+
+# Fotos de alunos (disco local / volume)
+uploads/
+apps/api/uploads/
+/data/

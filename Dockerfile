@@ -24,6 +24,10 @@ ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=3000
 ENV WEB_DIST_PATH=/app/apps/web/dist
+# Monte um volume neste path no EasyPanel para persistir fotos entre deploys
+ENV UPLOADS_DIR=/data/uploads
+
+RUN mkdir -p /data/uploads
 
 EXPOSE 3000
 

@@ -24,6 +24,10 @@ import { isMinorStudent } from "../../lib/student-age.js";
 import { createStudentAsaasCharge } from "../../lib/asaas/charges.js";
 import { AsaasError } from "../../lib/asaas/client.js";
 import { centsToBrl } from "../../lib/platform-fees.js";
+import {
+  persistStudentPhoto,
+  removeStudentPhoto,
+} from "../../lib/student-photos.js";
 
 const studentCreateSchema = z.object({
   nomeCompleto: z.string().min(1),
@@ -328,7 +332,7 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
       }
     }
 
-    const aluno = await prisma.student.create({
+    let aluno = await prisma.student.create({
       data: {
         tenantId,
         nomeCompleto: data.nomeCompleto.trim(),
@@ -354,10 +358,30 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
         dataInicio: data.dataInicio,
         diaVencimento: data.diaVencimento,
         formaPagamento: data.formaPagamento || null,
-        fotoUrl: data.fotoUrl || null,
+        fotoUrl: null,
         dietPlanId: dietPlanId ?? null,
       },
     });
+
+    if (data.fotoUrl) {
+      try {
+        const fotoUrl = await persistStudentPhoto({
+          tenantId,
+          studentId: aluno.id,
+          fotoUrl: data.fotoUrl,
+        });
+        aluno = await prisma.student.update({
+          where: { id: aluno.id },
+          data: { fotoUrl },
+        });
+      } catch (error) {
+        await prisma.student.delete({ where: { id: aluno.id } }).catch(() => undefined);
+        return reply.status(400).send({
+          error:
+            error instanceof Error ? error.message : "Não foi possível salvar a foto.",
+        });
+      }
+    }
 
     return reply.status(201).send({
       aluno: {
@@ -365,6 +389,7 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
         nomeCompleto: aluno.nomeCompleto,
         cpf: aluno.cpf,
         email: aluno.email,
+        fotoUrl: aluno.fotoUrl,
       },
       message: "Aluno cadastrado com sucesso.",
     });
@@ -413,7 +438,7 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
       const tenantId = request.user.tenantId;
       const current = await prisma.student.findFirst({
         where: { id: request.params.id, tenantId },
-        select: { id: true },
+        select: { id: true, fotoUrl: true },
       });
 
       if (!current) {
@@ -455,6 +480,22 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
         }
       }
 
+      let fotoUrl = current.fotoUrl;
+      if (data.fotoUrl !== undefined) {
+        try {
+          fotoUrl = await persistStudentPhoto({
+            tenantId,
+            studentId: current.id,
+            fotoUrl: data.fotoUrl,
+          });
+        } catch (error) {
+          return reply.status(400).send({
+            error:
+              error instanceof Error ? error.message : "Não foi possível salvar a foto.",
+          });
+        }
+      }
+
       const aluno = await prisma.student.update({
         where: { id: current.id },
         data: {
@@ -481,7 +522,7 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
           dataInicio: data.dataInicio,
           diaVencimento: data.diaVencimento,
           formaPagamento: data.formaPagamento || null,
-          fotoUrl: data.fotoUrl || null,
+          fotoUrl,
           ...(dietPlanId === undefined ? {} : { dietPlanId }),
           ...(data.active === undefined ? {} : { active: data.active }),
         },
@@ -639,13 +680,14 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
           id: request.params.id,
           tenantId: request.user.tenantId,
         },
-        select: { id: true },
+        select: { id: true, tenantId: true },
       });
 
       if (!aluno) {
         return reply.status(404).send({ error: "Aluno não encontrado." });
       }
 
+      await removeStudentPhoto(aluno.tenantId, aluno.id);
       await prisma.student.delete({ where: { id: aluno.id } });
       return reply.send({ message: "Aluno removido com sucesso." });
     },

@@ -108,4 +108,14 @@ export async function bootstrapDatabase(): Promise<void> {
   } catch (error) {
     console.error("[bootstrap] Falha ao carregar planos de dieta:", error);
   }
+
+  try {
+    const { migrateBase64StudentPhotos } = await import("./student-photos.js");
+    const migrated = await migrateBase64StudentPhotos();
+    if (migrated > 0) {
+      console.log(`[photos] Fotos base64 migradas para disco: ${migrated}.`);
+    }
+  } catch (error) {
+    console.error("[bootstrap] Falha ao migrar fotos de alunos:", error);
+  }
 }

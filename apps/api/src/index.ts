@@ -13,6 +13,7 @@ import { studentRoutes } from "./modules/student/routes.js";
 import { registerProfessorRoutes } from "./modules/modalities/routes.js";
 import { webhookRoutes } from "./modules/webhooks/routes.js";
 import { bootstrapDatabase } from "./lib/bootstrap.js";
+import { ensureUploadsDir, getUploadsRoot } from "./lib/student-photos.js";
 
 // EasyPanel injeta PORT (muitas vezes 80). A Porta do serviço no painel
 // deve ser a mesma deste valor.
@@ -29,6 +30,9 @@ const app = Fastify({
 });
 
 await bootstrapDatabase();
+
+const uploadsRoot = await ensureUploadsDir();
+console.log(`[photos] Uploads em ${uploadsRoot}`);
 
 await app.register(cors, {
   origin: true,
@@ -50,6 +54,16 @@ await app.register(async (apiScope) => {
   await registerProfessorRoutes(apiScope);
 }, { prefix: "/api" });
 
+// Fotos de alunos (fora do Postgres) — registrar antes do SPA
+await app.register(fastifyStatic, {
+  root: getUploadsRoot(),
+  prefix: "/uploads/",
+  decorateReply: false,
+  setHeaders(res) {
+    res.setHeader("Cache-Control", "public, max-age=86400");
+  },
+});
+
 // Em produção, servimos o front (Vite build) pelo mesmo servidor/domínio.
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const webDist = process.env.WEB_DIST_PATH
@@ -57,10 +71,14 @@ const webDist = process.env.WEB_DIST_PATH
   : resolve(currentDir, "../../web/dist");
 
 if (existsSync(webDist)) {
-  await app.register(fastifyStatic, { root: webDist });
+  await app.register(fastifyStatic, {
+    root: webDist,
+    decorateReply: true,
+  });
 
   app.setNotFoundHandler((request, reply) => {
-    if (request.raw.url?.startsWith("/api")) {
+    const url = request.raw.url ?? "";
+    if (url.startsWith("/api") || url.startsWith("/uploads")) {
       reply.code(404).send({ error: "Rota não encontrada" });
       return;
     }

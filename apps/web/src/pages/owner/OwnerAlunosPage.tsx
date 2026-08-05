@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { apiFetch } from "../../lib/api";
 import { formatCpf, formatPhone } from "../../lib/format";
 import OwnerAlunoEditModal from "../../components/owner/OwnerAlunoEditModal";
+import { resolveMediaUrl } from "../../lib/mediaUrl";
 import OwnerSectionPage from "./OwnerSectionPage";
 
 interface AlunoListItem {
@@ -122,9 +123,9 @@ export default function OwnerAlunosPage() {
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      {aluno.fotoUrl ? (
+                      {resolveMediaUrl(aluno.fotoUrl) ? (
                         <img
-                          src={aluno.fotoUrl}
+                          src={resolveMediaUrl(aluno.fotoUrl)!}
                           alt=""
                           className="h-9 w-9 rounded-full object-cover"
                         />

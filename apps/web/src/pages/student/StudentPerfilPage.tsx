@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../../lib/api";
 import { formatCpf } from "../../lib/format";
+import { resolveMediaUrl } from "../../lib/mediaUrl";
 import { getStudentSession } from "../../lib/studentSession";
 import { formatWorkoutDateLabel } from "../../lib/workout";
 import StudentSectionPage from "./StudentSectionPage";
@@ -43,6 +44,7 @@ export default function StudentPerfilPage() {
   const nome = perfil?.nomeCompleto ?? session?.nomeCompleto ?? "—";
   const cpf = perfil?.cpf ?? session?.cpf ?? "";
   const email = perfil?.email ?? session?.email ?? "—";
+  const fotoSrc = resolveMediaUrl(perfil?.fotoUrl);
 
   return (
     <StudentSectionPage
@@ -58,9 +60,9 @@ export default function StudentPerfilPage() {
           <div className="rounded-xl border border-white/10 bg-white/[0.05] p-5 backdrop-blur-sm">
             <p className="text-xs font-semibold uppercase tracking-wide text-white/50">Foto</p>
             <div className="mt-3 flex items-center gap-4">
-              {perfil?.fotoUrl ? (
+              {fotoSrc ? (
                 <img
-                  src={perfil.fotoUrl}
+                  src={fotoSrc}
                   alt=""
                   className="h-20 w-20 rounded-full object-cover ring-2 ring-white/10"
                 />
@@ -70,7 +72,7 @@ export default function StudentPerfilPage() {
                 </div>
               )}
               <p className="m-0 text-sm text-white/55">
-                {perfil?.fotoUrl
+                {fotoSrc
                   ? "Foto cadastrada pela academia."
                   : "Nenhuma foto cadastrada no seu perfil."}
               </p>

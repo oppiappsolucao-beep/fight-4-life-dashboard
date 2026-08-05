@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiFetch } from "../../lib/api";
+import { resolveMediaUrl } from "../../lib/mediaUrl";
 
 interface ProfessorAlunoItem {
   id: string;
@@ -141,9 +142,9 @@ export default function ProfessorAlunosPage() {
                     className="flex flex-col gap-4 rounded-xl border border-white/10 bg-[#123055]/55 p-4 sm:flex-row sm:items-center"
                   >
                     <div className="flex min-w-0 flex-1 items-start gap-3">
-                      {aluno.fotoUrl ? (
+                      {resolveMediaUrl(aluno.fotoUrl) ? (
                         <img
-                          src={aluno.fotoUrl}
+                          src={resolveMediaUrl(aluno.fotoUrl)!}
                           alt={aluno.nomeCompleto}
                           className="h-14 w-14 shrink-0 rounded-2xl object-cover ring-1 ring-white/15"
                         />
