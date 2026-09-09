@@ -1,8 +1,10 @@
 # Deploy Node (API + front) no EasyPanel via Nixpacks.
+# Não defina NODE_ENV=production em [variables]: o npm install
+# pularia vite/typescript/prisma (estão em devDependencies) e o build quebra.
+# Sem imagem nova o painel fica em: No such image: easypanel/dashboard/academia:latest
 providers = ["node"]
 
 [variables]
-NODE_ENV = "production"
 HOST = "0.0.0.0"
 WEB_DIST_PATH = "apps/web/dist"
 DATABASE_URL = "postgresql://build:build@127.0.0.1:5432/build?schema=public"
@@ -13,7 +15,7 @@ nixPkgs = ["nodejs_20", "openssl"]
 aptPkgs = ["openssl"]
 
 [phases.install]
-cmds = ["npm install"]
+cmds = ["npm install --include=dev"]
 
 [phases.build]
 cmds = [
@@ -22,8 +24,5 @@ cmds = [
   "npm run build -w @oppi/api"
 ]
 
-# db:push + catálogo de exercícios rodam no startup (bootstrapDatabase em index.ts)
-
-# node direto = PID 1 (evita SIGTERM estranho com npm)
 [start]
 cmd = "node apps/api/dist/index.js"
