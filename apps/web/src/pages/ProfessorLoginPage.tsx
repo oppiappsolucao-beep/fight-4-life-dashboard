@@ -5,7 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { apiFetch } from "../lib/api";
 import { canAccessProfessor } from "../lib/access";
 import { clearStudentSession } from "../lib/studentSession";
-import { getHostSubdomain } from "../lib/tenantHost";
+import { getAcademyAccessSlug } from "../lib/tenantHost";
 
 export default function ProfessorLoginPage() {
   const { professorLogin, logout, isAuthenticated, user } = useAuth();
@@ -16,7 +16,7 @@ export default function ProfessorLoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [academyName, setAcademyName] = useState<string | null>(null);
-  const hostSub = getHostSubdomain();
+  const academySlug = getAcademyAccessSlug();
 
   useEffect(() => {
     apiFetch<{ mode: string; tenant: { name: string } | null }>("/public/tenant-context")
@@ -43,7 +43,7 @@ export default function ProfessorLoginPage() {
     try {
       logout();
       clearStudentSession();
-      await professorLogin(email, password, hostSub ?? undefined);
+      await professorLogin(email, password, academySlug ?? undefined);
       navigate("/professor/visao-geral");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar.");

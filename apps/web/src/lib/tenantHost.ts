@@ -28,8 +28,47 @@ export function primaryAppBaseDomain(): string {
   return appBaseDomains()[0] || "oppifit.com.br";
 }
 
+export function platformHubHost(): string {
+  return `academia.${primaryAppBaseDomain()}`;
+}
+
+function normalizeAcademySlug(value: string): string | null {
+  const slug = value.trim().toLowerCase();
+  if (!slug || RESERVED_SUBDOMAINS.has(slug)) return null;
+  return slug;
+}
+
+/**
+ * URL pública da academia no host que já tem SSL (academia.oppifit.com.br),
+ * evitando o aviso “conexão não é particular” em subdomínios novos.
+ */
 export function academyPublicUrl(slugOrSubdomain: string): string {
-  return `https://${slugOrSubdomain}.${primaryAppBaseDomain()}`;
+  const slug = normalizeAcademySlug(slugOrSubdomain) ?? slugOrSubdomain.trim().toLowerCase();
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname.toLowerCase();
+    if (host === "localhost" || host === "127.0.0.1") {
+      return `${window.location.origin}/a/${slug}`;
+    }
+  }
+  return `https://${platformHubHost()}/a/${slug}`;
+}
+
+/** /a/fourarbjj → fourarbjj (null no hub da plataforma). */
+export function getPathAcademySlug(): string | null {
+  if (typeof window === "undefined") return null;
+  const match = window.location.pathname.match(/^\/a\/([a-z0-9-]+)(?=\/|$)/i);
+  if (!match?.[1]) return null;
+  return normalizeAcademySlug(match[1]);
+}
+
+export function routerBasename(): string {
+  const slug = getPathAcademySlug();
+  return slug ? `/a/${slug}` : "";
+}
+
+/** Slug da academia pelo subdomínio ou pelo caminho /a/{slug}. */
+export function getAcademyAccessSlug(): string | null {
+  return getHostSubdomain() ?? getPathAcademySlug();
 }
 
 /** Lê o subdomínio do host atual (null = hub plataforma, ex. academia.oppifit.com.br). */
@@ -52,14 +91,13 @@ export function getHostSubdomain(): string | null {
 }
 
 /**
- * No boot do app: se estiver em academia.oppifit.com.br, usa o subdomínio como tenant.
- * Em academia.oppifit.com.br (hub), não força tenant.
+ * No boot: subdomínio da academia OU caminho /a/{slug} no hub com SSL válido.
  */
 export function bootstrapTenantFromHost(): {
   mode: "platform" | "tenant";
   subdomain: string | null;
 } {
-  const subdomain = getHostSubdomain();
+  const subdomain = getAcademyAccessSlug();
 
   if (!subdomain) {
     return { mode: "platform", subdomain: null };

@@ -118,7 +118,7 @@ async function findActiveStudent(identifier: string, tenantId?: string | null) {
 
 export async function authRoutes(app: FastifyInstance): Promise<void> {
   app.get("/public/tenant-context", async (request, reply) => {
-    const tenant = await resolveTenantFromHost(request);
+    const tenant = await resolveAcademyTenant(request);
     if (!tenant) {
       return reply.send({ mode: "platform" as const, tenant: null });
     }

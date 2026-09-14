@@ -5,7 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { apiFetch } from "../lib/api";
 import { canAccessOwner } from "../lib/access";
 import { clearStudentSession } from "../lib/studentSession";
-import { getHostSubdomain } from "../lib/tenantHost";
+import { getAcademyAccessSlug } from "../lib/tenantHost";
 
 export default function OwnerLoginPage() {
   const { ownerLogin, logout, isAuthenticated, user } = useAuth();
@@ -16,7 +16,7 @@ export default function OwnerLoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [academyName, setAcademyName] = useState<string | null>(null);
-  const hostSub = getHostSubdomain();
+  const academySlug = getAcademyAccessSlug();
 
   useEffect(() => {
     apiFetch<{ mode: string; tenant: { name: string } | null }>("/public/tenant-context")
@@ -49,7 +49,7 @@ export default function OwnerLoginPage() {
     try {
       logout();
       clearStudentSession();
-      await ownerLogin(email, password, hostSub ?? undefined);
+      await ownerLogin(email, password, academySlug ?? undefined);
       navigate("/dono/visao-geral");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar.");

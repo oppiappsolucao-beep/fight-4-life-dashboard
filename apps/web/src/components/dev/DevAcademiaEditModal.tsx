@@ -295,7 +295,7 @@ export default function DevAcademiaEditModal({
         (form.subdominio.trim() ? academyPublicUrl(form.subdominio.trim()) : "");
       setSuccess(
         url
-          ? `Salvo. Domínio: ${url.replace(/^https?:\/\//, "")} — lembre de cadastrar esse host no EasyPanel.`
+          ? `Salvo. Link de acesso: ${url.replace(/^https?:\/\//, "")}`
           : "Alterações salvas com sucesso.",
       );
       notifyDevAcademiasChanged();
@@ -309,7 +309,7 @@ export default function DevAcademiaEditModal({
 
   const previewUrl = form?.subdominio.trim()
     ? academyPublicUrl(form.subdominio.trim())
-    : `https://[subdomínio].${primaryAppBaseDomain()}`;
+    : `https://academia.${primaryAppBaseDomain()}/a/[subdomínio]`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/75 p-4 backdrop-blur-sm md:p-8">
@@ -416,7 +416,7 @@ export default function DevAcademiaEditModal({
                           className="sm:max-w-xs"
                         />
                         <span className="text-sm text-slate-500">
-                          .{primaryAppBaseDomain()}
+                          identificador
                         </span>
                       </div>
                     </Field>
@@ -432,11 +432,12 @@ export default function DevAcademiaEditModal({
                       </a>
                     </p>
                     <p className="mt-2 text-[0.7rem] leading-relaxed text-slate-600">
-                      Depois de salvar, o EasyPanel precisa do wildcard{" "}
+                      O acesso usa o certificado de{" "}
                       <code className="rounded bg-white px-1 text-[#2E496C]">
-                        *.{primaryAppBaseDomain()}
-                      </code>{" "}
-                      com certificado SSL. Sem isso o Chrome mostra “conexão não é particular”.
+                        academia.{primaryAppBaseDomain()}
+                      </code>
+                      {" "}
+                      (caminho /a/…). Não abre mais um subdomínio novo, para o Chrome não bloquear.
                     </p>
                   </div>
 

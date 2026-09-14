@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { getHostSubdomain } from "../lib/tenantHost";
+import { getAcademyAccessSlug } from "../lib/tenantHost";
 
 /**
  * Se o usuário autenticado abrir outro subdomínio de academia,
@@ -12,7 +12,7 @@ export function useAcademyHostGuard() {
   useEffect(() => {
     if (!isAuthenticated || !tenant) return;
 
-    const hostSub = getHostSubdomain();
+    const hostSub = getAcademyAccessSlug();
     if (!hostSub) return;
 
     const matchesSlug = hostSub === tenant.slug;

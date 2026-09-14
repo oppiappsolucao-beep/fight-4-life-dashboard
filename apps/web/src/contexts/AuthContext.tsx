@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { apiFetch, clearTenantSlug, setTenantSlug } from "../lib/api";
+import { getAcademyAccessSlug } from "../lib/tenantHost";
 import type { AuthUser, LoginResponse, Tenant } from "../types/auth";
 
 interface AuthContextValue {
@@ -43,7 +44,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     localStorage.removeItem("token");
-    clearTenantSlug();
+    const academySlug = getAcademyAccessSlug();
+    if (academySlug) {
+      setTenantSlug(academySlug);
+    } else {
+      clearTenantSlug();
+    }
     setUser(null);
     setTenant(null);
   }, []);

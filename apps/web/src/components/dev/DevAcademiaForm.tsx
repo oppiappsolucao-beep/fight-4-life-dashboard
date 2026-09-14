@@ -170,26 +170,26 @@ export default function DevAcademiaForm() {
                   placeholder="Ex: fourarbjj"
                   className="sm:max-w-xs"
                 />
-                <span className="text-sm text-slate-500">.{primaryAppBaseDomain()}</span>
+                <span className="text-sm text-slate-500">identificador da academia</span>
               </div>
             </Field>
             <p className="mt-2 text-xs text-slate-500">
-              URL:{" "}
+              URL de acesso (com SSL da plataforma):{" "}
               <span className="font-medium text-[#2E496C]">
                 {form.subdominio.trim()
                   ? academyPublicUrl(form.subdominio.trim()).replace(/^https?:\/\//, "")
-                  : `[gerado].${primaryAppBaseDomain()}`}
+                  : `academia.${primaryAppBaseDomain()}/a/[gerado]`}
               </span>
-              . Se vazio, geramos a partir do nome fantasia.
+              . Se o identificador ficar vazio, geramos a partir do nome fantasia.
             </p>
             <p className="mt-2 text-[0.7rem] leading-relaxed text-slate-600">
-              No EasyPanel, o serviço precisa do host wildcard{" "}
+              A academia abre em{" "}
               <code className="rounded bg-white px-1 text-[#2E496C]">
-                *.{primaryAppBaseDomain()}
-              </code>{" "}
-              e certificado SSL cobrindo esse wildcard. Sem isso, o Chrome mostra “conexão não é particular”
-              no subdomínio novo. Não use <code className="rounded bg-white px-1">usemint</code> como
-              subdomínio de academia — esse nome é reservado da plataforma.
+                academia.{primaryAppBaseDomain()}/a/...
+              </code>
+              , no mesmo certificado do hub — sem o aviso de segurança do Chrome. Não use{" "}
+              <code className="rounded bg-white px-1">usemint</code> nem{" "}
+              <code className="rounded bg-white px-1">academia</code> como identificador.
             </p>
           </div>
           <Field label="CNPJ" required>

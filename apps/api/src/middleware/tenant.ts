@@ -204,6 +204,9 @@ export async function resolveTenant(
 }
 
 export function academyPublicUrl(slugOrSubdomain: string): string {
-  const base = appBaseDomains()[0] || "oppifit.com.br";
-  return `https://${slugOrSubdomain}.${base}`;
+  const slug = slugOrSubdomain.trim().toLowerCase();
+  const publicBase =
+    process.env.APP_PUBLIC_URL?.replace(/\/$/, "") ||
+    `https://academia.${appBaseDomains()[0] || "oppifit.com.br"}`;
+  return `${publicBase}/a/${slug}`;
 }
