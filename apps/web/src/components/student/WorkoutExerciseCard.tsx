@@ -74,7 +74,7 @@ export default function WorkoutExerciseCard({
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
               <div className="absolute bottom-3 left-3 right-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-black/45 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-700">
+                  <span className="rounded-full bg-black/45 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-white">
                     #{index}
                   </span>
                   {regionBadge ? (
@@ -83,10 +83,10 @@ export default function WorkoutExerciseCard({
                     </span>
                   ) : null}
                 </div>
-                <h4 className="m-0 mt-2 text-lg font-semibold leading-tight text-[#2E496C]">
+                <h4 className="m-0 mt-2 text-lg font-semibold leading-tight text-white">
                   {item.exercise.name}
                 </h4>
-                <p className="m-0 mt-1 text-xs font-medium text-[#A9BBD5] opacity-90 group-hover:opacity-100">
+                <p className="m-0 mt-1 text-xs font-medium text-white/85 opacity-90 group-hover:opacity-100">
                   Toque para ver o movimento completo
                 </p>
               </div>
@@ -159,7 +159,7 @@ export default function WorkoutExerciseCard({
           <button
             type="button"
             onClick={() => setShowExecution(true)}
-            className="mt-4 flex w-full items-center justify-between rounded-xl border border-[#5B7595]/35 bg-[#5B7595]/10 px-3 py-2.5 text-left text-sm font-medium text-[#A9BBD5] transition hover:bg-[#5B7595]/20"
+            className="mt-4 flex w-full items-center justify-between rounded-xl border border-[#5B7595]/35 bg-[#5B7595]/10 px-3 py-2.5 text-left text-sm font-medium text-[#2E496C] transition hover:bg-[#5B7595]/20"
           >
             <span>Ver como executar</span>
             <span className="text-[#5B7595]">↗</span>
@@ -179,19 +179,19 @@ export default function WorkoutExerciseCard({
             className="flex max-h-[min(92vh,880px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200 bg-[#0f1724] shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-4 py-3">
+            <div className="flex items-start justify-between gap-3 border-b border-white/10 px-4 py-3">
               <div className="min-w-0">
-                <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#5B7595]">
+                <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#A9BBD5]">
                   Como executar
                 </p>
-                <h3 className="m-0 mt-1 truncate text-base font-semibold text-[#2E496C] sm:text-lg">
+                <h3 className="m-0 mt-1 truncate text-base font-semibold text-white sm:text-lg">
                   {item.exercise.name}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setShowExecution(false)}
-                className="shrink-0 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:text-[#2E496C]"
+                className="shrink-0 rounded-lg border border-white/25 px-3 py-1.5 text-sm text-white hover:bg-white/10"
               >
                 Fechar
               </button>
@@ -213,11 +213,11 @@ export default function WorkoutExerciseCard({
               )}
 
               <div className="space-y-3 px-4 py-4">
-                <p className="m-0 text-sm text-slate-500">
+                <p className="m-0 text-sm text-slate-300">
                   {item.exercise.muscleGroup}
                   {item.exercise.equipment ? ` • ${item.exercise.equipment}` : ""}
                 </p>
-                <p className="m-0 text-sm leading-relaxed text-slate-700">
+                <p className="m-0 text-sm leading-relaxed text-slate-100">
                   {item.exercise.instructions?.trim()
                     ? item.exercise.instructions
                     : "Siga a animação e mantenha a postura controlada em todo o movimento."}

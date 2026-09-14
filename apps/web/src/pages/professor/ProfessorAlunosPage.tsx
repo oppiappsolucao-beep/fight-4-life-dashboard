@@ -139,17 +139,17 @@ export default function ProfessorAlunosPage() {
                 {filteredAlunos.map((aluno) => (
                   <article
                     key={aluno.id}
-                    className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-[#123055]/55 p-4 sm:flex-row sm:items-center"
+                    className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center"
                   >
                     <div className="flex min-w-0 flex-1 items-start gap-3">
                       {resolveMediaUrl(aluno.fotoUrl) ? (
                         <img
                           src={resolveMediaUrl(aluno.fotoUrl)!}
                           alt={aluno.nomeCompleto}
-                          className="h-14 w-14 shrink-0 rounded-2xl object-cover ring-1 ring-white/15"
+                          className="h-14 w-14 shrink-0 rounded-2xl object-cover ring-1 ring-slate-200"
                         />
                       ) : (
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#5B7595]/20 text-lg font-semibold text-[#A9BBD5]">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#D9E0E8] text-lg font-semibold text-[#2E496C]">
                           {aluno.nomeCompleto.charAt(0).toUpperCase()}
                         </div>
                       )}
@@ -157,17 +157,17 @@ export default function ProfessorAlunosPage() {
                         <p className="m-0 break-words text-base font-semibold leading-snug text-[#2E496C]">
                           {aluno.nomeCompleto}
                         </p>
-                        <p className="m-0 mt-1 break-words text-sm text-slate-500">
+                        <p className="m-0 mt-1 break-words text-sm text-slate-600">
                           Plano: {aluno.planoModalidade}
                         </p>
                         {aluno.modalityNames.length > 0 ? (
-                          <p className="m-0 mt-1 break-words text-xs text-[#2E496C]/40">
+                          <p className="m-0 mt-1 break-words text-xs text-slate-500">
                             {aluno.modalityNames.join(" • ")}
                           </p>
                         ) : null}
-                        <p className="m-0 mt-2 break-all text-xs text-slate-400">{aluno.email}</p>
+                        <p className="m-0 mt-2 break-all text-xs text-slate-600">{aluno.email}</p>
                         {aluno.telefone ? (
-                          <p className="m-0 mt-0.5 whitespace-nowrap text-xs text-slate-400">
+                          <p className="m-0 mt-0.5 whitespace-nowrap text-xs text-slate-600">
                             {aluno.telefone}
                           </p>
                         ) : null}
@@ -176,7 +176,7 @@ export default function ProfessorAlunosPage() {
                     <Link
                       to="/professor/cadastro-treino"
                       state={{ studentId: aluno.id }}
-                      className="inline-flex w-full shrink-0 items-center justify-center rounded-xl border border-[#5B7595]/40 bg-[#5B7595]/15 px-4 py-2.5 text-sm font-semibold text-[#d6e9f7] transition hover:bg-[#5B7595]/25 sm:w-auto"
+                      className="inline-flex w-full shrink-0 items-center justify-center rounded-xl bg-[#2E496C] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#243a58] sm:w-auto"
                     >
                       Montar treino
                     </Link>
