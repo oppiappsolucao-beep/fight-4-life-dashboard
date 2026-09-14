@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { formatCep, formatCnpj, formatCpf, formatPhone } from "../../lib/format";
 import { apiFetch } from "../../lib/api";
 import { notifyDevAcademiasChanged } from "../../lib/devAcademias";
+import { academyPublicUrl, primaryAppBaseDomain } from "../../lib/tenantHost";
 import AcademyPlanPicker from "./AcademyPlanPicker";
 import type { PlatformPlan } from "../../types/platformPlan";
 

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { apiFetch } from "../lib/api";
-import type { PlatformPlan } from "../types/platformPlan";
+import { apiFetch } from "../../lib/api";
+import type { PlatformPlan } from "../../types/platformPlan";
 
 export default function AcademyPlanPicker({
   planId,
