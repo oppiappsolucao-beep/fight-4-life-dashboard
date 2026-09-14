@@ -24,7 +24,7 @@ export default function OppiLogo({
   if (variant === "full") {
     return (
       <img
-        src="/usemint-wordmark.png?v=2"
+        src="/usemint-wordmark.png?v=3"
         alt="usemint — sua academia mais organizada"
         className={`${s.full} w-auto max-w-[min(92vw,420px)] bg-transparent object-contain ${className}`}
       />
