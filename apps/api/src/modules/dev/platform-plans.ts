@@ -1,10 +1,9 @@
 import { z } from "zod";
-import { prisma } from "../prisma.js";
+import { prisma } from "../../lib/prisma.js";
 import { requireAuth, requireRole } from "../../middleware/auth.js";
 import { UserRole } from "@prisma/client";
 import type { FastifyInstance } from "fastify";
 import {
-  PLATFORM_BILLING_TYPES,
   defaultPlanName,
   ensurePlatformPlans,
   serializePlatformPlan,
@@ -12,7 +11,7 @@ import {
 
 const planSchema = z.object({
   name: z.string().optional(),
-  billingType: z.enum(PLATFORM_BILLING_TYPES),
+  billingType: z.enum(["Boleto", "Recorrente", "Anual"]),
   studentLimit: z.coerce.number().int().min(1).max(100000),
   price: z.coerce.number().positive(),
 });
