@@ -236,7 +236,7 @@ export default function OwnerContasReceberPage() {
           </p>
           <Link
             to="/dono/cadastro-aluno"
-            className="mt-4 inline-block text-sm font-medium text-[#4a9fd8] hover:underline"
+            className="mt-4 inline-block text-sm font-medium text-[#5B7595] hover:underline"
           >
             Cadastrar aluno →
           </Link>
@@ -255,7 +255,7 @@ export default function OwnerContasReceberPage() {
               type="button"
               disabled={batchLoading || selectedCount === 0}
               onClick={() => void gerarLote()}
-              className="rounded-lg bg-[#4a9fd8] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
+              className="rounded-lg bg-[#5B7595] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
             >
               {batchLoading ? "Gerando lote..." : "Gerar cobranças (lote)"}
             </button>
@@ -312,7 +312,7 @@ export default function OwnerContasReceberPage() {
                               [aluno.id]: e.target.checked,
                             }))
                           }
-                          className="h-4 w-4 accent-[#4a9fd8]"
+                          className="h-4 w-4 accent-[#5B7595]"
                         />
                       </td>
                       <td className="px-4 py-3">
@@ -356,7 +356,7 @@ export default function OwnerContasReceberPage() {
                             type="button"
                             disabled={chargingId === aluno.id || hasOpenAsaas}
                             onClick={() => void gerarCobranca(aluno)}
-                            className="rounded-lg border border-[#4a9fd8]/40 px-3 py-1.5 text-xs font-semibold text-[#9fd0f0] hover:bg-[#4a9fd8]/10 disabled:opacity-50"
+                            className="rounded-lg border border-[#5B7595]/40 px-3 py-1.5 text-xs font-semibold text-[#A9BBD5] hover:bg-[#5B7595]/10 disabled:opacity-50"
                           >
                             {chargingId === aluno.id
                               ? "Gerando..."

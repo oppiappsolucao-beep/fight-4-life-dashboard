@@ -189,7 +189,7 @@ export default function StudentDietasPage() {
       ) : (
         <div className="space-y-5">
           <section className="rounded-xl border border-white/10 bg-gradient-to-br from-[#0b1f3a]/80 to-[#122a4a]/50 p-5">
-            <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.08rem] text-[#7ebef0]">
+            <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.08rem] text-[#A9BBD5]">
               {GOAL_LABELS[dieta.goal] ?? dieta.goal}
             </p>
             <h2 className="mt-1.5 mb-2 text-xl font-semibold text-white">{dieta.name}</h2>
@@ -236,7 +236,7 @@ export default function StudentDietasPage() {
                       <button
                         type="button"
                         onClick={() => shiftWeek(-weekOffset)}
-                        className="ml-2 text-xs font-semibold text-[#7ebef0] hover:text-[#4a9fd8]"
+                        className="ml-2 text-xs font-semibold text-[#A9BBD5] hover:text-[#5B7595]"
                       >
                         Hoje
                       </button>
@@ -265,7 +265,7 @@ export default function StudentDietasPage() {
                     onClick={() => setSelectedDate(date)}
                     className={`relative min-w-[5.5rem] shrink-0 snap-start rounded-2xl border px-3 py-3 text-left transition ${
                       selected
-                        ? "border-[#4a9fd8] bg-[#4a9fd8]/15 shadow-[0_0_0_1px_rgba(74,159,216,0.35)]"
+                        ? "border-[#5B7595] bg-[#5B7595]/15 shadow-[0_0_0_1px_rgba(91,117,149,0.35)]"
                         : "border-white/10 bg-black/25 hover:border-white/20"
                     }`}
                   >
@@ -322,7 +322,7 @@ export default function StudentDietasPage() {
                     className="flex w-full items-start justify-between gap-3 px-4 py-4 text-left transition hover:bg-white/[0.03]"
                   >
                     <div>
-                      <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.06rem] text-[#7ebef0]">
+                      <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.06rem] text-[#A9BBD5]">
                         {meal.mealTypeLabel}
                       </p>
                       <h3 className="mt-1 mb-0 text-base font-semibold text-white">{meal.title}</h3>

@@ -155,7 +155,7 @@ export default function DevAcademiaForm() {
               placeholder="Ex: Iron Pulse Fitness"
             />
           </Field>
-          <div className="md:col-span-2 rounded-xl border border-[#4a9fd8]/25 bg-[#4a9fd8]/10 p-4">
+          <div className="md:col-span-2 rounded-xl border border-[#5B7595]/25 bg-[#5B7595]/10 p-4">
             <Field label="Subdomínio">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <Input
@@ -174,7 +174,7 @@ export default function DevAcademiaForm() {
             </Field>
             <p className="mt-2 text-xs text-white/55">
               URL:{" "}
-              <span className="font-medium text-[#7ebef0]">
+              <span className="font-medium text-[#A9BBD5]">
                 {form.subdominio.trim()
                   ? academyPublicUrl(form.subdominio.trim()).replace(/^https?:\/\//, "")
                   : `[gerado].${primaryAppBaseDomain()}`}
@@ -419,7 +419,7 @@ export default function DevAcademiaForm() {
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] px-6 py-2.5 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
+          className="rounded-lg bg-gradient-to-r from-[#2E496C] to-[#5B7595] px-6 py-2.5 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
         >
           {loading ? "Salvando..." : "Cadastrar Academia"}
         </button>
@@ -430,7 +430,7 @@ export default function DevAcademiaForm() {
             setSuccess(null);
             setError("");
           }}
-          className="rounded-lg border border-white/15 px-6 py-2.5 text-[0.75rem] font-medium text-white/70 transition hover:border-[#4a9fd8]/40 hover:text-white"
+          className="rounded-lg border border-white/15 px-6 py-2.5 text-[0.75rem] font-medium text-white/70 transition hover:border-[#5B7595]/40 hover:text-white"
         >
           Limpar formulário
         </button>
@@ -471,7 +471,7 @@ function Field({
     <label className={`block ${className}`}>
       <span className="mb-1.5 block text-[0.65rem] font-semibold uppercase tracking-[0.06rem] text-white/75">
         {label}
-        {required && <span className="text-[#4a9fd8]"> *</span>}
+        {required && <span className="text-[#5B7595]"> *</span>}
       </span>
       {children}
     </label>
@@ -479,7 +479,7 @@ function Field({
 }
 
 const inputClass =
-  "w-full rounded-xl border border-white/12 bg-[#0d1117] px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#4a9fd8]/70 focus:ring-2 focus:ring-[#4a9fd8]/20 [color-scheme:dark]";
+  "w-full rounded-xl border border-white/12 bg-[#0d1117] px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#5B7595]/70 focus:ring-2 focus:ring-[#5B7595]/20 [color-scheme:dark]";
 
 function Input({
   className = "",

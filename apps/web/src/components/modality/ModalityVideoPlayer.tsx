@@ -82,7 +82,7 @@ export function ModalityVideoCard({ video, selected, onSelect }: ModalityVideoCa
       onClick={onSelect}
       className={`overflow-hidden rounded-2xl border text-left transition ${
         selected
-          ? "border-[#4a9fd8] bg-[#4a9fd8]/10 shadow-[0_0_0_1px_rgba(74,159,216,0.35)]"
+          ? "border-[#5B7595] bg-[#5B7595]/10 shadow-[0_0_0_1px_rgba(91,117,149,0.35)]"
           : "border-white/10 bg-black/25 hover:border-white/20"
       }`}
     >

@@ -313,7 +313,7 @@ export default function DevAcademiaEditModal({
         <div className="sticky top-0 z-10 border-b border-white/10 bg-[#12161c]/95 px-5 py-4 backdrop-blur md:px-6">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#4a9fd8]">
+              <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#5B7595]">
                 Editar academia
               </p>
               <h2 className="m-0 mt-1 truncate text-lg font-semibold text-white">
@@ -323,7 +323,7 @@ export default function DevAcademiaEditModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-white/70 transition hover:border-[#4a9fd8]/40 hover:text-white"
+              className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-white/70 transition hover:border-[#5B7595]/40 hover:text-white"
             >
               Fechar
             </button>
@@ -345,7 +345,7 @@ export default function DevAcademiaEditModal({
                       className={[
                         "flex w-full flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-center transition sm:flex-row sm:justify-center sm:gap-2",
                         active
-                          ? "bg-[#4a9fd8]/20 text-white ring-1 ring-[#4a9fd8]/45"
+                          ? "bg-[#5B7595]/20 text-white ring-1 ring-[#5B7595]/45"
                           : done
                             ? "bg-white/[0.05] text-white/80"
                             : "bg-white/[0.03] text-white/45",
@@ -355,7 +355,7 @@ export default function DevAcademiaEditModal({
                         className={[
                           "flex h-6 w-6 items-center justify-center rounded-full text-[0.7rem] font-bold",
                           active || done
-                            ? "bg-gradient-to-br from-[#4a9fd8] to-[#d44d62] text-white"
+                            ? "bg-gradient-to-br from-[#2E496C] to-[#5B7595] text-white"
                             : "bg-white/10 text-white/50",
                         ].join(" ")}
                       >
@@ -397,7 +397,7 @@ export default function DevAcademiaEditModal({
                     </p>
                   </div>
 
-                  <div className="rounded-xl border border-[#4a9fd8]/25 bg-[#4a9fd8]/10 p-4">
+                  <div className="rounded-xl border border-[#5B7595]/25 bg-[#5B7595]/10 p-4">
                     <Field label="Subdomínio" required>
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <Input
@@ -422,7 +422,7 @@ export default function DevAcademiaEditModal({
                         href={form.subdominio.trim() ? previewUrl : undefined}
                         target="_blank"
                         rel="noreferrer"
-                        className="font-medium text-[#7ebef0] hover:underline"
+                        className="font-medium text-[#A9BBD5] hover:underline"
                       >
                         {previewUrl.replace(/^https?:\/\//, "")}
                       </a>
@@ -607,7 +607,7 @@ export default function DevAcademiaEditModal({
                       type="checkbox"
                       checked={form.active}
                       onChange={(e) => updateField("active", e.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-white/30 accent-[#4a9fd8]"
+                      className="mt-0.5 h-4 w-4 rounded border-white/30 accent-[#5B7595]"
                     />
                     <span>
                       <span className="block text-sm font-medium text-white">
@@ -659,7 +659,7 @@ export default function DevAcademiaEditModal({
                         type="button"
                         disabled={asaasLoading || (Boolean(asaasWalletId) && hasAsaasApiKey)}
                         onClick={() => void vincularAsaas(false)}
-                        className="rounded-lg border border-[#4a9fd8]/40 px-3 py-1.5 text-xs font-semibold text-[#9fd0f0] hover:bg-[#4a9fd8]/10 disabled:opacity-50"
+                        className="rounded-lg border border-[#5B7595]/40 px-3 py-1.5 text-xs font-semibold text-[#A9BBD5] hover:bg-[#5B7595]/10 disabled:opacity-50"
                       >
                         {asaasLoading
                           ? "Vinculando..."
@@ -704,7 +704,7 @@ export default function DevAcademiaEditModal({
                             href={onboardingUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="block break-all text-xs text-[#9fd0f0] underline"
+                            className="block break-all text-xs text-[#A9BBD5] underline"
                           >
                             {onboardingUrl}
                           </a>
@@ -794,7 +794,7 @@ export default function DevAcademiaEditModal({
                     <button
                       type="button"
                       onClick={goNext}
-                      className="rounded-lg bg-[#4a9fd8] px-5 py-2.5 text-sm font-semibold text-white"
+                      className="rounded-lg bg-[#5B7595] px-5 py-2.5 text-sm font-semibold text-white"
                     >
                       Continuar
                     </button>
@@ -802,7 +802,7 @@ export default function DevAcademiaEditModal({
                     <button
                       type="submit"
                       disabled={saving}
-                      className="rounded-lg bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                      className="rounded-lg bg-gradient-to-r from-[#2E496C] to-[#5B7595] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
                     >
                       {saving ? "Salvando..." : "Salvar alterações"}
                     </button>
@@ -832,7 +832,7 @@ function Field({
     <label className={`block ${className}`}>
       <span className="mb-1.5 block text-xs font-medium text-white/55">
         {label}
-        {required ? <span className="text-[#4a9fd8]"> *</span> : null}
+        {required ? <span className="text-[#5B7595]"> *</span> : null}
       </span>
       {children}
     </label>
@@ -840,7 +840,7 @@ function Field({
 }
 
 const controlClass =
-  "w-full rounded-xl border border-white/12 bg-[#0d1117] px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#4a9fd8]/70 focus:ring-2 focus:ring-[#4a9fd8]/20 [color-scheme:dark]";
+  "w-full rounded-xl border border-white/12 bg-[#0d1117] px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#5B7595]/70 focus:ring-2 focus:ring-[#5B7595]/20 [color-scheme:dark]";
 
 function Input({
   className = "",

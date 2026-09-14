@@ -86,7 +86,7 @@ export function buildTimeRows(entries: ScheduleGridEntry[]): string[] {
 }
 
 const MODALITY_COLOR_CLASSES = [
-  "bg-[#4a9fd8]/15 text-[#7ebef0]",
+  "bg-[#5B7595]/15 text-[#A9BBD5]",
   "bg-sky-500/15 text-sky-200",
   "bg-amber-500/15 text-amber-200",
   "bg-violet-500/15 text-violet-200",

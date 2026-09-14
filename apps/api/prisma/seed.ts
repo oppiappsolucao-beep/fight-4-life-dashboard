@@ -65,7 +65,7 @@ async function ensurePlatformTenant() {
         name: DEFAULT_TENANT.name,
         subdomain: null,
         branding: {
-          primaryColor: "#4a9fd8",
+          primaryColor: "#2E496C",
           logo: "/oppi_logo.png",
         },
       },
@@ -93,7 +93,7 @@ async function ensurePlatformTenant() {
       name: DEFAULT_TENANT.name,
       subdomain: null,
       branding: {
-        primaryColor: "#4a9fd8",
+        primaryColor: "#2E496C",
         logo: "/oppi_logo.png",
       },
     },
@@ -102,7 +102,7 @@ async function ensurePlatformTenant() {
       name: DEFAULT_TENANT.name,
       subdomain: null,
       branding: {
-        primaryColor: "#4a9fd8",
+        primaryColor: "#2E496C",
         logo: "/oppi_logo.png",
       },
     },

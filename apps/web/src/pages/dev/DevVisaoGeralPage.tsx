@@ -98,13 +98,13 @@ export default function DevVisaoGeralPage() {
   return (
     <DevSectionPage
       title="Visão Geral"
-      description="Painel da OPPI Fit: academias e receita por taxa em cobranças pagas."
+      description="Painel da usemint: academias e receita por taxa em cobranças pagas."
     >
       <OverviewState loading={loading} error={error} />
       {!loading && !error && overview ? (
         <div className="space-y-4 pb-8">
           <OverviewHero
-            eyebrow="Painel OPPI Fit"
+            eyebrow="Painel usemint"
             title={`Olá, ${displayName}`}
             subtitle="Receita = taxa por aluno que pagou (R$ 1,90 até 100 / R$ 1,49 acima), por academia e mês da academia."
           />
@@ -123,7 +123,7 @@ export default function DevVisaoGeralPage() {
                 type="button"
                 onClick={() => void testAsaas()}
                 disabled={asaasLoading}
-                className="rounded-lg bg-[#4a9fd8] px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
+                className="rounded-lg bg-[#5B7595] px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
               >
                 {asaasLoading ? "Testando..." : "Testar conexão Asaas"}
               </button>
@@ -197,7 +197,7 @@ export default function DevVisaoGeralPage() {
                 hint: `${overview.metrics.academiasComPagamento ?? 0} academia(s) com pagamento`,
               },
               {
-                label: "Receita taxas OPPI",
+                label: "Receita taxas usemint",
                 value: formatPlanCurrency(overview.metrics.receitaPlataforma),
                 hint: "Só pagamentos confirmados · faixa por academia",
               },
@@ -211,7 +211,7 @@ export default function DevVisaoGeralPage() {
               <p className="m-0 text-sm font-semibold text-white">Últimas academias</p>
               <Link
                 to="/dev/cadastro-academias"
-                className="text-xs font-semibold text-[#7ebef0] hover:text-[#4a9fd8]"
+                className="text-xs font-semibold text-[#A9BBD5] hover:text-[#5B7595]"
               >
                 Ver todas
               </Link>

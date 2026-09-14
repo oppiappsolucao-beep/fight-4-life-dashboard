@@ -260,7 +260,7 @@ export default function OwnerCadastroAlunoForm() {
                   className={[
                     "flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition",
                     active
-                      ? "bg-[#4a9fd8]/15 ring-1 ring-[#4a9fd8]/40"
+                      ? "bg-[#5B7595]/15 ring-1 ring-[#5B7595]/40"
                       : done
                         ? "bg-white/[0.04] hover:bg-white/[0.07]"
                         : "bg-transparent opacity-55",
@@ -270,7 +270,7 @@ export default function OwnerCadastroAlunoForm() {
                     className={[
                       "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold",
                       active || done
-                        ? "bg-gradient-to-br from-[#4a9fd8] to-[#d44d62] text-white"
+                        ? "bg-gradient-to-br from-[#2E496C] to-[#5B7595] text-white"
                         : "bg-white/10 text-white/50",
                     ].join(" ")}
                   >
@@ -616,7 +616,7 @@ export default function OwnerCadastroAlunoForm() {
                   event.stopPropagation();
                   goNext();
                 }}
-                className="rounded-lg bg-[#4a9fd8] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2f7fb8]"
+                className="rounded-lg bg-[#5B7595] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2E496C]"
               >
                 Continuar
               </button>
@@ -624,7 +624,7 @@ export default function OwnerCadastroAlunoForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded-lg bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-105 disabled:opacity-60"
+                className="rounded-lg bg-gradient-to-r from-[#2E496C] to-[#5B7595] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-105 disabled:opacity-60"
               >
                 {loading ? "Salvando..." : "Cadastrar aluno"}
               </button>
@@ -677,7 +677,7 @@ function Field({
     <label className={`block ${className}`}>
       <span className="mb-1.5 block text-xs font-medium text-white/55">
         {label}
-        {required ? <span className="text-[#4a9fd8]"> *</span> : null}
+        {required ? <span className="text-[#5B7595]"> *</span> : null}
       </span>
       {children}
     </label>
@@ -685,7 +685,7 @@ function Field({
 }
 
 const inputClass =
-  "w-full rounded-xl border border-white/12 bg-[#0d1117] px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#4a9fd8]/70 focus:ring-2 focus:ring-[#4a9fd8]/20";
+  "w-full rounded-xl border border-white/12 bg-[#0d1117] px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#5B7595]/70 focus:ring-2 focus:ring-[#5B7595]/20";
 
 function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={inputClass} />;

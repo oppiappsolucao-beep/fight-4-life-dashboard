@@ -55,7 +55,7 @@ export default function ProfessorAlunosPage() {
   return (
     <div className="px-4 py-6 sm:px-6 md:px-10 md:py-8">
       <header className="mb-6">
-        <p className="mb-1 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#7ebef0]">
+        <p className="mb-1 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#A9BBD5]">
           Professor
         </p>
         <h1 className="m-0 text-2xl font-semibold text-white">Alunos</h1>
@@ -87,7 +87,7 @@ export default function ProfessorAlunosPage() {
               <button
                 type="button"
                 onClick={load}
-                className="rounded-lg border border-white/15 px-3 py-2 text-sm text-white/70 transition hover:border-[#4a9fd8]/50 hover:text-white"
+                className="rounded-lg border border-white/15 px-3 py-2 text-sm text-white/70 transition hover:border-[#5B7595]/50 hover:text-white"
               >
                 Atualizar
               </button>
@@ -100,8 +100,8 @@ export default function ProfessorAlunosPage() {
                   onClick={() => setSelectedModalityId("")}
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                     !selectedModalityId
-                      ? "bg-[#4a9fd8] text-white"
-                      : "border border-white/15 text-white/70 hover:border-[#4a9fd8]/50"
+                      ? "bg-[#5B7595] text-white"
+                      : "border border-white/15 text-white/70 hover:border-[#5B7595]/50"
                   }`}
                 >
                   Todas
@@ -113,8 +113,8 @@ export default function ProfessorAlunosPage() {
                     onClick={() => setSelectedModalityId(modality.id)}
                     className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                       selectedModalityId === modality.id
-                        ? "bg-[#4a9fd8] text-white"
-                        : "border border-white/15 text-white/70 hover:border-[#4a9fd8]/50"
+                        ? "bg-[#5B7595] text-white"
+                        : "border border-white/15 text-white/70 hover:border-[#5B7595]/50"
                     }`}
                   >
                     {modality.name}
@@ -149,7 +149,7 @@ export default function ProfessorAlunosPage() {
                           className="h-14 w-14 shrink-0 rounded-2xl object-cover ring-1 ring-white/15"
                         />
                       ) : (
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#4a9fd8]/20 text-lg font-semibold text-[#7ebef0]">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#5B7595]/20 text-lg font-semibold text-[#A9BBD5]">
                           {aluno.nomeCompleto.charAt(0).toUpperCase()}
                         </div>
                       )}
@@ -176,7 +176,7 @@ export default function ProfessorAlunosPage() {
                     <Link
                       to="/professor/cadastro-treino"
                       state={{ studentId: aluno.id }}
-                      className="inline-flex w-full shrink-0 items-center justify-center rounded-xl border border-[#4a9fd8]/40 bg-[#4a9fd8]/15 px-4 py-2.5 text-sm font-semibold text-[#d6e9f7] transition hover:bg-[#4a9fd8]/25 sm:w-auto"
+                      className="inline-flex w-full shrink-0 items-center justify-center rounded-xl border border-[#5B7595]/40 bg-[#5B7595]/15 px-4 py-2.5 text-sm font-semibold text-[#d6e9f7] transition hover:bg-[#5B7595]/25 sm:w-auto"
                     >
                       Montar treino
                     </Link>

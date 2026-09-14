@@ -43,7 +43,7 @@ export default function DashboardShell({
         <div className="min-w-0 flex-1">
           <OppiLogo size="sm" />
         </div>
-        <p className="max-w-[32%] shrink-0 truncate text-[0.65rem] font-semibold uppercase tracking-[0.08rem] text-[#7ebef0]">
+        <p className="max-w-[32%] shrink-0 truncate text-[0.65rem] font-semibold uppercase tracking-[0.08rem] text-[#A9BBD5]">
           {title}
         </p>
       </header>

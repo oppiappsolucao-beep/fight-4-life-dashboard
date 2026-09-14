@@ -287,7 +287,7 @@ export default function OwnerAlunoEditModal({
         <div className="sticky top-0 z-10 border-b border-white/10 bg-[#12161c]/95 px-5 py-4 backdrop-blur md:px-6">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#4a9fd8]">
+              <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#5B7595]">
                 Editar aluno
               </p>
               <h2 className="m-0 mt-1 truncate text-lg font-semibold text-white">
@@ -319,7 +319,7 @@ export default function OwnerAlunoEditModal({
                       className={[
                         "flex w-full items-center justify-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold transition sm:text-sm",
                         active
-                          ? "bg-[#4a9fd8]/20 text-white ring-1 ring-[#4a9fd8]/45"
+                          ? "bg-[#5B7595]/20 text-white ring-1 ring-[#5B7595]/45"
                           : done
                             ? "bg-white/[0.05] text-white/80"
                             : "bg-white/[0.03] text-white/45",
@@ -329,7 +329,7 @@ export default function OwnerAlunoEditModal({
                         className={[
                           "flex h-5 w-5 items-center justify-center rounded-full text-[0.65rem]",
                           active || done
-                            ? "bg-[#4a9fd8] text-white"
+                            ? "bg-[#5B7595] text-white"
                             : "bg-white/10 text-white/50",
                         ].join(" ")}
                       >
@@ -637,7 +637,7 @@ export default function OwnerAlunoEditModal({
                         event.stopPropagation();
                         goNext();
                       }}
-                      className="rounded-lg bg-[#4a9fd8] px-5 py-2.5 text-sm font-semibold text-white"
+                      className="rounded-lg bg-[#5B7595] px-5 py-2.5 text-sm font-semibold text-white"
                     >
                       Continuar
                     </button>
@@ -645,7 +645,7 @@ export default function OwnerAlunoEditModal({
                     <button
                       type="submit"
                       disabled={saving}
-                      className="rounded-lg bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                      className="rounded-lg bg-gradient-to-r from-[#2E496C] to-[#5B7595] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
                     >
                       {saving ? "Salvando..." : "Salvar alterações"}
                     </button>
@@ -678,7 +678,7 @@ function Field({
 }
 
 const controlClass =
-  "w-full rounded-xl border border-white/12 bg-[#0d1117] px-3.5 py-2.5 text-sm text-white outline-none transition focus:border-[#4a9fd8]/70 focus:ring-2 focus:ring-[#4a9fd8]/20 [color-scheme:dark]";
+  "w-full rounded-xl border border-white/12 bg-[#0d1117] px-3.5 py-2.5 text-sm text-white outline-none transition focus:border-[#5B7595]/70 focus:ring-2 focus:ring-[#5B7595]/20 [color-scheme:dark]";
 
 function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={controlClass} />;

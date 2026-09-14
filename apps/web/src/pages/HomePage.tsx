@@ -39,10 +39,8 @@ export default function HomePage() {
         </main>
 
         <footer className="flex items-center gap-2 text-[0.72rem] text-white/50">
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#3b9eff] to-[#ff2bd6] text-[0.55rem] font-bold text-white">
-            OF
-          </span>
-          OPPI Fit
+          <img src="/usemint-icon.png" alt="" className="h-6 w-6 rounded-md object-contain" />
+          usemint
         </footer>
       </div>
     </div>

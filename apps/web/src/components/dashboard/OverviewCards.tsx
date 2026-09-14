@@ -17,8 +17,8 @@ export function OverviewHero({
   const brandLabel = formatAcademyName(brand) || undefined;
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#4a9fd8]/25 via-[#123055]/50 to-[#0b1f3a]/70 p-5 sm:p-6">
-      <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[#7ebef0]/80">
+    <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#5B7595]/25 via-[#123055]/50 to-[#0b1f3a]/70 p-5 sm:p-6">
+      <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[#A9BBD5]/80">
         {eyebrow}
       </p>
       {brandLabel ? (
@@ -100,7 +100,7 @@ export function OverviewGoalsGrid({ metas }: { metas: OverviewGoalMetric[] }) {
             <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-black/30">
               <div
                 className={`h-full rounded-full transition-all ${
-                  emBreve ? "bg-white/20" : onTrack ? "bg-emerald-400" : "bg-[#4a9fd8]"
+                  emBreve ? "bg-white/20" : onTrack ? "bg-emerald-400" : "bg-[#5B7595]"
                 }`}
                 style={{ width: `${percent}%` }}
               />
@@ -123,7 +123,7 @@ export function OverviewQuickLinks({
         <Link
           key={link.to}
           to={link.to}
-          className="rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-center text-sm font-semibold text-white/80 transition hover:border-[#4a9fd8]/40 hover:text-white"
+          className="rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-center text-sm font-semibold text-white/80 transition hover:border-[#5B7595]/40 hover:text-white"
         >
           {link.label}
         </Link>

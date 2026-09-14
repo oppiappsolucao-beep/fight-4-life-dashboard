@@ -78,7 +78,7 @@ export default function WorkoutExerciseCard({
                     #{index}
                   </span>
                   {regionBadge ? (
-                    <span className="rounded-full bg-[#4a9fd8]/80 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-white">
+                    <span className="rounded-full bg-[#5B7595]/80 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-white">
                       {regionBadge}
                     </span>
                   ) : null}
@@ -86,7 +86,7 @@ export default function WorkoutExerciseCard({
                 <h4 className="m-0 mt-2 text-lg font-semibold leading-tight text-white">
                   {item.exercise.name}
                 </h4>
-                <p className="m-0 mt-1 text-xs font-medium text-[#7ebef0] opacity-90 group-hover:opacity-100">
+                <p className="m-0 mt-1 text-xs font-medium text-[#A9BBD5] opacity-90 group-hover:opacity-100">
                   Toque para ver o movimento completo
                 </p>
               </div>
@@ -99,7 +99,7 @@ export default function WorkoutExerciseCard({
                 #{index}
               </span>
               {regionBadge ? (
-                <span className="rounded-full bg-[#4a9fd8]/20 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-[#7ebef0]">
+                <span className="rounded-full bg-[#5B7595]/20 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-[#A9BBD5]">
                   {regionBadge}
                 </span>
               ) : null}
@@ -137,7 +137,7 @@ export default function WorkoutExerciseCard({
                     className={`min-w-[3rem] rounded-xl px-3 py-2 text-sm font-semibold transition ${
                       checked
                         ? "bg-emerald-500/20 text-emerald-300"
-                        : "border border-white/10 bg-black/20 text-white/70 hover:border-[#4a9fd8]/40"
+                        : "border border-white/10 bg-black/20 text-white/70 hover:border-[#5B7595]/40"
                     }`}
                   >
                     S{setNumber}
@@ -159,10 +159,10 @@ export default function WorkoutExerciseCard({
           <button
             type="button"
             onClick={() => setShowExecution(true)}
-            className="mt-4 flex w-full items-center justify-between rounded-xl border border-[#4a9fd8]/35 bg-[#4a9fd8]/10 px-3 py-2.5 text-left text-sm font-medium text-[#7ebef0] transition hover:bg-[#4a9fd8]/20"
+            className="mt-4 flex w-full items-center justify-between rounded-xl border border-[#5B7595]/35 bg-[#5B7595]/10 px-3 py-2.5 text-left text-sm font-medium text-[#A9BBD5] transition hover:bg-[#5B7595]/20"
           >
             <span>Ver como executar</span>
-            <span className="text-[#4a9fd8]">↗</span>
+            <span className="text-[#5B7595]">↗</span>
           </button>
         </div>
       </article>
@@ -181,7 +181,7 @@ export default function WorkoutExerciseCard({
           >
             <div className="flex items-start justify-between gap-3 border-b border-white/10 px-4 py-3">
               <div className="min-w-0">
-                <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#4a9fd8]">
+                <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#5B7595]">
                   Como executar
                 </p>
                 <h3 className="m-0 mt-1 truncate text-base font-semibold text-white sm:text-lg">

@@ -87,7 +87,7 @@ export default function ProfessorLoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Digite seu e-mail"
               autoComplete="username"
-              className="mb-3 w-full rounded-xl border border-white/12 bg-[#0d1117] px-3 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#4a9fd8]/70 focus:ring-2 focus:ring-[#4a9fd8]/20"
+              className="mb-3 w-full rounded-xl border border-white/12 bg-[#0d1117] px-3 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#5B7595]/70 focus:ring-2 focus:ring-[#5B7595]/20"
               required
             />
             <label className="mb-1.5 block text-[0.65rem] font-semibold uppercase tracking-[0.06rem] text-white/75">
@@ -100,7 +100,7 @@ export default function ProfessorLoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Digite sua senha"
                 autoComplete="current-password"
-                className="w-full rounded-xl border border-white/12 bg-[#0d1117] px-3 py-3 pr-16 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#4a9fd8]/70 focus:ring-2 focus:ring-[#4a9fd8]/20"
+                className="w-full rounded-xl border border-white/12 bg-[#0d1117] px-3 py-3 pr-16 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#5B7595]/70 focus:ring-2 focus:ring-[#5B7595]/20"
                 required
               />
               <button
@@ -115,7 +115,7 @@ export default function ProfessorLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 w-full rounded-lg bg-gradient-to-r from-[#4a9fd8] to-[#d44d62] py-3 text-sm font-semibold text-white disabled:opacity-60"
+              className="mt-2 w-full rounded-lg bg-gradient-to-r from-[#2E496C] to-[#5B7595] py-3 text-sm font-semibold text-white disabled:opacity-60"
             >
               {loading ? "Entrando..." : "Entrar como professor"}
             </button>

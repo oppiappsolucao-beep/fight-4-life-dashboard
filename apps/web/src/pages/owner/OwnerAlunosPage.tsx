@@ -75,7 +75,7 @@ export default function OwnerAlunosPage() {
         </p>
         <Link
           to="/dono/cadastro-aluno"
-          className="rounded-lg bg-[#4a9fd8] px-4 py-2 text-sm font-semibold text-white no-underline transition hover:bg-[#2f7fb8]"
+          className="rounded-lg bg-[#5B7595] px-4 py-2 text-sm font-semibold text-white no-underline transition hover:bg-[#2E496C]"
         >
           Novo aluno
         </Link>
@@ -94,7 +94,7 @@ export default function OwnerAlunosPage() {
           </p>
           <Link
             to="/dono/cadastro-aluno"
-            className="mt-4 inline-block text-sm font-medium text-[#4a9fd8] no-underline hover:underline"
+            className="mt-4 inline-block text-sm font-medium text-[#5B7595] no-underline hover:underline"
           >
             Cadastrar primeiro aluno
           </Link>
@@ -167,7 +167,7 @@ export default function OwnerAlunosPage() {
                       <button
                         type="button"
                         onClick={() => setEditingId(aluno.id)}
-                        className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-white/75 transition hover:border-[#4a9fd8]/50 hover:text-white"
+                        className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-white/75 transition hover:border-[#5B7595]/50 hover:text-white"
                       >
                         Editar
                       </button>

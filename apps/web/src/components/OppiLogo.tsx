@@ -20,18 +20,16 @@ export default function OppiLogo({
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <img
-        src="/oppi-fit-icon.png?v=3"
-        alt="OPPI Fit"
+        src="/usemint-icon.png"
+        alt="usemint"
         className={`${s.img} rounded-xl object-contain`}
       />
       {showText ? (
         <div
-          className={`${s.text} font-extrabold uppercase tracking-[0.12rem] text-white`}
+          className={`${s.text} font-extrabold lowercase tracking-[0.04rem] text-white`}
         >
-          OPPI{" "}
-          <span className="bg-gradient-to-r from-[#3b9eff] to-[#ff2bd6] bg-clip-text text-transparent">
-            Fit
-          </span>
+          use
+          <span className="text-[#5B7595]">mint</span>
         </div>
       ) : null}
     </div>
