@@ -110,6 +110,14 @@ export async function bootstrapDatabase(): Promise<void> {
   }
 
   try {
+    const { ensurePlatformPlans } = await import("./platform-plans.js");
+    const planCount = await ensurePlatformPlans();
+    console.log(`[saas] Planos de contratação sincronizados: ${planCount}.`);
+  } catch (error) {
+    console.error("[bootstrap] Falha ao carregar planos de contratação:", error);
+  }
+
+  try {
     const { migrateBase64StudentPhotos } = await import("./student-photos.js");
     const migrated = await migrateBase64StudentPhotos();
     if (migrated > 0) {

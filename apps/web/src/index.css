@@ -29,7 +29,7 @@ body,
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background: #d5dee8;
-  color: #2e496c;
+  background: #f4f6f8;
+  color: #1e293b;
   -webkit-text-size-adjust: 100%;
 }

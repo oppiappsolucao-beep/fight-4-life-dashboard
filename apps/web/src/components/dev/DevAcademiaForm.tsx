@@ -4,16 +4,14 @@ import { formatCep, formatCnpj, formatCpf, formatPhone } from "../../lib/format"
 import { apiFetch } from "../../lib/api";
 import { notifyDevAcademiasChanged } from "../../lib/devAcademias";
 import { academyPublicUrl, primaryAppBaseDomain } from "../../lib/tenantHost";
+import AcademyPlanPicker from "./AcademyPlanPicker";
+import type { PlatformPlan } from "../../types/platformPlan";
 
 const UF_LIST = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
   "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN",
   "RS", "RO", "RR", "SC", "SP", "SE", "TO",
 ];
-
-const PLANOS = ["Bronze", "Prata", "Ouro"];
-const PERIODOS = ["Mensal", "Anual"];
-const FORMAS_PAGAMENTO = ["Cartão de Crédito", "Boleto", "Pix"];
 
 const INITIAL_FORM = {
   razaoSocial: "",
@@ -39,6 +37,9 @@ const INITIAL_FORM = {
   plano: "",
   periodo: "",
   formaPagamento: "",
+  planId: "",
+  faixa: 0,
+  valor: 0,
 };
 
 type FormData = typeof INITIAL_FORM;
@@ -98,8 +99,8 @@ export default function DevAcademiaForm() {
       setError("As senhas não coincidem.");
       return;
     }
-    if (!form.plano || !form.periodo || !form.formaPagamento) {
-      setError("Selecione plano, período e forma de pagamento.");
+    if (!form.planId || !form.plano || !form.periodo) {
+      setError("Selecione o plano contratado pela academia.");
       return;
     }
 
@@ -345,48 +346,35 @@ export default function DevAcademiaForm() {
         </div>
       </FormSection>
 
-      <FormSection title="Configurações do Plano / SaaS">
-        <div className="grid gap-4 md:grid-cols-3">
-          <Field label="Plano Escolhido" required>
-            <Select
-              value={form.plano}
-              onChange={(e) => updateField("plano", e.target.value)}
-            >
-              <option value="">Selecione</option>
-              {PLANOS.map((plano) => (
-                <option key={plano} value={plano}>
-                  {plano}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Período" required>
-            <Select
-              value={form.periodo}
-              onChange={(e) => updateField("periodo", e.target.value)}
-            >
-              <option value="">Selecione</option>
-              {PERIODOS.map((periodo) => (
-                <option key={periodo} value={periodo}>
-                  {periodo}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Forma de Pagamento" required>
-            <Select
-              value={form.formaPagamento}
-              onChange={(e) => updateField("formaPagamento", e.target.value)}
-            >
-              <option value="">Selecione</option>
-              {FORMAS_PAGAMENTO.map((forma) => (
-                <option key={forma} value={forma}>
-                  {forma}
-                </option>
-              ))}
-            </Select>
-          </Field>
-        </div>
+      <FormSection title="Plano contratado">
+        <Field label="Plano SaaS" required>
+          <AcademyPlanPicker
+            planId={form.planId}
+            onSelect={(plan: PlatformPlan | null) => {
+              if (!plan) {
+                updateField("planId", "");
+                updateField("plano", "");
+                updateField("periodo", "");
+                updateField("formaPagamento", "");
+                updateField("faixa", 0);
+                updateField("valor", 0);
+                return;
+              }
+              setForm((prev) => ({
+                ...prev,
+                planId: plan.id,
+                plano: plan.name,
+                periodo: plan.billingType,
+                formaPagamento: plan.formaPagamento,
+                faixa: plan.studentLimit,
+                valor: plan.price,
+              }));
+            }}
+          />
+        </Field>
+        <p className="mt-2 text-xs text-slate-600">
+          Cadastre novos planos em Desenvolvimento → Planos.
+        </p>
       </FormSection>
 
       {error && (

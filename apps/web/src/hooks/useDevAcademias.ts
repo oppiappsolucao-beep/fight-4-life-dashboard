@@ -7,6 +7,9 @@ export interface AcademiaBilling {
   plano: string;
   periodo: string;
   formaPagamento: string;
+  faixa?: number | null;
+  valor?: number | null;
+  planId?: string;
 }
 
 export interface AcademiaOwner {

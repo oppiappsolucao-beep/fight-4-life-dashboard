@@ -2,17 +2,14 @@ import { FormEvent, useEffect, useState } from "react";
 import { formatCep, formatCnpj, formatCpf, formatPhone } from "../../lib/format";
 import { apiFetch } from "../../lib/api";
 import { notifyDevAcademiasChanged } from "../../lib/devAcademias";
-import { academyPublicUrl, primaryAppBaseDomain } from "../../lib/tenantHost";
+import AcademyPlanPicker from "./AcademyPlanPicker";
+import type { PlatformPlan } from "../../types/platformPlan";
 
 const UF_LIST = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
   "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN",
   "RS", "RO", "RR", "SC", "SP", "SE", "TO",
 ];
-
-const PLANOS = ["Bronze", "Prata", "Ouro"];
-const PERIODOS = ["Mensal", "Anual"];
-const FORMAS_PAGAMENTO = ["Cartão de Crédito", "Boleto", "Pix"];
 
 const STEPS = [
   { id: 0, label: "Empresa", hint: "Dados e domínio" },
@@ -42,6 +39,9 @@ interface AcademyFormData {
   plano: string;
   periodo: string;
   formaPagamento: string;
+  planId?: string;
+  faixa?: number;
+  valor?: number;
   senha: string;
   confirmarSenha: string;
   active: boolean;
@@ -98,6 +98,9 @@ export default function DevAcademiaEditModal({
         setForm({
           ...data.form,
           subdominio: data.form.subdominio ?? data.subdomain ?? data.slug ?? "",
+          planId: data.form.planId ?? "",
+          faixa: data.form.faixa ?? 0,
+          valor: data.form.valor ?? 0,
           senha: "",
           confirmarSenha: "",
           active: data.active,
@@ -237,8 +240,8 @@ export default function DevAcademiaEditModal({
       }
     }
     if (current === 2) {
-      if (!form.plano || !form.periodo || !form.formaPagamento) {
-        return "Selecione plano, período e forma de pagamento.";
+      if (!form.planId || !form.plano || !form.periodo) {
+        return "Selecione o plano contratado pela academia.";
       }
     }
     return null;
@@ -715,47 +718,42 @@ export default function DevAcademiaEditModal({
                     ) : null}
                   </div>
 
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <Field label="Plano" required>
-                      <Select
-                        value={form.plano}
-                        onChange={(e) => updateField("plano", e.target.value)}
-                      >
-                        <option value="">Selecione</option>
-                        {PLANOS.map((plano) => (
-                          <option key={plano} value={plano}>
-                            {plano}
-                          </option>
-                        ))}
-                      </Select>
-                    </Field>
-                    <Field label="Período" required>
-                      <Select
-                        value={form.periodo}
-                        onChange={(e) => updateField("periodo", e.target.value)}
-                      >
-                        <option value="">Selecione</option>
-                        {PERIODOS.map((periodo) => (
-                          <option key={periodo} value={periodo}>
-                            {periodo}
-                          </option>
-                        ))}
-                      </Select>
-                    </Field>
-                    <Field label="Forma de pagamento" required>
-                      <Select
-                        value={form.formaPagamento}
-                        onChange={(e) => updateField("formaPagamento", e.target.value)}
-                      >
-                        <option value="">Selecione</option>
-                        {FORMAS_PAGAMENTO.map((forma) => (
-                          <option key={forma} value={forma}>
-                            {forma}
-                          </option>
-                        ))}
-                      </Select>
-                    </Field>
-                  </div>
+                  <Field label="Plano contratado" required>
+                    <AcademyPlanPicker
+                      planId={form.planId ?? ""}
+                      onSelect={(plan: PlatformPlan | null) => {
+                        if (!plan) {
+                          setForm((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  planId: "",
+                                  plano: "",
+                                  periodo: "",
+                                  formaPagamento: "",
+                                  faixa: 0,
+                                  valor: 0,
+                                }
+                              : prev,
+                          );
+                          return;
+                        }
+                        setForm((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                planId: plan.id,
+                                plano: plan.name,
+                                periodo: plan.billingType,
+                                formaPagamento: plan.formaPagamento,
+                                faixa: plan.studentLimit,
+                                valor: plan.price,
+                              }
+                            : prev,
+                        );
+                      }}
+                    />
+                  </Field>
                 </div>
               ) : null}
 

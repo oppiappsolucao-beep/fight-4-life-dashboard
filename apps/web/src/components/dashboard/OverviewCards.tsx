@@ -17,21 +17,21 @@ export function OverviewHero({
   const brandLabel = formatAcademyName(brand) || undefined;
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-[#5B7595]/30 bg-[#d5dee8] p-5 shadow-[0_8px_30px_rgba(46,73,108,0.08)] sm:p-6">
-      <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[#5B7595]">
+    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[#2E496C]">
         {eyebrow}
       </p>
       {brandLabel ? (
         <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h2 className="m-0 break-words text-xl font-semibold leading-snug text-[#2E496C] sm:text-2xl">
+          <h2 className="m-0 break-words text-xl font-semibold leading-snug text-slate-900 sm:text-2xl">
             {brandLabel}
           </h2>
           <p className="m-0 text-base font-medium text-slate-500 sm:text-lg">{title}</p>
         </div>
       ) : (
-        <h2 className="m-0 mt-1 text-2xl font-semibold text-[#2E496C]">{title}</h2>
+        <h2 className="m-0 mt-1 text-2xl font-semibold text-slate-900">{title}</h2>
       )}
-      <p className="m-0 mt-2 text-sm text-slate-600">{subtitle}</p>
+      <p className="m-0 mt-2 text-sm text-slate-700">{subtitle}</p>
     </section>
   );
 }
@@ -41,24 +41,19 @@ export function OverviewMetricGrid({
 }: {
   items: Array<{ label: string; value: string; hint?: string }>;
 }) {
-  const tones = [
-    "bg-[#c5d0dc]",
-    "bg-[#cdd6e4]",
-    "bg-[#c5d4c8]",
-    "bg-[#d0c8dc]",
-  ];
+  const tones = ["bg-white", "bg-white", "bg-white", "bg-white"];
 
   return (
     <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {items.map((item, index) => (
         <div
           key={item.label}
-          className={`rounded-2xl border border-slate-200/80 p-4 ${tones[index % tones.length]}`}
+          className={`rounded-2xl border border-slate-200 p-4 shadow-sm ${tones[index % tones.length]}`}
         >
-          <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-600">
+          <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-700">
             {item.label}
           </p>
-          <p className="m-0 mt-2 text-2xl font-semibold text-[#2E496C]">{item.value}</p>
+          <p className="m-0 mt-2 text-2xl font-semibold text-slate-900">{item.value}</p>
           {item.hint ? <p className="m-0 mt-1 text-xs text-slate-500">{item.hint}</p> : null}
         </div>
       ))}

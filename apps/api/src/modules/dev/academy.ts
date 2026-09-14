@@ -33,6 +33,9 @@ export const academyFieldsSchema = z.object({
   plano: z.string().min(1),
   periodo: z.string().min(1),
   formaPagamento: z.string().min(1),
+  faixa: z.coerce.number().optional(),
+  valor: z.coerce.number().optional(),
+  planId: z.string().optional(),
 });
 
 export const academyCreateSchema = academyFieldsSchema.extend({
@@ -71,6 +74,9 @@ interface BrandingJson {
     nome?: string;
     periodo?: string;
     formaPagamento?: string;
+    faixa?: number;
+    valor?: number;
+    planId?: string;
   };
 }
 
@@ -107,6 +113,9 @@ export function brandingToForm(
     plano: plano.nome ?? "",
     periodo: plano.periodo ?? "",
     formaPagamento: plano.formaPagamento ?? "",
+    faixa: typeof plano.faixa === "number" ? plano.faixa : undefined,
+    valor: typeof plano.valor === "number" ? plano.valor : undefined,
+    planId: plano.planId ?? undefined,
   };
 }
 
@@ -118,6 +127,9 @@ export function parseBilling(branding: unknown) {
     plano: plano.nome ?? "",
     periodo: plano.periodo ?? "",
     formaPagamento: plano.formaPagamento ?? "",
+    faixa: typeof plano.faixa === "number" ? plano.faixa : null,
+    valor: typeof plano.valor === "number" ? plano.valor : null,
+    planId: plano.planId ?? "",
   };
 }
 
@@ -150,6 +162,9 @@ export function formToBranding(
       nome: data.plano,
       periodo: data.periodo,
       formaPagamento: data.formaPagamento,
+      faixa: data.faixa,
+      valor: data.valor,
+      planId: data.planId,
     },
   };
 }

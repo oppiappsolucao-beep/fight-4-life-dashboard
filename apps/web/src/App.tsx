@@ -30,6 +30,7 @@ import DevCadastroAcademiasPage from "./pages/dev/DevCadastroAcademiasPage";
 import DevDonosAcademiasPage from "./pages/dev/DevDonosAcademiasPage";
 import DevContasReceberPage from "./pages/dev/DevContasReceberPage";
 import DevModalidadesPage from "./pages/dev/DevModalidadesPage";
+import DevPlanosPage from "./pages/dev/DevPlanosPage";
 import OwnerModalidadesPage from "./pages/owner/OwnerModalidadesPage";
 import OwnerProfessoresPage from "./pages/owner/OwnerProfessoresPage";
 import ProfessorLayout from "./components/professor/ProfessorLayout";
@@ -116,6 +117,7 @@ export default function App() {
         <Route path="dev/cadastro-academias" element={<DevCadastroAcademiasPage />} />
         <Route path="dev/donos-academias" element={<DevDonosAcademiasPage />} />
         <Route path="dev/modalidades" element={<DevModalidadesPage />} />
+        <Route path="dev/planos" element={<DevPlanosPage />} />
         <Route path="dev/contas-a-receber" element={<DevContasReceberPage />} />
       </Route>
 

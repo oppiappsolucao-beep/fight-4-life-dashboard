@@ -24,7 +24,7 @@ export default function ProfessorLayout() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#d5dee8]">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#f4f6f8]">
       <DashboardShell
         title="Professor"
         menuOpen={menuOpen}

@@ -5,20 +5,13 @@ import DevAcademiaDeleteButton from "../../components/dev/DevAcademiaDeleteButto
 import { useDevAcademias, type DevAcademia } from "../../hooks/useDevAcademias";
 import DevSectionPage from "./DevSectionPage";
 
-const PLANO_VALORES: Record<string, { mensal: number; anual: number }> = {
-  Bronze: { mensal: 199, anual: 1990 },
-  Prata: { mensal: 299, anual: 2990 },
-  Ouro: { mensal: 399, anual: 3990 },
-};
+function getValorPlano(billing: { plano: string; periodo: string; valor?: number | null }) {
+  if (typeof billing.valor === "number" && billing.valor > 0) return billing.valor;
+  return null;
+}
 
 function formatCurrency(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function getValorPlano(plano: string, periodo: string) {
-  const valores = PLANO_VALORES[plano];
-  if (!valores) return null;
-  return periodo === "Anual" ? valores.anual : valores.mensal;
 }
 
 function formatDate(iso: string) {
@@ -31,7 +24,7 @@ export default function DevContasReceberPage() {
 
   const totalReceber = academias.reduce((sum, academia) => {
     if (!academia.active) return sum;
-    const valor = getValorPlano(academia.billing.plano, academia.billing.periodo);
+    const valor = getValorPlano(academia.billing);
     return sum + (valor ?? 0);
   }, 0);
 
@@ -100,10 +93,7 @@ export default function DevContasReceberPage() {
                 </thead>
                 <tbody>
                   {academias.map((academia) => {
-                    const valor = getValorPlano(
-                      academia.billing.plano,
-                      academia.billing.periodo,
-                    );
+                    const valor = getValorPlano(academia.billing);
 
                     return (
                       <tr key={academia.id} className="border-b border-slate-100 last:border-0">

@@ -32,6 +32,7 @@ import {
 import { getPlatformPlanValue } from "./billing.js";
 import { DEV_NEW_ACADEMIES_GOAL, percentValue } from "../../lib/goals.js";
 import { registerDevModalityRoutes } from "../modalities/routes.js";
+import { registerDevPlatformPlanRoutes } from "./platform-plans.js";
 import { sumPlatformRevenueForOpenCycles } from "../../lib/charge-payments.js";
 import { centsToBrl } from "../../lib/platform-fees.js";
 import {
@@ -392,7 +393,11 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
         if (tenant.active) {
           academiasAtivas += 1;
           const billing = parseBilling(tenant.branding);
-          receitaPlanosLegado += getPlatformPlanValue(billing.plano, billing.periodo);
+          receitaPlanosLegado += getPlatformPlanValue(
+            billing.plano,
+            billing.periodo,
+            billing.valor,
+          );
         } else {
           academiasInativas += 1;
         }
@@ -1124,4 +1129,5 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
   );
 
   await registerDevModalityRoutes(app);
+  await registerDevPlatformPlanRoutes(app);
 }

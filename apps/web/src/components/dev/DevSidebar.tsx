@@ -7,6 +7,7 @@ const MENU_ITEMS = [
   { to: "/dev/visao-geral", label: "Visão Geral", icon: HomeIcon },
   { to: "/dev/cadastro-academias", label: "Cadastro de Academias", icon: BuildingIcon },
   { to: "/dev/modalidades", label: "Modalidades", icon: ModalityIcon },
+  { to: "/dev/planos", label: "Planos", icon: PlanIcon },
   { to: "/dev/donos-academias", label: "Donos de Academias", icon: OwnersIcon },
   { to: "/dev/contas-a-receber", label: "Contas a Receber", icon: ReceivableIcon },
 ];
@@ -124,6 +125,15 @@ function OwnersIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <circle cx="9" cy="8" r="3.5" />
       <path d="M3 20c1-4 5-6 12-6M16 8a3 3 0 1 1 0 6M21 20c0-3.5-2.5-5.5-5-6.5" />
+    </svg>
+  );
+}
+
+function PlanIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <rect x="4" y="4" width="16" height="16" rx="2" />
+      <path d="M8 9h8M8 13h5" />
     </svg>
   );
 }

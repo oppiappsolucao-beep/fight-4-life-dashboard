@@ -374,6 +374,19 @@ model ModalityTemplate {
   modalities  Modality[]
 }
 
+model PlatformPlan {
+  id           String   @id @default(uuid())
+  name         String
+  billingType  String
+  studentLimit Int
+  price        Float
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([billingType, studentLimit])
+}
+
 model Modality {
   id          String              @id @default(uuid())
   tenantId    String

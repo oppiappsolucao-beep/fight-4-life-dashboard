@@ -15,8 +15,8 @@ export default function DevSectionPage({
         <p className="mb-1 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#5B7595]">
           Desenvolvimento • usemint
         </p>
-        <h1 className="m-0 break-words text-xl font-semibold text-[#2E496C] sm:text-2xl">{title}</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">{description}</p>
+        <h1 className="m-0 break-words text-xl font-semibold text-slate-900 sm:text-2xl">{title}</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-700">{description}</p>
       </header>
 
       {children ?? (
