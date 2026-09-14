@@ -17,6 +17,11 @@ export default function AuthEntryLayout({
 }) {
   return (
     <div className="relative min-h-dvh overflow-hidden bg-white">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/login-waves.png')" }}
+      />
       <div className="relative z-10 mx-auto flex min-h-dvh max-w-lg flex-col px-4 py-6 sm:px-6">
         <header className="flex flex-col items-center gap-4 pt-6">
           <OppiLogo variant="full" size="lg" />
