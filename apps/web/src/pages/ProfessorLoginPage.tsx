@@ -58,7 +58,7 @@ export default function ProfessorLoginPage() {
       <HeroBackground />
       <div className="relative z-10 mx-auto flex min-h-dvh max-w-lg flex-col px-4 py-5 sm:px-6">
         <header className="flex flex-col items-center gap-3 pt-2 sm:flex-row sm:justify-between sm:pt-4">
-          <OppiLogo size="md" />
+          <OppiLogo size="md" onDark />
           <Link to="/" className="text-[0.72rem] font-medium text-white/50 hover:text-white/80">
             Voltar ao início
           </Link>

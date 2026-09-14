@@ -136,40 +136,40 @@ export default function OwnerPlanosPage() {
       description="Configure os planos, modalidades e valores usados no cadastro do aluno e nas contas a receber."
     >
       {loading ? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
           Carregando planos...
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-white/50">
+            <p className="text-sm text-slate-500">
               {planos.length} plano(s) configurado(s)
             </p>
             <button
               type="button"
               onClick={addPlan}
-              className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-white/80 transition hover:border-[#5B7595]/50 hover:text-white"
+              className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-[#5B7595]/50 hover:text-[#2E496C]"
             >
               Adicionar plano
             </button>
           </div>
 
           {error ? (
-            <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           ) : null}
 
           {success ? (
-            <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+            <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">
               {success}
             </div>
           ) : null}
 
-          <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-sm">
+          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white backdrop-blur-sm">
             <table className="min-w-full border-collapse text-left text-sm">
               <thead>
-                <tr className="border-b border-white/10 text-[0.7rem] uppercase tracking-wide text-white/45">
+                <tr className="border-b border-slate-200 text-[0.7rem] uppercase tracking-wide text-slate-400">
                   <th className="px-4 py-3 font-medium">Plano / modalidade</th>
                   <th className="px-4 py-3 font-medium">Valor</th>
                   <th className="px-4 py-3 font-medium">Diferencial</th>
@@ -178,12 +178,12 @@ export default function OwnerPlanosPage() {
               </thead>
               <tbody>
                 {planos.map((plan, index) => (
-                  <tr key={index} className="border-b border-white/5 last:border-0">
+                  <tr key={index} className="border-b border-slate-100 last:border-0">
                     <td className="px-4 py-3">
                       <input
                         value={plan.nome}
                         onChange={(e) => updatePlanName(index, e.target.value)}
-                        className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-[#5B7595]/60"
+                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#2E496C] outline-none focus:border-[#5B7595]/60"
                         required
                       />
                     </td>
@@ -195,10 +195,10 @@ export default function OwnerPlanosPage() {
                           value={valorInputs[index] ?? ""}
                           onChange={(e) => updateValorInput(index, e.target.value)}
                           placeholder="0,00"
-                          className="w-36 rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-[#5B7595]/60"
+                          className="w-36 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#2E496C] outline-none focus:border-[#5B7595]/60"
                           required
                         />
-                        <span className="text-xs text-white/40">
+                        <span className="text-xs text-[#2E496C]/40">
                           {formatPlanCurrency(
                             parseValorInput(valorInputs[index] ?? "") ?? plan.valor,
                           )}
@@ -206,12 +206,12 @@ export default function OwnerPlanosPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <label className="inline-flex items-center gap-2 text-xs text-white/70">
+                      <label className="inline-flex items-center gap-2 text-xs text-slate-600">
                         <input
                           type="checkbox"
                           checked={plan.liberaTodaGrade === true}
                           onChange={() => toggleDiferencial(index)}
-                          className="rounded border-white/20"
+                          className="rounded border-slate-200"
                         />
                         Libera toda a grade
                       </label>
@@ -232,7 +232,7 @@ export default function OwnerPlanosPage() {
             </table>
           </div>
 
-          <p className="text-xs text-white/45">
+          <p className="text-xs text-slate-400">
             Marque um plano como diferencial para liberar todas as modalidades e horários da academia
             para o aluno matriculado nele.
           </p>

@@ -276,21 +276,21 @@ export default function OwnerProfessoresPage() {
       description="Gerencie professores, modalidades e horários da grade."
     >
       {loading ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
           Carregando...
         </div>
       ) : (
         <div className="space-y-5">
           {refreshing ? (
-            <p className="m-0 text-xs text-white/40">Atualizando dados...</p>
+            <p className="m-0 text-xs text-[#2E496C]/40">Atualizando dados...</p>
           ) : null}
           {error ? (
-            <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           ) : null}
           {success ? (
-            <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+            <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">
               {success}
             </div>
           ) : null}
@@ -299,48 +299,48 @@ export default function OwnerProfessoresPage() {
             ref={cadastroFormRef}
             onSubmit={handleSubmitProfessor}
             autoComplete="off"
-            className="rounded-2xl border border-white/10 bg-black/20 p-4"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="m-0 text-sm font-semibold text-white">
+              <p className="m-0 text-sm font-semibold text-[#2E496C]">
                 {formMode === "create" ? "Cadastrar professor" : "Ficha do professor"}
               </p>
               {formMode === "edit" ? (
                 <button
                   type="button"
                   onClick={resetCreateForm}
-                  className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/70"
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
                 >
                   Novo cadastro
                 </button>
               ) : null}
             </div>
             <div className="mt-4 space-y-3">
-              <label className="block text-xs text-white/50">
+              <label className="block text-xs text-slate-500">
                 Nome completo
                 <input
                   value={form.name}
                   onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
                   placeholder="Nome do professor"
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
                   required
                 />
               </label>
-              <label className="block text-xs text-white/50">
+              <label className="block text-xs text-slate-500">
                 E-mail (usuário de acesso)
                 <input
                   type="email"
                   value={form.email}
                   onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
                   placeholder="professor@academia.com"
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
                   required
                   readOnly={formMode === "edit"}
                   autoComplete="off"
                   name="professor-cadastro-email"
                 />
               </label>
-              <label className="block text-xs text-white/50">
+              <label className="block text-xs text-slate-500">
                 {formMode === "edit" ? "Nova senha (opcional)" : "Senha de acesso"}
                 <input
                   type="password"
@@ -349,14 +349,14 @@ export default function OwnerProfessoresPage() {
                     setForm((current) => ({ ...current, password: event.target.value }))
                   }
                   placeholder={formMode === "edit" ? "Deixe em branco para manter" : "Mínimo 6 caracteres"}
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
                   required={formMode === "create"}
                   autoComplete="new-password"
                   name="professor-cadastro-password"
                 />
               </label>
               <div>
-                <p className="m-0 mb-2 text-xs text-white/50">Modalidades que leciona</p>
+                <p className="m-0 mb-2 text-xs text-slate-500">Modalidades que leciona</p>
                 <div className="flex flex-wrap gap-2">
                   {activeModalities.map((item) => {
                     const slotCount = (formSchedules[item.id] ?? []).length;
@@ -371,8 +371,8 @@ export default function OwnerProfessoresPage() {
                           editing
                             ? "bg-[#5B7595] text-white ring-2 ring-[#5B7595]/40"
                             : selected
-                              ? "bg-emerald-500/20 text-emerald-300"
-                              : "border border-white/15 text-white/60"
+                              ? "bg-emerald-500/20 text-emerald-700"
+                              : "border border-slate-200 text-slate-500"
                         }`}
                       >
                         {item.name}
@@ -397,21 +397,21 @@ export default function OwnerProfessoresPage() {
                   );
                 })()
               ) : (
-                <p className="m-0 text-xs text-white/45">
+                <p className="m-0 text-xs text-slate-400">
                   Clique em uma modalidade para escolher os horários. Só entram no cadastro as que
                   tiverem horário selecionado.
                 </p>
               )}
               {formMode === "edit" && editingProfessor ? (
-                <div className="rounded-xl border border-white/10 bg-black/25 p-3">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <p className="m-0 text-xs font-semibold text-white/50">Acesso geral</p>
+                      <p className="m-0 text-xs font-semibold text-slate-500">Acesso geral</p>
                       <p
                         className={`m-0 mt-1 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
                           editingProfessor.active
-                            ? "bg-emerald-500/15 text-emerald-200"
-                            : "bg-red-500/15 text-red-200"
+                            ? "bg-emerald-500/15 text-emerald-700"
+                            : "bg-red-500/15 text-red-700"
                         }`}
                       >
                         {editingProfessor.active ? "Professor ativo" : "Professor bloqueado"}
@@ -423,14 +423,14 @@ export default function OwnerProfessoresPage() {
                       onClick={() => toggleProfessorAccess(editingProfessor)}
                       className={`rounded-lg px-3 py-2 text-xs font-semibold ${
                         editingProfessor.active
-                          ? "border border-red-400/30 text-red-200"
-                          : "border border-emerald-400/30 text-emerald-200"
+                          ? "border border-red-400/30 text-red-700"
+                          : "border border-emerald-400/30 text-emerald-700"
                       }`}
                     >
                       {editingProfessor.active ? "Bloquear acesso geral" : "Liberar acesso geral"}
                     </button>
                   </div>
-                  <p className="m-0 mt-2 text-[0.65rem] text-white/40">
+                  <p className="m-0 mt-2 text-[0.65rem] text-[#2E496C]/40">
                     Bloqueie aqui para impedir o professor em todas as modalidades. Na lista abaixo,
                     habilitar/desabilitar vale só para a modalidade selecionada.
                   </p>
@@ -452,14 +452,14 @@ export default function OwnerProfessoresPage() {
 
           {formEditingModalityId && selectedViewModality ? (
             <>
-              <section className="rounded-xl border border-white/10 bg-black/20 p-3">
+              <section className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <div className="mb-2 flex items-center justify-between gap-3">
-                  <p className="m-0 text-sm font-semibold text-white">
+                  <p className="m-0 text-sm font-semibold text-[#2E496C]">
                     Professores — {selectedViewModality.name} ({filteredProfessores.length})
                   </p>
                 </div>
                 {filteredProfessores.length === 0 ? (
-                  <p className="m-0 py-4 text-center text-sm text-white/45">
+                  <p className="m-0 py-4 text-center text-sm text-slate-400">
                     Nenhum professor cadastrado nesta modalidade.
                   </p>
                 ) : (
@@ -476,10 +476,10 @@ export default function OwnerProfessoresPage() {
                         className="flex flex-wrap items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
                       >
                         <div className="min-w-0">
-                          <p className="m-0 truncate text-sm font-medium text-white">
+                          <p className="m-0 truncate text-sm font-medium text-[#2E496C]">
                             {professor.name ?? professor.email}
                           </p>
-                          <p className="m-0 truncate text-[0.65rem] text-white/40">
+                          <p className="m-0 truncate text-[0.65rem] text-[#2E496C]/40">
                             {professor.email}
                           </p>
                           {!professor.active ? (
@@ -493,7 +493,7 @@ export default function OwnerProfessoresPage() {
                             type="button"
                             disabled={updatingProfessorId === professor.id}
                             onClick={() => openProfessorCadastro(professor)}
-                            className="rounded-lg border border-white/15 px-2.5 py-1 text-[0.65rem] font-semibold text-white/75"
+                            className="rounded-lg border border-slate-200 px-2.5 py-1 text-[0.65rem] font-semibold text-slate-600"
                           >
                             Cadastro
                           </button>
@@ -509,8 +509,8 @@ export default function OwnerProfessoresPage() {
                             }
                             className={`rounded-full px-3 py-1 text-[0.65rem] font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${
                               modalityActive
-                                ? "bg-emerald-500/20 text-emerald-200"
-                                : "border border-white/15 text-white/45"
+                                ? "bg-emerald-500/20 text-emerald-700"
+                                : "border border-slate-200 text-slate-400"
                             }`}
                           >
                             {modalityActive ? "Habilitado" : "Desabilitado"}
@@ -532,7 +532,7 @@ export default function OwnerProfessoresPage() {
               />
             </>
           ) : (
-            <div className="rounded-xl border border-dashed border-white/10 px-4 py-8 text-center text-sm text-white/45">
+            <div className="rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-400">
               Selecione uma modalidade acima para ver os professores e a grade de horários.
             </div>
           )}

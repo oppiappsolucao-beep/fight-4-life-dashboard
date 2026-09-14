@@ -10,12 +10,12 @@ export default function LessonVideoUploadField({
   onChange,
 }: LessonVideoUploadFieldProps) {
   return (
-    <label className="block text-xs text-white/50">
+    <label className="block text-xs text-slate-500">
       {label}
       <input
         type="file"
         accept="video/*"
-        className="mt-1 block w-full text-sm text-white/70 file:mr-3 file:rounded-lg file:border-0 file:bg-[#5B7595]/20 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[#A9BBD5]"
+        className="mt-1 block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-[#5B7595]/20 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[#A9BBD5]"
         onChange={(event) => {
           const file = event.target.files?.[0];
           if (!file) return;
@@ -33,7 +33,7 @@ export default function LessonVideoUploadField({
           reader.readAsDataURL(file);
         }}
       />
-      <span className="mt-1 block text-[0.65rem] text-white/40">
+      <span className="mt-1 block text-[0.65rem] text-[#2E496C]/40">
         Ou cole URL do YouTube/Vimeo no campo abaixo. Upload até 15 MB.
       </span>
     </label>

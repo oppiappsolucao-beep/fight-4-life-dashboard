@@ -178,25 +178,25 @@ export default function OwnerLessonCadastroPanel({
   return (
     <div className="space-y-6">
       {error ? (
-        <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       ) : null}
       {success ? (
-        <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+        <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">
           {success}
         </div>
       ) : null}
 
-      <section className="grid gap-4 rounded-xl border border-white/10 bg-white/[0.04] p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5">
+      <section className="grid gap-4 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5">
         <div>
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-white/50">
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
             Modalidade
           </label>
           <select
             value={selectedModalityId}
             onChange={(event) => onModalityChange(event.target.value)}
-            className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#5B7595]/60"
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C] outline-none focus:border-[#5B7595]/60"
             required
           >
             {modalidades
@@ -209,21 +209,21 @@ export default function OwnerLessonCadastroPanel({
           </select>
         </div>
         <div>
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-white/50">
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
             Data da aula
           </label>
           <input
             type="date"
             value={classDate}
             onChange={(event) => onClassDateChange(event.target.value)}
-            className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#5B7595]/60"
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C] outline-none focus:border-[#5B7595]/60"
             required
           />
         </div>
         <div className="sm:col-span-2">
-          <p className="m-0 text-sm text-white/55">
+          <p className="m-0 text-sm text-slate-500">
             Cadastre a aula em vídeo do dia para a modalidade{" "}
-            <strong className="text-white">{selectedModality?.name ?? "—"}</strong>. Os alunos
+            <strong className="text-[#2E496C]">{selectedModality?.name ?? "—"}</strong>. Os alunos
             visualizam na galeria e marcam presença.
           </p>
         </div>
@@ -231,19 +231,19 @@ export default function OwnerLessonCadastroPanel({
 
       <form
         onSubmit={handleSubmit}
-        className="grid gap-5 rounded-xl border border-white/10 bg-white/[0.04] p-4 sm:p-5 xl:grid-cols-[1fr_0.95fr]"
+        className="grid gap-5 rounded-xl border border-slate-200 bg-white p-4 sm:p-5 xl:grid-cols-[1fr_0.95fr]"
       >
         <div className="space-y-4">
-          <p className="m-0 text-sm font-semibold text-white">Publicar aula do professor</p>
+          <p className="m-0 text-sm font-semibold text-[#2E496C]">Publicar aula do professor</p>
 
-          <label className="block text-xs text-white/50">
+          <label className="block text-xs text-slate-500">
             Professor
             <select
               value={form.professorId}
               onChange={(event) =>
                 setForm((current) => ({ ...current, professorId: event.target.value }))
               }
-              className="mt-1 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
               required
             >
               {availableProfessors.length === 0 ? (
@@ -259,7 +259,7 @@ export default function OwnerLessonCadastroPanel({
           </label>
 
           <div>
-            <p className="m-0 text-xs text-white/50">
+            <p className="m-0 text-xs text-slate-500">
               Horário — {WEEKDAY_LABELS[weekday]}
             </p>
             {availableSlots.length > 0 ? (
@@ -274,8 +274,8 @@ export default function OwnerLessonCadastroPanel({
                       onClick={() => selectSlot(slot)}
                       className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                         selected
-                          ? "bg-emerald-500/25 text-emerald-200 ring-1 ring-emerald-400/40"
-                          : "border border-white/15 text-white/65"
+                          ? "bg-emerald-500/25 text-emerald-700 ring-1 ring-emerald-400/40"
+                          : "border border-slate-200 text-[#2E496C]/65"
                       }`}
                     >
                       {formatTimeRange(slot)}
@@ -284,7 +284,7 @@ export default function OwnerLessonCadastroPanel({
                 })}
               </div>
             ) : (
-              <p className="m-0 mt-2 text-xs text-amber-200/80">
+              <p className="m-0 mt-2 text-xs text-amber-800/80">
                 Nenhum horário cadastrado para este dia. Informe manualmente abaixo ou configure em
                 Professores / Modalidades.
               </p>
@@ -292,7 +292,7 @@ export default function OwnerLessonCadastroPanel({
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block text-xs text-white/50">
+            <label className="block text-xs text-slate-500">
               Início
               <input
                 type="time"
@@ -301,10 +301,10 @@ export default function OwnerLessonCadastroPanel({
                   setSelectedSlotKey("");
                   setForm((current) => ({ ...current, startTime: event.target.value }));
                 }}
-                className="mt-1 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
               />
             </label>
-            <label className="block text-xs text-white/50">
+            <label className="block text-xs text-slate-500">
               Fim
               <input
                 type="time"
@@ -313,23 +313,23 @@ export default function OwnerLessonCadastroPanel({
                   setSelectedSlotKey("");
                   setForm((current) => ({ ...current, endTime: event.target.value }));
                 }}
-                className="mt-1 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
               />
             </label>
           </div>
 
-          <label className="block text-xs text-white/50">
+          <label className="block text-xs text-slate-500">
             Título da aula
             <input
               value={form.title}
               onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
               placeholder="Ex.: Passagem de guarda"
-              className="mt-1 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
               required
             />
           </label>
 
-          <label className="block text-xs text-white/50">
+          <label className="block text-xs text-slate-500">
             Descrição do movimento
             <textarea
               value={form.description}
@@ -338,7 +338,7 @@ export default function OwnerLessonCadastroPanel({
               }
               rows={4}
               placeholder="Explique o movimento, detalhes e observações..."
-              className="mt-1 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
             />
           </label>
 
@@ -346,7 +346,7 @@ export default function OwnerLessonCadastroPanel({
             onChange={(videoUrl) => setForm((current) => ({ ...current, videoUrl }))}
           />
 
-          <label className="block text-xs text-white/50">
+          <label className="block text-xs text-slate-500">
             URL do vídeo (opcional se fez upload)
             <input
               value={form.videoUrl.startsWith("data:") ? "" : form.videoUrl}
@@ -354,11 +354,11 @@ export default function OwnerLessonCadastroPanel({
                 setForm((current) => ({ ...current, videoUrl: event.target.value }))
               }
               placeholder="https://youtube.com/..."
-              className="mt-1 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
             />
           </label>
           {form.videoUrl.startsWith("data:") ? (
-            <p className="m-0 text-xs text-emerald-300">Vídeo carregado para envio.</p>
+            <p className="m-0 text-xs text-emerald-700">Vídeo carregado para envio.</p>
           ) : null}
 
           <button
@@ -371,22 +371,22 @@ export default function OwnerLessonCadastroPanel({
         </div>
 
         <div className="space-y-3">
-          <p className="m-0 text-sm font-semibold text-white">
+          <p className="m-0 text-sm font-semibold text-[#2E496C]">
             Aulas do dia ({loadingAulas ? "..." : aulas.length})
           </p>
           {loadingAulas ? (
-            <div className="rounded-xl border border-white/10 bg-black/20 p-6 text-center text-sm text-white/45">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-400">
               Carregando aulas...
             </div>
           ) : aulas.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-white/45">
+            <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400">
               Nenhuma aula publicada para esta data.
             </div>
           ) : (
             aulas.map((aula) => (
-              <article key={aula.id} className="rounded-xl border border-white/10 bg-black/25 p-4">
-                <p className="m-0 font-semibold text-white">{aula.title}</p>
-                <p className="m-0 mt-1 text-sm text-white/50">
+              <article key={aula.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="m-0 font-semibold text-[#2E496C]">{aula.title}</p>
+                <p className="m-0 mt-1 text-sm text-slate-500">
                   {aula.professor?.name ?? aula.professor?.email ?? "Professor"}
                   {aula.startTime && aula.endTime
                     ? ` • ${aula.startTime} – ${aula.endTime}`
@@ -395,13 +395,13 @@ export default function OwnerLessonCadastroPanel({
                   {aula.attendanceCount} presença(s)
                 </p>
                 {aula.description ? (
-                  <p className="m-0 mt-2 text-sm text-white/60">{aula.description}</p>
+                  <p className="m-0 mt-2 text-sm text-slate-500">{aula.description}</p>
                 ) : null}
                 <p
                   className={`m-0 mt-2 inline-flex rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ${
                     aula.active
-                      ? "bg-emerald-500/15 text-emerald-200"
-                      : "bg-red-500/15 text-red-200"
+                      ? "bg-emerald-500/15 text-emerald-700"
+                      : "bg-red-500/15 text-red-700"
                   }`}
                 >
                   {aula.active ? "Ativa" : "Bloqueada"}

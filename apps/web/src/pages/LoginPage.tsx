@@ -37,7 +37,7 @@ export default function LoginPage() {
   return (
     <div className="mx-auto min-h-screen max-w-[1200px] px-5 py-6">
       <header className="mb-6 flex items-center justify-between">
-        <OppiLogo size="sm" />
+        <OppiLogo size="sm" onDark />
         <Link
           to="/"
           className="text-[0.72rem] font-medium text-white/50 transition hover:text-white/80"

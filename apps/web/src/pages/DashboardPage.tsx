@@ -8,7 +8,7 @@ export default function DashboardPage() {
     <div className="mx-auto min-h-screen max-w-[1460px] px-4 py-6">
       <header className="mb-6 flex items-center justify-between rounded-[18px] border border-border bg-surface px-5 py-4">
         <div>
-          <h1 className="m-0 text-[1.52rem] text-white">
+          <h1 className="m-0 text-[1.52rem] text-[#2E496C]">
             {tenant?.name ?? "Dashboard"}
           </h1>
           <p className="mt-1 text-[0.66rem] font-extrabold uppercase tracking-[0.11rem] text-brand">
@@ -18,7 +18,7 @@ export default function DashboardPage() {
         <div className="flex gap-3">
           <Link
             to="/"
-            className="rounded-[10px] border border-white/20 px-4 py-2 text-[0.75rem] font-bold uppercase text-white/70 transition hover:bg-white/5"
+            className="rounded-[10px] border border-slate-200 px-4 py-2 text-[0.75rem] font-bold uppercase text-slate-600 transition hover:bg-[#D9E0E8]/70"
           >
             Início
           </Link>
@@ -57,7 +57,7 @@ export default function DashboardPage() {
       </div>
 
       <section className="mt-6 rounded-2xl border border-border bg-surface p-6">
-        <h2 className="m-0 text-lg font-extrabold text-white">
+        <h2 className="m-0 text-lg font-extrabold text-[#2E496C]">
           Fase 1 concluída
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-400">

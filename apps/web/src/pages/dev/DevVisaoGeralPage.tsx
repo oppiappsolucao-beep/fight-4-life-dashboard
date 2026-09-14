@@ -109,11 +109,11 @@ export default function DevVisaoGeralPage() {
             subtitle="Receita = taxa por aluno que pagou (R$ 1,90 até 100 / R$ 1,49 acima), por academia e mês da academia."
           />
 
-          <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3">
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="m-0 text-sm font-semibold text-white">Asaas (conta master)</p>
-                <p className="m-0 mt-1 text-xs text-white/45">
+                <p className="m-0 text-sm font-semibold text-[#2E496C]">Asaas (conta master)</p>
+                <p className="m-0 mt-1 text-xs text-slate-400">
                   {overview.asaas?.configured
                     ? "Variáveis encontradas. No EasyPanel a chave deve ser aact_prod_... sem $."
                     : `Faltando: ${(overview.asaas?.missingEnv ?? []).join(", ") || "ASAAS_API_KEY, ASAAS_WALLET_ID"}`}
@@ -132,8 +132,8 @@ export default function DevVisaoGeralPage() {
               <div
                 className={`mt-3 rounded-lg border px-3 py-2 text-sm ${
                   asaasStatus.ok
-                    ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-200"
-                    : "border-red-400/30 bg-red-500/10 text-red-200"
+                    ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-700"
+                    : "border-red-400/30 bg-red-500/10 text-red-700"
                 }`}
               >
                 <p className="m-0 font-medium">{asaasStatus.message}</p>
@@ -206,9 +206,9 @@ export default function DevVisaoGeralPage() {
 
           <OverviewGoalsGrid metas={overview.metas} />
 
-          <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <p className="m-0 text-sm font-semibold text-white">Últimas academias</p>
+              <p className="m-0 text-sm font-semibold text-[#2E496C]">Últimas academias</p>
               <Link
                 to="/dev/cadastro-academias"
                 className="text-xs font-semibold text-[#A9BBD5] hover:text-[#5B7595]"
@@ -217,31 +217,31 @@ export default function DevVisaoGeralPage() {
               </Link>
             </div>
             {overview.recentAcademias.length === 0 ? (
-              <p className="m-0 text-sm text-white/45">Nenhuma academia cadastrada ainda.</p>
+              <p className="m-0 text-sm text-slate-400">Nenhuma academia cadastrada ainda.</p>
             ) : (
               <div className="space-y-2">
                 {overview.recentAcademias.map((academia) => (
                   <div
                     key={academia.id}
-                    className="rounded-xl border border-white/10 bg-black/20 px-3 py-3"
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="m-0 text-sm font-medium text-white">{academia.name}</p>
+                      <p className="m-0 text-sm font-medium text-[#2E496C]">{academia.name}</p>
                       <span
                         className={`rounded-full px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide ${
                           academia.active
-                            ? "bg-emerald-500/15 text-emerald-300"
-                            : "bg-white/10 text-white/45"
+                            ? "bg-emerald-500/15 text-emerald-700"
+                            : "bg-white/10 text-slate-400"
                         }`}
                       >
                         {academia.active ? "Ativa" : "Inativa"}
                       </span>
                     </div>
-                    <p className="m-0 mt-1 text-xs text-white/45">
+                    <p className="m-0 mt-1 text-xs text-slate-400">
                       {academia.billing.plano || "Sem plano"} • {formatDate(academia.createdAt)}
                     </p>
                     {academia.ownerEmail ? (
-                      <p className="m-0 mt-1 truncate text-xs text-white/35">
+                      <p className="m-0 mt-1 truncate text-xs text-[#2E496C]/35">
                         {academia.ownerEmail}
                       </p>
                     ) : null}

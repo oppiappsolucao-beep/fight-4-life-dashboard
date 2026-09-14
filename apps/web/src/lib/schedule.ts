@@ -87,11 +87,11 @@ export function buildTimeRows(entries: ScheduleGridEntry[]): string[] {
 
 const MODALITY_COLOR_CLASSES = [
   "bg-[#5B7595]/15 text-[#A9BBD5]",
-  "bg-sky-500/15 text-sky-200",
-  "bg-amber-500/15 text-amber-200",
-  "bg-violet-500/15 text-violet-200",
-  "bg-teal-500/15 text-teal-200",
-  "bg-orange-500/15 text-orange-200",
+  "bg-sky-500/15 text-sky-800",
+  "bg-amber-500/15 text-amber-800",
+  "bg-violet-500/15 text-violet-800",
+  "bg-teal-500/15 text-teal-800",
+  "bg-orange-500/15 text-orange-800",
 ] as const;
 
 export function buildModalityColorMap(modalityIds: string[]): Record<string, string> {
@@ -101,5 +101,5 @@ export function buildModalityColorMap(modalityIds: string[]): Record<string, str
 }
 
 export function professorEntryClassName(): string {
-  return "bg-emerald-500/15 text-emerald-200";
+  return "bg-emerald-500/15 text-emerald-700";
 }

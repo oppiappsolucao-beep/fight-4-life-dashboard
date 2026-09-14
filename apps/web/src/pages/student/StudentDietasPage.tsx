@@ -174,63 +174,63 @@ export default function StudentDietasPage() {
       description="Orientações alimentares liberadas pela academia para acompanhar seu objetivo."
     >
       {loading ? (
-        <p className="text-sm text-white/50">Carregando plano alimentar...</p>
+        <p className="text-sm text-slate-500">Carregando plano alimentar...</p>
       ) : error ? (
         <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
           {error}
         </div>
       ) : !dieta ? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.05] p-6 text-center sm:p-10">
-          <p className="m-0 text-sm text-white/60">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 text-center sm:p-10">
+          <p className="m-0 text-sm text-slate-500">
             Nenhuma dica liberada ainda. Peça ao responsável da academia para vincular um
             plano no seu cadastro.
           </p>
         </div>
       ) : (
         <div className="space-y-5">
-          <section className="rounded-xl border border-white/10 bg-gradient-to-br from-[#0b1f3a]/80 to-[#122a4a]/50 p-5">
+          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-[0_8px_30px_rgba(46,73,108,0.04)]">
             <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.08rem] text-[#A9BBD5]">
               {GOAL_LABELS[dieta.goal] ?? dieta.goal}
             </p>
-            <h2 className="mt-1.5 mb-2 text-xl font-semibold text-white">{dieta.name}</h2>
+            <h2 className="mt-1.5 mb-2 text-xl font-semibold text-[#2E496C]">{dieta.name}</h2>
             {dieta.description ? (
-              <p className="m-0 max-w-2xl text-sm leading-relaxed text-white/60">
+              <p className="m-0 max-w-2xl text-sm leading-relaxed text-slate-500">
                 {dieta.description}
               </p>
             ) : null}
             <div className="mt-4 flex flex-wrap gap-3 text-sm">
-              <span className="rounded-lg border border-white/10 bg-black/20 px-3 py-1.5 text-white/80">
-                Meta diária: <strong className="text-white">{dieta.targetCalories} kcal</strong>
+              <span className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-700">
+                Meta diária: <strong className="text-[#2E496C]">{dieta.targetCalories} kcal</strong>
               </span>
-              <span className="rounded-lg border border-white/10 bg-black/20 px-3 py-1.5 text-white/80">
+              <span className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-700">
                 Cardápio da semana:{" "}
-                <strong className="text-white">
+                <strong className="text-[#2E496C]">
                   {activeWeekIndex + 1}/{weekVariantCount}
                 </strong>
               </span>
-              <span className="rounded-lg border border-white/10 bg-black/20 px-3 py-1.5 text-white/80">
+              <span className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-700">
                 Dia selecionado:{" "}
-                <strong className="text-white">{Math.round(dayTotals.calories)} kcal</strong>
+                <strong className="text-[#2E496C]">{Math.round(dayTotals.calories)} kcal</strong>
               </span>
             </div>
           </section>
 
-          <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-3 backdrop-blur-md sm:p-4">
+          <section className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-3 backdrop-blur-md sm:p-4">
             <div className="mb-3 flex items-center justify-between gap-3 px-1">
               <div className="min-w-0 flex-1">
-                <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
+                <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Suas dicas
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={() => shiftWeek(-1)}
-                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/15 text-sm text-white/75 transition hover:border-white/30 hover:text-white"
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-sm text-slate-600 transition hover:border-[#5B7595]/40 hover:text-[#2E496C]"
                     aria-label="Semana anterior"
                   >
                     ←
                   </button>
-                  <p className="m-0 min-w-0 text-sm text-white/70">
+                  <p className="m-0 min-w-0 text-sm text-slate-600">
                     {formatWorkoutDateLabel(week.start)} a {formatWorkoutDateLabel(week.end)}
                     {weekOffset !== 0 ? (
                       <button
@@ -245,7 +245,7 @@ export default function StudentDietasPage() {
                   <button
                     type="button"
                     onClick={() => shiftWeek(1)}
-                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/15 text-sm text-white/75 transition hover:border-white/30 hover:text-white"
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-sm text-slate-600 transition hover:border-[#5B7595]/40 hover:text-[#2E496C]"
                     aria-label="Próxima semana"
                   >
                     →
@@ -266,20 +266,20 @@ export default function StudentDietasPage() {
                     className={`relative min-w-[5.5rem] shrink-0 snap-start rounded-2xl border px-3 py-3 text-left transition ${
                       selected
                         ? "border-[#5B7595] bg-[#5B7595]/15 shadow-[0_0_0_1px_rgba(91,117,149,0.35)]"
-                        : "border-white/10 bg-black/25 hover:border-white/20"
+                        : "border-slate-200 bg-slate-50 hover:border-slate-200"
                     }`}
                   >
-                    <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
+                    <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400">
                       {formatWorkoutWeekdayShort(date)}
                     </p>
-                    <p className="m-0 mt-1 text-2xl font-semibold leading-none text-white">
+                    <p className="m-0 mt-1 text-2xl font-semibold leading-none text-[#2E496C]">
                       {formatWorkoutDay(date)}
                     </p>
-                    <p className="m-0 mt-1 text-xs text-white/55">
+                    <p className="m-0 mt-1 text-xs text-slate-500">
                       {formatWorkoutMonthShort(date)}
                     </p>
                     {today ? (
-                      <span className="mt-2 inline-flex rounded-full bg-white/10 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-white/70">
+                      <span className="mt-2 inline-flex rounded-full bg-white/10 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-slate-600">
                         Hoje
                       </span>
                     ) : null}
@@ -300,10 +300,10 @@ export default function StudentDietasPage() {
             ).map(([label, value]) => (
               <div
                 key={label}
-                className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3"
+                className="rounded-xl border border-slate-200 bg-white px-4 py-3"
               >
-                <p className="m-0 text-[0.65rem] uppercase tracking-wide text-white/45">{label}</p>
-                <p className="mt-1 mb-0 text-lg font-semibold text-white">{value}</p>
+                <p className="m-0 text-[0.65rem] uppercase tracking-wide text-slate-400">{label}</p>
+                <p className="mt-1 mb-0 text-lg font-semibold text-[#2E496C]">{value}</p>
               </div>
             ))}
           </div>
@@ -314,46 +314,46 @@ export default function StudentDietasPage() {
               return (
                 <article
                   key={meal.id}
-                  className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.04]"
+                  className="overflow-hidden rounded-xl border border-slate-200 bg-white"
                 >
                   <button
                     type="button"
                     onClick={() => setSelectedMealId(open ? null : meal.id)}
-                    className="flex w-full items-start justify-between gap-3 px-4 py-4 text-left transition hover:bg-white/[0.03]"
+                    className="flex w-full items-start justify-between gap-3 px-4 py-4 text-left transition hover:bg-white"
                   >
                     <div>
                       <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.06rem] text-[#A9BBD5]">
                         {meal.mealTypeLabel}
                       </p>
-                      <h3 className="mt-1 mb-0 text-base font-semibold text-white">{meal.title}</h3>
-                      <p className="mt-1.5 mb-0 text-xs text-white/50">
+                      <h3 className="mt-1 mb-0 text-base font-semibold text-[#2E496C]">{meal.title}</h3>
+                      <p className="mt-1.5 mb-0 text-xs text-slate-500">
                         {formatMacro(meal.calories, " kcal")} · P{" "}
                         {formatMacro(meal.proteinG, "g")} · C {formatMacro(meal.carbsG, "g")} · G{" "}
                         {formatMacro(meal.fatG, "g")}
                       </p>
                     </div>
-                    <span className="mt-1 text-white/40">{open ? "−" : "+"}</span>
+                    <span className="mt-1 text-[#2E496C]/40">{open ? "−" : "+"}</span>
                   </button>
 
                   {open && selectedMeal ? (
-                    <div className="border-t border-white/10 px-4 py-4">
+                    <div className="border-t border-slate-200 px-4 py-4">
                       {selectedMeal.description ? (
-                        <p className="mt-0 mb-3 text-sm text-white/60">{selectedMeal.description}</p>
+                        <p className="mt-0 mb-3 text-sm text-slate-500">{selectedMeal.description}</p>
                       ) : null}
-                      <h4 className="mt-0 mb-2 text-xs font-semibold uppercase tracking-wide text-white/70">
+                      <h4 className="mt-0 mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
                         Ingredientes
                       </h4>
-                      <ul className="mb-4 mt-0 list-disc space-y-1 pl-5 text-sm text-white/75">
+                      <ul className="mb-4 mt-0 list-disc space-y-1 pl-5 text-sm text-slate-600">
                         {selectedMeal.ingredients.map((item) => (
                           <li key={item}>{item}</li>
                         ))}
                       </ul>
                       {selectedMeal.instructions ? (
                         <>
-                          <h4 className="mt-0 mb-2 text-xs font-semibold uppercase tracking-wide text-white/70">
+                          <h4 className="mt-0 mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
                             Preparo
                           </h4>
-                          <p className="m-0 text-sm leading-relaxed text-white/70">
+                          <p className="m-0 text-sm leading-relaxed text-slate-600">
                             {selectedMeal.instructions}
                           </p>
                         </>
@@ -365,7 +365,7 @@ export default function StudentDietasPage() {
             })}
           </div>
 
-          <p className="m-0 text-xs leading-relaxed text-white/40">
+          <p className="m-0 text-xs leading-relaxed text-[#2E496C]/40">
             Orientação alimentar da academia — não substitui avaliação de nutricionista. Ajuste
             porções conforme orientação profissional e necessidades individuais.
           </p>

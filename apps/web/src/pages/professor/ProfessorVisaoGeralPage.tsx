@@ -40,8 +40,8 @@ export default function ProfessorVisaoGeralPage() {
         <p className="mb-1 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#5B7595]">
           Professor
         </p>
-        <h1 className="m-0 text-2xl font-semibold text-white">Visão Geral</h1>
-        <p className="mt-2 text-sm text-white/60">
+        <h1 className="m-0 text-2xl font-semibold text-[#2E496C]">Visão Geral</h1>
+        <p className="mt-2 text-sm text-slate-500">
           Indicadores executivos das suas modalidades, alunos e aulas do mês.
         </p>
       </header>
@@ -76,36 +76,36 @@ export default function ProfessorVisaoGeralPage() {
             ]}
           />
 
-          <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-            <p className="m-0 text-sm font-semibold text-white">Por modalidade</p>
-            <p className="m-0 mt-1 text-xs text-white/45">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4">
+            <p className="m-0 text-sm font-semibold text-[#2E496C]">Por modalidade</p>
+            <p className="m-0 mt-1 text-xs text-slate-400">
               Alunos elegíveis e aulas publicadas no mês atual
             </p>
             {overview.modalidades.length === 0 ? (
-              <p className="m-0 mt-4 text-sm text-white/45">Nenhuma modalidade liberada.</p>
+              <p className="m-0 mt-4 text-sm text-slate-400">Nenhuma modalidade liberada.</p>
             ) : (
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {overview.modalidades.map((modality) => (
                   <div
                     key={modality.id}
-                    className="rounded-xl border border-white/10 bg-black/20 px-4 py-4"
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4"
                   >
-                    <p className="m-0 font-semibold text-white">{modality.name}</p>
-                    <p className="m-0 mt-1 text-xs text-white/45">
+                    <p className="m-0 font-semibold text-[#2E496C]">{modality.name}</p>
+                    <p className="m-0 mt-1 text-xs text-slate-400">
                       {contentTypeLabel(modality.contentType)}
                     </p>
                     <div className="mt-3 grid grid-cols-2 gap-3">
                       <div>
-                        <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
+                        <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400">
                           Alunos
                         </p>
-                        <p className="m-0 mt-1 text-xl font-semibold text-white">{modality.alunos}</p>
+                        <p className="m-0 mt-1 text-xl font-semibold text-[#2E496C]">{modality.alunos}</p>
                       </div>
                       <div>
-                        <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
+                        <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400">
                           Aulas/mês
                         </p>
-                        <p className="m-0 mt-1 text-xl font-semibold text-white">
+                        <p className="m-0 mt-1 text-xl font-semibold text-[#2E496C]">
                           {modality.aulasMes}
                         </p>
                       </div>

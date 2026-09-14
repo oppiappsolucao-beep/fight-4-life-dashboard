@@ -23,7 +23,7 @@ export default function DevDonosAcademiasPage() {
       </div>
 
       {loading && (
-        <div className="rounded-xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
           Carregando academias...
         </div>
       )}
@@ -35,8 +35,8 @@ export default function DevDonosAcademiasPage() {
       )}
 
       {!loading && !error && academias.length === 0 && (
-        <div className="rounded-xl border border-white/10 bg-white/[0.05] p-10 text-center backdrop-blur-sm">
-          <p className="text-sm text-white/60">Nenhuma academia cadastrada ainda.</p>
+        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center backdrop-blur-sm">
+          <p className="text-sm text-slate-500">Nenhuma academia cadastrada ainda.</p>
           <Link
             to="/dev/cadastro-academias"
             className="mt-4 inline-block text-sm font-medium text-[#5B7595] hover:underline"
@@ -47,11 +47,11 @@ export default function DevDonosAcademiasPage() {
       )}
 
       {!loading && !error && academias.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.05] backdrop-blur-sm">
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white backdrop-blur-sm">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead>
-                <tr className="border-b border-white/10 text-[0.65rem] font-semibold uppercase tracking-wide text-white/50">
+                <tr className="border-b border-slate-200 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-500">
                   <th className="px-5 py-3">Academia</th>
                   <th className="px-5 py-3">E-mail de login (dono)</th>
                   <th className="px-5 py-3">Responsável</th>
@@ -61,10 +61,10 @@ export default function DevDonosAcademiasPage() {
               </thead>
               <tbody>
                 {academias.map((academia) => (
-                  <tr key={academia.id} className="border-b border-white/5 last:border-0">
+                  <tr key={academia.id} className="border-b border-slate-100 last:border-0">
                     <td className="px-5 py-4">
-                      <p className="font-medium text-white">{academia.name}</p>
-                      <p className="mt-0.5 text-xs text-white/40">{academia.slug}</p>
+                      <p className="font-medium text-[#2E496C]">{academia.name}</p>
+                      <p className="mt-0.5 text-xs text-[#2E496C]/40">{academia.slug}</p>
                       {academia.url ? (
                         <a
                           href={academia.url}
@@ -78,14 +78,14 @@ export default function DevDonosAcademiasPage() {
                     </td>
                     <td className="px-5 py-4">
                       {academia.owner ? (
-                        <code className="rounded bg-black/30 px-2 py-1 text-[0.8rem] text-emerald-300">
+                        <code className="rounded bg-slate-100 px-2 py-1 text-[0.8rem] text-emerald-700">
                           {academia.owner.email}
                         </code>
                       ) : (
-                        <span className="text-white/40">Sem dono cadastrado</span>
+                        <span className="text-[#2E496C]/40">Sem dono cadastrado</span>
                       )}
                     </td>
-                    <td className="px-5 py-4 text-white/70">
+                    <td className="px-5 py-4 text-slate-600">
                       {academia.owner?.name ?? "—"}
                     </td>
                     <td className="px-5 py-4">
@@ -96,7 +96,7 @@ export default function DevDonosAcademiasPage() {
                         <button
                           type="button"
                           onClick={() => setEditingAcademia(academia)}
-                          className="rounded-lg border border-white/15 px-3 py-1.5 text-[0.72rem] font-medium text-white/80 transition hover:border-[#5B7595]/50 hover:text-[#5B7595]"
+                          className="rounded-lg border border-slate-200 px-3 py-1.5 text-[0.72rem] font-medium text-slate-700 transition hover:border-[#5B7595]/50 hover:text-[#5B7595]"
                         >
                           Editar
                         </button>
@@ -132,7 +132,7 @@ function StatusBadge({ active }: { active: boolean }) {
     <span
       className={`inline-flex rounded-full px-2.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide ${
         active
-          ? "bg-emerald-500/15 text-emerald-300"
+          ? "bg-emerald-500/15 text-emerald-700"
           : "bg-red-500/15 text-red-300"
       }`}
     >

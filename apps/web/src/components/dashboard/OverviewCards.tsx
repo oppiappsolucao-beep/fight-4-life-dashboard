@@ -17,21 +17,21 @@ export function OverviewHero({
   const brandLabel = formatAcademyName(brand) || undefined;
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#5B7595]/25 via-[#123055]/50 to-[#0b1f3a]/70 p-5 sm:p-6">
-      <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[#A9BBD5]/80">
+    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_30px_rgba(46,73,108,0.06)] sm:p-6">
+      <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[#5B7595]">
         {eyebrow}
       </p>
       {brandLabel ? (
         <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h2 className="m-0 break-words text-xl font-semibold leading-snug text-white sm:text-2xl">
+          <h2 className="m-0 break-words text-xl font-semibold leading-snug text-[#2E496C] sm:text-2xl">
             {brandLabel}
           </h2>
-          <p className="m-0 text-base font-medium text-white/75 sm:text-lg">{title}</p>
+          <p className="m-0 text-base font-medium text-slate-500 sm:text-lg">{title}</p>
         </div>
       ) : (
-        <h2 className="m-0 mt-1 text-2xl font-semibold text-white">{title}</h2>
+        <h2 className="m-0 mt-1 text-2xl font-semibold text-[#2E496C]">{title}</h2>
       )}
-      <p className="m-0 mt-2 text-sm text-white/55">{subtitle}</p>
+      <p className="m-0 mt-2 text-sm text-slate-500">{subtitle}</p>
     </section>
   );
 }
@@ -41,18 +41,25 @@ export function OverviewMetricGrid({
 }: {
   items: Array<{ label: string; value: string; hint?: string }>;
 }) {
+  const tones = [
+    "bg-[#E8EEF4]",
+    "bg-[#EEF1F8]",
+    "bg-[#EAF6F0]",
+    "bg-[#F3EEF8]",
+  ];
+
   return (
-    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-      {items.map((item) => (
+    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      {items.map((item, index) => (
         <div
           key={item.label}
-          className="rounded-2xl border border-white/10 bg-white/[0.04] p-4"
+          className={`rounded-2xl border border-slate-200/80 p-4 ${tones[index % tones.length]}`}
         >
-          <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
+          <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-500">
             {item.label}
           </p>
-          <p className="m-0 mt-2 text-2xl font-semibold text-white">{item.value}</p>
-          {item.hint ? <p className="m-0 mt-1 text-xs text-white/45">{item.hint}</p> : null}
+          <p className="m-0 mt-2 text-2xl font-semibold text-[#2E496C]">{item.value}</p>
+          {item.hint ? <p className="m-0 mt-1 text-xs text-slate-500">{item.hint}</p> : null}
         </div>
       ))}
     </section>
@@ -82,25 +89,25 @@ export function OverviewGoalsGrid({ metas }: { metas: OverviewGoalMetric[] }) {
         return (
           <div
             key={meta.id}
-            className="rounded-2xl border border-white/10 bg-white/[0.04] p-4"
+            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_30px_rgba(46,73,108,0.04)]"
           >
             <div className="flex items-start justify-between gap-2">
-              <p className="m-0 text-sm font-semibold text-white">{meta.label}</p>
+              <p className="m-0 text-sm font-semibold text-[#2E496C]">{meta.label}</p>
               {emBreve ? (
-                <span className="rounded-full bg-white/10 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-white/55">
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-slate-500">
                   Em breve
                 </span>
               ) : onTrack ? (
-                <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-emerald-300">
+                <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-emerald-700">
                   No alvo
                 </span>
               ) : null}
             </div>
-            <p className="m-0 mt-2 text-xl font-semibold text-white">{valueLabel}</p>
-            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-black/30">
+            <p className="m-0 mt-2 text-xl font-semibold text-[#2E496C]">{valueLabel}</p>
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
               <div
                 className={`h-full rounded-full transition-all ${
-                  emBreve ? "bg-white/20" : onTrack ? "bg-emerald-400" : "bg-[#5B7595]"
+                  emBreve ? "bg-slate-300" : onTrack ? "bg-emerald-400" : "bg-[#5B7595]"
                 }`}
                 style={{ width: `${percent}%` }}
               />
@@ -123,7 +130,7 @@ export function OverviewQuickLinks({
         <Link
           key={link.to}
           to={link.to}
-          className="rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-center text-sm font-semibold text-white/80 transition hover:border-[#5B7595]/40 hover:text-white"
+          className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-center text-sm font-semibold text-[#2E496C] transition hover:border-[#5B7595]/40 hover:text-[#2E496C]"
         >
           {link.label}
         </Link>
@@ -141,7 +148,7 @@ export function OverviewState({
 }) {
   if (loading) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+      <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
         Carregando...
       </div>
     );
@@ -149,7 +156,7 @@ export function OverviewState({
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
         {error}
       </div>
     );

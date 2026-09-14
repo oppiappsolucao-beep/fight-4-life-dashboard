@@ -31,12 +31,12 @@ export default function DashboardShell({
 
   return (
     <div className="relative z-10 flex min-h-screen min-w-0 items-stretch">
-      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-3 border-b border-white/10 bg-[#0b1f3a]/92 px-3 backdrop-blur-md sm:px-4 md:hidden">
+      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-3 border-b border-slate-200 bg-white/95 px-3 backdrop-blur-md sm:px-4 md:hidden">
         <button
           type="button"
           onClick={onOpenMenu}
           aria-label="Abrir menu"
-          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/15 text-white"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-[#2E496C]"
         >
           <MenuIcon />
         </button>
@@ -52,7 +52,7 @@ export default function DashboardShell({
         <button
           type="button"
           aria-label="Fechar menu"
-          className="fixed inset-0 z-40 bg-[#071525]/70 md:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/30 md:hidden"
           onClick={onCloseMenu}
         />
       ) : null}
@@ -69,9 +69,9 @@ export default function DashboardShell({
 export function sidebarShellClass(open: boolean): string {
   return [
     "fixed inset-y-0 left-0 z-50 flex h-dvh w-[min(280px,86vw)] shrink-0 flex-col",
-    "border-r border-white/10 bg-[#0b1f3a]/98 backdrop-blur-md transition-transform duration-200",
+    "border-r border-slate-200 bg-white shadow-[0_0_24px_rgba(46,73,108,0.06)] transition-transform duration-200",
     open ? "translate-x-0" : "-translate-x-full",
-    "md:static md:z-auto md:h-screen md:w-[280px] md:translate-x-0 md:bg-[#0b1f3a]/75",
+    "md:static md:z-auto md:h-screen md:w-[280px] md:translate-x-0",
   ].join(" ");
 }
 

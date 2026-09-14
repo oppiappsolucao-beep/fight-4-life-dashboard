@@ -60,57 +60,57 @@ export default function StudentFrequenciaPage() {
       description="Confirme sua presença nas aulas da sua modalidade. O professor validará se você compareceu."
     >
       {loading ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
           Carregando...
         </div>
       ) : error && !data ? (
-        <div className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <div className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       ) : data ? (
         <div className="space-y-4 pb-8">
-          <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-            <p className="m-0 text-sm text-white/55">Plano: {data.planoModalidade}</p>
-            <p className="m-0 mt-2 text-2xl font-semibold text-white">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4">
+            <p className="m-0 text-sm text-slate-500">Plano: {data.planoModalidade}</p>
+            <p className="m-0 mt-2 text-2xl font-semibold text-[#2E496C]">
               {data.totalPresencas} presença(s) validada(s)
             </p>
           </section>
 
           {success ? (
-            <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+            <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">
               {success}
             </div>
           ) : null}
           {error ? (
-            <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           ) : null}
 
           <section className="space-y-3">
-            <p className="m-0 text-sm font-semibold text-white">Confirmar presença</p>
+            <p className="m-0 text-sm font-semibold text-[#2E496C]">Confirmar presença</p>
             {data.aulasDisponiveis.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-white/45">
+              <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">
                 Nenhuma aula disponível para sua modalidade.
               </div>
             ) : (
               data.aulasDisponiveis.map((aula) => (
                 <article
                   key={aula.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/25 p-4"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4"
                 >
                   <div>
-                    <p className="m-0 font-semibold text-white">{aula.title}</p>
-                    <p className="m-0 mt-1 text-sm text-white/50">
+                    <p className="m-0 font-semibold text-[#2E496C]">{aula.title}</p>
+                    <p className="m-0 mt-1 text-sm text-slate-500">
                       {formatWorkoutDateLabel(aula.classDate)} • {aula.modality?.name}
                     </p>
                   </div>
                   {aula.presencaMarcada ? (
-                    <span className="rounded-full bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-300">
+                    <span className="rounded-full bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-700">
                       Validada
                     </span>
                   ) : aula.presencaPendente ? (
-                    <span className="rounded-full bg-amber-500/15 px-3 py-1.5 text-xs font-semibold text-amber-200">
+                    <span className="rounded-full bg-amber-500/15 px-3 py-1.5 text-xs font-semibold text-amber-800">
                       Aguardando professor
                     </span>
                   ) : (
@@ -130,11 +130,11 @@ export default function StudentFrequenciaPage() {
 
           {data.historico.length > 0 ? (
             <section className="space-y-2">
-              <p className="m-0 text-sm font-semibold text-white">Histórico</p>
+              <p className="m-0 text-sm font-semibold text-[#2E496C]">Histórico</p>
               {data.historico.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-xl border border-white/10 bg-black/20 px-3 py-3 text-sm text-white/70"
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-600"
                 >
                   {item.aula.title} • {formatWorkoutDateLabel(item.aula.classDate)}
                 </div>

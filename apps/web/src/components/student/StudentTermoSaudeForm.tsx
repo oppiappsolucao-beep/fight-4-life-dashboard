@@ -154,29 +154,29 @@ export default function StudentTermoSaudeForm() {
     return (
       <div className="space-y-4">
         <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-6 backdrop-blur-sm">
-          <p className="text-sm font-semibold text-emerald-300">
+          <p className="text-sm font-semibold text-emerald-700">
             Termo assinado e aceito com sucesso!
           </p>
-          <p className="mt-2 text-sm text-white/70">
+          <p className="mt-2 text-sm text-slate-600">
             Seu aceite eletrônico foi registrado para validade jurídica.
           </p>
         </div>
-        <div className="rounded-xl border border-white/10 bg-white/[0.05] p-5 backdrop-blur-sm">
-          <p className="mb-3 text-[0.65rem] font-semibold uppercase tracking-[0.08rem] text-white/50">
+        <div className="rounded-xl border border-slate-200 bg-white p-5 backdrop-blur-sm">
+          <p className="mb-3 text-[0.65rem] font-semibold uppercase tracking-[0.08rem] text-slate-500">
             Registro de assinatura digital
           </p>
           <dl className="grid gap-2 text-sm">
             <div className="flex justify-between gap-4">
-              <dt className="text-white/50">Data</dt>
-              <dd className="font-medium text-white">{acceptance.data}</dd>
+              <dt className="text-slate-500">Data</dt>
+              <dd className="font-medium text-[#2E496C]">{acceptance.data}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-white/50">Hora</dt>
-              <dd className="font-medium text-white">{acceptance.hora}</dd>
+              <dt className="text-slate-500">Hora</dt>
+              <dd className="font-medium text-[#2E496C]">{acceptance.hora}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-white/50">IP do dispositivo</dt>
-              <dd className="font-medium text-white">{acceptance.ip}</dd>
+              <dt className="text-slate-500">IP do dispositivo</dt>
+              <dd className="font-medium text-[#2E496C]">{acceptance.ip}</dd>
             </div>
           </dl>
         </div>
@@ -186,17 +186,17 @@ export default function StudentTermoSaudeForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <section className="rounded-xl border border-white/10 bg-white/[0.05] p-5 backdrop-blur-sm md:p-6">
-        <h2 className="mb-5 border-b border-white/10 pb-3 text-[0.8rem] font-bold uppercase tracking-wide text-white">
+      <section className="rounded-xl border border-slate-200 bg-white p-5 backdrop-blur-sm md:p-6">
+        <h2 className="mb-5 border-b border-slate-200 pb-3 text-[0.8rem] font-bold uppercase tracking-wide text-[#2E496C]">
           Questionário PAR-Q
         </h2>
         <div className="space-y-5">
           {QUESTIONS.map((question, index) => (
             <div
               key={question.id}
-              className="rounded-lg border border-white/10 bg-black/20 p-4"
+              className="rounded-lg border border-slate-200 bg-slate-50 p-4"
             >
-              <p className="text-[0.82rem] leading-relaxed text-white/90">
+              <p className="text-[0.82rem] leading-relaxed text-slate-800">
                 <span className="mr-1 font-semibold text-[#5B7595]">{index + 1}.</span>
                 {question.text}
               </p>
@@ -217,11 +217,11 @@ export default function StudentTermoSaudeForm() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-white/10 bg-white/[0.05] p-5 backdrop-blur-sm md:p-6">
-        <h2 className="mb-5 border-b border-white/10 pb-3 text-[0.8rem] font-bold uppercase tracking-wide text-white">
+      <section className="rounded-xl border border-slate-200 bg-white p-5 backdrop-blur-sm md:p-6">
+        <h2 className="mb-5 border-b border-slate-200 pb-3 text-[0.8rem] font-bold uppercase tracking-wide text-[#2E496C]">
           Informações Complementares
         </h2>
-        <p className="mb-4 text-[0.65rem] text-white/40">Opcional, mas recomendado.</p>
+        <p className="mb-4 text-[0.65rem] text-[#2E496C]/40">Opcional, mas recomendado.</p>
         <div className="space-y-4">
           <Field label="Possui alguma alergia? Se sim, qual?">
             <Textarea
@@ -244,20 +244,20 @@ export default function StudentTermoSaudeForm() {
               placeholder="Ex: infarto fulminante, diabetes..."
             />
           </Field>
-          <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-white/10 bg-black/20 px-4 py-3">
+          <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
             <input
               type="checkbox"
               checked={gravida}
               onChange={(e) => setGravida(e.target.checked)}
               className="h-4 w-4 accent-[#5B7595]"
             />
-            <span className="text-[0.82rem] text-white/90">Está grávida?</span>
+            <span className="text-[0.82rem] text-slate-800">Está grávida?</span>
           </label>
         </div>
       </section>
 
-      <section className="rounded-xl border border-white/10 bg-white/[0.05] p-5 backdrop-blur-sm md:p-6">
-        <h2 className="mb-5 border-b border-white/10 pb-3 text-[0.8rem] font-bold uppercase tracking-wide text-white">
+      <section className="rounded-xl border border-slate-200 bg-white p-5 backdrop-blur-sm md:p-6">
+        <h2 className="mb-5 border-b border-slate-200 pb-3 text-[0.8rem] font-bold uppercase tracking-wide text-[#2E496C]">
           Termo de Responsabilidade
         </h2>
         <label className="flex cursor-pointer items-start gap-3">
@@ -268,13 +268,13 @@ export default function StudentTermoSaudeForm() {
             className="mt-0.5 h-4 w-4 shrink-0 accent-[#5B7595]"
             required
           />
-          <span className="text-[0.82rem] leading-relaxed text-white/80">
+          <span className="text-[0.82rem] leading-relaxed text-slate-700">
             Declaro que as informações acima são verdadeiras e assumo total
             responsabilidade por omitir qualquer condição médica preexistente.
             <span className="text-[#5B7595]"> *</span>
           </span>
         </label>
-        <p className="mt-4 text-[0.65rem] text-white/40">
+        <p className="mt-4 text-[0.65rem] text-[#2E496C]/40">
           Ao assinar, seu aceite eletrônico será registrado com data, hora e IP do
           dispositivo para validade jurídica.
         </p>
@@ -313,7 +313,7 @@ function YesNoButton({
       className={`min-w-[72px] rounded-lg px-4 py-2 text-[0.75rem] font-semibold uppercase tracking-wide transition ${
         selected
           ? "bg-gradient-to-r from-[#2E496C] to-[#5B7595] text-white"
-          : "border border-white/15 bg-black/20 text-white/60 hover:border-[#5B7595]/40 hover:text-white"
+          : "border border-slate-200 bg-slate-50 text-slate-500 hover:border-[#5B7595]/40 hover:text-[#2E496C]"
       }`}
     >
       {label}
@@ -330,7 +330,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[0.65rem] font-semibold uppercase tracking-[0.06rem] text-white/75">
+      <span className="mb-1.5 block text-[0.65rem] font-semibold uppercase tracking-[0.06rem] text-slate-600">
         {label}
       </span>
       {children}
@@ -339,7 +339,7 @@ function Field({
 }
 
 const textareaClass =
-  "w-full resize-none rounded-lg border border-white/20 bg-white px-3 py-2.5 text-[0.82rem] text-black outline-none transition focus:border-[#5B7595]/60 focus:ring-2 focus:ring-[#5B7595]/15";
+  "w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-[0.82rem] text-black outline-none transition focus:border-[#5B7595]/60 focus:ring-2 focus:ring-[#5B7595]/15";
 
 function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return <textarea rows={2} {...props} className={textareaClass} />;

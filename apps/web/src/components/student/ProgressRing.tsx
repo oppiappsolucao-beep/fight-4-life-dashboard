@@ -30,7 +30,7 @@ export default function ProgressRing({
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-lg font-semibold text-white">{percent}%</span>
+        <span className="text-lg font-semibold text-[#2E496C]">{percent}%</span>
       </div>
     </div>
   );

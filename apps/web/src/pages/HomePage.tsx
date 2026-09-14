@@ -17,7 +17,7 @@ export default function HomePage() {
 
       <div className="relative z-10 flex min-h-screen flex-col px-6 py-6 md:px-10">
         <header className="flex items-center justify-between">
-          <OppiLogo size="md" />
+          <OppiLogo size="md" onDark />
           <Link
             to="/login"
             className="text-[0.8rem] font-medium text-white/50 transition hover:text-white/80"

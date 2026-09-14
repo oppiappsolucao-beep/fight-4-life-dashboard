@@ -120,10 +120,10 @@ export default function WorkoutDateStrip({
   const showWeekNav = Boolean(weekScheduleDates) || true;
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-3 backdrop-blur-md sm:p-4">
+    <section className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-3 backdrop-blur-md sm:p-4">
       <div className="mb-3 flex items-center justify-between gap-3 px-1">
         <div className="min-w-0 flex-1">
-          <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
+          <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
             {sectionLabel}
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -132,12 +132,12 @@ export default function WorkoutDateStrip({
                 <button
                   type="button"
                   onClick={() => shiftWeek(-1)}
-                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/15 text-sm text-white/75 transition hover:border-white/30 hover:text-white"
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-sm text-slate-600 transition hover:border-[#5B7595]/40 hover:text-[#2E496C]"
                   aria-label="Semana anterior"
                 >
                   ←
                 </button>
-                <p className="m-0 min-w-0 text-sm text-white/70">
+                <p className="m-0 min-w-0 text-sm text-slate-600">
                   {displayTreinos.length} dia{displayTreinos.length === 1 ? "" : "s"} •{" "}
                   {formatWorkoutDateLabel(week.start)} a {formatWorkoutDateLabel(week.end)}
                   {weekOffset !== 0 ? (
@@ -153,14 +153,14 @@ export default function WorkoutDateStrip({
                 <button
                   type="button"
                   onClick={() => shiftWeek(1)}
-                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/15 text-sm text-white/75 transition hover:border-white/30 hover:text-white"
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-sm text-slate-600 transition hover:border-[#5B7595]/40 hover:text-[#2E496C]"
                   aria-label="Próxima semana"
                 >
                   →
                 </button>
               </>
             ) : (
-              <p className="m-0 text-sm text-white/70">
+              <p className="m-0 text-sm text-slate-600">
                 {treinos.length} data{treinos.length === 1 ? "" : "s"} • semana{" "}
                 {formatWorkoutDateLabel(week.start)} a {formatWorkoutDateLabel(week.end)}
               </p>
@@ -168,7 +168,7 @@ export default function WorkoutDateStrip({
           </div>
         </div>
         {showLegend ? (
-          <div className="hidden items-center gap-3 text-[0.65rem] text-white/45 sm:flex">
+          <div className="hidden items-center gap-3 text-[0.65rem] text-slate-400 sm:flex">
             <LegendDot tone="done" label="Concluído" />
             <LegendDot tone="partial" label="Em andamento" />
             <LegendDot tone="pending" label="Pendente" />
@@ -190,21 +190,21 @@ export default function WorkoutDateStrip({
               className={`relative min-w-[5.5rem] shrink-0 snap-start rounded-2xl border px-3 py-3 text-left transition ${
                 selected
                   ? "border-[#5B7595] bg-[#5B7595]/15 shadow-[0_0_0_1px_rgba(91,117,149,0.35)]"
-                  : "border-white/10 bg-black/25 hover:border-white/20"
+                  : "border-slate-200 bg-slate-50 hover:border-slate-200"
               }`}
             >
               <StatusDot status={status} />
-              <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
+              <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400">
                 {formatWorkoutWeekdayShort(item.workoutDate)}
               </p>
-              <p className="m-0 mt-1 text-2xl font-semibold leading-none text-white">
+              <p className="m-0 mt-1 text-2xl font-semibold leading-none text-[#2E496C]">
                 {formatWorkoutDay(item.workoutDate)}
               </p>
-              <p className="m-0 mt-1 text-xs text-white/55">
+              <p className="m-0 mt-1 text-xs text-slate-500">
                 {formatWorkoutMonthShort(item.workoutDate)}
               </p>
               {today ? (
-                <span className="mt-2 inline-flex rounded-full bg-white/10 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-white/70">
+                <span className="mt-2 inline-flex rounded-full bg-white/10 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-slate-600">
                   Hoje
                 </span>
               ) : item.source === "STUDENT" ? (
@@ -212,7 +212,7 @@ export default function WorkoutDateStrip({
                   Meu
                 </span>
               ) : item.exerciseCount > 0 ? (
-                <p className="m-0 mt-2 truncate text-[0.65rem] text-white/40">
+                <p className="m-0 mt-2 truncate text-[0.65rem] text-[#2E496C]/40">
                   {item.exerciseCount} ex.
                 </p>
               ) : null}
@@ -220,8 +220,8 @@ export default function WorkoutDateStrip({
           );
         })}
         {allowCreateDate ? (
-          <label className="relative min-w-[5.5rem] shrink-0 snap-start rounded-2xl border border-dashed border-white/20 bg-black/15 px-3 py-3 text-left">
-            <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
+          <label className="relative min-w-[5.5rem] shrink-0 snap-start rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-left">
+            <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400">
               Nova
             </span>
             <span className="mt-3 block text-2xl font-semibold text-[#5B7595]">+</span>

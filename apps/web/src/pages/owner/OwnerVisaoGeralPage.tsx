@@ -79,9 +79,9 @@ export default function OwnerVisaoGeralPage() {
 
           <OverviewGoalsGrid metas={overview.metas} />
 
-          <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <p className="m-0 text-sm font-semibold text-white">Últimos alunos cadastrados</p>
+              <p className="m-0 text-sm font-semibold text-[#2E496C]">Últimos alunos cadastrados</p>
               <Link
                 to="/dono/alunos"
                 className="text-xs font-semibold text-[#A9BBD5] hover:text-[#5B7595]"
@@ -90,19 +90,19 @@ export default function OwnerVisaoGeralPage() {
               </Link>
             </div>
             {overview.recentAlunos.length === 0 ? (
-              <p className="m-0 text-sm text-white/45">Nenhum aluno cadastrado ainda.</p>
+              <p className="m-0 text-sm text-slate-400">Nenhum aluno cadastrado ainda.</p>
             ) : (
               <div className="space-y-2">
                 {overview.recentAlunos.map((aluno) => (
                   <div
                     key={aluno.id}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-3"
+                    className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3"
                   >
                     <div className="min-w-0">
-                      <p className="m-0 truncate text-sm font-medium text-white">
+                      <p className="m-0 truncate text-sm font-medium text-[#2E496C]">
                         {aluno.nomeCompleto}
                       </p>
-                      <p className="m-0 truncate text-xs text-white/45">
+                      <p className="m-0 truncate text-xs text-slate-400">
                         {aluno.planoModalidade}
                       </p>
                     </div>

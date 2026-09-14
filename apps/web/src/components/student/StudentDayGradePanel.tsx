@@ -38,7 +38,7 @@ export default function StudentDayGradePanel({
 
   if (loading) {
     return (
-      <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/45">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-400">
         Carregando grade do dia...
       </section>
     );
@@ -46,7 +46,7 @@ export default function StudentDayGradePanel({
 
   if (!data || data.sequencia.length === 0) {
     return (
-      <section className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-4 text-sm text-white/45">
+      <section className="rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-sm text-slate-400">
         Nenhuma modalidade na grade para {formatWorkoutDateLabel(classDate)}.
       </section>
     );
@@ -61,12 +61,12 @@ export default function StudentDayGradePanel({
   }
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+    <section className="rounded-2xl border border-slate-200 bg-white p-4">
       <div className="mb-3">
-        <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
+        <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
           Grade do dia
         </p>
-        <p className="m-0 mt-1 text-sm text-white/70">
+        <p className="m-0 mt-1 text-sm text-slate-600">
           {formatWorkoutDateLabel(classDate)} • {sequencia.length} horário(s)
         </p>
       </div>
@@ -82,17 +82,17 @@ export default function StudentDayGradePanel({
               className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition ${
                 selected
                   ? "border-[#5B7595] bg-[#5B7595]/10"
-                  : "border-white/10 bg-black/20 hover:border-white/20"
+                  : "border-slate-200 bg-slate-50 hover:border-slate-200"
               }`}
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-white/70">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-slate-600">
                 {index + 1}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold text-white">
+                <span className="block truncate text-sm font-semibold text-[#2E496C]">
                   {item.modalityName}
                 </span>
-                <span className="mt-0.5 block text-xs text-white/45">
+                <span className="mt-0.5 block text-xs text-slate-400">
                   {item.label}
                   {item.hasLesson ? " • Aula publicada" : " • Horário reservado"}
                 </span>

@@ -11,7 +11,7 @@ export default function PlaceholderPage({
 }: PlaceholderPageProps) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 px-6 text-center">
-      <h1 className="text-2xl font-semibold text-white">{title}</h1>
+      <h1 className="text-2xl font-semibold text-[#2E496C]">{title}</h1>
       <p className="mt-3 max-w-md text-sm text-zinc-400">{description}</p>
       <Link
         to="/"

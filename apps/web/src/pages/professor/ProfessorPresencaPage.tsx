@@ -215,25 +215,25 @@ export default function ProfessorPresencaPage() {
         <p className="mb-1 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#5B7595]">
           Professor
         </p>
-        <h1 className="m-0 text-2xl font-semibold text-white">Presença</h1>
-        <p className="mt-2 text-sm text-white/60">
+        <h1 className="m-0 text-2xl font-semibold text-[#2E496C]">Presença</h1>
+        <p className="mt-2 text-sm text-slate-500">
           Selecione a data, escolha a aula e valide os alunos que confirmaram frequência.
         </p>
       </header>
 
       {error ? (
-        <div className="mb-4 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <div className="mb-4 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       ) : null}
       {success ? (
-        <div className="mb-4 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+        <div className="mb-4 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">
           {success}
         </div>
       ) : null}
 
       {loading ? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
           Carregando presenças...
         </div>
       ) : (
@@ -246,27 +246,27 @@ export default function ProfessorPresencaPage() {
             onCreateDate={setSelectedDate}
           />
 
-          <section className="rounded-xl border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+          <section className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="m-0 text-base font-semibold text-white">
+                <h2 className="m-0 text-base font-semibold text-[#2E496C]">
                   Aulas — {formatWorkoutDateLabel(selectedDate)}
                 </h2>
-                <p className="mt-1 text-sm text-white/45">
+                <p className="mt-1 text-sm text-slate-400">
                   {aulasDoDia.length} aula{aulasDoDia.length === 1 ? "" : "s"} nesta data
                 </p>
               </div>
               <button
                 type="button"
                 onClick={load}
-                className="rounded-lg border border-white/15 px-3 py-2 text-sm text-white/70 transition hover:border-[#5B7595]/40 hover:text-white"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 transition hover:border-[#5B7595]/40 hover:text-[#2E496C]"
               >
                 Atualizar
               </button>
             </div>
 
             {aulasDoDia.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-white/10 p-8 text-center text-sm text-white/45">
+              <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">
                 Nenhuma aula publicada para esta data.
               </div>
             ) : (
@@ -277,7 +277,7 @@ export default function ProfessorPresencaPage() {
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                     !selectedLessonId
                       ? "bg-[#5B7595] text-white"
-                      : "border border-white/15 text-white/70 hover:border-[#5B7595]/40"
+                      : "border border-slate-200 text-slate-600 hover:border-[#5B7595]/40"
                   }`}
                 >
                   Todas
@@ -290,7 +290,7 @@ export default function ProfessorPresencaPage() {
                     className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                       selectedLessonId === aula.id
                         ? "bg-[#5B7595] text-white"
-                        : "border border-white/15 text-white/70 hover:border-[#5B7595]/40"
+                        : "border border-slate-200 text-slate-600 hover:border-[#5B7595]/40"
                     }`}
                   >
                     {aula.title}
@@ -304,16 +304,16 @@ export default function ProfessorPresencaPage() {
           </section>
 
           {selectedLesson ? (
-            <section className="rounded-xl border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+            <section className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
               <div className="mb-4">
-                <h2 className="m-0 text-base font-semibold text-white">Registrar presença manual</h2>
-                <p className="mt-1 text-sm text-white/45">
+                <h2 className="m-0 text-base font-semibold text-[#2E496C]">Registrar presença manual</h2>
+                <p className="mt-1 text-sm text-slate-400">
                   Para alunos que compareceram sem solicitar confirmação pelo app.
                 </p>
               </div>
 
               {alunosParaPresencaManual.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-white/45">
+                <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400">
                   {loadingLessonPresencas
                     ? "Carregando alunos..."
                     : "Todos os alunos elegíveis já possuem presença registrada ou pendente."}
@@ -321,13 +321,13 @@ export default function ProfessorPresencaPage() {
               ) : (
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                   <div className="min-w-0 flex-1">
-                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-white/50">
+                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Aluno
                     </label>
                     <select
                       value={manualStudentId}
                       onChange={(event) => setManualStudentId(event.target.value)}
-                      className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#5B7595]/60"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C] outline-none focus:border-[#5B7595]/60"
                     >
                       <option value="">Selecione o aluno</option>
                       {alunosParaPresencaManual.map((aluno) => (
@@ -349,15 +349,15 @@ export default function ProfessorPresencaPage() {
               )}
 
               {presencasConfirmadas.length > 0 ? (
-                <div className="mt-5 border-t border-white/10 pt-4">
-                  <p className="m-0 text-sm font-semibold text-white">
+                <div className="mt-5 border-t border-slate-200 pt-4">
+                  <p className="m-0 text-sm font-semibold text-[#2E496C]">
                     Presenças confirmadas nesta aula
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {presencasConfirmadas.map((item) => (
                       <span
                         key={item.id}
-                        className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200"
+                        className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700"
                       >
                         {item.student?.nomeCompleto ?? "Aluno"}
                       </span>
@@ -368,16 +368,16 @@ export default function ProfessorPresencaPage() {
             </section>
           ) : null}
 
-          <section className="rounded-xl border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+          <section className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
             <div className="mb-4">
-              <h2 className="m-0 text-base font-semibold text-white">Alunos que confirmaram</h2>
-              <p className="mt-1 text-sm text-white/45">
+              <h2 className="m-0 text-base font-semibold text-[#2E496C]">Alunos que confirmaram</h2>
+              <p className="mt-1 text-sm text-slate-400">
                 {presencasDoDia.length} confirmação(ões) aguardando validação
               </p>
             </div>
 
             {presencasDoDia.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-white/10 p-8 text-center text-sm text-white/45">
+              <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">
                 Nenhum aluno aguardando validação nesta data
                 {selectedLessonId ? " para a aula selecionada" : ""}.
               </div>
@@ -386,18 +386,18 @@ export default function ProfessorPresencaPage() {
                 {presencasDoDia.map((item) => (
                   <article
                     key={item.id}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/25 p-4"
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4"
                   >
                     <div>
-                      <p className="m-0 font-semibold text-white">
+                      <p className="m-0 font-semibold text-[#2E496C]">
                         {item.student?.nomeCompleto ?? "Aluno"}
                       </p>
-                      <p className="m-0 mt-1 text-sm text-white/50">
+                      <p className="m-0 mt-1 text-sm text-slate-500">
                         {item.lesson?.title ?? "Aula"}
                         {item.lesson?.modality?.name ? ` • ${item.lesson.modality.name}` : ""}
                       </p>
                       {item.studentConfirmedAt ? (
-                        <p className="m-0 mt-1 text-xs text-white/40">
+                        <p className="m-0 mt-1 text-xs text-[#2E496C]/40">
                           Confirmou em{" "}
                           {new Date(item.studentConfirmedAt).toLocaleString("pt-BR")}
                         </p>
@@ -408,7 +408,7 @@ export default function ProfessorPresencaPage() {
                         type="button"
                         disabled={validatingId === item.id}
                         onClick={() => handlePresencaAction(item.id, "validate")}
-                        className="rounded-xl bg-emerald-500/20 px-4 py-2 text-sm font-semibold text-emerald-200 ring-1 ring-emerald-400/30 disabled:opacity-60"
+                        className="rounded-xl bg-emerald-500/20 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-400/30 disabled:opacity-60"
                       >
                         {validatingId === item.id ? "..." : "Validar presença"}
                       </button>

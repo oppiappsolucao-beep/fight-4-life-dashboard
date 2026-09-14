@@ -147,19 +147,19 @@ export default function StudentTreinoBuilder({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error ? (
-        <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       ) : null}
 
-      <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-        <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4">
+        <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400">
           Criar treino • {formatWorkoutDateLabel(workoutDate)}
         </p>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="mt-3 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#5B7595]/60"
+          className="mt-3 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C] outline-none focus:border-[#5B7595]/60"
           required
         />
       </section>
@@ -173,7 +173,7 @@ export default function StudentTreinoBuilder({
             className={`rounded-xl px-2 py-3 text-left ${
               activePhase === phase.id
                 ? "bg-[#5B7595] text-white"
-                : "bg-white/[0.04] text-white/70"
+                : "bg-white text-slate-600"
             }`}
           >
             <p className="m-0 text-[0.65rem] font-semibold uppercase">{phase.label}</p>
@@ -194,7 +194,7 @@ export default function StudentTreinoBuilder({
               className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                 meioRegion === region.id
                   ? "bg-[#5B7595] text-white"
-                  : "border border-white/15 text-white/70"
+                  : "border border-slate-200 text-slate-600"
               }`}
             >
               {region.label}
@@ -203,20 +203,20 @@ export default function StudentTreinoBuilder({
         </div>
       ) : null}
 
-      <section className="rounded-2xl border border-white/10 bg-black/20 p-4">
-        <p className="m-0 mb-3 text-sm font-semibold text-white">Adicionar exercícios</p>
+      <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <p className="m-0 mb-3 text-sm font-semibold text-[#2E496C]">Adicionar exercícios</p>
         {loadingCatalog ? (
-          <p className="m-0 text-sm text-white/45">Carregando catálogo...</p>
+          <p className="m-0 text-sm text-slate-400">Carregando catálogo...</p>
         ) : (
           <div className="max-h-56 space-y-2 overflow-y-auto">
             {phaseCatalog.map((exercise) => (
               <div
                 key={exercise.id}
-                className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/25 px-3 py-2"
+                className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
               >
                 <div className="min-w-0">
-                  <p className="m-0 truncate text-sm font-medium text-white">{exercise.name}</p>
-                  <p className="m-0 text-xs text-white/45">
+                  <p className="m-0 truncate text-sm font-medium text-[#2E496C]">{exercise.name}</p>
+                  <p className="m-0 text-xs text-slate-400">
                     {exercise.muscleGroup} • {bodyRegionLabel(exercise.bodyRegion)}
                   </p>
                 </div>
@@ -235,7 +235,7 @@ export default function StudentTreinoBuilder({
 
       {phaseDrafts.length > 0 ? (
         <section className="space-y-2">
-          <p className="m-0 px-1 text-sm font-semibold text-white">
+          <p className="m-0 px-1 text-sm font-semibold text-[#2E496C]">
             Ficha — {WORKOUT_PHASES.find((phase) => phase.id === activePhase)?.label}
           </p>
           {phaseDrafts.map((draft) => {
@@ -244,10 +244,10 @@ export default function StudentTreinoBuilder({
             return (
               <div
                 key={`${draft.phase}-${draft.exerciseId}-${draft.order}`}
-                className="rounded-xl border border-white/10 bg-black/25 p-3"
+                className="rounded-xl border border-slate-200 bg-slate-50 p-3"
               >
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <p className="m-0 text-sm font-semibold text-white">
+                  <p className="m-0 text-sm font-semibold text-[#2E496C]">
                     {draft.order}. {exercise.name}
                   </p>
                   <button
@@ -259,7 +259,7 @@ export default function StudentTreinoBuilder({
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <label className="text-xs text-white/50">
+                  <label className="text-xs text-slate-500">
                     Séries
                     <input
                       type="number"
@@ -274,10 +274,10 @@ export default function StudentTreinoBuilder({
                           ),
                         )
                       }
-                      className="mt-1 w-full rounded-lg border border-white/10 bg-black/25 px-2 py-2 text-sm text-white"
+                      className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-sm text-[#2E496C]"
                     />
                   </label>
-                  <label className="text-xs text-white/50">
+                  <label className="text-xs text-slate-500">
                     Reps
                     <input
                       value={draft.reps}
@@ -290,7 +290,7 @@ export default function StudentTreinoBuilder({
                           ),
                         )
                       }
-                      className="mt-1 w-full rounded-lg border border-white/10 bg-black/25 px-2 py-2 text-sm text-white"
+                      className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-sm text-[#2E496C]"
                     />
                   </label>
                 </div>
@@ -305,7 +305,7 @@ export default function StudentTreinoBuilder({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-xl border border-white/10 px-4 py-3 text-sm text-white/70"
+            className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-600"
           >
             Cancelar
           </button>

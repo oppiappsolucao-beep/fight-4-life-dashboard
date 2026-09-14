@@ -48,21 +48,21 @@ export default function StudentVisaoGeralPage() {
       description="Acompanhe metas, treinos da semana e atalhos da sua jornada."
     >
       {loading ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
           Carregando...
         </div>
       ) : error ? (
-        <div className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <div className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       ) : overview ? (
         <div className="space-y-4 pb-8">
-          <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#5B7595]/20 via-black/30 to-black/40 p-5">
-            <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
+          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-[#5B7595]/20 via-black/30 to-black/40 p-5">
+            <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
               Bem-vindo de volta
             </p>
-            <h2 className="m-0 mt-1 text-2xl font-semibold text-white">{firstName}</h2>
-            <p className="m-0 mt-2 text-sm text-white/60">
+            <h2 className="m-0 mt-1 text-2xl font-semibold text-[#2E496C]">{firstName}</h2>
+            <p className="m-0 mt-2 text-sm text-slate-500">
               Plano: <strong>{overview.aluno.planoModalidade}</strong>
             </p>
           </section>
@@ -84,28 +84,28 @@ export default function StudentVisaoGeralPage() {
               return (
                 <div
                   key={meta.id}
-                  className="rounded-2xl border border-white/10 bg-white/[0.04] p-4"
+                  className="rounded-2xl border border-slate-200 bg-white p-4"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <p className="m-0 text-sm font-semibold text-white">{meta.label}</p>
+                    <p className="m-0 text-sm font-semibold text-[#2E496C]">{meta.label}</p>
                     {emBreve ? (
-                      <span className="rounded-full bg-white/10 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-white/55">
+                      <span className="rounded-full bg-white/10 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-slate-500">
                         Em breve
                       </span>
                     ) : onTrack ? (
-                      <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-emerald-300">
+                      <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-emerald-700">
                         No alvo
                       </span>
                     ) : null}
                   </div>
-                  <p className="m-0 mt-2 text-2xl font-semibold text-white">
+                  <p className="m-0 mt-2 text-2xl font-semibold text-[#2E496C]">
                     {meta.atual}
-                    <span className="text-base font-medium text-white/45">
+                    <span className="text-base font-medium text-slate-400">
                       {" "}
                       / {meta.meta} {meta.unidade}
                     </span>
                   </p>
-                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-black/30">
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
                     <div
                       className={`h-full rounded-full transition-all ${
                         emBreve ? "bg-white/20" : onTrack ? "bg-emerald-400" : "bg-[#5B7595]"
@@ -118,13 +118,13 @@ export default function StudentVisaoGeralPage() {
             })}
           </section>
 
-          <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-4">
+          <section className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
-                <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
+                <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   Treinos da semana
                 </p>
-                <p className="m-0 mt-1 text-sm text-white/60">
+                <p className="m-0 mt-1 text-sm text-slate-500">
                   {formatWorkoutDateLabel(overview.semana.start)} a{" "}
                   {formatWorkoutDateLabel(overview.semana.end)}
                 </p>
@@ -138,7 +138,7 @@ export default function StudentVisaoGeralPage() {
             </div>
 
             {overview.treinosSemana.length === 0 ? (
-              <p className="m-0 rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-white/45">
+              <p className="m-0 rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400">
                 Nenhum treino publicado para esta semana.
               </p>
             ) : (
@@ -147,18 +147,18 @@ export default function StudentVisaoGeralPage() {
                   <Link
                     key={item.id}
                     to={`/treino?date=${item.workoutDate}`}
-                    className="min-w-[5.5rem] shrink-0 snap-start rounded-2xl border border-white/10 bg-black/25 px-3 py-3 transition hover:border-[#5B7595]/40"
+                    className="min-w-[5.5rem] shrink-0 snap-start rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 transition hover:border-[#5B7595]/40"
                   >
-                    <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
+                    <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400">
                       {formatWorkoutWeekdayShort(item.workoutDate)}
                     </p>
-                    <p className="m-0 mt-1 text-2xl font-semibold leading-none text-white">
+                    <p className="m-0 mt-1 text-2xl font-semibold leading-none text-[#2E496C]">
                       {formatWorkoutDay(item.workoutDate)}
                     </p>
-                    <p className="m-0 mt-1 text-xs text-white/55">
+                    <p className="m-0 mt-1 text-xs text-slate-500">
                       {formatWorkoutMonthShort(item.workoutDate)}
                     </p>
-                    <p className="m-0 mt-2 truncate text-[0.65rem] text-white/40">
+                    <p className="m-0 mt-2 truncate text-[0.65rem] text-[#2E496C]/40">
                       {item.exerciseCount} ex.
                     </p>
                   </Link>
@@ -168,14 +168,14 @@ export default function StudentVisaoGeralPage() {
           </section>
 
           {overview.proximoTreino ? (
-            <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-              <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
+            <section className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
                 Próximo treino
               </p>
-              <h3 className="m-0 mt-2 text-lg font-semibold text-white">
+              <h3 className="m-0 mt-2 text-lg font-semibold text-[#2E496C]">
                 {overview.proximoTreino.title}
               </h3>
-              <p className="m-0 mt-1 text-sm text-white/55">
+              <p className="m-0 mt-1 text-sm text-slate-500">
                 {formatWorkoutDateLabel(overview.proximoTreino.workoutDate)} •{" "}
                 {overview.proximoTreino.exerciseCount} exercícios
               </p>
@@ -183,7 +183,7 @@ export default function StudentVisaoGeralPage() {
                 {WORKOUT_PHASES.map((phase) => (
                   <span
                     key={phase.id}
-                    className="rounded-full border border-white/10 px-2.5 py-1 text-[0.65rem] text-white/55"
+                    className="rounded-full border border-slate-200 px-2.5 py-1 text-[0.65rem] text-slate-500"
                   >
                     {phase.label}
                   </span>
@@ -214,7 +214,7 @@ function QuickLink({ to, label }: { to: string; label: string }) {
   return (
     <Link
       to={to}
-      className="rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-center text-sm font-semibold text-white/80 transition hover:border-[#5B7595]/40 hover:text-white"
+      className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-center text-sm font-semibold text-slate-700 transition hover:border-[#5B7595]/40 hover:text-[#2E496C]"
     >
       {label}
     </Link>

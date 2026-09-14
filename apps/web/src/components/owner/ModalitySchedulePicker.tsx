@@ -28,7 +28,7 @@ export default function ModalitySchedulePicker({
   if (available.length === 0) {
     return (
       <div className="rounded-xl border border-amber-400/20 bg-amber-500/5 px-3 py-2.5">
-        <p className="m-0 text-xs text-amber-200/90">
+        <p className="m-0 text-xs text-amber-800/90">
           Cadastre horários de <strong>{modality.name}</strong> em Modalidades antes de vincular o
           professor.
         </p>
@@ -37,11 +37,11 @@ export default function ModalitySchedulePicker({
   }
 
   return (
-    <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="m-0 text-sm font-semibold text-white">{modality.name}</p>
-          <p className="m-0 mt-0.5 text-xs text-white/45">
+          <p className="m-0 text-sm font-semibold text-[#2E496C]">{modality.name}</p>
+          <p className="m-0 mt-0.5 text-xs text-slate-400">
             {professorLabel
               ? `Professor: ${professorLabel}`
               : "Escolha os horários em que o professor atua"}
@@ -50,7 +50,7 @@ export default function ModalitySchedulePicker({
         <button
           type="button"
           onClick={() => onChange(allSelected ? [] : [...available])}
-          className="rounded-lg border border-white/15 px-2.5 py-1 text-[0.65rem] font-semibold text-white/75"
+          className="rounded-lg border border-slate-200 px-2.5 py-1 text-[0.65rem] font-semibold text-slate-600"
         >
           {allSelected ? "Limpar horários" : "Selecionar todos"}
         </button>
@@ -71,8 +71,8 @@ export default function ModalitySchedulePicker({
               }}
               className={`rounded-full px-2.5 py-1 text-[0.65rem] font-semibold transition ${
                 selected
-                  ? "bg-emerald-500/25 text-emerald-200 ring-1 ring-emerald-400/40"
-                  : "border border-white/15 text-white/65 hover:border-white/30"
+                  ? "bg-emerald-500/25 text-emerald-700 ring-1 ring-emerald-400/40"
+                  : "border border-slate-200 text-[#2E496C]/65 hover:border-[#5B7595]/40"
               }`}
             >
               {WEEKDAY_LABELS[slot.weekday].slice(0, 3)} {formatTimeRange(slot)}

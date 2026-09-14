@@ -70,7 +70,7 @@ export default function OwnerAlunosPage() {
       description="Visualize e gerencie todos os alunos cadastrados na academia."
     >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-white/50">
+        <p className="text-sm text-slate-500">
           {loading ? "Carregando…" : `${alunos.length} aluno(s) cadastrado(s)`}
         </p>
         <Link
@@ -82,14 +82,14 @@ export default function OwnerAlunosPage() {
       </div>
 
       {error ? (
-        <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       ) : null}
 
       {!loading && !error && alunos.length === 0 ? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.05] p-10 text-center backdrop-blur-sm">
-          <p className="text-sm text-white/50">
+        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center backdrop-blur-sm">
+          <p className="text-sm text-slate-500">
             Nenhum aluno cadastrado ainda.
           </p>
           <Link
@@ -102,10 +102,10 @@ export default function OwnerAlunosPage() {
       ) : null}
 
       {alunos.length > 0 ? (
-        <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-sm">
+        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white backdrop-blur-sm">
           <table className="min-w-full border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-white/10 text-[0.7rem] uppercase tracking-wide text-white/45">
+              <tr className="border-b border-slate-200 text-[0.7rem] uppercase tracking-wide text-slate-400">
                 <th className="px-4 py-3 font-medium">Aluno</th>
                 <th className="px-4 py-3 font-medium">CPF</th>
                 <th className="px-4 py-3 font-medium">Contato</th>
@@ -119,7 +119,7 @@ export default function OwnerAlunosPage() {
               {alunos.map((aluno) => (
                 <tr
                   key={aluno.id}
-                  className="border-b border-white/5 text-white/85 last:border-0"
+                  className="border-b border-slate-100 text-[#2E496C]/85 last:border-0"
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
@@ -130,36 +130,36 @@ export default function OwnerAlunosPage() {
                           className="h-9 w-9 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-white/60">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-slate-500">
                           {aluno.nomeCompleto.slice(0, 1).toUpperCase()}
                         </div>
                       )}
                       <div>
-                        <p className="m-0 font-medium text-white">
+                        <p className="m-0 font-medium text-[#2E496C]">
                           {aluno.nomeCompleto}
                         </p>
-                        <p className="m-0 text-xs text-white/45">{aluno.email}</p>
+                        <p className="m-0 text-xs text-slate-400">{aluno.email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-white/70">
+                  <td className="px-4 py-3 whitespace-nowrap text-slate-600">
                     {formatCpfDisplay(aluno.cpf)}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-white/70">
+                  <td className="px-4 py-3 whitespace-nowrap text-slate-600">
                     {aluno.telefone ? formatPhone(aluno.telefone) : "—"}
                   </td>
-                  <td className="px-4 py-3 text-white/70">
+                  <td className="px-4 py-3 text-slate-600">
                     {aluno.planoModalidade}
                     {aluno.formaPagamento ? (
-                      <span className="block text-xs text-white/40">
+                      <span className="block text-xs text-[#2E496C]/40">
                         {aluno.formaPagamento}
                       </span>
                     ) : null}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-white/70">
+                  <td className="px-4 py-3 whitespace-nowrap text-slate-600">
                     {aluno.dataInicio}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-white/70">
+                  <td className="px-4 py-3 whitespace-nowrap text-slate-600">
                     Dia {aluno.diaVencimento}
                   </td>
                   <td className="px-4 py-3">
@@ -167,7 +167,7 @@ export default function OwnerAlunosPage() {
                       <button
                         type="button"
                         onClick={() => setEditingId(aluno.id)}
-                        className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-medium text-white/75 transition hover:border-[#5B7595]/50 hover:text-white"
+                        className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-[#5B7595]/50 hover:text-[#2E496C]"
                       >
                         Editar
                       </button>

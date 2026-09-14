@@ -283,21 +283,21 @@ export default function OwnerAlunoEditModal({
 
   return (
     <div className="fixed inset-0 z-50 flex overflow-y-auto bg-black/75 p-4 backdrop-blur-sm">
-      <div className="relative my-auto w-full max-w-3xl overflow-hidden rounded-2xl border border-white/10 bg-[#12161c] shadow-2xl">
-        <div className="sticky top-0 z-10 border-b border-white/10 bg-[#12161c]/95 px-5 py-4 backdrop-blur md:px-6">
+      <div className="relative my-auto w-full max-w-3xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <div className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 px-5 py-4 backdrop-blur md:px-6">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#5B7595]">
                 Editar aluno
               </p>
-              <h2 className="m-0 mt-1 truncate text-lg font-semibold text-white">
+              <h2 className="m-0 mt-1 truncate text-lg font-semibold text-[#2E496C]">
                 {form?.nomeCompleto ?? "Carregando..."}
               </h2>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-white/70 hover:text-white"
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:text-[#2E496C]"
             >
               Fechar
             </button>
@@ -319,10 +319,10 @@ export default function OwnerAlunoEditModal({
                       className={[
                         "flex w-full items-center justify-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold transition sm:text-sm",
                         active
-                          ? "bg-[#5B7595]/20 text-white ring-1 ring-[#5B7595]/45"
+                          ? "bg-[#5B7595]/20 text-[#2E496C] ring-1 ring-[#5B7595]/45"
                           : done
-                            ? "bg-white/[0.05] text-white/80"
-                            : "bg-white/[0.03] text-white/45",
+                            ? "bg-white text-slate-700"
+                            : "bg-white text-slate-400",
                       ].join(" ")}
                     >
                       <span
@@ -330,7 +330,7 @@ export default function OwnerAlunoEditModal({
                           "flex h-5 w-5 items-center justify-center rounded-full text-[0.65rem]",
                           active || done
                             ? "bg-[#5B7595] text-white"
-                            : "bg-white/10 text-white/50",
+                            : "bg-white/10 text-slate-500",
                         ].join(" ")}
                       >
                         {done ? "✓" : item.id + 1}
@@ -346,11 +346,11 @@ export default function OwnerAlunoEditModal({
 
         <div className="max-h-[calc(100vh-10rem)] overflow-y-auto p-5 md:p-6">
           {loading ? (
-            <p className="py-10 text-center text-sm text-white/50">Carregando...</p>
+            <p className="py-10 text-center text-sm text-slate-500">Carregando...</p>
           ) : null}
 
           {error ? (
-            <div className="mb-4 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            <div className="mb-4 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           ) : null}
@@ -596,8 +596,8 @@ export default function OwnerAlunoEditModal({
               {step === 3 ? (
                 <div className="space-y-3">
                   <div>
-                    <p className="m-0 text-sm font-semibold text-white">Foto do aluno</p>
-                    <p className="m-0 mt-1 text-sm text-white/55">
+                    <p className="m-0 text-sm font-semibold text-[#2E496C]">Foto do aluno</p>
+                    <p className="m-0 mt-1 text-sm text-slate-500">
                       Opcional. Tire uma nova foto ou escolha da galeria.
                     </p>
                   </div>
@@ -608,11 +608,11 @@ export default function OwnerAlunoEditModal({
                 </div>
               ) : null}
 
-              <div className="flex flex-wrap justify-between gap-3 border-t border-white/10 pt-5">
+              <div className="flex flex-wrap justify-between gap-3 border-t border-slate-200 pt-5">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-lg border border-white/15 px-4 py-2.5 text-sm text-white/70"
+                  className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm text-slate-600"
                 >
                   Cancelar
                 </button>
@@ -624,7 +624,7 @@ export default function OwnerAlunoEditModal({
                         setError("");
                         setStep((value) => value - 1);
                       }}
-                      className="rounded-lg border border-white/15 px-4 py-2.5 text-sm text-white/75"
+                      className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm text-slate-600"
                     >
                       Voltar
                     </button>
@@ -671,14 +671,14 @@ function Field({
 }) {
   return (
     <label className={span ? "md:col-span-2" : ""}>
-      <span className="mb-1.5 block text-xs font-medium text-white/55">{label}</span>
+      <span className="mb-1.5 block text-xs font-medium text-slate-500">{label}</span>
       {children}
     </label>
   );
 }
 
 const controlClass =
-  "w-full rounded-xl border border-white/12 bg-[#0d1117] px-3.5 py-2.5 text-sm text-white outline-none transition focus:border-[#5B7595]/70 focus:ring-2 focus:ring-[#5B7595]/20 [color-scheme:dark]";
+  "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-[#2E496C] outline-none transition focus:border-[#5B7595]/70 focus:ring-2 focus:ring-[#5B7595]/20 [color-scheme:light]";
 
 function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={controlClass} />;

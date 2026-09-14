@@ -62,7 +62,7 @@ export default function OwnerStudentPhotoField({
   return (
     <>
       <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-        <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-black/30">
+        <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
           {preview ? (
             <img src={preview} alt="Preview" className="h-full w-full object-cover" />
           ) : (
@@ -82,7 +82,7 @@ export default function OwnerStudentPhotoField({
             <button
               type="button"
               onClick={() => galleryInputRef.current?.click()}
-              className="rounded-lg border border-white/15 px-4 py-2 text-[0.75rem] font-medium text-white/70 transition hover:border-[#5B7595]/40 hover:text-white"
+              className="rounded-lg border border-slate-200 px-4 py-2 text-[0.75rem] font-medium text-slate-600 transition hover:border-[#5B7595]/40 hover:text-[#2E496C]"
             >
               Escolher da galeria
             </button>
@@ -90,13 +90,13 @@ export default function OwnerStudentPhotoField({
               <button
                 type="button"
                 onClick={handleRemovePhoto}
-                className="rounded-lg border border-white/15 px-4 py-2 text-[0.75rem] font-medium text-white/50 transition hover:border-red-400/40 hover:text-red-300"
+                className="rounded-lg border border-slate-200 px-4 py-2 text-[0.75rem] font-medium text-slate-500 transition hover:border-red-400/40 hover:text-red-300"
               >
                 Remover
               </button>
             )}
           </div>
-          <p className="text-[0.65rem] text-white/40">
+          <p className="text-[0.65rem] text-[#2E496C]/40">
             No celular, a câmera abre direto. No computador da academia, use{" "}
             <strong>http://localhost:5173</strong> para webcam ao vivo.
           </p>
@@ -225,18 +225,18 @@ function CameraCaptureModal({
 
   return createPortal(
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#1a1a1a] shadow-2xl">
-        <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+      <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-[#1a1a1a] shadow-2xl">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
           <div>
             <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#5B7595]">
               Câmera
             </p>
-            <h3 className="m-0 text-base font-semibold text-white">Tirar foto do aluno</h3>
+            <h3 className="m-0 text-base font-semibold text-[#2E496C]">Tirar foto do aluno</h3>
           </div>
           <button
             type="button"
             onClick={handleClose}
-            className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-white/70 hover:text-white"
+            className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:text-[#2E496C]"
           >
             Fechar
           </button>
@@ -254,7 +254,7 @@ function CameraCaptureModal({
                   </p>
                   <p className="mt-2 mb-0 text-[0.8rem] leading-relaxed text-amber-100/80">
                     No <strong>computador da academia</strong>, abra{" "}
-                    <code className="text-emerald-300">http://localhost:5173</code> para usar a
+                    <code className="text-emerald-700">http://localhost:5173</code> para usar a
                     webcam.
                   </p>
                 </>
@@ -269,7 +269,7 @@ function CameraCaptureModal({
               {error === "unknown" && <>Não foi possível acessar a câmera. Tente recarregar a página.</>}
             </div>
           ) : (
-            <div className="overflow-hidden rounded-xl border border-white/10 bg-black">
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-black">
               <video
                 ref={videoRef}
                 autoPlay
@@ -281,7 +281,7 @@ function CameraCaptureModal({
           )}
 
           {!error && (
-            <p className="mt-3 text-center text-[0.65rem] text-white/45">
+            <p className="mt-3 text-center text-[0.65rem] text-slate-400">
               Posicione o rosto do aluno e clique em capturar. Autorize a câmera se solicitado.
             </p>
           )}
@@ -290,7 +290,7 @@ function CameraCaptureModal({
             <button
               type="button"
               onClick={handleClose}
-              className="rounded-lg border border-white/15 px-4 py-2 text-[0.75rem] font-medium text-white/70 hover:text-white"
+              className="rounded-lg border border-slate-200 px-4 py-2 text-[0.75rem] font-medium text-slate-600 hover:text-[#2E496C]"
             >
               Cancelar
             </button>
@@ -321,7 +321,7 @@ function UserPlaceholderIcon() {
       fill="none"
       stroke="currentColor"
       strokeWidth="1.5"
-      className="text-white/30"
+      className="text-[#2E496C]/30"
     >
       <circle cx="12" cy="8" r="4" />
       <path d="M5 20c1.5-4 13.5-4 14 0" />

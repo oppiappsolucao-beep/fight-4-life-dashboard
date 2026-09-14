@@ -209,7 +209,7 @@ export default function StudentLoginPage() {
 
       <div className="relative z-10 mx-auto flex min-h-dvh max-w-md flex-col px-4 py-6 sm:px-6">
         <header className="flex justify-center pt-2 sm:pt-4">
-          <OppiLogo size="md" />
+          <OppiLogo size="md" onDark />
         </header>
 
         <main className="flex flex-1 flex-col items-center justify-center py-8">

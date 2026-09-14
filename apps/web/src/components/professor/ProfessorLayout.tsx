@@ -6,8 +6,6 @@ import { canAccessProfessor } from "../../lib/access";
 import DashboardShell from "../DashboardShell";
 import ProfessorSidebar from "./ProfessorSidebar";
 
-const GYM_BG = "/hero-gym.png?v=3";
-
 export default function ProfessorLayout() {
   const { isAuthenticated, loading, user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -15,7 +13,7 @@ export default function ProfessorLayout() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-white/50">
+      <div className="flex min-h-screen items-center justify-center text-sm text-slate-500">
         Carregando...
       </div>
     );
@@ -26,14 +24,7 @@ export default function ProfessorLayout() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${GYM_BG})` }}
-      />
-      <div className="absolute inset-0 bg-black/65" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/40 to-black/55" />
-
+    <div className="relative min-h-screen overflow-x-hidden bg-[#eef2f6]">
       <DashboardShell
         title="Professor"
         menuOpen={menuOpen}

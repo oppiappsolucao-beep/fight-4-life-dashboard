@@ -383,11 +383,11 @@ export default function StudentTreinoPage() {
       }
     >
       {contextLoading ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
           Carregando...
         </div>
       ) : accessModalidades.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/50">
+        <div className="rounded-2xl border border-dashed border-slate-200 p-10 text-center text-sm text-slate-500">
           Nenhuma modalidade liberada no seu plano ({planoModalidade || "—"}).
         </div>
       ) : (
@@ -402,7 +402,7 @@ export default function StudentTreinoPage() {
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                     selectedModalityId === item.id
                       ? "bg-[#5B7595] text-white"
-                      : "border border-white/15 text-white/70"
+                      : "border border-slate-200 text-slate-600"
                   }`}
                 >
                   {item.name}
@@ -422,11 +422,11 @@ export default function StudentTreinoPage() {
           ) : (
             <>
               {loading ? (
-                <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+                <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
                   Carregando treinos...
                 </div>
               ) : error && !treino && mode === "execute" && treinos.length === 0 ? (
-                <div className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                <div className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
                   {error}
                 </div>
               ) : (
@@ -443,13 +443,13 @@ export default function StudentTreinoPage() {
           />
 
           {error && treino ? (
-            <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           ) : null}
 
           {loadingTreino ? (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+            <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
               Carregando ficha...
             </div>
           ) : mode === "build" && session?.id ? (
@@ -462,19 +462,19 @@ export default function StudentTreinoPage() {
             />
           ) : !treino ? (
             <>
-              <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] via-black/30 to-black/40 p-4 sm:p-5">
-                <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
+              <section className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-white/[0.06] via-black/30 to-black/40 p-4 sm:p-5">
+                <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   {formatWorkoutDateLabel(selectedDate)}
                 </p>
-                <h2 className="m-0 mt-1 text-xl font-semibold text-white sm:text-2xl">
+                <h2 className="m-0 mt-1 text-xl font-semibold text-[#2E496C] sm:text-2xl">
                   Sem treino cadastrado
                 </h2>
-                <p className="m-0 mt-2 text-sm text-white/55">
+                <p className="m-0 mt-2 text-sm text-slate-500">
                   Escolha uma etapa abaixo ou monte seu treino para este dia.
                 </p>
               </section>
 
-              <section className="sticky top-14 z-20 -mx-1 rounded-2xl border border-white/10 bg-black/80 p-2 backdrop-blur-md md:top-0">
+              <section className="sticky top-14 z-20 -mx-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm md:top-0">
                 <div className="grid grid-cols-3 gap-2">
                   {WORKOUT_PHASES.map((phase) => {
                     const selected = activePhase === phase.id;
@@ -486,7 +486,7 @@ export default function StudentTreinoPage() {
                         className={`rounded-xl px-2 py-3 text-left transition ${
                           selected
                             ? "bg-[#5B7595] text-white shadow-[0_8px_24px_rgba(91,117,149,0.25)]"
-                            : "bg-white/[0.04] text-white/70 hover:bg-white/[0.07]"
+                            : "bg-white text-slate-600 hover:bg-white/[0.07]"
                         }`}
                       >
                         <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide">
@@ -499,8 +499,8 @@ export default function StudentTreinoPage() {
                 </div>
               </section>
 
-              <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center">
-                <p className="m-0 text-sm text-white/55">
+              <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center">
+                <p className="m-0 text-sm text-slate-500">
                   Nenhum exercício em{" "}
                   {WORKOUT_PHASES.find((phase) => phase.id === activePhase)?.label.toLowerCase()}{" "}
                   para {formatWorkoutDateLabel(selectedDate)}.
@@ -516,18 +516,18 @@ export default function StudentTreinoPage() {
             </>
           ) : (
             <>
-              <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#5B7595]/20 via-black/30 to-black/40 p-4 sm:p-5">
+              <section className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-[#5B7595]/20 via-black/30 to-black/40 p-4 sm:p-5">
                 <div className="flex items-start gap-4">
                   <ProgressRing percent={completionPercent} status={completionStatus} />
                   <div className="min-w-0 flex-1">
-                    <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
+                    <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
                       {formatWorkoutDateLabel(treino.workoutDate)}
                       {treino.source === "STUDENT" ? " • Meu treino" : " • Professor"}
                     </p>
-                    <h2 className="m-0 mt-1 truncate text-xl font-semibold text-white sm:text-2xl">
+                    <h2 className="m-0 mt-1 truncate text-xl font-semibold text-[#2E496C] sm:text-2xl">
                       {treino.title}
                     </h2>
-                    <p className="m-0 mt-2 text-sm text-white/60">
+                    <p className="m-0 mt-2 text-sm text-slate-500">
                       {setProgress?.completedSets ?? 0}/{setProgress?.totalSets ?? 0} séries •{" "}
                       {setProgress?.completedExercises ?? 0}/{setProgress?.totalExercises ?? 0}{" "}
                       exercícios
@@ -537,7 +537,7 @@ export default function StudentTreinoPage() {
                       <button
                         type="button"
                         onClick={() => setMode("build")}
-                        className="mt-3 rounded-full border border-white/15 px-3 py-1.5 text-xs font-semibold text-white/75"
+                        className="mt-3 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600"
                       >
                         Editar treino
                       </button>
@@ -546,7 +546,7 @@ export default function StudentTreinoPage() {
                 </div>
               </section>
 
-              <section className="sticky top-14 z-20 -mx-1 rounded-2xl border border-white/10 bg-black/80 p-2 backdrop-blur-md md:top-0">
+              <section className="sticky top-14 z-20 -mx-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm md:top-0">
                 <div className="grid grid-cols-3 gap-2">
                   {WORKOUT_PHASES.map((phase) => {
                     const total = phaseCounts?.[phase.id] ?? 0;
@@ -572,7 +572,7 @@ export default function StudentTreinoPage() {
                             ? "bg-[#5B7595] text-white shadow-[0_8px_24px_rgba(91,117,149,0.25)]"
                             : disabled
                               ? "cursor-not-allowed bg-white/[0.02] text-white/25"
-                              : "bg-white/[0.04] text-white/70 hover:bg-white/[0.07]"
+                              : "bg-white text-slate-600 hover:bg-white/[0.07]"
                         }`}
                       >
                         <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide">
@@ -589,7 +589,7 @@ export default function StudentTreinoPage() {
 
               <section className="space-y-4">
                 {activePhaseItems.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-white/45">
+                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">
                     Nenhum exercício nesta etapa.
                   </div>
                 ) : activePhase === "MEIO" && activeMeioGroups && activeMeioGroups.length > 0 ? (

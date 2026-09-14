@@ -97,21 +97,21 @@ export default function StudentGaleriaPage() {
       description="Assista às aulas publicadas pelo professor da sua modalidade."
     >
       {loading ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
           Carregando...
         </div>
       ) : error ? (
-        <div className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <div className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       ) : gallery ? (
         <div className="space-y-4 pb-8">
-          <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-[#5B7595]/20 via-black/30 to-black/40 p-4">
-            <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
+          <section className="rounded-2xl border border-slate-200 bg-gradient-to-br from-[#5B7595]/20 via-black/30 to-black/40 p-4">
+            <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
               Seu plano
             </p>
-            <h2 className="m-0 mt-1 text-xl font-semibold text-white">{gallery.planoModalidade}</h2>
-            <p className="m-0 mt-2 text-sm text-white/60">
+            <h2 className="m-0 mt-1 text-xl font-semibold text-[#2E496C]">{gallery.planoModalidade}</h2>
+            <p className="m-0 mt-2 text-sm text-slate-500">
               Modalidade: <strong>{selectedModalityName}</strong>
             </p>
           </section>
@@ -130,7 +130,7 @@ export default function StudentGaleriaPage() {
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                     selectedModalityId === item.id
                       ? "bg-[#5B7595] text-white"
-                      : "border border-white/15 text-white/70"
+                      : "border border-slate-200 text-slate-600"
                   }`}
                 >
                   {item.name} ({item.lessonCount})
@@ -140,20 +140,20 @@ export default function StudentGaleriaPage() {
           ) : null}
 
           {gallery.aulas.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/50">
+            <div className="rounded-2xl border border-dashed border-slate-200 p-10 text-center text-sm text-slate-500">
               Nenhuma aula publicada para {selectedModalityName} ainda.
             </div>
           ) : (
             <>
               {activeLesson ? (
                 loadingLessonId === activeLesson.id && !activeLesson.videoUrl ? (
-                  <div className="rounded-2xl border border-white/10 bg-black/25 p-10 text-center text-sm text-white/50">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-10 text-center text-sm text-slate-500">
                     Carregando vídeo...
                   </div>
                 ) : activeLesson.videoUrl ? (
                   <ModalityVideoPlayer video={lessonToVideoCard(activeLesson)} />
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/45">
+                  <div className="rounded-2xl border border-dashed border-slate-200 p-10 text-center text-sm text-slate-400">
                     Vídeo indisponível para esta aula.
                   </div>
                 )

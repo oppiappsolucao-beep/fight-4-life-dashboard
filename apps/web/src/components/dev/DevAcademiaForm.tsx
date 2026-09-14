@@ -169,10 +169,10 @@ export default function DevAcademiaForm() {
                   placeholder="Ex: fourarbjj"
                   className="sm:max-w-xs"
                 />
-                <span className="text-sm text-white/50">.{primaryAppBaseDomain()}</span>
+                <span className="text-sm text-slate-500">.{primaryAppBaseDomain()}</span>
               </div>
             </Field>
-            <p className="mt-2 text-xs text-white/55">
+            <p className="mt-2 text-xs text-slate-500">
               URL:{" "}
               <span className="font-medium text-[#A9BBD5]">
                 {form.subdominio.trim()
@@ -317,7 +317,7 @@ export default function DevAcademiaForm() {
               onChange={(e) => updateField("emailLogin", e.target.value)}
               placeholder="dono@academia.com.br"
             />
-            <p className="mt-1 text-[0.65rem] text-white/40">
+            <p className="mt-1 text-[0.65rem] text-[#2E496C]/40">
               Este e-mail será o usuário master do sistema para o dono da academia.
             </p>
           </Field>
@@ -391,25 +391,25 @@ export default function DevAcademiaForm() {
       )}
 
       {success && (
-        <div className="rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+        <div className="rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">
           Academia <strong>{success.tenantName}</strong> cadastrada com sucesso!
           URL:{" "}
           <a
             href={success.url}
             target="_blank"
             rel="noreferrer"
-            className="font-semibold underline hover:text-emerald-200"
+            className="font-semibold underline hover:text-emerald-700"
           >
             {success.url}
           </a>
           . O dono entra em <strong>{success.url}/dono/login</strong> com{" "}
           <strong>{success.emailLogin}</strong>.
           {" "}
-          <Link to="/dev/donos-academias" className="font-semibold underline hover:text-emerald-200">
+          <Link to="/dev/donos-academias" className="font-semibold underline hover:text-emerald-700">
             Ver em Donos de Academias
           </Link>
           {" · "}
-          <Link to="/dev/contas-a-receber" className="font-semibold underline hover:text-emerald-200">
+          <Link to="/dev/contas-a-receber" className="font-semibold underline hover:text-emerald-700">
             Ver em Contas a Receber
           </Link>
         </div>
@@ -430,7 +430,7 @@ export default function DevAcademiaForm() {
             setSuccess(null);
             setError("");
           }}
-          className="rounded-lg border border-white/15 px-6 py-2.5 text-[0.75rem] font-medium text-white/70 transition hover:border-[#5B7595]/40 hover:text-white"
+          className="rounded-lg border border-slate-200 px-6 py-2.5 text-[0.75rem] font-medium text-slate-600 transition hover:border-[#5B7595]/40 hover:text-[#2E496C]"
         >
           Limpar formulário
         </button>
@@ -447,8 +447,8 @@ function FormSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-white/10 bg-white/[0.05] p-4 backdrop-blur-sm sm:p-5 md:p-6">
-      <h2 className="mb-5 break-words border-b border-white/10 pb-3 text-[0.8rem] font-bold uppercase tracking-wide text-white">
+    <section className="rounded-xl border border-slate-200 bg-white p-4 backdrop-blur-sm sm:p-5 md:p-6">
+      <h2 className="mb-5 break-words border-b border-slate-200 pb-3 text-[0.8rem] font-bold uppercase tracking-wide text-[#2E496C]">
         {title}
       </h2>
       {children}
@@ -469,7 +469,7 @@ function Field({
 }) {
   return (
     <label className={`block ${className}`}>
-      <span className="mb-1.5 block text-[0.65rem] font-semibold uppercase tracking-[0.06rem] text-white/75">
+      <span className="mb-1.5 block text-[0.65rem] font-semibold uppercase tracking-[0.06rem] text-slate-600">
         {label}
         {required && <span className="text-[#5B7595]"> *</span>}
       </span>
@@ -479,7 +479,7 @@ function Field({
 }
 
 const inputClass =
-  "w-full rounded-xl border border-white/12 bg-[#0d1117] px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#5B7595]/70 focus:ring-2 focus:ring-[#5B7595]/20 [color-scheme:dark]";
+  "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-[#2E496C] outline-none transition placeholder:text-slate-400 focus:border-[#5B7595]/70 focus:ring-2 focus:ring-[#5B7595]/20 [color-scheme:light]";
 
 function Input({
   className = "",

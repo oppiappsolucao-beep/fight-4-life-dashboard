@@ -8,8 +8,8 @@
   --color-navy: #2E496C;
   --color-navy-mid: #5B7595;
   --color-sky: #D9E0E8;
-  --color-surface: #243a58;
-  --color-border: #5B7595;
+  --color-surface: #ffffff;
+  --color-border: #D9E0E8;
   --color-black: #000000;
   --font-sans: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
@@ -29,10 +29,7 @@ body,
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background:
-    radial-gradient(circle at 12% 18%, rgba(91, 117, 149, 0.28), transparent 22rem),
-    radial-gradient(circle at 88% 78%, rgba(169, 187, 213, 0.12), transparent 26rem),
-    linear-gradient(165deg, #1a2c44 0%, #2E496C 42%, #243a58 100%);
-  color: #f4f8fc;
+  background: #eef2f6;
+  color: #2e496c;
   -webkit-text-size-adjust: 100%;
 }

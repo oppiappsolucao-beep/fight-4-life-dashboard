@@ -2,6 +2,7 @@ interface OppiLogoProps {
   size?: "sm" | "md" | "lg";
   showText?: boolean;
   className?: string;
+  onDark?: boolean;
 }
 
 const sizes = {
@@ -14,6 +15,7 @@ export default function OppiLogo({
   size = "md",
   showText = true,
   className = "",
+  onDark = false,
 }: OppiLogoProps) {
   const s = sizes[size];
 
@@ -26,7 +28,9 @@ export default function OppiLogo({
       />
       {showText ? (
         <div
-          className={`${s.text} font-extrabold lowercase tracking-[0.04rem] text-white`}
+          className={`${s.text} font-extrabold lowercase tracking-[0.04rem] ${
+            onDark ? "text-white" : "text-[#2E496C]"
+          }`}
         >
           use
           <span className="text-[#5B7595]">mint</span>

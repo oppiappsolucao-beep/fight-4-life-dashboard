@@ -375,7 +375,7 @@ export default function OwnerCadastroTreinoPage() {
       }
     >
       {loading ? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
           Carregando alunos e exercícios...
         </div>
       ) : !isMusculacao ? (
@@ -391,7 +391,7 @@ export default function OwnerCadastroTreinoPage() {
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                     selectedModalityId === item.id
                       ? "bg-[#5B7595] text-white"
-                      : "border border-white/15 text-white/70"
+                      : "border border-slate-200 text-slate-600"
                   }`}
                 >
                   {item.name}
@@ -415,25 +415,25 @@ export default function OwnerCadastroTreinoPage() {
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
           {error ? (
-            <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           ) : null}
           {success ? (
-            <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+            <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">
               {success}
             </div>
           ) : null}
 
-          <section className="grid gap-4 rounded-xl border border-white/10 bg-white/[0.04] p-4 sm:grid-cols-2 lg:grid-cols-5 sm:p-5">
+          <section className="grid gap-4 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-5 sm:p-5">
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-white/50">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Aluno
               </label>
               <select
                 value={selectedStudentId}
                 onChange={(e) => setSelectedStudentId(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#5B7595]/60"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C] outline-none focus:border-[#5B7595]/60"
               >
                 {alunos.map((aluno) => (
                   <option key={aluno.id} value={aluno.id} className="bg-zinc-900">
@@ -443,13 +443,13 @@ export default function OwnerCadastroTreinoPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-white/50">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Modalidade
               </label>
               <select
                 value={selectedModalityId}
                 onChange={(event) => setSelectedModalityId(event.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#5B7595]/60"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C] outline-none focus:border-[#5B7595]/60"
                 required
               >
                 {modalidades.length === 0 ? (
@@ -464,25 +464,25 @@ export default function OwnerCadastroTreinoPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-white/50">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Data do treino
               </label>
               <input
                 type="date"
                 value={workoutDate}
                 onChange={(e) => setWorkoutDate(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#5B7595]/60"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C] outline-none focus:border-[#5B7595]/60"
                 required
               />
             </div>
             <div className="lg:col-span-2">
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-white/50">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Título
               </label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#5B7595]/60"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C] outline-none focus:border-[#5B7595]/60"
                 required
               />
             </div>
@@ -490,17 +490,17 @@ export default function OwnerCadastroTreinoPage() {
               <button
                 type="button"
                 onClick={() => setNotesOpen((current) => !current)}
-                className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-2.5 text-left text-sm text-white/70 transition hover:border-white/20"
+                className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-left text-sm text-slate-600 transition hover:border-slate-200"
               >
                 <span>Observações do treino</span>
-                <span className="text-white/40">{notesOpen ? "−" : "+"}</span>
+                <span className="text-[#2E496C]/40">{notesOpen ? "−" : "+"}</span>
               </button>
               {notesOpen ? (
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={2}
-                  className="mt-2 w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#5B7595]/60"
+                  className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C] outline-none focus:border-[#5B7595]/60"
                 />
               ) : null}
             </div>
@@ -509,12 +509,12 @@ export default function OwnerCadastroTreinoPage() {
                 <button
                   type="button"
                   onClick={() => setSavedDatesOpen((current) => !current)}
-                  className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-2.5 text-left text-sm text-white/70 transition hover:border-white/20"
+                  className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-left text-sm text-slate-600 transition hover:border-slate-200"
                 >
                   <span>
                     Treinos cadastrados ({savedTreinos.length})
                   </span>
-                  <span className="text-white/40">{savedDatesOpen ? "−" : "+"}</span>
+                  <span className="text-[#2E496C]/40">{savedDatesOpen ? "−" : "+"}</span>
                 </button>
                 {savedDatesOpen ? (
                   <div className="mt-2 flex flex-wrap gap-2">
@@ -529,7 +529,7 @@ export default function OwnerCadastroTreinoPage() {
                         className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
                           item.workoutDate === workoutDate
                             ? "bg-[#5B7595] text-white"
-                            : "border border-white/15 text-white/70 hover:border-[#5B7595]/40"
+                            : "border border-slate-200 text-slate-600 hover:border-[#5B7595]/40"
                         }`}
                       >
                         {formatWorkoutDateLabel(item.workoutDate)} • {item.title}
@@ -541,13 +541,13 @@ export default function OwnerCadastroTreinoPage() {
             ) : null}
           </section>
 
-          <section className="rounded-xl border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+          <section className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="m-0 text-base font-semibold text-white">
+                <h2 className="m-0 text-base font-semibold text-[#2E496C]">
                   {selectedStudent?.nomeCompleto ?? "Aluno"} • {formatWorkoutDateLabel(workoutDate)}
                 </h2>
-                <p className="mt-1 text-sm text-white/45">
+                <p className="mt-1 text-sm text-slate-400">
                   {loadingTreino
                     ? "Carregando..."
                     : `${drafts.length} exercício(s) na ficha`}
@@ -564,7 +564,7 @@ export default function OwnerCadastroTreinoPage() {
 
             {!activePhase ? (
               <>
-                <p className="mb-3 text-sm text-white/45">
+                <p className="mb-3 text-sm text-slate-400">
                   Clique em uma etapa para montar ou revisar os exercícios.
                 </p>
                 <div className="grid gap-3 sm:grid-cols-3">
@@ -575,13 +575,13 @@ export default function OwnerCadastroTreinoPage() {
                         key={phase.id}
                         type="button"
                         onClick={() => openPhaseEditor(phase.id)}
-                        className="rounded-xl border border-white/10 bg-black/20 px-4 py-4 text-left transition hover:border-[#5B7595]/40 hover:bg-[#5B7595]/10"
+                        className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-left transition hover:border-[#5B7595]/40 hover:bg-[#5B7595]/10"
                       >
                         <p className="m-0 text-xs font-semibold uppercase tracking-wide text-[#5B7595]">
                           {phase.label}
                         </p>
-                        <p className="m-0 mt-2 text-sm text-white/55">{phase.description}</p>
-                        <p className="m-0 mt-3 text-xs font-medium text-white/70">
+                        <p className="m-0 mt-2 text-sm text-slate-500">{phase.description}</p>
+                        <p className="m-0 mt-3 text-xs font-medium text-slate-600">
                           {count} exercício{count === 1 ? "" : "s"}
                         </p>
                       </button>
@@ -589,7 +589,7 @@ export default function OwnerCadastroTreinoPage() {
                   })}
                 </div>
                 {drafts.length === 0 ? (
-                  <div className="mt-4 rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-white/45">
+                  <div className="mt-4 rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400">
                     Comece escolhendo <strong>Começo</strong>, <strong>Meio</strong> ou{" "}
                     <strong>Fim</strong>.
                   </div>
@@ -601,7 +601,7 @@ export default function OwnerCadastroTreinoPage() {
                   <button
                     type="button"
                     onClick={closePhaseEditor}
-                    className="rounded-lg border border-white/10 px-3 py-2 text-sm text-white/70 transition hover:text-white"
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 transition hover:text-[#2E496C]"
                   >
                     ← Voltar às etapas
                   </button>
@@ -611,8 +611,8 @@ export default function OwnerCadastroTreinoPage() {
                 </div>
 
                 {activePhase === "MEIO" ? (
-                  <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/50">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Tipo do meio do treino
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -628,7 +628,7 @@ export default function OwnerCadastroTreinoPage() {
                           className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                             meioRegion === region.id
                               ? "bg-[#5B7595] text-white"
-                              : "border border-white/15 text-white/70 hover:border-[#5B7595]/40"
+                              : "border border-slate-200 text-slate-600 hover:border-[#5B7595]/40"
                           }`}
                         >
                           {region.label}
@@ -639,11 +639,11 @@ export default function OwnerCadastroTreinoPage() {
                 ) : null}
 
                 <div className="grid gap-4 xl:grid-cols-2">
-                  <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
                       <div>
-                        <h3 className="m-0 text-sm font-semibold text-white">Catálogo</h3>
-                        <p className="mt-1 text-xs text-white/45">
+                        <h3 className="m-0 text-sm font-semibold text-[#2E496C]">Catálogo</h3>
+                        <p className="mt-1 text-xs text-slate-400">
                           {filteredCatalog.length} opção(ões) para {activePhaseMeta?.label}
                           {activePhase === "MEIO" ? ` — ${meioRegionMeta?.label?.toLowerCase()}` : ""}
                         </p>
@@ -652,7 +652,7 @@ export default function OwnerCadastroTreinoPage() {
                         <select
                           value={muscleFilter}
                           onChange={(e) => setMuscleFilter(e.target.value)}
-                          className="rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none"
+                          className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#2E496C] outline-none"
                         >
                           {muscleGroups.map((group) => (
                             <option key={group} value={group} className="bg-zinc-900">
@@ -664,21 +664,21 @@ export default function OwnerCadastroTreinoPage() {
                           value={search}
                           onChange={(e) => setSearch(e.target.value)}
                           placeholder="Buscar"
-                          className="min-w-[120px] rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none"
+                          className="min-w-[120px] rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#2E496C] outline-none"
                         />
                       </div>
                     </div>
 
                     <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
                       {filteredCatalog.length === 0 ? (
-                        <div className="rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-white/45">
+                        <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400">
                           Nenhum exercício disponível nesta etapa.
                         </div>
                       ) : (
                         filteredCatalog.map((exercise) => (
                           <div
                             key={exercise.id}
-                            className="flex gap-3 rounded-lg border border-white/10 bg-black/25 p-3"
+                            className="flex gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3"
                           >
                             {exercise.imageUrl ? (
                               <img
@@ -689,8 +689,8 @@ export default function OwnerCadastroTreinoPage() {
                               />
                             ) : null}
                             <div className="min-w-0 flex-1">
-                              <p className="m-0 text-sm font-semibold text-white">{exercise.name}</p>
-                              <p className="mt-0.5 text-xs text-white/45">
+                              <p className="m-0 text-sm font-semibold text-[#2E496C]">{exercise.name}</p>
+                              <p className="mt-0.5 text-xs text-slate-400">
                                 {exercise.muscleGroup}
                                 {exercise.bodyRegion
                                   ? ` • ${bodyRegionLabel(exercise.bodyRegion)}`
@@ -710,17 +710,17 @@ export default function OwnerCadastroTreinoPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-                    <h3 className="m-0 text-sm font-semibold text-white">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <h3 className="m-0 text-sm font-semibold text-[#2E496C]">
                       Ficha — {activePhaseMeta?.label}
                     </h3>
-                    <p className="mt-1 text-xs text-white/45">
+                    <p className="mt-1 text-xs text-slate-400">
                       {groupedDrafts[activePhase].length} exercício
                       {groupedDrafts[activePhase].length === 1 ? "" : "s"} nesta etapa
                     </p>
 
                     {groupedDrafts[activePhase].length === 0 ? (
-                      <div className="mt-3 rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-white/45">
+                      <div className="mt-3 rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400">
                         Adicione exercícios pelo catálogo ao lado.
                       </div>
                     ) : (
@@ -734,7 +734,7 @@ export default function OwnerCadastroTreinoPage() {
                           return (
                             <div
                               key={draftKey}
-                              className="rounded-lg border border-white/10 bg-black/25"
+                              className="rounded-lg border border-slate-200 bg-slate-50"
                             >
                               <div className="flex items-center gap-2 p-3">
                                 <button
@@ -744,10 +744,10 @@ export default function OwnerCadastroTreinoPage() {
                                   }
                                   className="min-w-0 flex-1 text-left"
                                 >
-                                  <p className="m-0 truncate text-sm font-semibold text-white">
+                                  <p className="m-0 truncate text-sm font-semibold text-[#2E496C]">
                                     {draft.order}. {exercise.name}
                                   </p>
-                                  <p className="m-0 mt-0.5 text-xs text-white/45">
+                                  <p className="m-0 mt-0.5 text-xs text-slate-400">
                                     {draft.sets}x{draft.reps}
                                     {draft.load ? ` • ${draft.load}` : ""}
                                   </p>
@@ -756,14 +756,14 @@ export default function OwnerCadastroTreinoPage() {
                                   <button
                                     type="button"
                                     onClick={() => moveDraft(draft.phase, draft.order, -1)}
-                                    className="rounded border border-white/10 px-2 py-1 text-xs text-white/60"
+                                    className="rounded border border-slate-200 px-2 py-1 text-xs text-slate-500"
                                   >
                                     ↑
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => moveDraft(draft.phase, draft.order, 1)}
-                                    className="rounded border border-white/10 px-2 py-1 text-xs text-white/60"
+                                    className="rounded border border-slate-200 px-2 py-1 text-xs text-slate-500"
                                   >
                                     ↓
                                   </button>
@@ -781,9 +781,9 @@ export default function OwnerCadastroTreinoPage() {
                               </div>
 
                               {expanded ? (
-                                <div className="border-t border-white/10 px-3 pb-3 pt-2">
+                                <div className="border-t border-slate-200 px-3 pb-3 pt-2">
                                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                                    <label className="text-xs text-white/50">
+                                    <label className="text-xs text-slate-500">
                                       Séries
                                       <input
                                         type="number"
@@ -794,30 +794,30 @@ export default function OwnerCadastroTreinoPage() {
                                             sets: Number(e.target.value) || 1,
                                           })
                                         }
-                                        className="mt-1 w-full rounded-lg border border-white/10 bg-black/25 px-2 py-2 text-sm text-white"
+                                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-sm text-[#2E496C]"
                                       />
                                     </label>
-                                    <label className="text-xs text-white/50">
+                                    <label className="text-xs text-slate-500">
                                       Reps
                                       <input
                                         value={draft.reps}
                                         onChange={(e) =>
                                           updateDraft(draftKey, { reps: e.target.value })
                                         }
-                                        className="mt-1 w-full rounded-lg border border-white/10 bg-black/25 px-2 py-2 text-sm text-white"
+                                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-sm text-[#2E496C]"
                                       />
                                     </label>
-                                    <label className="text-xs text-white/50">
+                                    <label className="text-xs text-slate-500">
                                       Carga
                                       <input
                                         value={draft.load}
                                         onChange={(e) =>
                                           updateDraft(draftKey, { load: e.target.value })
                                         }
-                                        className="mt-1 w-full rounded-lg border border-white/10 bg-black/25 px-2 py-2 text-sm text-white"
+                                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-sm text-[#2E496C]"
                                       />
                                     </label>
-                                    <label className="text-xs text-white/50">
+                                    <label className="text-xs text-slate-500">
                                       Descanso
                                       <input
                                         type="number"
@@ -828,7 +828,7 @@ export default function OwnerCadastroTreinoPage() {
                                             restSeconds: Number(e.target.value) || 0,
                                           })
                                         }
-                                        className="mt-1 w-full rounded-lg border border-white/10 bg-black/25 px-2 py-2 text-sm text-white"
+                                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-sm text-[#2E496C]"
                                       />
                                     </label>
                                   </div>

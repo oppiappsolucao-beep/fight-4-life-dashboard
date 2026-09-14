@@ -93,37 +93,37 @@ export default function ProfessorAulasPage() {
         <p className="mb-1 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#5B7595]">
           Professor
         </p>
-        <h1 className="m-0 text-2xl font-semibold text-white">Minhas Aulas</h1>
-        <p className="mt-2 text-sm text-white/60">
+        <h1 className="m-0 text-2xl font-semibold text-[#2E496C]">Minhas Aulas</h1>
+        <p className="mt-2 text-sm text-slate-500">
           Cadastre a data, título, descrição e vídeo do movimento para suas modalidades liberadas.
         </p>
       </header>
 
       {loading ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
           Carregando...
         </div>
       ) : modalidades.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-white/50">
+        <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
           Nenhuma modalidade liberada. Peça ao dono da academia para liberar seu acesso.
         </div>
       ) : (
         <div className="grid gap-5 xl:grid-cols-[1fr_0.95fr]">
           <section className="space-y-3">
-            <p className="m-0 text-sm font-semibold text-white">Aulas publicadas ({aulas.length})</p>
+            <p className="m-0 text-sm font-semibold text-[#2E496C]">Aulas publicadas ({aulas.length})</p>
             {aulas.map((aula) => (
-              <article key={aula.id} className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                <p className="m-0 font-semibold text-white">{aula.title}</p>
-                <p className="m-0 mt-1 text-sm text-white/50">
+              <article key={aula.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className="m-0 font-semibold text-[#2E496C]">{aula.title}</p>
+                <p className="m-0 mt-1 text-sm text-slate-500">
                   {aula.modality?.name} • {aula.classDate} • {aula.attendanceCount} presença(s)
                 </p>
                 {aula.description ? (
-                  <p className="m-0 mt-2 text-sm text-white/60">{aula.description}</p>
+                  <p className="m-0 mt-2 text-sm text-slate-500">{aula.description}</p>
                 ) : null}
                 <button
                   type="button"
                   onClick={() => loadPresencas(aula.id)}
-                  className="mt-3 rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/75"
+                  className="mt-3 rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
                 >
                   Ver presenças
                 </button>
@@ -131,16 +131,16 @@ export default function ProfessorAulasPage() {
             ))}
 
             {selectedLessonId ? (
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                <p className="m-0 text-sm font-semibold text-white">Alunos presentes</p>
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <p className="m-0 text-sm font-semibold text-[#2E496C]">Alunos presentes</p>
                 {presencas.length === 0 ? (
-                  <p className="m-0 mt-2 text-sm text-white/45">Nenhuma presença marcada ainda.</p>
+                  <p className="m-0 mt-2 text-sm text-slate-400">Nenhuma presença marcada ainda.</p>
                 ) : (
                   <ul className="m-0 mt-3 space-y-2 p-0">
                     {presencas.map((item) => (
                       <li
                         key={item.id}
-                        className="list-none rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-white/75"
+                        className="list-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600"
                       >
                         {item.student.nomeCompleto}
                       </li>
@@ -151,15 +151,15 @@ export default function ProfessorAulasPage() {
             ) : null}
           </section>
 
-          <form onSubmit={handleSubmit} className="rounded-2xl border border-white/10 bg-black/20 p-4">
-            <p className="m-0 text-sm font-semibold text-white">Nova aula</p>
+          <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="m-0 text-sm font-semibold text-[#2E496C]">Nova aula</p>
             <div className="mt-4 space-y-3">
-              <label className="block text-xs text-white/50">
+              <label className="block text-xs text-slate-500">
                 Modalidade
                 <select
                   value={form.modalityId}
                   onChange={(e) => setForm((c) => ({ ...c, modalityId: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
                   required
                 >
                   {modalidades.map((item) => (
@@ -169,55 +169,55 @@ export default function ProfessorAulasPage() {
                   ))}
                 </select>
               </label>
-              <label className="block text-xs text-white/50">
+              <label className="block text-xs text-slate-500">
                 Data da aula
                 <input
                   type="date"
                   value={form.classDate}
                   onChange={(e) => setForm((c) => ({ ...c, classDate: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
                   required
                 />
               </label>
-              <label className="block text-xs text-white/50">
+              <label className="block text-xs text-slate-500">
                 Título
                 <input
                   value={form.title}
                   onChange={(e) => setForm((c) => ({ ...c, title: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
                   required
                 />
               </label>
-              <label className="block text-xs text-white/50">
+              <label className="block text-xs text-slate-500">
                 Descrição
                 <textarea
                   value={form.description}
                   onChange={(e) => setForm((c) => ({ ...c, description: e.target.value }))}
                   rows={3}
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
                 />
               </label>
               <LessonVideoUploadField onChange={(videoUrl) => setForm((c) => ({ ...c, videoUrl }))} />
-              <label className="block text-xs text-white/50">
+              <label className="block text-xs text-slate-500">
                 URL do vídeo (opcional se fez upload)
                 <input
                   value={form.videoUrl.startsWith("data:") ? "" : form.videoUrl}
                   onChange={(e) => setForm((c) => ({ ...c, videoUrl: e.target.value }))}
                   placeholder="https://youtube.com/..."
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
                 />
               </label>
               {form.videoUrl.startsWith("data:") ? (
-                <p className="m-0 text-xs text-emerald-300">Vídeo carregado para envio.</p>
+                <p className="m-0 text-xs text-emerald-700">Vídeo carregado para envio.</p>
               ) : null}
             </div>
             {error ? (
-              <div className="mt-3 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+              <div className="mt-3 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-700">
                 {error}
               </div>
             ) : null}
             {success ? (
-              <div className="mt-3 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+              <div className="mt-3 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700">
                 {success}
               </div>
             ) : null}

@@ -36,7 +36,7 @@ export default function ModalityCards() {
       {MODALIDADES.map((item) => (
         <article
           key={item.titulo}
-          className="group relative min-h-[118px] overflow-hidden rounded-xl border border-white/8 transition duration-200 hover:border-white/20"
+          className="group relative min-h-[118px] overflow-hidden rounded-xl border border-white/8 transition duration-200 hover:border-slate-200"
           style={{
             backgroundImage: item.image
               ? `url(${item.image}), ${item.fallback}`

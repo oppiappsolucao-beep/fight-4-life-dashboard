@@ -802,18 +802,18 @@ export default function ProfessorCadastroTreinoPage() {
         <p className="mb-1 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#5B7595]">
           Professor
         </p>
-        <h1 className="m-0 text-2xl font-semibold text-white">Cadastro de Treino</h1>
-        <p className="mt-2 text-sm text-white/60">
+        <h1 className="m-0 text-2xl font-semibold text-[#2E496C]">Cadastro de Treino</h1>
+        <p className="mt-2 text-sm text-slate-500">
           Monte a ficha ou a aula do dia nas modalidades liberadas para você.
         </p>
       </header>
 
       {loading ? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
           Carregando alunos e exercícios...
         </div>
       ) : modalidades.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-white/50">
+        <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
           Nenhuma modalidade liberada. Peça ao dono da academia para liberar seu acesso.
         </div>
       ) : (
@@ -822,12 +822,12 @@ export default function ProfessorCadastroTreinoPage() {
           className="space-y-6"
         >
           {error ? (
-            <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           ) : null}
           {success ? (
-            <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+            <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">
               {success}
             </div>
           ) : null}
@@ -851,16 +851,16 @@ export default function ProfessorCadastroTreinoPage() {
             }
           />
 
-          <section className="grid gap-4 rounded-xl border border-white/10 bg-white/[0.04] p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5">
+          <section className="grid gap-4 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5">
             {isMusculacao ? (
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-white/50">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Aluno
               </label>
               <select
                 value={selectedStudentId}
                 onChange={(e) => setSelectedStudentId(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#5B7595]/60"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C] outline-none focus:border-[#5B7595]/60"
               >
                 {alunosForModality.length === 0 ? (
                   <option value="">Nenhum aluno nesta modalidade</option>
@@ -875,13 +875,13 @@ export default function ProfessorCadastroTreinoPage() {
             </div>
             ) : null}
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-white/50">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Modalidade
               </label>
               <select
                 value={selectedModalityId}
                 onChange={(event) => setSelectedModalityId(event.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#5B7595]/60"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C] outline-none focus:border-[#5B7595]/60"
                 required
               >
                 {modalidades.length === 0 ? (
@@ -896,13 +896,13 @@ export default function ProfessorCadastroTreinoPage() {
               </select>
             </div>
             <div className={isMusculacao ? "" : "sm:col-span-2 lg:col-span-2"}>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-white/50">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Título
               </label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#5B7595]/60"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C] outline-none focus:border-[#5B7595]/60"
                 required
               />
             </div>
@@ -910,23 +910,23 @@ export default function ProfessorCadastroTreinoPage() {
               <button
                 type="button"
                 onClick={() => setNotesOpen((current) => !current)}
-                className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-2.5 text-left text-sm text-white/70 transition hover:border-white/20"
+                className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-left text-sm text-slate-600 transition hover:border-slate-200"
               >
                 <span>Observações do treino</span>
-                <span className="text-white/40">{notesOpen ? "−" : "+"}</span>
+                <span className="text-[#2E496C]/40">{notesOpen ? "−" : "+"}</span>
               </button>
               {notesOpen ? (
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={2}
-                  className="mt-2 w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#5B7595]/60"
+                  className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C] outline-none focus:border-[#5B7595]/60"
                 />
               ) : null}
             </div>
             {!isMusculacao ? (
               <div className="sm:col-span-2 lg:col-span-5">
-                <p className="m-0 text-xs font-semibold uppercase tracking-wide text-white/50">
+                <p className="m-0 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Horário da grade — {WEEKDAY_LABELS[weekday]}
                 </p>
                 {availableSlots.length > 0 ? (
@@ -941,8 +941,8 @@ export default function ProfessorCadastroTreinoPage() {
                           onClick={() => selectSlot(slot)}
                           className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                             selected
-                              ? "bg-emerald-500/25 text-emerald-200 ring-1 ring-emerald-400/40"
-                              : "border border-white/15 text-white/65 hover:border-emerald-400/30"
+                              ? "bg-emerald-500/25 text-emerald-700 ring-1 ring-emerald-400/40"
+                              : "border border-slate-200 text-[#2E496C]/65 hover:border-emerald-400/30"
                           }`}
                         >
                           {formatTimeRange(slot)}
@@ -951,7 +951,7 @@ export default function ProfessorCadastroTreinoPage() {
                     })}
                   </div>
                 ) : (
-                  <p className="mt-2 text-sm text-amber-200/80">
+                  <p className="mt-2 text-sm text-amber-800/80">
                     Nenhum horário cadastrado para este dia. Peça ao dono da academia para montar a
                     grade.
                   </p>
@@ -960,15 +960,15 @@ export default function ProfessorCadastroTreinoPage() {
             ) : null}
           </section>
 
-          <section className="rounded-xl border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+          <section className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="m-0 text-base font-semibold text-white">
+                <h2 className="m-0 text-base font-semibold text-[#2E496C]">
                   {isMusculacao
                     ? `${selectedStudent?.nomeCompleto ?? "Aluno"} • ${formatWorkoutDateLabel(workoutDate)}`
                     : `${selectedModality?.name ?? "Modalidade"} • ${formatWorkoutDateLabel(workoutDate)}`}
                 </h2>
-                <p className="mt-1 text-sm text-white/45">
+                <p className="mt-1 text-sm text-slate-400">
                   {loadingTreino && isMusculacao
                     ? "Carregando..."
                     : isMusculacao
@@ -993,7 +993,7 @@ export default function ProfessorCadastroTreinoPage() {
             {isMusculacao ? (
             !activePhase ? (
               <>
-                <p className="mb-3 text-sm text-white/45">
+                <p className="mb-3 text-sm text-slate-400">
                   Clique em uma etapa para montar ou revisar os exercícios.
                 </p>
                 <div className="grid gap-3 sm:grid-cols-3">
@@ -1004,13 +1004,13 @@ export default function ProfessorCadastroTreinoPage() {
                         key={phase.id}
                         type="button"
                         onClick={() => openPhaseEditor(phase.id)}
-                        className="rounded-xl border border-white/10 bg-black/20 px-4 py-4 text-left transition hover:border-[#5B7595]/40 hover:bg-[#5B7595]/10"
+                        className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-left transition hover:border-[#5B7595]/40 hover:bg-[#5B7595]/10"
                       >
                         <p className="m-0 text-xs font-semibold uppercase tracking-wide text-[#5B7595]">
                           {phase.label}
                         </p>
-                        <p className="m-0 mt-2 text-sm text-white/55">{phase.description}</p>
-                        <p className="m-0 mt-3 text-xs font-medium text-white/70">
+                        <p className="m-0 mt-2 text-sm text-slate-500">{phase.description}</p>
+                        <p className="m-0 mt-3 text-xs font-medium text-slate-600">
                           {count} exercício{count === 1 ? "" : "s"}
                         </p>
                       </button>
@@ -1018,7 +1018,7 @@ export default function ProfessorCadastroTreinoPage() {
                   })}
                 </div>
                 {drafts.length === 0 ? (
-                  <div className="mt-4 rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-white/45">
+                  <div className="mt-4 rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400">
                     Comece escolhendo <strong>Começo</strong>, <strong>Meio</strong> ou{" "}
                     <strong>Fim</strong>.
                   </div>
@@ -1030,7 +1030,7 @@ export default function ProfessorCadastroTreinoPage() {
                   <button
                     type="button"
                     onClick={closePhaseEditor}
-                    className="rounded-lg border border-white/10 px-3 py-2 text-sm text-white/70 transition hover:text-white"
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 transition hover:text-[#2E496C]"
                   >
                     ← Voltar às etapas
                   </button>
@@ -1040,8 +1040,8 @@ export default function ProfessorCadastroTreinoPage() {
                 </div>
 
                 {activePhase === "MEIO" ? (
-                  <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/50">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Tipo do meio do treino
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -1057,7 +1057,7 @@ export default function ProfessorCadastroTreinoPage() {
                           className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                             meioRegion === region.id
                               ? "bg-[#5B7595] text-white"
-                              : "border border-white/15 text-white/70 hover:border-[#5B7595]/40"
+                              : "border border-slate-200 text-slate-600 hover:border-[#5B7595]/40"
                           }`}
                         >
                           {region.label}
@@ -1068,11 +1068,11 @@ export default function ProfessorCadastroTreinoPage() {
                 ) : null}
 
                 <div className="grid gap-4 xl:grid-cols-2">
-                  <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
                       <div>
-                        <h3 className="m-0 text-sm font-semibold text-white">Catálogo</h3>
-                        <p className="mt-1 text-xs text-white/45">
+                        <h3 className="m-0 text-sm font-semibold text-[#2E496C]">Catálogo</h3>
+                        <p className="mt-1 text-xs text-slate-400">
                           {filteredCatalog.length} opção(ões) para {activePhaseMeta?.label}
                           {activePhase === "MEIO" ? ` — ${meioRegionMeta?.label?.toLowerCase()}` : ""}
                         </p>
@@ -1081,7 +1081,7 @@ export default function ProfessorCadastroTreinoPage() {
                         <select
                           value={muscleFilter}
                           onChange={(e) => setMuscleFilter(e.target.value)}
-                          className="rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none"
+                          className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#2E496C] outline-none"
                         >
                           {muscleGroups.map((group) => (
                             <option key={group} value={group} className="bg-zinc-900">
@@ -1093,21 +1093,21 @@ export default function ProfessorCadastroTreinoPage() {
                           value={search}
                           onChange={(e) => setSearch(e.target.value)}
                           placeholder="Buscar"
-                          className="min-w-[120px] rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none"
+                          className="min-w-[120px] rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#2E496C] outline-none"
                         />
                       </div>
                     </div>
 
                     <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
                       {filteredCatalog.length === 0 ? (
-                        <div className="rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-white/45">
+                        <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400">
                           Nenhum exercício disponível nesta etapa.
                         </div>
                       ) : (
                         filteredCatalog.map((exercise) => (
                           <div
                             key={exercise.id}
-                            className="flex gap-3 rounded-lg border border-white/10 bg-black/25 p-3"
+                            className="flex gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3"
                           >
                             {exercise.imageUrl ? (
                               <img
@@ -1118,8 +1118,8 @@ export default function ProfessorCadastroTreinoPage() {
                               />
                             ) : null}
                             <div className="min-w-0 flex-1">
-                              <p className="m-0 text-sm font-semibold text-white">{exercise.name}</p>
-                              <p className="mt-0.5 text-xs text-white/45">
+                              <p className="m-0 text-sm font-semibold text-[#2E496C]">{exercise.name}</p>
+                              <p className="mt-0.5 text-xs text-slate-400">
                                 {exercise.muscleGroup}
                                 {exercise.bodyRegion
                                   ? ` • ${bodyRegionLabel(exercise.bodyRegion)}`
@@ -1139,17 +1139,17 @@ export default function ProfessorCadastroTreinoPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-                    <h3 className="m-0 text-sm font-semibold text-white">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <h3 className="m-0 text-sm font-semibold text-[#2E496C]">
                       Ficha — {activePhaseMeta?.label}
                     </h3>
-                    <p className="mt-1 text-xs text-white/45">
+                    <p className="mt-1 text-xs text-slate-400">
                       {groupedDrafts[activePhase].length} exercício
                       {groupedDrafts[activePhase].length === 1 ? "" : "s"} nesta etapa
                     </p>
 
                     {groupedDrafts[activePhase].length === 0 ? (
-                      <div className="mt-3 rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-white/45">
+                      <div className="mt-3 rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400">
                         Adicione exercícios pelo catálogo ao lado.
                       </div>
                     ) : (
@@ -1163,7 +1163,7 @@ export default function ProfessorCadastroTreinoPage() {
                           return (
                             <div
                               key={draftKey}
-                              className="rounded-lg border border-white/10 bg-black/25"
+                              className="rounded-lg border border-slate-200 bg-slate-50"
                             >
                               <div className="flex items-center gap-2 p-3">
                                 <button
@@ -1173,10 +1173,10 @@ export default function ProfessorCadastroTreinoPage() {
                                   }
                                   className="min-w-0 flex-1 text-left"
                                 >
-                                  <p className="m-0 truncate text-sm font-semibold text-white">
+                                  <p className="m-0 truncate text-sm font-semibold text-[#2E496C]">
                                     {draft.order}. {exercise.name}
                                   </p>
-                                  <p className="m-0 mt-0.5 text-xs text-white/45">
+                                  <p className="m-0 mt-0.5 text-xs text-slate-400">
                                     {draft.sets}x{draft.reps}
                                     {draft.load ? ` • ${draft.load}` : ""}
                                   </p>
@@ -1185,14 +1185,14 @@ export default function ProfessorCadastroTreinoPage() {
                                   <button
                                     type="button"
                                     onClick={() => moveDraft(draft.phase, draft.order, -1)}
-                                    className="rounded border border-white/10 px-2 py-1 text-xs text-white/60"
+                                    className="rounded border border-slate-200 px-2 py-1 text-xs text-slate-500"
                                   >
                                     ↑
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => moveDraft(draft.phase, draft.order, 1)}
-                                    className="rounded border border-white/10 px-2 py-1 text-xs text-white/60"
+                                    className="rounded border border-slate-200 px-2 py-1 text-xs text-slate-500"
                                   >
                                     ↓
                                   </button>
@@ -1210,9 +1210,9 @@ export default function ProfessorCadastroTreinoPage() {
                               </div>
 
                               {expanded ? (
-                                <div className="border-t border-white/10 px-3 pb-3 pt-2">
+                                <div className="border-t border-slate-200 px-3 pb-3 pt-2">
                                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                                    <label className="text-xs text-white/50">
+                                    <label className="text-xs text-slate-500">
                                       Séries
                                       <input
                                         type="number"
@@ -1223,30 +1223,30 @@ export default function ProfessorCadastroTreinoPage() {
                                             sets: Number(e.target.value) || 1,
                                           })
                                         }
-                                        className="mt-1 w-full rounded-lg border border-white/10 bg-black/25 px-2 py-2 text-sm text-white"
+                                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-sm text-[#2E496C]"
                                       />
                                     </label>
-                                    <label className="text-xs text-white/50">
+                                    <label className="text-xs text-slate-500">
                                       Reps
                                       <input
                                         value={draft.reps}
                                         onChange={(e) =>
                                           updateDraft(draftKey, { reps: e.target.value })
                                         }
-                                        className="mt-1 w-full rounded-lg border border-white/10 bg-black/25 px-2 py-2 text-sm text-white"
+                                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-sm text-[#2E496C]"
                                       />
                                     </label>
-                                    <label className="text-xs text-white/50">
+                                    <label className="text-xs text-slate-500">
                                       Carga
                                       <input
                                         value={draft.load}
                                         onChange={(e) =>
                                           updateDraft(draftKey, { load: e.target.value })
                                         }
-                                        className="mt-1 w-full rounded-lg border border-white/10 bg-black/25 px-2 py-2 text-sm text-white"
+                                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-sm text-[#2E496C]"
                                       />
                                     </label>
-                                    <label className="text-xs text-white/50">
+                                    <label className="text-xs text-slate-500">
                                       Descanso
                                       <input
                                         type="number"
@@ -1257,7 +1257,7 @@ export default function ProfessorCadastroTreinoPage() {
                                             restSeconds: Number(e.target.value) || 0,
                                           })
                                         }
-                                        className="mt-1 w-full rounded-lg border border-white/10 bg-black/25 px-2 py-2 text-sm text-white"
+                                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-sm text-[#2E496C]"
                                       />
                                     </label>
                                   </div>
@@ -1274,7 +1274,7 @@ export default function ProfessorCadastroTreinoPage() {
             )
             ) : !activeLessonPhase ? (
               <>
-                <p className="mb-3 text-sm text-white/45">
+                <p className="mb-3 text-sm text-slate-400">
                   Clique em uma etapa para montar o aquecimento ou publicar a aula em vídeo.
                 </p>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -1290,13 +1290,13 @@ export default function ProfessorCadastroTreinoPage() {
                         key={phase.id}
                         type="button"
                         onClick={() => openLessonPhaseEditor(phase.id)}
-                        className="rounded-xl border border-white/10 bg-black/20 px-4 py-4 text-left transition hover:border-[#5B7595]/40 hover:bg-[#5B7595]/10"
+                        className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-left transition hover:border-[#5B7595]/40 hover:bg-[#5B7595]/10"
                       >
                         <p className="m-0 text-xs font-semibold uppercase tracking-wide text-[#5B7595]">
                           {phase.label}
                         </p>
-                        <p className="m-0 mt-2 text-sm text-white/55">{phase.description}</p>
-                        <p className="m-0 mt-3 text-xs font-medium text-white/70">
+                        <p className="m-0 mt-2 text-sm text-slate-500">{phase.description}</p>
+                        <p className="m-0 mt-3 text-xs font-medium text-slate-600">
                           {phase.id === "AQUECIMENTO"
                             ? `${count} movimento${count === 1 ? "" : "s"}`
                             : count > 0
@@ -1314,7 +1314,7 @@ export default function ProfessorCadastroTreinoPage() {
                   <button
                     type="button"
                     onClick={closeLessonPhaseEditor}
-                    className="rounded-lg border border-white/10 px-3 py-2 text-sm text-white/70 transition hover:text-white"
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 transition hover:text-[#2E496C]"
                   >
                     ← Voltar às etapas
                   </button>
@@ -1322,13 +1322,13 @@ export default function ProfessorCadastroTreinoPage() {
                     Editando: Aula
                   </span>
                 </div>
-                <label className="block text-xs text-white/50">
+                <label className="block text-xs text-slate-500">
                   Descrição da aula
                   <textarea
                     value={lessonDescription}
                     onChange={(event) => setLessonDescription(event.target.value)}
                     rows={3}
-                    className="mt-1 w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
                   />
                 </label>
                 <LessonVideoUploadField onChange={setVideoUrl} />
@@ -1336,7 +1336,7 @@ export default function ProfessorCadastroTreinoPage() {
                   value={videoUrl.startsWith("data:") ? "" : videoUrl}
                   onChange={(event) => setVideoUrl(event.target.value)}
                   placeholder="URL do vídeo (opcional se fez upload)"
-                  className="w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
                 />
               </div>
             ) : (
@@ -1345,7 +1345,7 @@ export default function ProfessorCadastroTreinoPage() {
                   <button
                     type="button"
                     onClick={closeLessonPhaseEditor}
-                    className="rounded-lg border border-white/10 px-3 py-2 text-sm text-white/70 transition hover:text-white"
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 transition hover:text-[#2E496C]"
                   >
                     ← Voltar às etapas
                   </button>
@@ -1354,8 +1354,8 @@ export default function ProfessorCadastroTreinoPage() {
                   </span>
                 </div>
                 <div className="grid gap-4 xl:grid-cols-2">
-                  <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-                    <h3 className="m-0 text-sm font-semibold text-white">Catálogo</h3>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <h3 className="m-0 text-sm font-semibold text-[#2E496C]">Catálogo</h3>
                     <div className="mt-3 flex gap-2">
                       <input
                         value={customMovementName}
@@ -1367,7 +1367,7 @@ export default function ProfessorCadastroTreinoPage() {
                           }
                         }}
                         placeholder="Nome do movimento"
-                        className="min-w-0 flex-1 rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white"
+                        className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#2E496C]"
                       />
                       <button
                         type="button"
@@ -1382,12 +1382,12 @@ export default function ProfessorCadastroTreinoPage() {
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
                       placeholder="Buscar exercício"
-                      className="mt-3 w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm text-white"
+                      className="mt-3 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-[#2E496C]"
                     />
                     <div className="mt-3 max-h-72 space-y-3 overflow-y-auto">
                       {filteredSavedCatalog.length > 0 ? (
                         <div className="space-y-2">
-                          <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
+                          <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400">
                             Meus movimentos
                           </p>
                           {filteredSavedCatalog.map((entry) => {
@@ -1398,9 +1398,9 @@ export default function ProfessorCadastroTreinoPage() {
                             return (
                               <div
                                 key={entry.id}
-                                className="flex items-center justify-between rounded-lg border border-white/10 bg-black/25 p-3"
+                                className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3"
                               >
-                                <span className="text-sm text-white">{label}</span>
+                                <span className="text-sm text-[#2E496C]">{label}</span>
                                 <button
                                   type="button"
                                   onClick={() => addFromSavedCatalog(entry)}
@@ -1415,20 +1415,20 @@ export default function ProfessorCadastroTreinoPage() {
                       ) : null}
 
                       <div className="space-y-2">
-                        <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
+                        <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400">
                           Catálogo geral
                         </p>
                         {filteredGlobalCatalog.length === 0 ? (
-                          <div className="rounded-lg border border-dashed border-white/10 p-4 text-center text-sm text-white/45">
+                          <div className="rounded-lg border border-dashed border-slate-200 p-4 text-center text-sm text-slate-400">
                             Nenhum exercício encontrado.
                           </div>
                         ) : (
                           filteredGlobalCatalog.map((exercise) => (
                             <div
                               key={exercise.id}
-                              className="flex items-center justify-between rounded-lg border border-white/10 bg-black/25 p-3"
+                              className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3"
                             >
-                              <span className="text-sm text-white">{exercise.name}</span>
+                              <span className="text-sm text-[#2E496C]">{exercise.name}</span>
                               <button
                                 type="button"
                                 onClick={() => {
@@ -1445,14 +1445,14 @@ export default function ProfessorCadastroTreinoPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-                    <h3 className="m-0 text-sm font-semibold text-white">Movimentos</h3>
-                    <p className="mt-1 text-xs text-white/45">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <h3 className="m-0 text-sm font-semibold text-[#2E496C]">Movimentos</h3>
+                    <p className="mt-1 text-xs text-slate-400">
                       {groupedDrafts.INICIO.length} movimento
                       {groupedDrafts.INICIO.length === 1 ? "" : "s"} no aquecimento
                     </p>
                     {groupedDrafts.INICIO.length === 0 ? (
-                      <div className="mt-3 rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-white/45">
+                      <div className="mt-3 rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400">
                         Adicione movimentos pelo catálogo ao lado.
                       </div>
                     ) : (
@@ -1465,21 +1465,21 @@ export default function ProfessorCadastroTreinoPage() {
                           return (
                             <div
                               key={draftKey}
-                              className="rounded-lg border border-white/10 bg-black/25"
+                              className="rounded-lg border border-slate-200 bg-slate-50"
                             >
                               <div className="flex items-center gap-2 p-3">
                                 <div className="min-w-0 flex-1">
-                                  <p className="m-0 truncate text-sm font-semibold text-white">
+                                  <p className="m-0 truncate text-sm font-semibold text-[#2E496C]">
                                     {draft.order}. {exercise.name}
                                   </p>
-                                  <p className="m-0 mt-0.5 text-xs text-white/45">{draft.sets}x</p>
+                                  <p className="m-0 mt-0.5 text-xs text-slate-400">{draft.sets}x</p>
                                 </div>
                                 <div className="flex shrink-0 items-center gap-1">
                                   <button
                                     type="button"
                                     aria-label="Aumentar repetições"
                                     onClick={() => adjustDraftSets(draft.phase, draft.order, 1)}
-                                    className="rounded border border-white/10 px-2 py-1 text-xs text-white/60"
+                                    className="rounded border border-slate-200 px-2 py-1 text-xs text-slate-500"
                                   >
                                     ↑
                                   </button>
@@ -1487,7 +1487,7 @@ export default function ProfessorCadastroTreinoPage() {
                                     type="button"
                                     aria-label="Diminuir repetições"
                                     onClick={() => adjustDraftSets(draft.phase, draft.order, -1)}
-                                    className="rounded border border-white/10 px-2 py-1 text-xs text-white/60"
+                                    className="rounded border border-slate-200 px-2 py-1 text-xs text-slate-500"
                                   >
                                     ↓
                                   </button>

@@ -41,7 +41,7 @@ export default function DevContasReceberPage() {
       description="Mensalidades e cobranças das academias cadastradas na plataforma."
     >
       {loading && (
-        <div className="rounded-xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
           Carregando contas...
         </div>
       )}
@@ -53,8 +53,8 @@ export default function DevContasReceberPage() {
       )}
 
       {!loading && !error && academias.length === 0 && (
-        <div className="rounded-xl border border-white/10 bg-white/[0.05] p-10 text-center backdrop-blur-sm">
-          <p className="text-sm text-white/60">
+        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center backdrop-blur-sm">
+          <p className="text-sm text-slate-500">
             Nenhuma academia cadastrada ainda. As contas aparecem após o cadastro.
           </p>
           <Link
@@ -83,11 +83,11 @@ export default function DevContasReceberPage() {
             />
           </div>
 
-          <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.05] backdrop-blur-sm">
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white backdrop-blur-sm">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[880px] text-left text-sm">
                 <thead>
-                  <tr className="border-b border-white/10 text-[0.65rem] font-semibold uppercase tracking-wide text-white/50">
+                  <tr className="border-b border-slate-200 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-500">
                     <th className="px-5 py-3">Academia</th>
                     <th className="px-5 py-3">Plano</th>
                     <th className="px-5 py-3">Período</th>
@@ -106,24 +106,24 @@ export default function DevContasReceberPage() {
                     );
 
                     return (
-                      <tr key={academia.id} className="border-b border-white/5 last:border-0">
+                      <tr key={academia.id} className="border-b border-slate-100 last:border-0">
                         <td className="px-5 py-4">
-                          <p className="font-medium text-white">{academia.name}</p>
-                          <p className="mt-0.5 text-xs text-white/40">{academia.slug}</p>
+                          <p className="font-medium text-[#2E496C]">{academia.name}</p>
+                          <p className="mt-0.5 text-xs text-[#2E496C]/40">{academia.slug}</p>
                         </td>
-                        <td className="px-5 py-4 text-white/80">
+                        <td className="px-5 py-4 text-slate-700">
                           {academia.billing.plano || "—"}
                         </td>
-                        <td className="px-5 py-4 text-white/80">
+                        <td className="px-5 py-4 text-slate-700">
                           {academia.billing.periodo || "—"}
                         </td>
-                        <td className="px-5 py-4 text-white/80">
+                        <td className="px-5 py-4 text-slate-700">
                           {academia.billing.formaPagamento || "—"}
                         </td>
-                        <td className="px-5 py-4 font-medium text-white">
+                        <td className="px-5 py-4 font-medium text-[#2E496C]">
                           {valor != null ? formatCurrency(valor) : "—"}
                         </td>
-                        <td className="px-5 py-4 text-white/60">
+                        <td className="px-5 py-4 text-slate-500">
                           {formatDate(academia.createdAt)}
                         </td>
                         <td className="px-5 py-4">
@@ -134,7 +134,7 @@ export default function DevContasReceberPage() {
                             <button
                               type="button"
                               onClick={() => setEditingAcademia(academia)}
-                              className="rounded-lg border border-white/15 px-3 py-1.5 text-[0.72rem] font-medium text-white/80 transition hover:border-[#5B7595]/50 hover:text-[#5B7595]"
+                              className="rounded-lg border border-slate-200 px-3 py-1.5 text-[0.72rem] font-medium text-slate-700 transition hover:border-[#5B7595]/50 hover:text-[#5B7595]"
                             >
                               Editar
                             </button>
@@ -169,11 +169,11 @@ export default function DevContasReceberPage() {
 
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.05] px-5 py-4 backdrop-blur-sm">
-      <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
+    <div className="rounded-xl border border-slate-200 bg-white px-5 py-4 backdrop-blur-sm">
+      <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400">
         {label}
       </p>
-      <p className="mt-1 text-xl font-semibold text-white">{value}</p>
+      <p className="mt-1 text-xl font-semibold text-[#2E496C]">{value}</p>
     </div>
   );
 }
@@ -183,7 +183,7 @@ function StatusBadge({ active }: { active: boolean }) {
     <span
       className={`inline-flex rounded-full px-2.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide ${
         active
-          ? "bg-emerald-500/15 text-emerald-300"
+          ? "bg-emerald-500/15 text-emerald-700"
           : "bg-red-500/15 text-red-300"
       }`}
     >

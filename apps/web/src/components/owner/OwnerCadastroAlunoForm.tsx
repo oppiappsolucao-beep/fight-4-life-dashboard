@@ -262,7 +262,7 @@ export default function OwnerCadastroAlunoForm() {
                     active
                       ? "bg-[#5B7595]/15 ring-1 ring-[#5B7595]/40"
                       : done
-                        ? "bg-white/[0.04] hover:bg-white/[0.07]"
+                        ? "bg-white hover:bg-white/[0.07]"
                         : "bg-transparent opacity-55",
                   ].join(" ")}
                 >
@@ -271,14 +271,14 @@ export default function OwnerCadastroAlunoForm() {
                       "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold",
                       active || done
                         ? "bg-gradient-to-br from-[#2E496C] to-[#5B7595] text-white"
-                        : "bg-white/10 text-white/50",
+                        : "bg-white/10 text-slate-500",
                     ].join(" ")}
                   >
                     {done ? "✓" : index + 1}
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-white">{item.label}</span>
-                    <span className="hidden text-[0.7rem] text-white/45 sm:block">
+                    <span className="block text-sm font-semibold text-[#2E496C]">{item.label}</span>
+                    <span className="hidden text-[0.7rem] text-slate-400 sm:block">
                       {item.hint}
                     </span>
                   </span>
@@ -292,7 +292,7 @@ export default function OwnerCadastroAlunoForm() {
         </ol>
       </nav>
 
-      <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-5 md:p-7">
+      <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-5 md:p-7">
         {step === 0 ? (
           <StepBlock
             title="Informações pessoais"
@@ -405,7 +405,7 @@ export default function OwnerCadastroAlunoForm() {
             {isMinor ? (
               <>
                 <Divider label="Responsável financeiro (obrigatório — menor de 18)" />
-                <p className="m-0 -mt-2 mb-3 text-xs text-amber-200/80">
+                <p className="m-0 -mt-2 mb-3 text-xs text-amber-800/80">
                   Cobranças Asaas serão emitidas em nome do responsável, não do aluno.
                 </p>
                 <div className="grid gap-4 md:grid-cols-2">
@@ -558,7 +558,7 @@ export default function OwnerCadastroAlunoForm() {
                     </option>
                   ))}
                 </Select>
-                <p className="mt-1.5 text-xs text-white/40">
+                <p className="mt-1.5 text-xs text-[#2E496C]/40">
                   O aluno verá as refeições na aba Dicas do app.
                 </p>
               </Field>
@@ -582,7 +582,7 @@ export default function OwnerCadastroAlunoForm() {
         ) : null}
 
         {success ? (
-          <div className="mt-5 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+          <div className="mt-5 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">
             Aluno cadastrado com sucesso!{" "}
             <Link to="/dono/alunos" className="font-semibold underline">
               Ver na lista de alunos
@@ -590,11 +590,11 @@ export default function OwnerCadastroAlunoForm() {
           </div>
         ) : null}
 
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-5">
           <button
             type="button"
             onClick={handleClear}
-            className="rounded-lg px-3 py-2 text-sm text-white/50 transition hover:text-white"
+            className="rounded-lg px-3 py-2 text-sm text-slate-500 transition hover:text-[#2E496C]"
           >
             Limpar
           </button>
@@ -603,7 +603,7 @@ export default function OwnerCadastroAlunoForm() {
               <button
                 type="button"
                 onClick={goBack}
-                className="rounded-lg border border-white/15 px-5 py-2.5 text-sm font-medium text-white/75 transition hover:border-white/30 hover:text-white"
+                className="rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 transition hover:border-[#5B7595]/40 hover:text-[#2E496C]"
               >
                 Voltar
               </button>
@@ -647,8 +647,8 @@ function StepBlock({
 }) {
   return (
     <div>
-      <h2 className="m-0 text-lg font-semibold text-white">{title}</h2>
-      <p className="mt-1 mb-5 text-sm text-white/45">{description}</p>
+      <h2 className="m-0 text-lg font-semibold text-[#2E496C]">{title}</h2>
+      <p className="mt-1 mb-5 text-sm text-slate-400">{description}</p>
       {children}
     </div>
   );
@@ -656,7 +656,7 @@ function StepBlock({
 
 function Divider({ label }: { label: string }) {
   return (
-    <p className="mb-3 mt-6 text-[0.7rem] font-semibold uppercase tracking-[0.1rem] text-white/35">
+    <p className="mb-3 mt-6 text-[0.7rem] font-semibold uppercase tracking-[0.1rem] text-[#2E496C]/35">
       {label}
     </p>
   );
@@ -675,7 +675,7 @@ function Field({
 }) {
   return (
     <label className={`block ${className}`}>
-      <span className="mb-1.5 block text-xs font-medium text-white/55">
+      <span className="mb-1.5 block text-xs font-medium text-slate-500">
         {label}
         {required ? <span className="text-[#5B7595]"> *</span> : null}
       </span>
@@ -685,12 +685,12 @@ function Field({
 }
 
 const inputClass =
-  "w-full rounded-xl border border-white/12 bg-[#0d1117] px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#5B7595]/70 focus:ring-2 focus:ring-[#5B7595]/20";
+  "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-[#2E496C] outline-none transition placeholder:text-slate-400 focus:border-[#5B7595]/70 focus:ring-2 focus:ring-[#5B7595]/20";
 
 function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={inputClass} />;
 }
 
 function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...props} className={`${inputClass} [color-scheme:dark]`} />;
+  return <select {...props} className={`${inputClass} [color-scheme:light]`} />;
 }

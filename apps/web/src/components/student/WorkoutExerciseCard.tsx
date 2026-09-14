@@ -54,7 +54,7 @@ export default function WorkoutExerciseCard({
         className={`overflow-hidden rounded-2xl border transition ${
           done
             ? "border-emerald-400/35 bg-emerald-500/[0.07]"
-            : "border-white/10 bg-black/30"
+            : "border-slate-200 bg-slate-100"
         }`}
       >
         {mediaUrl ? (
@@ -74,7 +74,7 @@ export default function WorkoutExerciseCard({
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
               <div className="absolute bottom-3 left-3 right-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-black/45 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-white/80">
+                  <span className="rounded-full bg-black/45 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-700">
                     #{index}
                   </span>
                   {regionBadge ? (
@@ -83,7 +83,7 @@ export default function WorkoutExerciseCard({
                     </span>
                   ) : null}
                 </div>
-                <h4 className="m-0 mt-2 text-lg font-semibold leading-tight text-white">
+                <h4 className="m-0 mt-2 text-lg font-semibold leading-tight text-[#2E496C]">
                   {item.exercise.name}
                 </h4>
                 <p className="m-0 mt-1 text-xs font-medium text-[#A9BBD5] opacity-90 group-hover:opacity-100">
@@ -93,9 +93,9 @@ export default function WorkoutExerciseCard({
             </div>
           </button>
         ) : (
-          <div className="border-b border-white/10 px-4 py-4">
+          <div className="border-b border-slate-200 px-4 py-4">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-white/10 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-white/70">
+              <span className="rounded-full bg-white/10 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-600">
                 #{index}
               </span>
               {regionBadge ? (
@@ -104,12 +104,12 @@ export default function WorkoutExerciseCard({
                 </span>
               ) : null}
             </div>
-            <h4 className="m-0 mt-2 text-lg font-semibold text-white">{item.exercise.name}</h4>
+            <h4 className="m-0 mt-2 text-lg font-semibold text-[#2E496C]">{item.exercise.name}</h4>
           </div>
         )}
 
         <div className="p-4">
-          <p className="m-0 text-sm text-white/50">
+          <p className="m-0 text-sm text-slate-500">
             {item.exercise.muscleGroup}
             {item.exercise.equipment ? ` • ${item.exercise.equipment}` : ""}
           </p>
@@ -122,7 +122,7 @@ export default function WorkoutExerciseCard({
           </div>
 
           <div className="mt-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/45">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
               Marcar séries feitas
             </p>
             <div className="flex flex-wrap gap-2">
@@ -136,8 +136,8 @@ export default function WorkoutExerciseCard({
                     onClick={() => onToggleSet(setNumber)}
                     className={`min-w-[3rem] rounded-xl px-3 py-2 text-sm font-semibold transition ${
                       checked
-                        ? "bg-emerald-500/20 text-emerald-300"
-                        : "border border-white/10 bg-black/20 text-white/70 hover:border-[#5B7595]/40"
+                        ? "bg-emerald-500/20 text-emerald-700"
+                        : "border border-slate-200 bg-slate-50 text-slate-600 hover:border-[#5B7595]/40"
                     }`}
                   >
                     S{setNumber}
@@ -145,13 +145,13 @@ export default function WorkoutExerciseCard({
                 );
               })}
             </div>
-            <p className="m-0 mt-2 text-xs text-white/45">
+            <p className="m-0 mt-2 text-xs text-slate-400">
               {completedSets.length}/{item.sets} séries concluídas
             </p>
           </div>
 
           {item.notes ? (
-            <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white/70">
+            <p className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
               {item.notes}
             </p>
           ) : null}
@@ -176,22 +176,22 @@ export default function WorkoutExerciseCard({
           onClick={() => setShowExecution(false)}
         >
           <div
-            className="flex max-h-[min(92vh,880px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0f1724] shadow-2xl"
+            className="flex max-h-[min(92vh,880px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200 bg-[#0f1724] shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-3 border-b border-white/10 px-4 py-3">
+            <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-4 py-3">
               <div className="min-w-0">
                 <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#5B7595]">
                   Como executar
                 </p>
-                <h3 className="m-0 mt-1 truncate text-base font-semibold text-white sm:text-lg">
+                <h3 className="m-0 mt-1 truncate text-base font-semibold text-[#2E496C] sm:text-lg">
                   {item.exercise.name}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setShowExecution(false)}
-                className="shrink-0 rounded-lg border border-white/15 px-3 py-1.5 text-sm text-white/70 hover:text-white"
+                className="shrink-0 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:text-[#2E496C]"
               >
                 Fechar
               </button>
@@ -207,17 +207,17 @@ export default function WorkoutExerciseCard({
                   />
                 </div>
               ) : (
-                <div className="border-b border-white/10 px-4 py-8 text-center text-sm text-white/45">
+                <div className="border-b border-slate-200 px-4 py-8 text-center text-sm text-slate-400">
                   Sem animação disponível para este exercício.
                 </div>
               )}
 
               <div className="space-y-3 px-4 py-4">
-                <p className="m-0 text-sm text-white/50">
+                <p className="m-0 text-sm text-slate-500">
                   {item.exercise.muscleGroup}
                   {item.exercise.equipment ? ` • ${item.exercise.equipment}` : ""}
                 </p>
-                <p className="m-0 text-sm leading-relaxed text-white/80">
+                <p className="m-0 text-sm leading-relaxed text-slate-700">
                   {item.exercise.instructions?.trim()
                     ? item.exercise.instructions
                     : "Siga a animação e mantenha a postura controlada em todo o movimento."}
@@ -233,9 +233,9 @@ export default function WorkoutExerciseCard({
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/20 px-2 py-2 text-center">
-      <p className="m-0 text-[0.6rem] uppercase tracking-wide text-white/40">{label}</p>
-      <p className="m-0 mt-1 truncate text-sm font-semibold text-white">{value}</p>
+    <div className="rounded-xl border border-slate-200 bg-slate-50 px-2 py-2 text-center">
+      <p className="m-0 text-[0.6rem] uppercase tracking-wide text-[#2E496C]/40">{label}</p>
+      <p className="m-0 mt-1 truncate text-sm font-semibold text-[#2E496C]">{value}</p>
     </div>
   );
 }

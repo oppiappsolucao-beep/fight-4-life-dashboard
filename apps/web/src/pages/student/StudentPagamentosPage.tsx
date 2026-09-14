@@ -35,10 +35,10 @@ export default function StudentPagamentosPage() {
 
   const statusClass =
     billing?.status === "vencido"
-      ? "border-red-400/30 bg-red-500/10 text-red-200"
+      ? "border-red-400/30 bg-red-500/10 text-red-700"
       : billing?.status === "hoje"
-        ? "border-amber-400/30 bg-amber-500/10 text-amber-200"
-        : "border-emerald-400/30 bg-emerald-500/10 text-emerald-300";
+        ? "border-amber-400/30 bg-amber-500/10 text-amber-800"
+        : "border-emerald-400/30 bg-emerald-500/10 text-emerald-700";
 
   return (
     <StudentSectionPage
@@ -46,26 +46,26 @@ export default function StudentPagamentosPage() {
       description="Consulte seu plano, vencimento e valor da mensalidade."
     >
       {loading ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
           Carregando...
         </div>
       ) : error ? (
-        <div className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <div className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       ) : billing ? (
         <div className="space-y-4 pb-8">
-          <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#5B7595]/20 via-black/30 to-black/40 p-5">
-            <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
+          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-[#5B7595]/20 via-black/30 to-black/40 p-5">
+            <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
               Plano contratado
             </p>
-            <h2 className="m-0 mt-2 text-2xl font-semibold text-white">
+            <h2 className="m-0 mt-2 text-2xl font-semibold text-[#2E496C]">
               {billing.planoModalidade}
             </h2>
             <p className="m-0 mt-3 text-3xl font-semibold text-[#A9BBD5]">
               {formatPlanCurrency(billing.valorMensalidade)}
             </p>
-            <p className="m-0 mt-1 text-sm text-white/50">Valor da mensalidade</p>
+            <p className="m-0 mt-1 text-sm text-slate-500">Valor da mensalidade</p>
           </section>
 
           <section className="grid gap-3 sm:grid-cols-2">
@@ -78,14 +78,14 @@ export default function StudentPagamentosPage() {
           <div className={`rounded-2xl border px-4 py-3 text-sm ${statusClass}`}>
             Status: <strong>{billingStatusLabel(billing.status, billing.acessoLiberadoAte)}</strong>
             {billing.acessoLiberadoAte && billing.status === "em_dia" ? (
-              <span className="block mt-1 text-white/70">
+              <span className="block mt-1 text-slate-600">
                 Acesso liberado pela academia até {billing.liberadoAteLabel ?? billing.acessoLiberadoAte}.
               </span>
             ) : null}
           </div>
 
-          <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-            <p className="m-0 text-sm text-white/55">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4">
+            <p className="m-0 text-sm text-slate-500">
               Histórico de pagamentos e comprovantes estarão disponíveis em breve nesta aba.
             </p>
           </section>
@@ -97,11 +97,11 @@ export default function StudentPagamentosPage() {
 
 function InfoCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-      <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400">
         {label}
       </p>
-      <p className="m-0 mt-2 text-lg font-semibold text-white">{value}</p>
+      <p className="m-0 mt-2 text-lg font-semibold text-[#2E496C]">{value}</p>
     </div>
   );
 }

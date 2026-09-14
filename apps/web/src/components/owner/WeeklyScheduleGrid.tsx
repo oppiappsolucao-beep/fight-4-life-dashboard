@@ -32,28 +32,28 @@ export default function WeeklyScheduleGrid({
 
   if (visibleEntries.length === 0) {
     return (
-      <section className="rounded-2xl border border-dashed border-white/10 p-6 text-center text-sm text-white/45">
-        <p className="m-0 font-semibold text-white/70">{title}</p>
+      <section className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400">
+        <p className="m-0 font-semibold text-slate-600">{title}</p>
         <p className="m-0 mt-2">{emptyMessage}</p>
       </section>
     );
   }
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
-      <div className="border-b border-white/10 px-4 py-3">
-        <p className="m-0 text-sm font-semibold text-white">{title}</p>
+    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+      <div className="border-b border-slate-200 px-4 py-3">
+        <p className="m-0 text-sm font-semibold text-[#2E496C]">{title}</p>
         {filterModalityId ? (
-          <p className="m-0 mt-1 text-xs text-white/45">Mostrando apenas a categoria selecionada.</p>
+          <p className="m-0 mt-1 text-xs text-slate-400">Mostrando apenas a categoria selecionada.</p>
         ) : null}
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full border-collapse text-left text-xs">
           <thead>
-            <tr className="border-b border-white/10 bg-white/[0.03]">
-              <th className="px-2 py-2 font-semibold text-white/45">Horário</th>
+            <tr className="border-b border-slate-200 bg-white">
+              <th className="px-2 py-2 font-semibold text-slate-400">Horário</th>
               {WEEKDAY_SHORT.map((label) => (
-                <th key={label} className="px-2 py-2 font-semibold text-white/70">
+                <th key={label} className="px-2 py-2 font-semibold text-slate-600">
                   {label}
                 </th>
               ))}
@@ -61,8 +61,8 @@ export default function WeeklyScheduleGrid({
           </thead>
           <tbody>
             {timeRows.map((timeLabel) => (
-              <tr key={timeLabel} className="border-b border-white/5 align-top">
-                <td className="whitespace-nowrap px-2 py-2 font-medium text-white/45">{timeLabel}</td>
+              <tr key={timeLabel} className="border-b border-slate-100 align-top">
+                <td className="whitespace-nowrap px-2 py-2 font-medium text-slate-400">{timeLabel}</td>
                 {grouped.map((dayEntries, weekday) => {
                   const matches = dayEntries.filter((entry) => entry.startTime === timeLabel);
 

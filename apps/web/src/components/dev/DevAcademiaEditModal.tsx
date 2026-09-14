@@ -309,21 +309,21 @@ export default function DevAcademiaEditModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/75 p-4 backdrop-blur-sm md:p-8">
-      <div className="relative my-auto w-full max-w-3xl overflow-hidden rounded-2xl border border-white/10 bg-[#12161c] shadow-2xl">
-        <div className="sticky top-0 z-10 border-b border-white/10 bg-[#12161c]/95 px-5 py-4 backdrop-blur md:px-6">
+      <div className="relative my-auto w-full max-w-3xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <div className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 px-5 py-4 backdrop-blur md:px-6">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#5B7595]">
                 Editar academia
               </p>
-              <h2 className="m-0 mt-1 truncate text-lg font-semibold text-white">
+              <h2 className="m-0 mt-1 truncate text-lg font-semibold text-[#2E496C]">
                 {academiaName}
               </h2>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-white/70 transition hover:border-[#5B7595]/40 hover:text-white"
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 transition hover:border-[#5B7595]/40 hover:text-[#2E496C]"
             >
               Fechar
             </button>
@@ -345,10 +345,10 @@ export default function DevAcademiaEditModal({
                       className={[
                         "flex w-full flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-center transition sm:flex-row sm:justify-center sm:gap-2",
                         active
-                          ? "bg-[#5B7595]/20 text-white ring-1 ring-[#5B7595]/45"
+                          ? "bg-[#5B7595]/20 text-[#2E496C] ring-1 ring-[#5B7595]/45"
                           : done
-                            ? "bg-white/[0.05] text-white/80"
-                            : "bg-white/[0.03] text-white/45",
+                            ? "bg-white text-slate-700"
+                            : "bg-white text-slate-400",
                       ].join(" ")}
                     >
                       <span
@@ -356,14 +356,14 @@ export default function DevAcademiaEditModal({
                           "flex h-6 w-6 items-center justify-center rounded-full text-[0.7rem] font-bold",
                           active || done
                             ? "bg-gradient-to-br from-[#2E496C] to-[#5B7595] text-white"
-                            : "bg-white/10 text-white/50",
+                            : "bg-white/10 text-slate-500",
                         ].join(" ")}
                       >
                         {done ? "✓" : item.id + 1}
                       </span>
                       <span className="min-w-0">
                         <span className="block text-xs font-semibold sm:text-sm">{item.label}</span>
-                        <span className="hidden text-[0.65rem] text-white/40 sm:block">
+                        <span className="hidden text-[0.65rem] text-[#2E496C]/40 sm:block">
                           {item.hint}
                         </span>
                       </span>
@@ -377,7 +377,7 @@ export default function DevAcademiaEditModal({
 
         <div className="max-h-[calc(100vh-10rem)] overflow-y-auto p-5 md:p-6">
           {loading ? (
-            <p className="py-10 text-center text-sm text-white/50">Carregando dados...</p>
+            <p className="py-10 text-center text-sm text-slate-500">Carregando dados...</p>
           ) : null}
 
           {error && !form ? (
@@ -391,8 +391,8 @@ export default function DevAcademiaEditModal({
               {step === 0 ? (
                 <div className="space-y-5">
                   <div>
-                    <h3 className="m-0 text-base font-semibold text-white">Dados da empresa</h3>
-                    <p className="mt-1 text-sm text-white/45">
+                    <h3 className="m-0 text-base font-semibold text-[#2E496C]">Dados da empresa</h3>
+                    <p className="mt-1 text-sm text-slate-400">
                       Identificação fiscal, endereço e domínio público da academia.
                     </p>
                   </div>
@@ -411,12 +411,12 @@ export default function DevAcademiaEditModal({
                           placeholder="Ex: fourarbjj"
                           className="sm:max-w-xs"
                         />
-                        <span className="text-sm text-white/50">
+                        <span className="text-sm text-slate-500">
                           .{primaryAppBaseDomain()}
                         </span>
                       </div>
                     </Field>
-                    <p className="mt-2 text-xs text-white/55">
+                    <p className="mt-2 text-xs text-slate-500">
                       URL:{" "}
                       <a
                         href={form.subdominio.trim() ? previewUrl : undefined}
@@ -469,7 +469,7 @@ export default function DevAcademiaEditModal({
                     </div>
                   </div>
 
-                  <p className="mb-0 text-[0.7rem] font-semibold uppercase tracking-[0.1rem] text-white/35">
+                  <p className="mb-0 text-[0.7rem] font-semibold uppercase tracking-[0.1rem] text-[#2E496C]/35">
                     Endereço e contato
                   </p>
                   <div className="grid gap-4 md:grid-cols-3">
@@ -538,8 +538,8 @@ export default function DevAcademiaEditModal({
               {step === 1 ? (
                 <div className="space-y-5">
                   <div>
-                    <h3 className="m-0 text-base font-semibold text-white">Acesso do dono</h3>
-                    <p className="mt-1 text-sm text-white/45">
+                    <h3 className="m-0 text-base font-semibold text-[#2E496C]">Acesso do dono</h3>
+                    <p className="mt-1 text-sm text-slate-400">
                       Credenciais usadas em /dono/login nesta academia.
                     </p>
                   </div>
@@ -596,13 +596,13 @@ export default function DevAcademiaEditModal({
               {step === 2 ? (
                 <div className="space-y-5">
                   <div>
-                    <h3 className="m-0 text-base font-semibold text-white">Plano e status</h3>
-                    <p className="mt-1 text-sm text-white/45">
+                    <h3 className="m-0 text-base font-semibold text-[#2E496C]">Plano e status</h3>
+                    <p className="mt-1 text-sm text-slate-400">
                       Configuração comercial e liberação de acesso.
                     </p>
                   </div>
 
-                  <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                  <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white p-4">
                     <input
                       type="checkbox"
                       checked={form.active}
@@ -610,18 +610,18 @@ export default function DevAcademiaEditModal({
                       className="mt-0.5 h-4 w-4 rounded border-white/30 accent-[#5B7595]"
                     />
                     <span>
-                      <span className="block text-sm font-medium text-white">
+                      <span className="block text-sm font-medium text-[#2E496C]">
                         Academia e dono ativos
                       </span>
-                      <span className="mt-0.5 block text-xs text-white/45">
+                      <span className="mt-0.5 block text-xs text-slate-400">
                         Desmarque para bloquear o acesso em /dono/login.
                       </span>
                     </span>
                   </label>
 
-                  <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-                    <p className="m-0 text-sm font-medium text-white">Asaas (subconta)</p>
-                    <p className="m-0 mt-1 text-xs text-white/45">
+                  <div className="rounded-xl border border-slate-200 bg-white p-4">
+                    <p className="m-0 text-sm font-medium text-[#2E496C]">Asaas (subconta)</p>
+                    <p className="m-0 mt-1 text-xs text-slate-400">
                       {asaasWalletId
                         ? hasAsaasApiKey
                           ? `Pronta para cobrar no nome da academia · wallet ${asaasWalletId.slice(0, 8)}…`
@@ -629,7 +629,7 @@ export default function DevAcademiaEditModal({
                         : "Ainda sem subconta. Necessário para cobranças no nome da academia."}
                     </p>
                     {asaasAccountId ? (
-                      <p className="m-0 mt-1 text-[0.65rem] text-white/35">
+                      <p className="m-0 mt-1 text-[0.65rem] text-[#2E496C]/35">
                         account {asaasAccountId}
                       </p>
                     ) : null}
@@ -641,13 +641,13 @@ export default function DevAcademiaEditModal({
                           value={asaasApiKeyInput}
                           onChange={(e) => setAsaasApiKeyInput(e.target.value)}
                           placeholder="Cole a API Key da subconta (aact_prod_... sem $)"
-                          className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-xs text-white"
+                          className="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-xs text-[#2E496C]"
                         />
                         <button
                           type="button"
                           disabled={asaasLoading}
                           onClick={() => void salvarChaveAsaas()}
-                          className="rounded-lg border border-emerald-400/40 px-3 py-1.5 text-xs font-semibold text-emerald-200 hover:bg-emerald-500/10 disabled:opacity-50"
+                          className="rounded-lg border border-emerald-400/40 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-500/10 disabled:opacity-50"
                         >
                           {asaasLoading ? "Validando..." : "Salvar chave da subconta"}
                         </button>
@@ -690,10 +690,10 @@ export default function DevAcademiaEditModal({
                     </div>
 
                     {onboardingStatus || onboardingUrl ? (
-                      <div className="mt-3 space-y-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+                      <div className="mt-3 space-y-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
                         {onboardingStatus ? (
-                          <p className="m-0 text-xs text-white/70">
-                            Status Asaas: <span className="text-white">{onboardingStatus}</span>
+                          <p className="m-0 text-xs text-slate-600">
+                            Status Asaas: <span className="text-[#2E496C]">{onboardingStatus}</span>
                             {typeof onboardingPending === "number"
                               ? ` · ${onboardingPending} pendência(s)`
                               : ""}
@@ -764,16 +764,16 @@ export default function DevAcademiaEditModal({
               ) : null}
 
               {success ? (
-                <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+                <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">
                   {success}
                 </div>
               ) : null}
 
-              <div className="flex flex-wrap justify-between gap-3 border-t border-white/10 pt-5">
+              <div className="flex flex-wrap justify-between gap-3 border-t border-slate-200 pt-5">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-lg border border-white/15 px-4 py-2.5 text-sm text-white/70"
+                  className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm text-slate-600"
                 >
                   Cancelar
                 </button>
@@ -785,7 +785,7 @@ export default function DevAcademiaEditModal({
                         setError("");
                         setStep((value) => value - 1);
                       }}
-                      className="rounded-lg border border-white/15 px-4 py-2.5 text-sm text-white/75"
+                      className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm text-slate-600"
                     >
                       Voltar
                     </button>
@@ -830,7 +830,7 @@ function Field({
 }) {
   return (
     <label className={`block ${className}`}>
-      <span className="mb-1.5 block text-xs font-medium text-white/55">
+      <span className="mb-1.5 block text-xs font-medium text-slate-500">
         {label}
         {required ? <span className="text-[#5B7595]"> *</span> : null}
       </span>
@@ -840,7 +840,7 @@ function Field({
 }
 
 const controlClass =
-  "w-full rounded-xl border border-white/12 bg-[#0d1117] px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#5B7595]/70 focus:ring-2 focus:ring-[#5B7595]/20 [color-scheme:dark]";
+  "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-[#2E496C] outline-none transition placeholder:text-slate-400 focus:border-[#5B7595]/70 focus:ring-2 focus:ring-[#5B7595]/20 [color-scheme:light]";
 
 function Input({
   className = "",

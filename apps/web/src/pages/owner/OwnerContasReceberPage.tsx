@@ -212,26 +212,26 @@ export default function OwnerContasReceberPage() {
       description="Mensalidades Asaas dos alunos. Gere cobrança individual ou em lote."
     >
       {loading ? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
           Carregando contas...
         </div>
       ) : null}
 
       {error ? (
-        <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       ) : null}
 
       {success ? (
-        <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300 break-all">
+        <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700 break-all">
           {success}
         </div>
       ) : null}
 
       {!loading && !error && alunos.length === 0 ? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.05] p-10 text-center backdrop-blur-sm">
-          <p className="text-sm text-white/60">
+        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center backdrop-blur-sm">
+          <p className="text-sm text-slate-500">
             Nenhum aluno cadastrado ainda. As cobranças aparecem após o cadastro.
           </p>
           <Link
@@ -246,7 +246,7 @@ export default function OwnerContasReceberPage() {
       {!loading && !error && alunos.length > 0 ? (
         <>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <p className="m-0 text-xs text-white/45">
+            <p className="m-0 text-xs text-slate-400">
               {selectedCount > 0
                 ? `${selectedCount} aluno(s) selecionado(s)`
                 : "Selecione alunos para cobrança em lote"}
@@ -271,10 +271,10 @@ export default function OwnerContasReceberPage() {
             <SummaryCard label="Asaas pendentes" value={String(asaasPendentes || venceHoje)} />
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-sm">
+          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white backdrop-blur-sm">
             <table className="min-w-full border-collapse text-left text-sm">
               <thead>
-                <tr className="border-b border-white/10 text-[0.7rem] uppercase tracking-wide text-white/45">
+                <tr className="border-b border-slate-200 text-[0.7rem] uppercase tracking-wide text-slate-400">
                   <th className="px-3 py-3 font-medium">
                     <span className="sr-only">Selecionar</span>
                   </th>
@@ -300,7 +300,7 @@ export default function OwnerContasReceberPage() {
                   return (
                     <tr
                       key={aluno.id}
-                      className="border-b border-white/5 text-white/85 last:border-0"
+                      className="border-b border-slate-100 text-[#2E496C]/85 last:border-0"
                     >
                       <td className="px-3 py-3">
                         <input
@@ -316,33 +316,33 @@ export default function OwnerContasReceberPage() {
                         />
                       </td>
                       <td className="px-4 py-3">
-                        <p className="m-0 font-medium text-white">{aluno.nomeCompleto}</p>
-                        <p className="m-0 text-xs text-white/45">
+                        <p className="m-0 font-medium text-[#2E496C]">{aluno.nomeCompleto}</p>
+                        <p className="m-0 text-xs text-slate-400">
                           {formatCpf(aluno.cpf)}
                           {aluno.telefone
                             ? ` · ${formatPhone(aluno.telefone)}`
                             : ""}
                         </p>
                       </td>
-                      <td className="px-4 py-3 text-white/75">
+                      <td className="px-4 py-3 text-slate-600">
                         {aluno.planoModalidade}
-                        <span className="block text-xs text-white/40">
+                        <span className="block text-xs text-[#2E496C]/40">
                           Início {formatDate(aluno.dataInicio)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-medium text-white">
+                      <td className="px-4 py-3 font-medium text-[#2E496C]">
                         {valor != null ? formatPlanCurrency(valor) : "—"}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-white/75">
+                      <td className="px-4 py-3 whitespace-nowrap text-slate-600">
                         Dia {parseDueDay(aluno.diaVencimento)}
-                        <span className="block text-xs text-white/40">
+                        <span className="block text-xs text-[#2E496C]/40">
                           Próx. {proximoVenc.toLocaleDateString("pt-BR")}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-xs text-white/70">
+                      <td className="px-4 py-3 text-xs text-slate-600">
                         {chargeLabel(aluno.latestCharge?.status)}
                         {aluno.latestCharge?.dueDate ? (
-                          <span className="block text-white/40">
+                          <span className="block text-[#2E496C]/40">
                             {aluno.latestCharge.dueDate.split("-").reverse().join("/")}
                           </span>
                         ) : null}
@@ -369,7 +369,7 @@ export default function OwnerContasReceberPage() {
                               type="button"
                               disabled={releasingId === aluno.id}
                               onClick={() => liberarAluno(aluno)}
-                              className="rounded-lg border border-emerald-400/30 px-3 py-1.5 text-xs font-semibold text-emerald-200 hover:bg-emerald-500/10 disabled:opacity-50"
+                              className="rounded-lg border border-emerald-400/30 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-500/10 disabled:opacity-50"
                             >
                               {releasingId === aluno.id ? "Liberando..." : "Liberar aluno"}
                             </button>
@@ -390,11 +390,11 @@ export default function OwnerContasReceberPage() {
 
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.05] px-5 py-4 backdrop-blur-sm">
-      <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-white/45">
+    <div className="rounded-xl border border-slate-200 bg-white px-5 py-4 backdrop-blur-sm">
+      <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400">
         {label}
       </p>
-      <p className="mt-1 text-xl font-semibold text-white">{value}</p>
+      <p className="mt-1 text-xl font-semibold text-[#2E496C]">{value}</p>
     </div>
   );
 }
@@ -408,10 +408,10 @@ function StatusBadge({
 }) {
   const styles =
     status === "em_dia"
-      ? "bg-emerald-500/15 text-emerald-200"
+      ? "bg-emerald-500/15 text-emerald-700"
       : status === "hoje"
-        ? "bg-amber-500/15 text-amber-200"
-        : "bg-red-500/15 text-red-200";
+        ? "bg-amber-500/15 text-amber-800"
+        : "bg-red-500/15 text-red-700";
   const label =
     status === "em_dia" ? "Em dia" : status === "hoje" ? "Vence hoje" : "Vencido";
 
@@ -421,7 +421,7 @@ function StatusBadge({
         {label}
       </span>
       {liberadoAte ? (
-        <p className="m-0 mt-1 text-[0.65rem] text-white/40">
+        <p className="m-0 mt-1 text-[0.65rem] text-[#2E496C]/40">
           Liberado até {liberadoAte.split("-").reverse().join("/")}
         </p>
       ) : null}

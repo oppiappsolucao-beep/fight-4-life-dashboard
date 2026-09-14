@@ -254,38 +254,38 @@ export default function OwnerModalidadesPage() {
       description="Ative modalidades, cadastre novas opções e configure dias e horários da grade semanal."
     >
       {loading ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
           Carregando...
         </div>
       ) : (
         <div className="space-y-5">
           {refreshing ? (
-            <p className="m-0 text-xs text-white/40">Atualizando dados...</p>
+            <p className="m-0 text-xs text-[#2E496C]/40">Atualizando dados...</p>
           ) : null}
           {error ? (
-            <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           ) : null}
           {success ? (
-            <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+            <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">
               {success}
             </div>
           ) : null}
 
           {modalidades.length === 0 ? (
-            <section className="rounded-xl border border-dashed border-white/15 bg-black/20 p-6 text-center">
-              <p className="m-0 text-sm text-white/70">
+            <section className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
+              <p className="m-0 text-sm text-slate-600">
                 Nenhuma modalidade cadastrada nesta academia.
               </p>
-              <p className="m-0 mt-2 text-xs text-white/45">
+              <p className="m-0 mt-2 text-xs text-slate-400">
                 Importe o catálogo padrão ou inclua modalidades manualmente abaixo.
               </p>
               <button
                 type="button"
                 disabled={importing}
                 onClick={handleImportTemplates}
-                className="mt-4 rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-white/80 disabled:opacity-60"
+                className="mt-4 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 disabled:opacity-60"
               >
                 {importing ? "Importando..." : "Importar catálogo padrão"}
               </button>
@@ -294,22 +294,22 @@ export default function OwnerModalidadesPage() {
 
           <form
             onSubmit={handleCreateModality}
-            className="rounded-2xl border border-white/10 bg-black/20 p-4"
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
           >
-            <p className="m-0 text-sm font-semibold text-white">Incluir nova modalidade</p>
+            <p className="m-0 text-sm font-semibold text-[#2E496C]">Incluir nova modalidade</p>
             <div className="mt-4 grid gap-3 md:grid-cols-[1.2fr_0.9fr]">
               <input
                 value={newName}
                 onChange={(event) => setNewName(event.target.value)}
                 placeholder="Ex.: Boxe, Funcional, Cross..."
-                className="rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
+                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
               />
               <select
                 value={newContentType}
                 onChange={(event) =>
                   setNewContentType(event.target.value as "VIDEO_GALLERY" | "EXERCISE_CATALOG")
                 }
-                className="rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
+                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
               >
                 <option value="VIDEO_GALLERY">Galeria de vídeos</option>
                 <option value="EXERCISE_CATALOG">Catálogo de treinos</option>
@@ -319,7 +319,7 @@ export default function OwnerModalidadesPage() {
                 onChange={(event) => setNewDescription(event.target.value)}
                 placeholder="Descrição opcional"
                 rows={2}
-                className="md:col-span-2 rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white"
+                className="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
               />
             </div>
             <button
@@ -331,10 +331,10 @@ export default function OwnerModalidadesPage() {
             </button>
           </form>
 
-          <section className="rounded-xl border border-white/10 bg-black/20 p-3">
+          <section className="rounded-xl border border-slate-200 bg-slate-50 p-3">
             <div className="mb-2 flex items-center justify-between gap-3">
-              <p className="m-0 text-sm font-semibold text-white">Modalidades ofertadas</p>
-              <span className="text-xs text-white/45">{selectedIds.length} ativa(s)</span>
+              <p className="m-0 text-sm font-semibold text-[#2E496C]">Modalidades ofertadas</p>
+              <span className="text-xs text-slate-400">{selectedIds.length} ativa(s)</span>
             </div>
             <div className="divide-y divide-white/10">
               {modalidades.map((item) => {
@@ -345,8 +345,8 @@ export default function OwnerModalidadesPage() {
                     className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
                   >
                     <div className="min-w-0">
-                      <p className="m-0 truncate text-sm text-white">{item.name}</p>
-                      <p className="m-0 text-[0.65rem] text-white/40">
+                      <p className="m-0 truncate text-sm text-[#2E496C]">{item.name}</p>
+                      <p className="m-0 text-[0.65rem] text-[#2E496C]/40">
                         {contentTypeLabel(item.contentType)}
                         {(scheduleDrafts[item.id] ?? []).length > 0
                           ? ` • ${(scheduleDrafts[item.id] ?? []).length} horário(s)`
@@ -358,8 +358,8 @@ export default function OwnerModalidadesPage() {
                       onClick={() => toggle(item.id)}
                       className={`shrink-0 rounded-full px-3 py-1 text-[0.65rem] font-semibold ${
                         enabled
-                          ? "bg-emerald-500/20 text-emerald-200"
-                          : "border border-white/15 text-white/45"
+                          ? "bg-emerald-500/20 text-emerald-700"
+                          : "border border-slate-200 text-slate-400"
                       }`}
                     >
                       {enabled ? "Ativa" : "Inativa"}
@@ -370,7 +370,7 @@ export default function OwnerModalidadesPage() {
             </div>
           </section>
 
-          <p className="text-sm text-white/45">
+          <p className="text-sm text-slate-400">
             Modalidades de vídeo ativas:{" "}
             {galleryModalities.filter((item) => selectedIds.includes(item.id)).length}
           </p>
@@ -387,8 +387,8 @@ export default function OwnerModalidadesPage() {
           {activeModalities.length > 0 ? (
             <section className="space-y-3">
               <div>
-                <p className="m-0 text-sm font-semibold text-white">Horários por modalidade</p>
-                <p className="m-0 mt-1 text-xs text-white/45">
+                <p className="m-0 text-sm font-semibold text-[#2E496C]">Horários por modalidade</p>
+                <p className="m-0 mt-1 text-xs text-slate-400">
                   Edite uma modalidade por vez para manter a tela organizada.
                 </p>
               </div>
@@ -406,7 +406,7 @@ export default function OwnerModalidadesPage() {
                     className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                       editingScheduleId === modality.id
                         ? "bg-[#5B7595] text-white"
-                        : "border border-white/15 text-white/70 hover:border-[#5B7595]/40"
+                        : "border border-slate-200 text-slate-600 hover:border-[#5B7595]/40"
                     }`}
                   >
                     {modality.name}
@@ -442,7 +442,7 @@ export default function OwnerModalidadesPage() {
                   );
                 })()
               ) : (
-                <div className="rounded-xl border border-dashed border-white/10 px-4 py-6 text-sm text-white/45">
+                <div className="rounded-xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-400">
                   Selecione uma modalidade acima para editar horários, repetição mensal e cancelamentos.
                 </div>
               )}
@@ -456,8 +456,8 @@ export default function OwnerModalidadesPage() {
                 onClick={() => setGridFilterModalityId(null)}
                 className={`rounded-full px-3 py-1 text-xs font-semibold ${
                   !gridFilterModalityId
-                    ? "bg-white/15 text-white"
-                    : "border border-white/15 text-white/60"
+                    ? "bg-white/15 text-[#2E496C]"
+                    : "border border-slate-200 text-slate-500"
                 }`}
               >
                 Todas
@@ -470,7 +470,7 @@ export default function OwnerModalidadesPage() {
                   className={`rounded-full px-3 py-1 text-xs font-semibold ${
                     gridFilterModalityId === modality.id
                       ? modalityColorMap[modality.id]
-                      : "border border-white/15 text-white/60"
+                      : "border border-slate-200 text-slate-500"
                   }`}
                 >
                   {modality.name}

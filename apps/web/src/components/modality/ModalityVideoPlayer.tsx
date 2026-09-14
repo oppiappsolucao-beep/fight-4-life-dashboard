@@ -17,13 +17,13 @@ export default function ModalityVideoPlayer({
   const parsed = parseVideoEmbed(video.videoUrl);
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-white/10 bg-black/40">
+    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
       <div className="aspect-video w-full bg-black">
         {!parsed ? (
           video.videoUrl.startsWith("data:video/") ? (
             <video src={video.videoUrl} controls playsInline className="h-full w-full bg-black" />
           ) : (
-            <div className="flex h-full items-center justify-center px-6 text-center text-sm text-white/50">
+            <div className="flex h-full items-center justify-center px-6 text-center text-sm text-slate-500">
               Formato de vídeo não suportado neste navegador.
             </div>
           )
@@ -47,7 +47,7 @@ export default function ModalityVideoPlayer({
       </div>
       <div className="p-4 sm:p-5">
         {professorName || classDate || timeLabel ? (
-          <p className="m-0 text-xs text-white/45">
+          <p className="m-0 text-xs text-slate-400">
             {professorName ? `Professor: ${professorName}` : null}
             {professorName && (classDate || timeLabel) ? " • " : null}
             {classDate ? classDate : null}
@@ -55,9 +55,9 @@ export default function ModalityVideoPlayer({
             {timeLabel ? timeLabel : null}
           </p>
         ) : null}
-        <h3 className="m-0 mt-2 text-lg font-semibold text-white">{video.title}</h3>
+        <h3 className="m-0 mt-2 text-lg font-semibold text-[#2E496C]">{video.title}</h3>
         {video.description ? (
-          <p className="m-0 mt-2 text-sm leading-relaxed text-white/65">{video.description}</p>
+          <p className="m-0 mt-2 text-sm leading-relaxed text-[#2E496C]/65">{video.description}</p>
         ) : null}
       </div>
     </section>
@@ -83,23 +83,23 @@ export function ModalityVideoCard({ video, selected, onSelect }: ModalityVideoCa
       className={`overflow-hidden rounded-2xl border text-left transition ${
         selected
           ? "border-[#5B7595] bg-[#5B7595]/10 shadow-[0_0_0_1px_rgba(91,117,149,0.35)]"
-          : "border-white/10 bg-black/25 hover:border-white/20"
+          : "border-slate-200 bg-slate-50 hover:border-slate-200"
       }`}
     >
       <div className="relative aspect-video bg-black/50">
         {thumbnail ? (
           <img src={thumbnail} alt={video.title} className="h-full w-full object-cover" loading="lazy" />
         ) : (
-          <div className="flex h-full items-center justify-center text-sm text-white/40">Aula em vídeo</div>
+          <div className="flex h-full items-center justify-center text-sm text-[#2E496C]/40">Aula em vídeo</div>
         )}
-        <span className="absolute inset-0 flex items-center justify-center bg-black/20">
-          <span className="rounded-full bg-black/55 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-white">
+        <span className="absolute inset-0 flex items-center justify-center bg-slate-50">
+          <span className="rounded-full bg-black/55 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[#2E496C]">
             Assistir
           </span>
         </span>
       </div>
       <div className="p-3">
-        <p className="m-0 line-clamp-2 text-sm font-semibold text-white">{video.title}</p>
+        <p className="m-0 line-clamp-2 text-sm font-semibold text-[#2E496C]">{video.title}</p>
       </div>
     </button>
   );

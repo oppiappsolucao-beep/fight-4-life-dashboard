@@ -52,13 +52,13 @@ export default function StudentPerfilPage() {
       description="Suas informações de acesso na área do aluno."
     >
       {loading ? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.05] p-8 text-center text-sm text-white/50">
+        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
           Carregando...
         </div>
       ) : (
         <div className="grid max-w-xl gap-4">
-          <div className="rounded-xl border border-white/10 bg-white/[0.05] p-5 backdrop-blur-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-white/50">Foto</p>
+          <div className="rounded-xl border border-slate-200 bg-white p-5 backdrop-blur-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Foto</p>
             <div className="mt-3 flex items-center gap-4">
               {fotoSrc ? (
                 <img
@@ -67,11 +67,11 @@ export default function StudentPerfilPage() {
                   className="h-20 w-20 rounded-full object-cover ring-2 ring-white/10"
                 />
               ) : (
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/10 text-2xl font-semibold text-white/50">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/10 text-2xl font-semibold text-slate-500">
                   {nome.slice(0, 1).toUpperCase()}
                 </div>
               )}
-              <p className="m-0 text-sm text-white/55">
+              <p className="m-0 text-sm text-slate-500">
                 {fotoSrc
                   ? "Foto cadastrada pela academia."
                   : "Nenhuma foto cadastrada no seu perfil."}
@@ -79,29 +79,29 @@ export default function StudentPerfilPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-white/[0.05] p-5 backdrop-blur-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-white/50">Nome</p>
-            <p className="mt-2 text-lg font-medium text-white">{nome}</p>
+          <div className="rounded-xl border border-slate-200 bg-white p-5 backdrop-blur-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Nome</p>
+            <p className="mt-2 text-lg font-medium text-[#2E496C]">{nome}</p>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-white/[0.05] p-5 backdrop-blur-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-white/50">CPF</p>
-            <p className="mt-2 text-lg font-medium text-white">
+          <div className="rounded-xl border border-slate-200 bg-white p-5 backdrop-blur-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">CPF</p>
+            <p className="mt-2 text-lg font-medium text-[#2E496C]">
               {cpf ? formatCpf(cpf) : "—"}
             </p>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-white/[0.05] p-5 backdrop-blur-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-white/50">E-mail</p>
-            <p className="mt-2 break-all text-lg font-medium text-white">{email}</p>
+          <div className="rounded-xl border border-slate-200 bg-white p-5 backdrop-blur-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">E-mail</p>
+            <p className="mt-2 break-all text-lg font-medium text-[#2E496C]">{email}</p>
           </div>
 
           {perfil?.termoSaudeSignedAt ? (
             <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/5 p-5 backdrop-blur-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-200/80">
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700/80">
                 Termo de saúde
               </p>
-              <p className="mt-2 text-sm text-white/75">
+              <p className="mt-2 text-sm text-slate-600">
                 Assinado em{" "}
                 <strong>
                   {formatWorkoutDateLabel(perfil.termoSaudeSignedAt.slice(0, 10))}

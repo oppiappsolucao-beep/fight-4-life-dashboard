@@ -15,13 +15,13 @@ export default function DevSectionPage({
         <p className="mb-1 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#5B7595]">
           Desenvolvimento • usemint
         </p>
-        <h1 className="m-0 break-words text-xl font-semibold text-white sm:text-2xl">{title}</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/60">{description}</p>
+        <h1 className="m-0 break-words text-xl font-semibold text-[#2E496C] sm:text-2xl">{title}</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">{description}</p>
       </header>
 
       {children ?? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.05] p-6 text-center backdrop-blur-sm sm:p-10">
-          <p className="text-sm text-white/50">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 text-center backdrop-blur-sm sm:p-10">
+          <p className="text-sm text-slate-500">
             Conteúdo em desenvolvimento. Em breve você verá suas informações aqui.
           </p>
         </div>

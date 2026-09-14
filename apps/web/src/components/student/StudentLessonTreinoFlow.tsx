@@ -351,28 +351,28 @@ export default function StudentLessonTreinoFlow({
       />
 
       {error ? (
-        <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       ) : null}
 
       {loading ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center text-sm text-white/50">
+        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
           Carregando aula...
         </div>
       ) : (
         <>
-          <section className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#5B7595]/20 via-black/30 to-black/40 p-4 sm:p-5">
+          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-[#5B7595]/20 via-black/30 to-black/40 p-4 sm:p-5">
             <div className="flex items-start gap-4">
               <ProgressRing percent={completionPercent} status={completionStatus} />
               <div className="min-w-0 flex-1">
-                <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-white/45">
+                <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
                   {formatWorkoutDateLabel(classDate)} • {modalityName}
                 </p>
-                <h2 className="m-0 mt-1 truncate text-xl font-semibold text-white sm:text-2xl">
+                <h2 className="m-0 mt-1 truncate text-xl font-semibold text-[#2E496C] sm:text-2xl">
                   {activeLesson?.title ?? "Sem aula cadastrada"}
                 </h2>
-                <p className="m-0 mt-2 text-sm text-white/60">
+                <p className="m-0 mt-2 text-sm text-slate-500">
                   Plano: {planoModalidade}
                   {selectedSlot?.professorName ? ` • Prof. ${selectedSlot.professorName}` : ""}
                 </p>
@@ -381,8 +381,8 @@ export default function StudentLessonTreinoFlow({
           </section>
 
           {horarios.length > 0 ? (
-            <section className="rounded-xl border border-white/10 bg-black/20 p-4">
-              <p className="m-0 text-sm font-semibold text-white">Horários do dia</p>
+            <section className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="m-0 text-sm font-semibold text-[#2E496C]">Horários do dia</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {horarios.map((slot) => {
                   const key = lessonSlotKey(slot);
@@ -398,8 +398,8 @@ export default function StudentLessonTreinoFlow({
                         selected
                           ? "bg-[#5B7595] text-white"
                           : disabled
-                            ? "cursor-not-allowed border border-white/10 text-white/30"
-                            : "border border-white/15 text-white/70 hover:border-[#5B7595]/40"
+                            ? "cursor-not-allowed border border-slate-200 text-white/30"
+                            : "border border-slate-200 text-slate-600 hover:border-[#5B7595]/40"
                       }`}
                     >
                       {slot.label}
@@ -412,7 +412,7 @@ export default function StudentLessonTreinoFlow({
             </section>
           ) : null}
 
-          <section className="sticky top-14 z-20 -mx-1 rounded-2xl border border-white/10 bg-black/80 p-2 backdrop-blur-md md:top-0">
+          <section className="sticky top-14 z-20 -mx-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm md:top-0">
             <div className="grid grid-cols-2 gap-2">
               {LESSON_PHASES.map((phase) => {
                 const selected = activePhase === phase.id;
@@ -440,8 +440,8 @@ export default function StudentLessonTreinoFlow({
                       selected
                         ? "bg-[#5B7595] text-white shadow-[0_8px_24px_rgba(91,117,149,0.25)]"
                         : hasContent
-                          ? "bg-white/[0.04] text-white/70 hover:bg-white/[0.07]"
-                          : "bg-white/[0.04] text-white/45 hover:bg-white/[0.07]"
+                          ? "bg-white text-slate-600 hover:bg-white/[0.07]"
+                          : "bg-white text-slate-400 hover:bg-white/[0.07]"
                     }`}
                   >
                     <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide">
@@ -457,7 +457,7 @@ export default function StudentLessonTreinoFlow({
           {activePhase === "AQUECIMENTO" ? (
             <section className="space-y-4">
               {warmupExercises.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-white/45">
+                <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">
                   {activeLesson
                     ? `Nenhum movimento de aquecimento cadastrado para ${modalityName}.`
                     : `Sem aquecimento para ${formatWorkoutDateLabel(classDate)}. Aguarde o professor cadastrar a aula.`}
@@ -492,7 +492,7 @@ export default function StudentLessonTreinoFlow({
                 onClick={markAulaCompleted}
                 className={`w-full rounded-xl px-4 py-3 text-sm font-semibold ${
                   aulaCompleted
-                    ? "border border-emerald-400/30 bg-emerald-500/10 text-emerald-200"
+                    ? "border border-emerald-400/30 bg-emerald-500/10 text-emerald-700"
                     : "bg-[#5B7595] text-white"
                 }`}
               >
@@ -500,7 +500,7 @@ export default function StudentLessonTreinoFlow({
               </button>
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-white/45">
+            <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">
               Nenhuma aula publicada para {formatWorkoutDateLabel(classDate)} em {modalityName}.
             </div>
           )}
