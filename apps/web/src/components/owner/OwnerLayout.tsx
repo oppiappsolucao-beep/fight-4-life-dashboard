@@ -32,7 +32,7 @@ export default function OwnerLayout() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#eef2f6]">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#d5dee8]">
       <DashboardShell
         title="Dono"
         menuOpen={menuOpen}

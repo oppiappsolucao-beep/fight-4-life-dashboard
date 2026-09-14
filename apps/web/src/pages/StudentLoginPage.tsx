@@ -1,7 +1,6 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import OppiLogo from "../components/OppiLogo";
-import HeroBackground from "../components/HeroBackground";
+import AuthEntryLayout, { authInputClass } from "../components/AuthEntryLayout";
 import { useAuth } from "../contexts/AuthContext";
 import { apiFetch, setTenantSlug } from "../lib/api";
 import { formatCpf } from "../lib/format";
@@ -204,101 +203,80 @@ export default function StudentLoginPage() {
             : "Digite sua senha para continuar";
 
   return (
-    <div className="relative min-h-dvh overflow-hidden">
-      <HeroBackground />
+    <AuthEntryLayout
+      showBack={false}
+      title={
+        step === "password" && profile?.name
+          ? `Olá, ${profile.name.split(" ")[0]}!`
+          : "Seja bem-vindo"
+      }
+      subtitle={headerSubtitle}
+    >
+      {step === "identify" ? (
+        <form onSubmit={handleIdentify}>
+          <input
+            type="text"
+            value={identifier}
+            onChange={(e) => handleIdentifierChange(e.target.value)}
+            placeholder="000.000.000-00 ou seu@email.com"
+            autoComplete="username"
+            className={`mb-2 ${authInputClass}`}
+          />
 
-      <div className="relative z-10 mx-auto flex min-h-dvh max-w-md flex-col px-4 py-6 sm:px-6">
-        <header className="flex justify-center pt-2 sm:pt-4">
-          <OppiLogo size="md" onDark />
-        </header>
+          {error && (
+            <p className="mb-2 text-[0.75rem] leading-snug text-red-600">{error}</p>
+          )}
 
-        <main className="flex flex-1 flex-col items-center justify-center py-8">
-          <div className="mb-6 text-center">
-            <h1 className="m-0 text-[clamp(1.35rem,5vw,1.85rem)] font-normal text-white/95">
-              {step === "password" && profile?.name
-                ? `Olá, ${profile.name.split(" ")[0]}!`
-                : "Seja bem vindo!"}
-            </h1>
-            <p className="mt-2 text-[0.78rem] leading-relaxed text-[#9a9a9a]">
-              {headerSubtitle}
-            </p>
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-4 w-full rounded-lg bg-[#2E496C] py-3 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:bg-[#243a58] disabled:opacity-60"
+          >
+            {loading ? "Verificando..." : "Continuar"}
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={handlePasswordSubmit}>
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Digite sua senha"
+              autoComplete="current-password"
+              autoFocus
+              className={`mb-2 pr-16 ${authInputClass}`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.68rem] font-medium text-slate-500"
+            >
+              {showPassword ? "Ocultar" : "Ver"}
+            </button>
           </div>
 
-          <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05] shadow-[0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur-md">
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#5B7595]/40 to-transparent" />
+          {error && (
+            <p className="mb-2 text-[0.75rem] leading-snug text-red-600">{error}</p>
+          )}
 
-            {step === "identify" ? (
-              <form onSubmit={handleIdentify} className="px-5 py-6 sm:px-6">
-                <input
-                  type="text"
-                  value={identifier}
-                  onChange={(e) => handleIdentifierChange(e.target.value)}
-                  placeholder="000.000.000-00 ou seu@email.com"
-                  autoComplete="username"
-                  className="mb-2 w-full rounded-lg border border-white/20 bg-white px-3 py-3 text-[0.9rem] text-black outline-none transition focus:border-[#5B7595]/60 focus:ring-2 focus:ring-[#5B7595]/15"
-                />
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-4 w-full rounded-lg bg-[#2E496C] py-3 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:bg-[#243a58] disabled:opacity-60"
+          >
+            {loading ? "Entrando..." : "Entrar"}
+          </button>
 
-                {error && (
-                  <p className="mb-2 text-[0.75rem] leading-snug text-red-300/90">
-                    {error}
-                  </p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="mt-4 w-full rounded-lg bg-gradient-to-r from-[#2E496C] to-[#5B7595] py-3 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
-                >
-                  {loading ? "Verificando..." : "Continuar"}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handlePasswordSubmit} className="px-5 py-6 sm:px-6">
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Digite sua senha"
-                    autoComplete="current-password"
-                    autoFocus
-                    className="mb-2 w-full rounded-lg border border-white/20 bg-white px-3 py-3 pr-16 text-[0.9rem] text-black outline-none transition focus:border-[#5B7595]/60 focus:ring-2 focus:ring-[#5B7595]/15"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.68rem] font-medium text-zinc-500"
-                  >
-                    {showPassword ? "Ocultar" : "Ver"}
-                  </button>
-                </div>
-
-                {error && (
-                  <p className="mb-2 text-[0.75rem] leading-snug text-red-300/90">
-                    {error}
-                  </p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="mt-4 w-full rounded-lg bg-gradient-to-r from-[#2E496C] to-[#5B7595] py-3 text-[0.75rem] font-bold uppercase tracking-wide text-white transition hover:brightness-105 disabled:opacity-60"
-                >
-                  {loading ? "Entrando..." : "Entrar"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={resetToIdentify}
-                  className="mt-3 w-full py-2 text-[0.72rem] font-medium text-white/45 transition hover:text-white/70"
-                >
-                  Voltar
-                </button>
-              </form>
-            )}
-          </div>
-        </main>
-      </div>
-    </div>
+          <button
+            type="button"
+            onClick={resetToIdentify}
+            className="mt-3 w-full py-2 text-[0.72rem] font-medium text-[#5B7595] transition hover:text-[#2E496C]"
+          >
+            Voltar
+          </button>
+        </form>
+      )}
+    </AuthEntryLayout>
   );
 }

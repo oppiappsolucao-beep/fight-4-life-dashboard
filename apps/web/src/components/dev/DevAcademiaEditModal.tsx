@@ -422,15 +422,17 @@ export default function DevAcademiaEditModal({
                         href={form.subdominio.trim() ? previewUrl : undefined}
                         target="_blank"
                         rel="noreferrer"
-                        className="font-medium text-[#A9BBD5] hover:underline"
+                        className="font-medium text-[#2E496C] hover:underline"
                       >
                         {previewUrl.replace(/^https?:\/\//, "")}
                       </a>
                     </p>
-                    <p className="mt-2 text-[0.7rem] leading-relaxed text-amber-100/80">
-                      Depois de salvar, cadastre este host em EasyPanel → Domains do serviço
-                      (ou use o wildcard <code className="text-amber-50">*.oppifit.com.br</code>).
-                      Sem isso o navegador mostra 404.
+                    <p className="mt-2 text-[0.7rem] leading-relaxed text-slate-600">
+                      Depois de salvar, o EasyPanel precisa do wildcard{" "}
+                      <code className="rounded bg-white px-1 text-[#2E496C]">
+                        *.{primaryAppBaseDomain()}
+                      </code>{" "}
+                      com certificado SSL. Sem isso o Chrome mostra “conexão não é particular”.
                     </p>
                   </div>
 

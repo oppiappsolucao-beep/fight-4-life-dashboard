@@ -15,7 +15,7 @@ declare module "fastify" {
 }
 
 /** Subdomínios de plataforma — não mapeiam academia. */
-const RESERVED_SUBDOMAINS = new Set([
+export const RESERVED_SUBDOMAINS = new Set([
   "academia",
   "www",
   "api",
@@ -25,7 +25,15 @@ const RESERVED_SUBDOMAINS = new Set([
   "mail",
   "dev",
   "static",
+  "usemint",
+  "oppifit",
 ]);
+
+export function isReservedSubdomain(value: string | null | undefined): boolean {
+  const normalized = value?.trim().toLowerCase();
+  if (!normalized) return false;
+  return RESERVED_SUBDOMAINS.has(normalized) || isPlatformTenantSlug(normalized);
+}
 
 /** Slugs do tenant da plataforma (hub / painel OPPI Fit). */
 export const PLATFORM_TENANT_SLUGS = ["oppifit", "oppi-tech"] as const;
@@ -95,7 +103,7 @@ export async function findAcademyTenantByKey(
   key: string | null | undefined,
 ): Promise<TenantContext | null> {
   const normalized = key?.trim().toLowerCase();
-  if (!normalized || RESERVED_SUBDOMAINS.has(normalized) || isPlatformTenantSlug(normalized)) {
+  if (!normalized || isReservedSubdomain(normalized)) {
     return null;
   }
 
@@ -134,7 +142,7 @@ export function extractSubdomainFromHost(hostHeader: string | undefined): string
 
     const sub = host.slice(0, -(base.length + 1));
     if (!sub || sub.includes(".")) continue;
-    if (RESERVED_SUBDOMAINS.has(sub)) return null;
+    if (isReservedSubdomain(sub)) return null;
     return sub;
   }
 

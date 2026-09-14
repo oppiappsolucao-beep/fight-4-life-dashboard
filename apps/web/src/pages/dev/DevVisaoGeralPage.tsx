@@ -109,11 +109,11 @@ export default function DevVisaoGeralPage() {
             subtitle="Receita = taxa por aluno que pagou (R$ 1,90 até 100 / R$ 1,49 acima), por academia e mês da academia."
           />
 
-          <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <div className="rounded-xl border border-[#5B7595]/35 bg-[#d5dee8] px-4 py-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="m-0 text-sm font-semibold text-[#2E496C]">Asaas (conta master)</p>
-                <p className="m-0 mt-1 text-xs text-slate-400">
+                <p className="m-0 mt-1 text-xs text-slate-600">
                   {overview.asaas?.configured
                     ? "Variáveis encontradas. No EasyPanel a chave deve ser aact_prod_... sem $."
                     : `Faltando: ${(overview.asaas?.missingEnv ?? []).join(", ") || "ASAAS_API_KEY, ASAAS_WALLET_ID"}`}

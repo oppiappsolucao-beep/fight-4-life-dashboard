@@ -7,7 +7,11 @@ import { UserRole } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
 
 import { slugify, uniqueTenantSlug } from "../../lib/slug.js";
-import { academyPublicUrl } from "../../middleware/tenant.js";
+import {
+  academyPublicUrl,
+  isReservedSubdomain,
+  PLATFORM_TENANT_SLUGS,
+} from "../../middleware/tenant.js";
 
 import { requireAuth, requireRole } from "../../middleware/auth.js";
 
@@ -28,7 +32,6 @@ import {
 import { getPlatformPlanValue } from "./billing.js";
 import { DEV_NEW_ACADEMIES_GOAL, percentValue } from "../../lib/goals.js";
 import { registerDevModalityRoutes } from "../modalities/routes.js";
-import { PLATFORM_TENANT_SLUGS } from "../../middleware/tenant.js";
 import { sumPlatformRevenueForOpenCycles } from "../../lib/charge-payments.js";
 import { centsToBrl } from "../../lib/platform-fees.js";
 import {
@@ -768,6 +771,12 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
       let nextSubdomain = tenant.subdomain;
       if (data.subdominio) {
         const customSub = slugify(data.subdominio);
+        if (isReservedSubdomain(customSub)) {
+          return reply.status(400).send({
+            error:
+              "Este subdomínio é reservado para a plataforma. Use outro nome (ex.: fourarbjj).",
+          });
+        }
         const taken = await prisma.tenant.findFirst({
           where: {
             id: { not: tenant.id },
@@ -897,6 +906,13 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
       let slug: string;
 
       if (customSub) {
+        if (isReservedSubdomain(customSub)) {
+          return reply.status(400).send({
+            error:
+              "Este subdomínio é reservado para a plataforma (academia, usemint, www…). Escolha outro, por exemplo fourarbjj.",
+          });
+        }
+
         const taken = await prisma.tenant.findFirst({
           where: {
             OR: [{ slug: customSub }, { subdomain: customSub }],
@@ -913,6 +929,7 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
         slug = customSub;
       } else {
         slug = await uniqueTenantSlug(data.nomeFantasia, async (candidate) => {
+          if (isReservedSubdomain(candidate)) return true;
           const found = await prisma.tenant.findFirst({
             where: {
               OR: [{ slug: candidate }, { subdomain: candidate }],
@@ -1010,6 +1027,7 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
           subdomain: tenant.subdomain,
           name: tenant.name,
           active: tenant.active,
+          url: academyPublicUrl(tenant.subdomain ?? tenant.slug),
           asaasAccountId: asaasLink.ok ? asaasLink.result.accountId : null,
           asaasWalletId: asaasLink.ok ? asaasLink.result.walletId : null,
         },

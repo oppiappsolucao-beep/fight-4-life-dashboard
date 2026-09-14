@@ -17,7 +17,7 @@ export function OverviewHero({
   const brandLabel = formatAcademyName(brand) || undefined;
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_30px_rgba(46,73,108,0.06)] sm:p-6">
+    <section className="overflow-hidden rounded-2xl border border-[#5B7595]/30 bg-[#d5dee8] p-5 shadow-[0_8px_30px_rgba(46,73,108,0.08)] sm:p-6">
       <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[#5B7595]">
         {eyebrow}
       </p>
@@ -31,7 +31,7 @@ export function OverviewHero({
       ) : (
         <h2 className="m-0 mt-1 text-2xl font-semibold text-[#2E496C]">{title}</h2>
       )}
-      <p className="m-0 mt-2 text-sm text-slate-500">{subtitle}</p>
+      <p className="m-0 mt-2 text-sm text-slate-600">{subtitle}</p>
     </section>
   );
 }
@@ -42,10 +42,10 @@ export function OverviewMetricGrid({
   items: Array<{ label: string; value: string; hint?: string }>;
 }) {
   const tones = [
-    "bg-[#E8EEF4]",
-    "bg-[#EEF1F8]",
-    "bg-[#EAF6F0]",
-    "bg-[#F3EEF8]",
+    "bg-[#c5d0dc]",
+    "bg-[#cdd6e4]",
+    "bg-[#c5d4c8]",
+    "bg-[#d0c8dc]",
   ];
 
   return (
@@ -55,7 +55,7 @@ export function OverviewMetricGrid({
           key={item.label}
           className={`rounded-2xl border border-slate-200/80 p-4 ${tones[index % tones.length]}`}
         >
-          <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-500">
+          <p className="m-0 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-600">
             {item.label}
           </p>
           <p className="m-0 mt-2 text-2xl font-semibold text-[#2E496C]">{item.value}</p>

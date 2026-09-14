@@ -13,7 +13,7 @@ export default function StudentLayout() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#eef2f6]">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#d5dee8]">
       <DashboardShell
         title="Aluno"
         menuOpen={menuOpen}

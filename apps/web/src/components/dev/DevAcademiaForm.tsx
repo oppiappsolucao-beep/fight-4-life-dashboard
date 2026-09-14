@@ -174,16 +174,21 @@ export default function DevAcademiaForm() {
             </Field>
             <p className="mt-2 text-xs text-slate-500">
               URL:{" "}
-              <span className="font-medium text-[#A9BBD5]">
+              <span className="font-medium text-[#2E496C]">
                 {form.subdominio.trim()
                   ? academyPublicUrl(form.subdominio.trim()).replace(/^https?:\/\//, "")
                   : `[gerado].${primaryAppBaseDomain()}`}
               </span>
               . Se vazio, geramos a partir do nome fantasia.
             </p>
-            <p className="mt-2 text-[0.7rem] leading-relaxed text-amber-100/80">
-              No EasyPanel, cadastre o host (ou o wildcard{" "}
-              <code className="text-amber-50">*.oppifit.com.br</code>) no serviço da aplicação.
+            <p className="mt-2 text-[0.7rem] leading-relaxed text-slate-600">
+              No EasyPanel, o serviço precisa do host wildcard{" "}
+              <code className="rounded bg-white px-1 text-[#2E496C]">
+                *.{primaryAppBaseDomain()}
+              </code>{" "}
+              e certificado SSL cobrindo esse wildcard. Sem isso, o Chrome mostra “conexão não é particular”
+              no subdomínio novo. Não use <code className="rounded bg-white px-1">usemint</code> como
+              subdomínio de academia — esse nome é reservado da plataforma.
             </p>
           </div>
           <Field label="CNPJ" required>

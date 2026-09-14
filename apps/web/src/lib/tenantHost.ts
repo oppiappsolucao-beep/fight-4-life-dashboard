@@ -10,6 +10,8 @@ const RESERVED_SUBDOMAINS = new Set([
   "mail",
   "dev",
   "static",
+  "usemint",
+  "oppifit",
 ]);
 
 function appBaseDomains(): string[] {
