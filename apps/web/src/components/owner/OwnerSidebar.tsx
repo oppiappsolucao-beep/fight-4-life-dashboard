@@ -33,7 +33,7 @@ export default function OwnerSidebar({ open, onClose }: OwnerSidebarProps) {
     <aside className={sidebarShellClass(open)}>
       <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-5">
         <div className="min-w-0">
-          <OppiLogo size="sm" />
+          <OppiLogo variant="full" size="sm" />
           <p className="mt-3 text-[0.65rem] font-semibold uppercase tracking-[0.12rem] text-[#5B7595]">
             Dono da Academia
           </p>

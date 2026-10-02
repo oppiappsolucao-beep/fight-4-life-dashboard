@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { apiFetch } from "../../lib/api";
 import { formatCpf, formatPhone } from "../../lib/format";
 import OwnerAlunoEditModal from "../../components/owner/OwnerAlunoEditModal";
@@ -30,6 +30,9 @@ export default function OwnerAlunosPage() {
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [notice, setNotice] = useState("");
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const load = useCallback(() => {
     setLoading(true);
@@ -45,6 +48,13 @@ export default function OwnerAlunosPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    const state = location.state as { cadastro?: string } | null;
+    if (state?.cadastro !== "ok") return;
+    setNotice("Aluno cadastrado com sucesso.");
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.pathname, location.state, navigate]);
 
   async function handleDelete(aluno: AlunoListItem) {
     const confirmed = window.confirm(
@@ -80,6 +90,12 @@ export default function OwnerAlunosPage() {
           Novo aluno
         </Link>
       </div>
+
+      {notice ? (
+        <div className="mb-4 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">
+          {notice}
+        </div>
+      ) : null}
 
       {error ? (
         <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">

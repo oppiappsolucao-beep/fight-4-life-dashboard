@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { getAsaasWebhookToken } from "../../lib/asaas/config.js";
+import { confirmAcademyChargePaid } from "../../lib/asaas/charges.js";
 import { confirmStudentChargePaid } from "../../lib/charge-payments.js";
 
 type AsaasWebhookBody = {
@@ -69,17 +70,25 @@ export async function webhookRoutes(app: FastifyInstance): Promise<void> {
       body.payment?.clientPaymentDate;
     const paidAt = paidAtRaw ? new Date(paidAtRaw) : new Date();
 
+    const paid = Number.isNaN(paidAt.getTime()) ? new Date() : paidAt;
+
     try {
       const result = await confirmStudentChargePaid({
         asaasPaymentId: paymentId,
-        paidAt: Number.isNaN(paidAt.getTime()) ? new Date() : paidAt,
+        paidAt: paid,
       });
       return reply.send({ ok: true, ...result });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro no webhook.";
-      // Cobrança desconhecida: ack para o Asaas não reenviar eternamente
       if (message.includes("não encontrada")) {
-        request.log.warn({ paymentId, event }, "Webhook Asaas sem StudentCharge local");
+        const academy = await confirmAcademyChargePaid({
+          asaasPaymentId: paymentId,
+          paidAt: paid,
+        });
+        if (academy) {
+          return reply.send({ ok: true, academy: true, ...academy });
+        }
+        request.log.warn({ paymentId, event }, "Webhook Asaas sem cobrança local");
         return reply.send({ ok: true, ignored: true, reason: message });
       }
       request.log.error(error);

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import DevAcademiaEditModal from "../../components/dev/DevAcademiaEditModal";
 import DevAcademiaDeleteButton from "../../components/dev/DevAcademiaDeleteButton";
+import { apiFetch } from "../../lib/api";
 import { useDevAcademias, type DevAcademia } from "../../hooks/useDevAcademias";
 import DevSectionPage from "./DevSectionPage";
 
@@ -21,6 +22,9 @@ function formatDate(iso: string) {
 export default function DevContasReceberPage() {
   const { academias, loading, error, reload } = useDevAcademias();
   const [editingAcademia, setEditingAcademia] = useState<DevAcademia | null>(null);
+  const [chargingId, setChargingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
 
   const totalReceber = academias.reduce((sum, academia) => {
     if (!academia.active) return sum;
@@ -28,10 +32,27 @@ export default function DevContasReceberPage() {
     return sum + (valor ?? 0);
   }, 0);
 
+  async function emitirCobranca(academia: DevAcademia) {
+    setChargingId(academia.id);
+    setActionError("");
+    setActionMessage("");
+    try {
+      const result = await apiFetch<{ message: string }>(`/dev/academias/${academia.id}/cobranca`, {
+        method: "POST",
+      });
+      setActionMessage(result.message);
+      reload();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Erro ao emitir cobrança.");
+    } finally {
+      setChargingId(null);
+    }
+  }
+
   return (
     <DevSectionPage
       title="Contas a Receber"
-      description="Mensalidades e cobranças das academias cadastradas na plataforma."
+      description="Cobrança Asaas do plano da academia, emitida para o dono no cadastro."
     >
       {loading && (
         <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
@@ -44,6 +65,18 @@ export default function DevContasReceberPage() {
           {error}
         </div>
       )}
+
+      {actionError ? (
+        <div className="mb-4 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-700">
+          {actionError}
+        </div>
+      ) : null}
+
+      {actionMessage ? (
+        <div className="mb-4 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">
+          {actionMessage}
+        </div>
+      ) : null}
 
       {!loading && !error && academias.length === 0 && (
         <div className="rounded-xl border border-slate-200 bg-white p-10 text-center backdrop-blur-sm">
@@ -87,6 +120,7 @@ export default function DevContasReceberPage() {
                     <th className="px-5 py-3">Forma de pagamento</th>
                     <th className="px-5 py-3">Valor</th>
                     <th className="px-5 py-3">Cadastro</th>
+                    <th className="px-5 py-3">Asaas (dono)</th>
                     <th className="px-5 py-3">Status</th>
                     <th className="px-5 py-3">Ações</th>
                   </tr>
@@ -116,11 +150,47 @@ export default function DevContasReceberPage() {
                         <td className="px-5 py-4 text-slate-500">
                           {formatDate(academia.createdAt)}
                         </td>
+                        <td className="px-5 py-4 text-xs text-slate-600">
+                          {academia.asaasCharge ? (
+                            <>
+                              <span className="font-semibold text-[#2E496C]">
+                                {academia.asaasCharge.status === "PAID" ? "Paga" : "Pendente"}
+                              </span>
+                              {academia.asaasCharge.dueDate ? (
+                                <span className="block text-slate-400">
+                                  Vence {academia.asaasCharge.dueDate.split("-").reverse().join("/")}
+                                </span>
+                              ) : null}
+                              {academia.asaasCharge.invoiceUrl ? (
+                                <a
+                                  href={academia.asaasCharge.invoiceUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="mt-1 inline-block font-semibold text-[#5B7595] underline"
+                                >
+                                  Abrir cobrança
+                                </a>
+                              ) : null}
+                            </>
+                          ) : (
+                            "Sem cobrança"
+                          )}
+                        </td>
                         <td className="px-5 py-4">
                           <StatusBadge active={academia.active} />
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex flex-wrap gap-2">
+                            {!academia.asaasCharge || academia.asaasCharge.status === "CANCELLED" ? (
+                              <button
+                                type="button"
+                                disabled={chargingId === academia.id}
+                                onClick={() => void emitirCobranca(academia)}
+                                className="rounded-lg border border-[#5B7595]/40 px-3 py-1.5 text-[0.72rem] font-medium text-[#2E496C] transition hover:border-[#5B7595]"
+                              >
+                                {chargingId === academia.id ? "Emitindo..." : "Cobrar dono"}
+                              </button>
+                            ) : null}
                             <button
                               type="button"
                               onClick={() => setEditingAcademia(academia)}

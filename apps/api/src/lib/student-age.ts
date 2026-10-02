@@ -1,4 +1,4 @@
-/** Menor de 18 anos: cobrança Asaas em nome do responsável, não do aluno. */
+/** Cadastro de aluno é para maiores de 18 anos. A cobrança Asaas é da academia. */
 
 export function parseBirthDate(dataNascimento: string): Date | null {
   const raw = dataNascimento.trim();
@@ -30,6 +30,12 @@ export function isMinorStudent(dataNascimento: string, reference = new Date()): 
   const age = getAgeYears(dataNascimento, reference);
   if (age === null) return false;
   return age < 18;
+}
+
+export function isAdultStudent(dataNascimento: string, reference = new Date()): boolean {
+  const age = getAgeYears(dataNascimento, reference);
+  if (age === null) return false;
+  return age >= 18;
 }
 
 export interface BillingPayerInput {

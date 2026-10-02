@@ -48,6 +48,9 @@ interface RegisterResult {
   tenantName: string;
   emailLogin: string;
   url: string;
+  message: string;
+  invoiceUrl: string | null;
+  chargeError: string | null;
 }
 
 export default function DevAcademiaForm() {
@@ -113,6 +116,9 @@ export default function DevAcademiaForm() {
       const result = await apiFetch<{
         tenant: { name: string; url?: string; subdomain?: string; slug: string };
         owner: { email: string };
+        message?: string;
+        chargeError?: string | null;
+        asaas?: { invoiceUrl: string | null; dueDate: string; amountBrl: number } | null;
       }>("/dev/academias", {
         method: "POST",
         body: JSON.stringify({
@@ -128,6 +134,9 @@ export default function DevAcademiaForm() {
         url:
           result.tenant.url ||
           academyPublicUrl(result.tenant.subdomain || result.tenant.slug),
+        message: result.message || "Academia criada.",
+        invoiceUrl: result.asaas?.invoiceUrl ?? null,
+        chargeError: result.chargeError ?? null,
       });
       setForm(INITIAL_FORM);
       notifyDevAcademiasChanged();
@@ -385,7 +394,26 @@ export default function DevAcademiaForm() {
 
       {success && (
         <div className="rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">
-          Academia <strong>{success.tenantName}</strong> cadastrada com sucesso!
+          Academia <strong>{success.tenantName}</strong> cadastrada. {success.message}{" "}
+          {success.invoiceUrl ? (
+            <>
+              Link da cobrança do dono:{" "}
+              <a
+                href={success.invoiceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="font-semibold underline hover:text-emerald-700"
+              >
+                {success.invoiceUrl}
+              </a>
+              .{" "}
+            </>
+          ) : null}
+          {success.chargeError ? (
+            <span className="block mt-1 text-amber-800">
+              A academia foi salva, mas a cobrança Asaas do dono não saiu: {success.chargeError}
+            </span>
+          ) : null}{" "}
           URL:{" "}
           <a
             href={success.url}

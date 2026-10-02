@@ -49,23 +49,6 @@ function parseDueDay(diaVencimento: string): number {
   return day;
 }
 
-function chargeLabel(status: LatestCharge["status"] | undefined) {
-  switch (status) {
-    case "PAID":
-      return "Paga (Asaas)";
-    case "PENDING":
-      return "Pendente (Asaas)";
-    case "OVERDUE":
-      return "Vencida (Asaas)";
-    case "CANCELLED":
-      return "Cancelada";
-    case "REFUNDED":
-      return "Estornada";
-    default:
-      return "Sem cobrança";
-  }
-}
-
 export default function OwnerContasReceberPage() {
   const [alunos, setAlunos] = useState<AlunoRecebivel[]>([]);
   const [planos, setPlanos] = useState<PlanItem[]>(DEFAULT_OWNER_PLANS);
@@ -73,9 +56,6 @@ export default function OwnerContasReceberPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [releasingId, setReleasingId] = useState<string | null>(null);
-  const [chargingId, setChargingId] = useState<string | null>(null);
-  const [batchLoading, setBatchLoading] = useState(false);
-  const [selected, setSelected] = useState<Record<string, boolean>>({});
 
   const priceMap = useMemo(() => plansToPriceMap(planos), [planos]);
 
@@ -127,72 +107,6 @@ export default function OwnerContasReceberPage() {
     }
   }
 
-  async function gerarCobranca(aluno: AlunoRecebivel) {
-    setChargingId(aluno.id);
-    setError("");
-    setSuccess("");
-    try {
-      const result = await apiFetch<{
-        message: string;
-        invoiceUrl: string | null;
-        charge: LatestCharge;
-      }>(`/owner/alunos/${aluno.id}/cobrancas`, { method: "POST" });
-
-      setAlunos((current) =>
-        current.map((item) =>
-          item.id === aluno.id
-            ? {
-                ...item,
-                latestCharge: {
-                  id: result.charge.id,
-                  status: result.charge.status,
-                  dueDate: result.charge.dueDate,
-                  amountBrl: result.charge.amountBrl,
-                  asaasPaymentId: result.charge.asaasPaymentId,
-                  paidAt: null,
-                },
-              }
-            : item,
-        ),
-      );
-      setSuccess(
-        result.invoiceUrl
-          ? `${result.message} Link: ${result.invoiceUrl}`
-          : result.message,
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao gerar cobrança.");
-    } finally {
-      setChargingId(null);
-    }
-  }
-
-  async function gerarLote() {
-    const studentIds = Object.entries(selected)
-      .filter(([, on]) => on)
-      .map(([id]) => id);
-    if (!studentIds.length) {
-      setError("Selecione ao menos um aluno.");
-      return;
-    }
-    setBatchLoading(true);
-    setError("");
-    setSuccess("");
-    try {
-      const result = await apiFetch<{ message: string }>("/owner/cobrancas/lote", {
-        method: "POST",
-        body: JSON.stringify({ studentIds }),
-      });
-      setSuccess(result.message);
-      setSelected({});
-      load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro no lote de cobranças.");
-    } finally {
-      setBatchLoading(false);
-    }
-  }
-
   const totalPrevisto = alunos.reduce(
     (sum, aluno) => sum + (priceMap[aluno.planoModalidade] ?? 0),
     0,
@@ -200,16 +114,10 @@ export default function OwnerContasReceberPage() {
   const vencidos = alunos.filter(
     (a) => getEffectiveDueStatus(a) === "vencido",
   ).length;
-  const venceHoje = alunos.filter((a) => getEffectiveDueStatus(a) === "hoje").length;
-  const asaasPendentes = alunos.filter(
-    (a) => a.latestCharge?.status === "PENDING" || a.latestCharge?.status === "OVERDUE",
-  ).length;
-  const selectedCount = Object.values(selected).filter(Boolean).length;
-
   return (
     <OwnerSectionPage
       title="Contas a Receber"
-      description="Mensalidades Asaas dos alunos. Gere cobrança individual ou em lote."
+      description="Mensalidades dos alunos, combinadas direto com a academia. A cobrança Asaas da plataforma é do dono, no cadastro da academia."
     >
       {loading ? (
         <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
@@ -245,44 +153,23 @@ export default function OwnerContasReceberPage() {
 
       {!loading && !error && alunos.length > 0 ? (
         <>
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <p className="m-0 text-xs text-slate-400">
-              {selectedCount > 0
-                ? `${selectedCount} aluno(s) selecionado(s)`
-                : "Selecione alunos para cobrança em lote"}
-            </p>
-            <button
-              type="button"
-              disabled={batchLoading || selectedCount === 0}
-              onClick={() => void gerarLote()}
-              className="rounded-lg bg-[#5B7595] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
-            >
-              {batchLoading ? "Gerando lote..." : "Gerar cobranças (lote)"}
-            </button>
-          </div>
-
-          <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mb-6 grid gap-4 sm:grid-cols-3">
             <SummaryCard label="Alunos ativos" value={String(alunos.length)} />
             <SummaryCard
               label="Receita prevista (mês)"
               value={formatPlanCurrency(totalPrevisto)}
             />
             <SummaryCard label="Vencidos no mês" value={String(vencidos)} />
-            <SummaryCard label="Asaas pendentes" value={String(asaasPendentes || venceHoje)} />
           </div>
 
           <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white backdrop-blur-sm">
             <table className="min-w-full border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-[0.7rem] uppercase tracking-wide text-slate-400">
-                  <th className="px-3 py-3 font-medium">
-                    <span className="sr-only">Selecionar</span>
-                  </th>
                   <th className="px-4 py-3 font-medium">Aluno</th>
                   <th className="px-4 py-3 font-medium">Plano</th>
                   <th className="px-4 py-3 font-medium">Valor</th>
                   <th className="px-4 py-3 font-medium">Vencimento</th>
-                  <th className="px-4 py-3 font-medium">Asaas</th>
                   <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 font-medium">Ações</th>
                 </tr>
@@ -293,28 +180,12 @@ export default function OwnerContasReceberPage() {
                     aluno.latestCharge?.amountBrl ?? priceMap[aluno.planoModalidade];
                   const status = getEffectiveDueStatus(aluno);
                   const proximoVenc = getNextDueDate(aluno.diaVencimento);
-                  const hasOpenAsaas =
-                    aluno.latestCharge?.status === "PENDING" ||
-                    aluno.latestCharge?.status === "OVERDUE";
 
                   return (
                     <tr
                       key={aluno.id}
                       className="border-b border-slate-100 text-[#2E496C]/85 last:border-0"
                     >
-                      <td className="px-3 py-3">
-                        <input
-                          type="checkbox"
-                          checked={Boolean(selected[aluno.id])}
-                          onChange={(e) =>
-                            setSelected((prev) => ({
-                              ...prev,
-                              [aluno.id]: e.target.checked,
-                            }))
-                          }
-                          className="h-4 w-4 accent-[#5B7595]"
-                        />
-                      </td>
                       <td className="px-4 py-3">
                         <p className="m-0 font-medium text-[#2E496C]">{aluno.nomeCompleto}</p>
                         <p className="m-0 text-xs text-slate-400">
@@ -339,31 +210,11 @@ export default function OwnerContasReceberPage() {
                           Próx. {proximoVenc.toLocaleDateString("pt-BR")}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-600">
-                        {chargeLabel(aluno.latestCharge?.status)}
-                        {aluno.latestCharge?.dueDate ? (
-                          <span className="block text-[#2E496C]/40">
-                            {aluno.latestCharge.dueDate.split("-").reverse().join("/")}
-                          </span>
-                        ) : null}
-                      </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={status} liberadoAte={aluno.acessoLiberadoAte} />
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-col gap-1.5">
-                          <button
-                            type="button"
-                            disabled={chargingId === aluno.id || hasOpenAsaas}
-                            onClick={() => void gerarCobranca(aluno)}
-                            className="rounded-lg border border-[#5B7595]/40 px-3 py-1.5 text-xs font-semibold text-[#A9BBD5] hover:bg-[#5B7595]/10 disabled:opacity-50"
-                          >
-                            {chargingId === aluno.id
-                              ? "Gerando..."
-                              : hasOpenAsaas
-                                ? "Já pendente"
-                                : "Gerar cobrança"}
-                          </button>
                           {status === "vencido" ? (
                             <button
                               type="button"

@@ -25,9 +25,11 @@ import {
 
   formToBranding,
 
+  parseAsaasCharge,
   parseBilling,
 
 } from "./academy.js";
+import { issueAcademyOwnerCharge } from "../../lib/asaas/charges.js";
 
 import { getPlatformPlanValue } from "./billing.js";
 import { DEV_NEW_ACADEMIES_GOAL, percentValue } from "../../lib/goals.js";
@@ -574,6 +576,7 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
           createdAt: tenant.createdAt,
 
           billing: parseBilling(tenant.branding),
+          asaasCharge: parseAsaasCharge(tenant.branding),
 
           owner: owner
 
@@ -1017,6 +1020,30 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
 
       const owner = tenant.users[0];
 
+      let asaas: {
+        invoiceUrl: string | null;
+        paymentId: string;
+        dueDate: string;
+        amountBrl: number;
+        status: string;
+      } | null = null;
+      let chargeError: string | null = null;
+      try {
+        const issued = await issueAcademyOwnerCharge(tenant.id);
+        asaas = {
+          invoiceUrl: issued.invoiceUrl,
+          paymentId: issued.paymentId,
+          dueDate: issued.dueDate,
+          amountBrl: issued.amountBrl,
+          status: issued.status,
+        };
+      } catch (error) {
+        chargeError =
+          error instanceof Error
+            ? error.message
+            : "Falha ao emitir a cobrança Asaas da academia.";
+      }
+
       return reply.status(201).send({
         tenant: {
           id: tenant.id,
@@ -1029,9 +1056,39 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
         owner: owner
           ? { id: owner.id, email: owner.email, name: owner.name, role: owner.role }
           : null,
-        message: "Academia criada.",
+        asaas,
+        chargeError,
+        message: chargeError
+          ? `Academia criada. Cobrança Asaas não emitida: ${chargeError}`
+          : "Academia criada e cobrança enviada ao dono.",
         publicUrl: academyPublicUrl(tenant.subdomain ?? tenant.slug),
       });
+    },
+  );
+
+  app.post(
+    "/dev/academias/:id/cobranca",
+    { preHandler: [requireAuth, requireRole(UserRole.DESENVOLVIMENTO)] },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const tenant = await findAcademyOr404(id);
+      if (!tenant) {
+        return reply.status(404).send({ error: "Academia não encontrada." });
+      }
+
+      try {
+        const issued = await issueAcademyOwnerCharge(tenant.id);
+        return reply.send({
+          asaas: issued,
+          message: issued.alreadyIssued
+            ? "Esta academia já tem cobrança Asaas."
+            : "Cobrança Asaas enviada ao dono da academia.",
+        });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Falha ao emitir a cobrança Asaas.";
+        return reply.status(400).send({ error: message });
+      }
     },
   );
 

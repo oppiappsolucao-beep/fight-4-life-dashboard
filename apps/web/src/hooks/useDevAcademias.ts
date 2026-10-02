@@ -19,6 +19,15 @@ export interface AcademiaOwner {
   active: boolean;
 }
 
+export interface AcademiaAsaasCharge {
+  paymentId: string;
+  invoiceUrl: string | null;
+  status: string;
+  amountCents: number;
+  dueDate: string;
+  payerName: string;
+}
+
 export interface DevAcademia {
   id: string;
   slug: string;
@@ -29,6 +38,7 @@ export interface DevAcademia {
   createdAt: string;
   owner: AcademiaOwner | null;
   billing: AcademiaBilling;
+  asaasCharge?: AcademiaAsaasCharge | null;
 }
 
 export function useDevAcademias() {

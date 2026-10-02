@@ -1,4 +1,4 @@
-/** Helpers de idade no front (espelha a regra da API: menor de 18). */
+/** Helpers de idade no front (espelha a regra da API: cadastro a partir de 18 anos). */
 
 export function parseBirthDateLocal(dataNascimento: string): Date | null {
   const raw = dataNascimento.trim();
@@ -24,4 +24,10 @@ export function isMinorStudent(dataNascimento: string, reference = new Date()): 
   const age = getAgeYears(dataNascimento, reference);
   if (age === null) return false;
   return age < 18;
+}
+
+export function isAdultStudent(dataNascimento: string, reference = new Date()): boolean {
+  const age = getAgeYears(dataNascimento, reference);
+  if (age === null) return false;
+  return age >= 18;
 }

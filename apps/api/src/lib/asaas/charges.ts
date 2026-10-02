@@ -13,6 +13,12 @@ import { resolveBillingPayer } from "../student-age.js";
 import { isAsaasConfigured } from "./config.js";
 import { asaasRequest, AsaasError } from "./client.js";
 import { normalizePlans, plansToPriceMap } from "../../modules/owner/plans.js";
+import {
+  brandingWithAsaasCharge,
+  parseAsaasCharge,
+  parseBilling,
+  type AcademyAsaasChargeRecord,
+} from "../../modules/dev/academy.js";
 
 function digitsOnly(value: string): string {
   return value.replace(/\D/g, "");
@@ -226,4 +232,170 @@ export async function createStudentAsaasCharge(options: {
     invoiceUrl: payment.invoiceUrl ?? payment.bankSlipUrl ?? null,
     estimatedFeeCents,
   };
+}
+
+function asaasBillingType(
+  periodo: string,
+  forma: string,
+): "UNDEFINED" | "BOLETO" | "PIX" | "CREDIT_CARD" {
+  const text = `${periodo} ${forma}`.toLowerCase();
+  if (text.includes("pix")) return "PIX";
+  if (text.includes("cart")) return "CREDIT_CARD";
+  if (text.includes("boleto")) return "BOLETO";
+  return "UNDEFINED";
+}
+
+/**
+ * Cobrança Asaas do plano da academia, no CPF/e-mail do dono.
+ * A mensalidade do aluno fica entre a academia e o aluno.
+ */
+export async function issueAcademyOwnerCharge(tenantId: string) {
+  if (!isAsaasConfigured()) {
+    throw new AsaasError("Asaas não configurado no servidor.", 503, null);
+  }
+
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { id: true, name: true, branding: true },
+  });
+  if (!tenant) {
+    throw new Error("Academia não encontrada.");
+  }
+
+  const existing = parseAsaasCharge(tenant.branding);
+  if (
+    existing &&
+    (existing.status === "PENDING" || existing.status === "PAID" || existing.status === "OVERDUE")
+  ) {
+    return {
+      invoiceUrl: existing.invoiceUrl,
+      paymentId: existing.paymentId,
+      dueDate: existing.dueDate,
+      amountBrl: existing.amountCents / 100,
+      status: existing.status,
+      alreadyIssued: true,
+    };
+  }
+
+  const billing = parseBilling(tenant.branding);
+  const branding = (tenant.branding ?? {}) as {
+    responsavel?: { nome?: string; cpf?: string; telefone?: string; emailLogin?: string };
+    emailCorporativo?: string;
+  };
+  const amountBrl = typeof billing.valor === "number" ? billing.valor : 0;
+  if (!(amountBrl >= 5)) {
+    throw new Error(
+      "O plano da academia precisa ter valor de pelo menos R$ 5,00 para emitir a cobrança.",
+    );
+  }
+
+  const payerName = branding.responsavel?.nome?.trim() || tenant.name;
+  const payerCpf = (branding.responsavel?.cpf ?? "").replace(/\D/g, "");
+  const payerEmail = (
+    branding.responsavel?.emailLogin ||
+    branding.emailCorporativo ||
+    ""
+  )
+    .trim()
+    .toLowerCase();
+  const payerPhone = branding.responsavel?.telefone?.trim() || null;
+
+  if (!payerName || payerCpf.length < 11 || !payerEmail) {
+    throw new Error("Informe nome, CPF e e-mail do dono para emitir a cobrança da academia.");
+  }
+
+  const customerId = await upsertAsaasCustomer({
+    existingCustomerId: existing?.customerId ?? null,
+    name: payerName,
+    cpf: payerCpf,
+    email: payerEmail,
+    phone: payerPhone,
+    externalReference: `academy:${tenant.id}`,
+  });
+
+  const due = new Date();
+  due.setDate(due.getDate() + 3);
+  const dueDateIso = formatIsoDate(due);
+  const amountCents = Math.round(amountBrl * 100);
+  const description = `Plano ${billing.plano || "usemint"} — ${tenant.name}`;
+
+  const payment = await asaasRequest<{
+    id?: string;
+    invoiceUrl?: string;
+    bankSlipUrl?: string;
+    status?: string;
+  }>("/payments", {
+    method: "POST",
+    body: JSON.stringify({
+      customer: customerId,
+      billingType: asaasBillingType(billing.periodo, billing.formaPagamento),
+      value: centsToBrl(amountCents),
+      dueDate: dueDateIso,
+      description,
+      externalReference: `academy-charge:${tenant.id}:${dueDateIso}`,
+    }),
+  });
+
+  if (!payment.id) {
+    throw new AsaasError("Asaas não retornou id do pagamento.", 502, payment);
+  }
+
+  const record: AcademyAsaasChargeRecord = {
+    customerId,
+    paymentId: payment.id,
+    invoiceUrl: payment.invoiceUrl ?? payment.bankSlipUrl ?? null,
+    status: "PENDING",
+    amountCents,
+    dueDate: dueDateIso,
+    payerName,
+    payerCpf,
+    createdAt: new Date().toISOString(),
+    paidAt: null,
+  };
+
+  await prisma.tenant.update({
+    where: { id: tenant.id },
+    data: { branding: brandingWithAsaasCharge(tenant.branding, record) },
+  });
+
+  return {
+    invoiceUrl: record.invoiceUrl,
+    paymentId: record.paymentId,
+    dueDate: record.dueDate,
+    amountBrl,
+    status: record.status,
+    alreadyIssued: false,
+  };
+}
+
+export async function confirmAcademyChargePaid(options: {
+  asaasPaymentId: string;
+  paidAt: Date;
+}): Promise<{ tenantId: string; alreadyPaid: boolean } | null> {
+  const tenants = await prisma.tenant.findMany({
+    select: { id: true, branding: true },
+  });
+  const tenant = tenants.find(
+    (item) => parseAsaasCharge(item.branding)?.paymentId === options.asaasPaymentId,
+  );
+  if (!tenant) return null;
+
+  const charge = parseAsaasCharge(tenant.branding);
+  if (!charge) return null;
+  if (charge.status === "PAID") {
+    return { tenantId: tenant.id, alreadyPaid: true };
+  }
+
+  await prisma.tenant.update({
+    where: { id: tenant.id },
+    data: {
+      branding: brandingWithAsaasCharge(tenant.branding, {
+        ...charge,
+        status: "PAID",
+        paidAt: options.paidAt.toISOString(),
+      }),
+    },
+  });
+
+  return { tenantId: tenant.id, alreadyPaid: false };
 }

@@ -133,6 +133,49 @@ export function parseBilling(branding: unknown) {
   };
 }
 
+export interface AcademyAsaasChargeRecord {
+  customerId: string;
+  paymentId: string;
+  invoiceUrl: string | null;
+  status: string;
+  amountCents: number;
+  dueDate: string;
+  payerName: string;
+  payerCpf: string;
+  createdAt: string;
+  paidAt?: string | null;
+}
+
+export function parseAsaasCharge(branding: unknown): AcademyAsaasChargeRecord | null {
+  const data = (branding ?? {}) as { asaasCobranca?: Partial<AcademyAsaasChargeRecord> };
+  const charge = data.asaasCobranca;
+  if (!charge?.paymentId || !charge.customerId) return null;
+
+  return {
+    customerId: charge.customerId,
+    paymentId: charge.paymentId,
+    invoiceUrl: charge.invoiceUrl ?? null,
+    status: charge.status ?? "PENDING",
+    amountCents: typeof charge.amountCents === "number" ? charge.amountCents : 0,
+    dueDate: charge.dueDate ?? "",
+    payerName: charge.payerName ?? "",
+    payerCpf: charge.payerCpf ?? "",
+    createdAt: charge.createdAt ?? "",
+    paidAt: charge.paidAt ?? null,
+  };
+}
+
+export function brandingWithAsaasCharge(
+  branding: unknown,
+  charge: AcademyAsaasChargeRecord,
+): Prisma.InputJsonObject {
+  const current = JSON.parse(JSON.stringify(branding ?? {})) as Record<string, unknown>;
+  return {
+    ...current,
+    asaasCobranca: { ...charge },
+  } as Prisma.InputJsonObject;
+}
+
 export function formToBranding(
   data: AcademyFields,
   emailLogin: string,

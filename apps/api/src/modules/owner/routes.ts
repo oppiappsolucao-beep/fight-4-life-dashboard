@@ -21,9 +21,13 @@ import {
 import { ensureExerciseCatalog } from "../../lib/exercise-catalog.js";
 import { registerOwnerModalityRoutes } from "../modalities/routes.js";
 import { isMinorStudent } from "../../lib/student-age.js";
-import { createStudentAsaasCharge } from "../../lib/asaas/charges.js";
-import { AsaasError } from "../../lib/asaas/client.js";
+
+const MINOR_STUDENT_ERROR =
+  "O cadastro de aluno é somente para maiores de 18 anos.";
 import { centsToBrl } from "../../lib/platform-fees.js";
+
+const STUDENT_ASAAS_BLOCKED =
+  "A cobrança Asaas é da academia, emitida para o dono no cadastro. A mensalidade do aluno é combinada direto com a academia.";
 import {
   persistStudentPhoto,
   removeStudentPhoto,
@@ -320,16 +324,7 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
     }
 
     if (isMinorStudent(data.dataNascimento)) {
-      const hasResponsible =
-        Boolean(data.responsavelNome?.trim()) &&
-        Boolean(data.responsavelCpf?.replace(/\D/g, "")) &&
-        Boolean(data.responsavelEmail?.trim());
-      if (!hasResponsible) {
-        return reply.status(400).send({
-          error:
-            "Aluno menor de 18 anos: informe responsável (nome, CPF e e-mail) para cobranças.",
-        });
-      }
+      return reply.status(400).send({ error: MINOR_STUDENT_ERROR });
     }
 
     let aluno = await prisma.student.create({
@@ -468,16 +463,7 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
       }
 
       if (isMinorStudent(data.dataNascimento)) {
-        const hasResponsible =
-          Boolean(data.responsavelNome?.trim()) &&
-          Boolean(data.responsavelCpf?.replace(/\D/g, "")) &&
-          Boolean(data.responsavelEmail?.trim());
-        if (!hasResponsible) {
-          return reply.status(400).send({
-            error:
-              "Aluno menor de 18 anos: informe responsável (nome, CPF e e-mail) para cobranças.",
-          });
-        }
+        return reply.status(400).send({ error: MINOR_STUDENT_ERROR });
       }
 
       let fotoUrl = current.fotoUrl;
@@ -578,72 +564,12 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
     },
   );
 
-  app.post<{ Params: { id: string } }>(
-    "/owner/alunos/:id/cobrancas",
-    async (request, reply) => {
-      try {
-        const result = await createStudentAsaasCharge({
-          tenantId: request.user.tenantId,
-          studentId: request.params.id,
-        });
-        return reply.status(201).send({
-          message: "Cobrança Asaas gerada com sucesso.",
-          charge: {
-            id: result.charge.id,
-            status: result.charge.status,
-            dueDate: result.charge.dueDate,
-            amountBrl: centsToBrl(result.charge.amountCents),
-            asaasPaymentId: result.charge.asaasPaymentId,
-          },
-          invoiceUrl: result.invoiceUrl,
-          estimatedFeeBrl: centsToBrl(result.estimatedFeeCents),
-        });
-      } catch (error) {
-        const message =
-          error instanceof AsaasError
-            ? error.message
-            : error instanceof Error
-              ? error.message
-              : "Falha ao gerar cobrança.";
-        const status = error instanceof AsaasError ? Math.min(error.status, 502) : 400;
-        return reply.status(status >= 400 ? status : 400).send({ error: message });
-      }
-    },
-  );
+  app.post("/owner/alunos/:id/cobrancas", async (_request, reply) => {
+    return reply.status(400).send({ error: STUDENT_ASAAS_BLOCKED });
+  });
 
-  app.post("/owner/cobrancas/lote", async (request, reply) => {
-    const body = z
-      .object({
-        studentIds: z.array(z.string().uuid()).min(1).max(100),
-      })
-      .safeParse(request.body);
-
-    if (!body.success) {
-      return reply.status(400).send({ error: "Informe studentIds (1–100)." });
-    }
-
-    const tenantId = request.user.tenantId;
-    const created: Array<{ studentId: string; chargeId: string }> = [];
-    const errors: Array<{ studentId: string; error: string }> = [];
-
-    for (const studentId of body.data.studentIds) {
-      try {
-        const result = await createStudentAsaasCharge({ tenantId, studentId });
-        created.push({ studentId, chargeId: result.charge.id });
-      } catch (error) {
-        errors.push({
-          studentId,
-          error:
-            error instanceof Error ? error.message : "Falha ao gerar cobrança.",
-        });
-      }
-    }
-
-    return reply.send({
-      message: `Geradas ${created.length} cobrança(s). ${errors.length} falha(s).`,
-      created,
-      errors,
-    });
+  app.post("/owner/cobrancas/lote", async (_request, reply) => {
+    return reply.status(400).send({ error: STUDENT_ASAAS_BLOCKED });
   });
 
   app.get("/owner/cobrancas", async (request, reply) => {

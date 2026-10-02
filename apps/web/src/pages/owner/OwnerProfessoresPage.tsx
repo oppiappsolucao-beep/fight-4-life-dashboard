@@ -1,4 +1,5 @@
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import ModalitySchedulePicker from "../../components/owner/ModalitySchedulePicker";
 import WeeklyScheduleGrid from "../../components/owner/WeeklyScheduleGrid";
 import { apiFetch } from "../../lib/api";
@@ -29,10 +30,7 @@ export default function OwnerProfessoresPage() {
   const [success, setSuccess] = useState("");
   const cadastroFormRef = useRef<HTMLFormElement>(null);
 
-  const activeModalities = useMemo(
-    () => modalidades.filter((item) => item.active),
-    [modalidades],
-  );
+  const activeModalities = useMemo(() => modalidades, [modalidades]);
 
   const load = useCallback((options?: { silent?: boolean }) => {
     if (options?.silent) {
@@ -357,6 +355,15 @@ export default function OwnerProfessoresPage() {
               </label>
               <div>
                 <p className="m-0 mb-2 text-xs text-slate-500">Modalidades que leciona</p>
+                {activeModalities.length === 0 ? (
+                  <p className="m-0 rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-900">
+                    Nenhuma modalidade nesta academia.{" "}
+                    <Link to="/dono/modalidades" className="font-semibold underline">
+                      Cadastre ou importe em Modalidades
+                    </Link>{" "}
+                    para poder selecionar aqui.
+                  </p>
+                ) : (
                 <div className="flex flex-wrap gap-2">
                   {activeModalities.map((item) => {
                     const slotCount = (formSchedules[item.id] ?? []).length;
@@ -381,6 +388,7 @@ export default function OwnerProfessoresPage() {
                     );
                   })}
                 </div>
+                )}
               </div>
               {formEditingModalityId ? (
                 (() => {
