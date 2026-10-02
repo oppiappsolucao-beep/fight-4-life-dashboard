@@ -5,11 +5,8 @@
  * - ASAAS_API_KEY          → preferir SEM cifrão: aact_prod_... (o código adiciona $)
  * - ASAAS_API_KEY_B64      → alternativa: chave completa em Base64 (evita bug do $ no EasyPanel)
  * - ASAAS_ENV              → "sandbox" | "production"
- * - ASAAS_WALLET_ID        → wallet da OPPI Fit (receber split da taxa)
+ * - ASAAS_WALLET_ID        → wallet da conta master
  * - ASAAS_WEBHOOK_TOKEN    → token para validar webhooks (opcional mas recomendado)
- *
- * Por academia (gravado no Tenant após criar subconta):
- * - asaasAccountId / asaasWalletId
  */
 
 export type AsaasEnv = "sandbox" | "production";

@@ -1,6 +1,6 @@
 /**
- * Emissão de cobranças Asaas pela subconta da academia.
- * Fatura no nome da academia; split da taxa OPPI → wallet master.
+ * Emissão de cobranças Asaas na conta master.
+ * O valor integral cai na conta master. A taxa da plataforma é só controle interno.
  */
 
 import { ChargeStatus } from "@prisma/client";
@@ -10,15 +10,8 @@ import { formatIsoDate, getNextDueDate } from "../billing.js";
 import { assertStudentCanBeCharged } from "../charge-payments.js";
 import { platformFeeCentsForPaidIndex, centsToBrl } from "../platform-fees.js";
 import { resolveBillingPayer } from "../student-age.js";
-import {
-  getAsaasPlatformWalletId,
-  isAsaasConfigured,
-} from "./config.js";
-import { asaasRequest, AsaasError, normalizeAsaasApiKey } from "./client.js";
-import {
-  createAsaasSubaccountForTenant,
-  ensureAsaasSubaccountQuiet,
-} from "./subaccounts.js";
+import { isAsaasConfigured } from "./config.js";
+import { asaasRequest, AsaasError } from "./client.js";
 import { normalizePlans, plansToPriceMap } from "../../modules/owner/plans.js";
 
 function digitsOnly(value: string): string {
@@ -42,7 +35,6 @@ async function estimateNextPlatformFeeCents(tenantId: string, cycleKey: string) 
 }
 
 async function upsertAsaasCustomer(options: {
-  apiKey: string;
   existingCustomerId: string | null;
   name: string;
   cpf: string;
@@ -54,7 +46,6 @@ async function upsertAsaasCustomer(options: {
   if (options.existingCustomerId) {
     try {
       await asaasRequest(`/customers/${options.existingCustomerId}`, {
-        apiKey: options.apiKey,
         method: "PUT",
         body: JSON.stringify({
           name: options.name,
@@ -67,12 +58,11 @@ async function upsertAsaasCustomer(options: {
       });
       return options.existingCustomerId;
     } catch {
-      // Cliente pode ser de outra conta (master antiga) — recria na subconta
+      // Cliente pode ser de outra conta — recria na conta master
     }
   }
 
   const created = await asaasRequest<{ id?: string }>("/customers", {
-    apiKey: options.apiKey,
     method: "POST",
     body: JSON.stringify({
       name: options.name,
@@ -102,11 +92,6 @@ export async function createStudentAsaasCharge(options: {
     throw new AsaasError("Asaas não configurado no servidor.", 503, null);
   }
 
-  const masterWalletId = getAsaasPlatformWalletId();
-  if (!masterWalletId) {
-    throw new AsaasError("ASAAS_WALLET_ID ausente.", 503, null);
-  }
-
   const student = await prisma.student.findFirst({
     where: { id: options.studentId, tenantId: options.tenantId },
     include: {
@@ -115,9 +100,6 @@ export async function createStudentAsaasCharge(options: {
           id: true,
           createdAt: true,
           billingCycleDay: true,
-          asaasWalletId: true,
-          asaasAccountId: true,
-          asaasApiKey: true,
           name: true,
         },
       },
@@ -131,35 +113,6 @@ export async function createStudentAsaasCharge(options: {
   const canCharge = assertStudentCanBeCharged(student);
   if (!canCharge.ok) {
     throw new Error(canCharge.error);
-  }
-
-  let academyApiKey = normalizeAsaasApiKey(student.tenant.asaasApiKey);
-  let academyWalletId = student.tenant.asaasWalletId;
-
-  if (!academyApiKey || !academyWalletId) {
-    const linked = await ensureAsaasSubaccountQuiet(student.tenantId);
-    if (!linked.ok) {
-      throw new Error(
-        `Academia sem subconta Asaas pronta. No Dev, vincule a subconta (e a chave). (${linked.error})`,
-      );
-    }
-    academyApiKey = linked.result.apiKey;
-    academyWalletId = linked.result.walletId;
-  }
-
-  // Garante que ainda temos os 3 campos (caso ensure tenha retornado parcial no passado)
-  if (!academyApiKey) {
-    try {
-      const refreshed = await createAsaasSubaccountForTenant(student.tenantId);
-      academyApiKey = refreshed.apiKey;
-      academyWalletId = refreshed.walletId;
-    } catch (error) {
-      throw new Error(
-        error instanceof Error
-          ? error.message
-          : "Subconta sem apiKey. Cole a chave no painel Dev.",
-      );
-    }
   }
 
   let amountBrl = options.amountBrl;
@@ -207,16 +160,10 @@ export async function createStudentAsaasCharge(options: {
     student.tenantId,
     cycle.key,
   );
-  // Taxa OPPI em valor fixo (cabe no líquido; bem menor que a taxa Asaas)
-  const feeCents = Math.min(estimatedFeeCents, Math.max(amountCents - 200, 0));
-  if (feeCents <= 0) {
-    throw new Error("Valor insuficiente para split da taxa OPPI.");
-  }
 
   const billingType = options.billingType ?? "PIX";
   const payer = resolveBillingPayer(student);
   const customerId = await upsertAsaasCustomer({
-    apiKey: academyApiKey,
     existingCustomerId: student.asaasCustomerId,
     name: payer.name,
     cpf: payer.cpf,
@@ -236,15 +183,12 @@ export async function createStudentAsaasCharge(options: {
     options.description?.trim() ||
     `Mensalidade ${student.planoModalidade} — ${student.tenant.name}`;
 
-  // Emitido pela subconta → fatura no nome da academia.
-  // Split da taxa OPPI → wallet master; restante fica na academia.
   const payment = await asaasRequest<{
     id?: string;
     invoiceUrl?: string;
     bankSlipUrl?: string;
     status?: string;
   }>("/payments", {
-    apiKey: academyApiKey,
     method: "POST",
     body: JSON.stringify({
       customer: customerId,
@@ -253,12 +197,6 @@ export async function createStudentAsaasCharge(options: {
       dueDate: dueDateIso,
       description,
       externalReference: `charge:${student.id}:${dueDateIso}`,
-      split: [
-        {
-          walletId: masterWalletId,
-          fixedValue: centsToBrl(feeCents),
-        },
-      ],
     }),
   });
 
@@ -286,6 +224,6 @@ export async function createStudentAsaasCharge(options: {
   return {
     charge,
     invoiceUrl: payment.invoiceUrl ?? payment.bankSlipUrl ?? null,
-    estimatedFeeCents: feeCents,
+    estimatedFeeCents,
   };
 }

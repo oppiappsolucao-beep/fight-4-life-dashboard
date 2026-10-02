@@ -49,12 +49,6 @@ import {
   describeAsaasApiKey,
   normalizeAsaasApiKey,
 } from "../../lib/asaas/client.js";
-import {
-  createAsaasSubaccountForTenant,
-  ensureAsaasSubaccountQuiet,
-  getTenantAsaasOnboarding,
-  saveTenantAsaasApiKey,
-} from "../../lib/asaas/subaccounts.js";
 
 
 
@@ -1023,8 +1017,6 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
 
       const owner = tenant.users[0];
 
-      const asaasLink = await ensureAsaasSubaccountQuiet(tenant.id);
-
       return reply.status(201).send({
         tenant: {
           id: tenant.id,
@@ -1033,98 +1025,13 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
           name: tenant.name,
           active: tenant.active,
           url: academyPublicUrl(tenant.subdomain ?? tenant.slug),
-          asaasAccountId: asaasLink.ok ? asaasLink.result.accountId : null,
-          asaasWalletId: asaasLink.ok ? asaasLink.result.walletId : null,
         },
         owner: owner
           ? { id: owner.id, email: owner.email, name: owner.name, role: owner.role }
           : null,
-        asaas: asaasLink.ok
-          ? { linked: true, walletId: asaasLink.result.walletId }
-          : { linked: false, error: asaasLink.error },
-        message: asaasLink.ok
-          ? "Academia criada e subconta Asaas vinculada."
-          : `Academia criada. Subconta Asaas pendente: ${asaasLink.error}`,
+        message: "Academia criada.",
         publicUrl: academyPublicUrl(tenant.subdomain ?? tenant.slug),
       });
-    },
-  );
-
-  app.post<{ Params: { id: string } }>(
-    "/dev/academias/:id/asaas-subaccount",
-    { preHandler: [requireAuth, requireRole(UserRole.DESENVOLVIMENTO)] },
-    async (request, reply) => {
-      const tenant = await findAcademyOr404(request.params.id);
-      if (!tenant) {
-        return reply.status(404).send({ error: "Academia não encontrada." });
-      }
-
-      const body = (request.body ?? {}) as {
-        force?: boolean;
-        apiKey?: string;
-      };
-
-      try {
-        if (body.apiKey?.trim()) {
-          const result = await saveTenantAsaasApiKey(tenant.id, body.apiKey);
-          return reply.send({
-            message: "Chave da subconta Asaas salva e validada.",
-            asaasAccountId: result.accountId,
-            asaasWalletId: result.walletId,
-            hasAsaasApiKey: true,
-          });
-        }
-
-        const result = await createAsaasSubaccountForTenant(tenant.id, {
-          force: Boolean(body.force),
-        });
-        return reply.send({
-          message: "Subconta Asaas vinculada com sucesso.",
-          asaasAccountId: result.accountId,
-          asaasWalletId: result.walletId,
-          hasAsaasApiKey: true,
-        });
-      } catch (error) {
-        const message =
-          error instanceof AsaasError
-            ? error.message
-            : error instanceof Error
-              ? error.message
-              : "Falha ao vincular Asaas.";
-        return reply.status(400).send({ error: message });
-      }
-    },
-  );
-
-  app.get<{ Params: { id: string } }>(
-    "/dev/academias/:id/asaas-onboarding",
-    { preHandler: [requireAuth, requireRole(UserRole.DESENVOLVIMENTO)] },
-    async (request, reply) => {
-      const tenant = await findAcademyOr404(request.params.id);
-      if (!tenant) {
-        return reply.status(404).send({ error: "Academia não encontrada." });
-      }
-
-      try {
-        const info = await getTenantAsaasOnboarding(tenant.id);
-        return reply.send({
-          academyName: tenant.name,
-          ...info,
-          message: info.primaryOnboardingUrl
-            ? "Link de ativação disponível. Envie ao dono da academia."
-            : info.accountStatus === "APPROVED"
-              ? "Subconta já aprovada — sem documentos pendentes."
-              : "Nenhum link de onboarding retornado. Confira no Asaas se a subconta já enviou os documentos.",
-        });
-      } catch (error) {
-        const message =
-          error instanceof AsaasError
-            ? error.message
-            : error instanceof Error
-              ? error.message
-              : "Falha ao buscar onboarding Asaas.";
-        return reply.status(400).send({ error: message });
-      }
     },
   );
 
