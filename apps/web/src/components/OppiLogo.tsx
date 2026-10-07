@@ -7,9 +7,9 @@ interface OppiLogoProps {
 }
 
 const sizes = {
-  sm: { img: "h-9 w-9", text: "text-[0.95rem]", full: "h-28" },
-  md: { img: "h-11 w-11", text: "text-[clamp(1rem,2.2vw,1.45rem)]", full: "h-32" },
-  lg: { img: "h-14 w-14", text: "text-[clamp(1.2rem,2.5vw,1.75rem)]", full: "h-36 sm:h-44" },
+  sm: { img: "h-9 w-9", text: "text-[0.95rem]", full: "w-40" },
+  md: { img: "h-11 w-11", text: "text-[clamp(1rem,2.2vw,1.45rem)]", full: "w-52" },
+  lg: { img: "h-14 w-14", text: "text-[clamp(1.2rem,2.5vw,1.75rem)]", full: "w-64 sm:w-72" },
 };
 
 export default function OppiLogo({
@@ -24,9 +24,9 @@ export default function OppiLogo({
   if (variant === "full") {
     return (
       <img
-        src="/usemint-logo.png?v=4"
+        src="/usemint-wordmark.png?v=5"
         alt="usemint — sua academia mais organizada"
-        className={`${s.full} w-auto max-w-full bg-transparent object-contain object-left ${className}`}
+        className={`${s.full} h-auto max-w-full bg-transparent object-contain ${className}`}
       />
     );
   }
