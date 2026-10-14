@@ -345,14 +345,15 @@ export default function OwnerProfessoresPage() {
     const modality = activeModalities.find((item) => item.id === modalityId);
     const modalityName = modality?.name ?? "modalidade";
     const schedules = schedulePayload(professor, modalityIds);
+    const modalitySlots = modality?.scheduleSlots ?? [];
     if (
       linked &&
       !schedules.some((entry) => entry.modalityId === modalityId) &&
-      (modality?.scheduleSlots.length ?? 0) > 0
+      modalitySlots.length > 0
     ) {
       schedules.push({
         modalityId,
-        slots: toScheduleSlots(modality?.scheduleSlots ?? []),
+        slots: toScheduleSlots(modalitySlots),
       });
     }
     await updateProfessor(
