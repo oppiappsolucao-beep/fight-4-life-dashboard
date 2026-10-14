@@ -1,8 +1,9 @@
 import {
   WEEKDAY_SHORT,
-  buildTimeRows,
+  formatTimeRange,
   groupEntriesByWeekday,
   professorEntryClassName,
+  timeToMinutes,
   type ScheduleGridEntry,
 } from "../../lib/schedule";
 
@@ -28,7 +29,15 @@ export default function WeeklyScheduleGrid({
     : entries;
 
   const grouped = groupEntriesByWeekday(visibleEntries);
-  const timeRows = buildTimeRows(visibleEntries);
+  const timeRows = Array.from(
+    new Map(
+      visibleEntries.map((entry) => [`${entry.startTime}|${entry.endTime}`, entry] as const),
+    ).values(),
+  ).sort(
+    (left, right) =>
+      timeToMinutes(left.startTime) - timeToMinutes(right.startTime) ||
+      timeToMinutes(left.endTime) - timeToMinutes(right.endTime),
+  );
 
   if (visibleEntries.length === 0) {
     return (
@@ -60,14 +69,18 @@ export default function WeeklyScheduleGrid({
             </tr>
           </thead>
           <tbody>
-            {timeRows.map((timeLabel) => (
-              <tr key={timeLabel} className="border-b border-slate-100 align-top">
-                <td className="whitespace-nowrap px-2 py-2 font-medium text-slate-400">{timeLabel}</td>
+            {timeRows.map((row) => (
+              <tr key={`${row.startTime}-${row.endTime}`} className="border-b border-slate-100 align-top">
+                <td className="whitespace-nowrap px-2 py-2 font-medium text-slate-500">
+                  {formatTimeRange(row)}
+                </td>
                 {grouped.map((dayEntries, weekday) => {
-                  const matches = dayEntries.filter((entry) => entry.startTime === timeLabel);
+                  const matches = dayEntries.filter(
+                    (entry) => entry.startTime === row.startTime && entry.endTime === row.endTime,
+                  );
 
                   return (
-                    <td key={`${weekday}-${timeLabel}`} className="px-1.5 py-1.5">
+                    <td key={`${weekday}-${row.startTime}-${row.endTime}`} className="px-1.5 py-1.5">
                       <div className="space-y-1">
                         {matches.map((entry, index) => (
                           <div
@@ -76,7 +89,7 @@ export default function WeeklyScheduleGrid({
                               entry.colorClass ??
                               (entry.tone === "professor"
                                 ? professorEntryClassName()
-                                : "bg-[#5B7595]/15 text-[#A9BBD5]")
+                                : "bg-[#5B7595]/15 text-[#2E496C]")
                             }`}
                           >
                             <p className="m-0 truncate text-[0.7rem] font-semibold">{entry.label}</p>

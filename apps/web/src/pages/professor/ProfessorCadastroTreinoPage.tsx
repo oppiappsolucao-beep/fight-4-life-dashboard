@@ -873,7 +873,29 @@ export default function ProfessorCadastroTreinoPage() {
                 )}
               </select>
             </div>
-            ) : null}
+            ) : (
+            <div className="sm:col-span-2 lg:col-span-4">
+              <p className="m-0 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Alunos nesta modalidade ({alunosForModality.length})
+              </p>
+              {alunosForModality.length === 0 ? (
+                <p className="m-0 mt-2 text-sm text-slate-400">
+                  Nenhum aluno liberado nesta modalidade.
+                </p>
+              ) : (
+                <ul className="m-0 mt-2 flex list-none flex-wrap gap-2 p-0">
+                  {alunosForModality.map((aluno) => (
+                    <li
+                      key={aluno.id}
+                      className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-[#2E496C]"
+                    >
+                      {aluno.nomeCompleto}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            )}
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Modalidade

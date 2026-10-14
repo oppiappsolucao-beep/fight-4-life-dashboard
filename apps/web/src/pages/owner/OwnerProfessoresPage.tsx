@@ -3,7 +3,11 @@ import { Link } from "react-router-dom";
 import ModalitySchedulePicker from "../../components/owner/ModalitySchedulePicker";
 import WeeklyScheduleGrid from "../../components/owner/WeeklyScheduleGrid";
 import { apiFetch } from "../../lib/api";
-import { buildModalityColorMap, type ScheduleGridEntry } from "../../lib/schedule";
+import {
+  buildModalityColorMap,
+  scheduleSlotKey,
+  type ScheduleGridEntry,
+} from "../../lib/schedule";
 import type { ModalityItem, ProfessorItem, ScheduleSlot } from "../../types/modality";
 import OwnerSectionPage from "./OwnerSectionPage";
 
@@ -94,6 +98,38 @@ export default function OwnerProfessoresPage() {
       }),
     [professores, activeModalities, modalityColorMap],
   );
+
+  const calendarEntries = useMemo<ScheduleGridEntry[]>(() => {
+    if (!formEditingModalityId) return professorGridEntries;
+    const draftSlots = formSchedules[formEditingModalityId] ?? [];
+    if (draftSlots.length === 0) return professorGridEntries;
+
+    const modality = activeModalities.find((item) => item.id === formEditingModalityId);
+    const savedKeys = new Set(
+      professorGridEntries
+        .filter((entry) => entry.modalityId === formEditingModalityId)
+        .map((entry) => scheduleSlotKey(entry)),
+    );
+    const draftEntries = draftSlots
+      .filter((slot) => !savedKeys.has(scheduleSlotKey(slot)))
+      .map((slot) => ({
+        ...slot,
+        modalityId: formEditingModalityId,
+        label: modality?.name ?? "Modalidade",
+        sublabel: form.name.trim() || "Horário selecionado",
+        tone: "professor" as const,
+        colorClass: modality ? modalityColorMap[modality.id] : undefined,
+      }));
+
+    return [...professorGridEntries, ...draftEntries];
+  }, [
+    professorGridEntries,
+    formEditingModalityId,
+    formSchedules,
+    form.name,
+    activeModalities,
+    modalityColorMap,
+  ]);
 
   function isModalityAssignmentActive(professor: ProfessorItem, modalityId: string) {
     return (
@@ -273,17 +309,27 @@ export default function OwnerProfessoresPage() {
     );
   }
 
+  function toScheduleSlots(slots: ScheduleSlot[]) {
+    return slots.map((slot) => ({
+      weekday: slot.weekday,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+    }));
+  }
+
   function schedulePayload(professor: ProfessorItem, modalityIds: string[]) {
-    return (professor.schedules ?? [])
-      .filter((entry) => modalityIds.includes(entry.modalityId) && entry.slots.length > 0)
-      .map((entry) => ({
-        modalityId: entry.modalityId,
-        slots: entry.slots.map((slot) => ({
-          weekday: slot.weekday,
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-        })),
-      }));
+    return modalityIds
+      .map((modalityId) => {
+        const draft = formSchedules[modalityId] ?? [];
+        const saved =
+          professor.schedules?.find((entry) => entry.modalityId === modalityId)?.slots ?? [];
+        const slots = draft.length > 0 ? draft : saved;
+        return {
+          modalityId,
+          slots: toScheduleSlots(slots),
+        };
+      })
+      .filter((entry) => entry.slots.length > 0);
   }
 
   async function setProfessorOnModality(professor: ProfessorItem, modalityId: string, linked: boolean) {
@@ -296,13 +342,24 @@ export default function OwnerProfessoresPage() {
       return;
     }
 
-    const modalityName =
-      activeModalities.find((item) => item.id === modalityId)?.name ?? "modalidade";
+    const modality = activeModalities.find((item) => item.id === modalityId);
+    const modalityName = modality?.name ?? "modalidade";
+    const schedules = schedulePayload(professor, modalityIds);
+    if (
+      linked &&
+      !schedules.some((entry) => entry.modalityId === modalityId) &&
+      (modality?.scheduleSlots.length ?? 0) > 0
+    ) {
+      schedules.push({
+        modalityId,
+        slots: toScheduleSlots(modality?.scheduleSlots ?? []),
+      });
+    }
     await updateProfessor(
       professor.id,
       {
         modalityIds,
-        schedules: schedulePayload(professor, modalityIds),
+        schedules,
       },
       linked
         ? `Professor selecionado em ${modalityName}.`
@@ -650,7 +707,7 @@ export default function OwnerProfessoresPage() {
 
               <WeeklyScheduleGrid
                 title={`Grade — ${selectedViewModality.name}`}
-                entries={professorGridEntries}
+                entries={calendarEntries}
                 emptyMessage="Cadastre professores com horários nesta modalidade para montar a grade."
                 filterModalityId={formEditingModalityId}
                 filterLabel={selectedViewModality.name}

@@ -217,6 +217,18 @@ function modalitiesVisibleToStudent<T extends Parameters<typeof modalityMatchesP
   return matched.length > 0 ? matched : modalidades;
 }
 
+function professorModalitiesForStudent<T extends { id: string } & Parameters<typeof modalityMatchesPlan>[0]>(
+  professorModalities: T[],
+  activeModalities: T[],
+  planName: string,
+  tenantPlans: Awaited<ReturnType<typeof getTenantPlans>>,
+): T[] {
+  const visibleIds = new Set(
+    modalitiesVisibleToStudent(activeModalities, planName, tenantPlans).map((item) => item.id),
+  );
+  return professorModalities.filter((item) => visibleIds.has(item.id));
+}
+
 async function studentCanOpenModality(
   tenantId: string,
   modality: Parameters<typeof modalityMatchesPlan>[0] & { id: string },
@@ -1676,14 +1688,14 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
     const monthStart = monthDates[0] ?? `${monthInput}-01`;
     const monthEnd = monthDates[monthDates.length - 1] ?? monthStart;
 
-    const [tenant, modalities, students, aulasMes, presencasPendentes, presencasValidadasMes] =
+    const [tenant, activeModalities, students, aulasMes, presencasPendentes, presencasValidadasMes] =
       await Promise.all([
         prisma.tenant.findUnique({
           where: { id: tenantId },
           select: { name: true },
         }),
         prisma.modality.findMany({
-          where: { tenantId, id: { in: modalityIds }, active: true },
+          where: { tenantId, active: true },
           orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
           select: {
             id: true,
@@ -1738,6 +1750,8 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
       ]);
 
     const tenantPlans = await getTenantPlans(tenantId);
+    const modalityIdSet = new Set(modalityIds);
+    const modalities = activeModalities.filter((item) => modalityIdSet.has(item.id));
     const studentIds = new Set<string>();
 
     const lessonCounts = await prisma.professorLesson.groupBy({
@@ -1760,7 +1774,12 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
 
     const modalidades = modalities.map((modality) => {
       const alunos = students.filter((student) =>
-        modalityMatchesPlan(modality, student.planoModalidade, tenantPlans),
+        professorModalitiesForStudent(
+          modalities,
+          activeModalities,
+          student.planoModalidade,
+          tenantPlans,
+        ).some((item) => item.id === modality.id),
       );
       alunos.forEach((student) => studentIds.add(student.id));
 
@@ -1798,9 +1817,9 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
     const query = request.query as { withFoto?: string };
     const withFoto = query.withFoto === "1" || query.withFoto === "true";
 
-    const [modalities, students] = await Promise.all([
+    const [activeModalities, students] = await Promise.all([
       prisma.modality.findMany({
-        where: { tenantId, id: { in: modalityIds }, active: true },
+        where: { tenantId, active: true },
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
         select: {
           id: true,
@@ -1825,10 +1844,16 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
       }),
     ]);
 
+    const modalityIdSet = new Set(modalityIds);
+    const modalities = activeModalities.filter((item) => modalityIdSet.has(item.id));
+
     const alunos = students
       .map((student) => {
-        const matchingModalities = modalities.filter((modality) =>
-          modalityMatchesPlan(modality, student.planoModalidade, tenantPlans),
+        const matchingModalities = professorModalitiesForStudent(
+          modalities,
+          activeModalities,
+          student.planoModalidade,
+          tenantPlans,
         );
         return {
           ...student,
