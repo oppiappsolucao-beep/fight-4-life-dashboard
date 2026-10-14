@@ -29,8 +29,8 @@ export default function ModalitySchedulePicker({
     return (
       <div className="rounded-xl border border-amber-400/20 bg-amber-500/5 px-3 py-2.5">
         <p className="m-0 text-xs text-amber-800/90">
-          Cadastre horários de <strong>{modality.name}</strong> em Modalidades antes de vincular o
-          professor.
+          {modality.name} ainda não tem horários. O professor pode ser vinculado agora; os horários
+          podem ser cadastrados depois em Modalidades.
         </p>
       </div>
     );

@@ -250,18 +250,21 @@ export default function StudentLessonTreinoFlow({
       .then((data) => {
         setHorarios(data.horarios);
         const firstWithLesson = data.horarios.find((item) => item.lesson);
-        if (firstWithLesson?.lesson) {
-          setSelectedSlotKey(lessonSlotKey(firstWithLesson));
-          setActiveLesson(firstWithLesson.lesson);
+        const firstSlot = firstWithLesson ?? data.horarios[0] ?? null;
+        if (firstSlot) {
+          setSelectedSlotKey(lessonSlotKey(firstSlot));
+          setActiveLesson(firstSlot.lesson);
           setAulaCompleted(
-            readAulaCompleted(modalityId, classDate, firstWithLesson.lesson.id),
+            firstSlot.lesson
+              ? readAulaCompleted(modalityId, classDate, firstSlot.lesson.id)
+              : false,
           );
           loadWarmupForDay(true);
         } else {
           setSelectedSlotKey("");
           setActiveLesson(null);
           setAulaCompleted(false);
-          loadWarmupForDay(false);
+          loadWarmupForDay(true);
         }
       })
       .catch((err) => {
@@ -295,11 +298,13 @@ export default function StudentLessonTreinoFlow({
   }, [loadSchedule]);
 
   function selectSlot(slot: StudentLessonSlotOption) {
-    if (!slot.lesson) return;
     setSelectedSlotKey(lessonSlotKey(slot));
     setActiveLesson(slot.lesson);
-    setAulaCompleted(readAulaCompleted(modalityId, classDate, slot.lesson.id));
-    setActivePhase("AULA");
+    setAulaCompleted(
+      slot.lesson ? readAulaCompleted(modalityId, classDate, slot.lesson.id) : false,
+    );
+    setActivePhase(slot.lesson ? "AULA" : "AQUECIMENTO");
+    loadWarmupForDay(true);
   }
 
   function handleToggleSet(item: WorkoutExerciseItem, setNumber: number) {
@@ -387,24 +392,20 @@ export default function StudentLessonTreinoFlow({
                 {horarios.map((slot) => {
                   const key = lessonSlotKey(slot);
                   const selected = selectedSlotKey === key;
-                  const disabled = !slot.lesson;
                   return (
                     <button
                       key={key}
                       type="button"
-                      disabled={disabled}
                       onClick={() => selectSlot(slot)}
                       className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                         selected
                           ? "bg-[#5B7595] text-white"
-                          : disabled
-                            ? "cursor-not-allowed border border-slate-200 text-white/30"
-                            : "border border-slate-200 text-slate-600 hover:border-[#5B7595]/40"
+                          : "border border-slate-200 text-slate-600 hover:border-[#5B7595]/40"
                       }`}
                     >
                       {slot.label}
                       {slot.professorName ? ` • ${slot.professorName}` : ""}
-                      {disabled ? " (sem aula)" : ""}
+                      {slot.lesson ? "" : " (sem vídeo)"}
                     </button>
                   );
                 })}

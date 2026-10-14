@@ -176,6 +176,13 @@ export function planGrantsAllModalities(
     return true;
   }
 
+  if (
+    tenantPlans.length === 1 &&
+    normalizePlanName(tenantPlans[0]?.nome ?? "") === normalizedPlan
+  ) {
+    return true;
+  }
+
   return (
     normalizedPlan.includes("master") ||
     normalizedPlan.includes("premium") ||

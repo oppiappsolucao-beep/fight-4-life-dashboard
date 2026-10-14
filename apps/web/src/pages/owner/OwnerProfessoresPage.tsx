@@ -26,11 +26,15 @@ export default function OwnerProfessoresPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [updatingProfessorId, setUpdatingProfessorId] = useState<string | null>(null);
+  const [deletingProfessorId, setDeletingProfessorId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const cadastroFormRef = useRef<HTMLFormElement>(null);
 
-  const activeModalities = useMemo(() => modalidades, [modalidades]);
+  const activeModalities = useMemo(
+    () => modalidades.filter((item) => item.active),
+    [modalidades],
+  );
 
   const load = useCallback((options?: { silent?: boolean }) => {
     if (options?.silent) {
@@ -102,9 +106,12 @@ export default function OwnerProfessoresPage() {
 
   const filteredProfessores = useMemo(() => {
     if (!formEditingModalityId) return [];
-    return professores.filter((professor) =>
-      professor.modalityIds.includes(formEditingModalityId),
-    );
+    return [...professores].sort((left, right) => {
+      const leftLinked = left.modalityIds.includes(formEditingModalityId) ? 0 : 1;
+      const rightLinked = right.modalityIds.includes(formEditingModalityId) ? 0 : 1;
+      if (leftLinked !== rightLinked) return leftLinked - rightLinked;
+      return (left.name ?? left.email).localeCompare(right.name ?? right.email, "pt-BR");
+    });
   }, [professores, formEditingModalityId]);
 
   function buildSchedulesPayload(source: Record<string, ScheduleSlot[]>, modalityIds: string[]) {
@@ -116,24 +123,29 @@ export default function OwnerProfessoresPage() {
       }));
   }
 
-  function resolveFormModalityIds(
-    modalityIds: string[],
-    schedules: Record<string, ScheduleSlot[]>,
-  ) {
-    return modalityIds.filter((modalityId) => (schedules[modalityId] ?? []).length > 0);
+  function resolveFormModalityIds(modalityIds: string[]) {
+    return Array.from(new Set(modalityIds));
   }
 
   function syncFormModalityFromSchedules(modalityId: string, slots: ScheduleSlot[]) {
     setFormSchedules((current) => ({ ...current, [modalityId]: slots }));
+    if (slots.length === 0) return;
     setForm((current) => ({
       ...current,
-      modalityIds:
-        slots.length > 0
-          ? current.modalityIds.includes(modalityId)
-            ? current.modalityIds
-            : [...current.modalityIds, modalityId]
-          : current.modalityIds.filter((item) => item !== modalityId),
+      modalityIds: current.modalityIds.includes(modalityId)
+        ? current.modalityIds
+        : [...current.modalityIds, modalityId],
     }));
+  }
+
+  function toggleFormModality(modalityId: string) {
+    setForm((current) => ({
+      ...current,
+      modalityIds: current.modalityIds.includes(modalityId)
+        ? current.modalityIds.filter((item) => item !== modalityId)
+        : [...current.modalityIds, modalityId],
+    }));
+    setSuccess("");
   }
 
   function resetCreateForm() {
@@ -148,9 +160,7 @@ export default function OwnerProfessoresPage() {
     const schedulesMap = Object.fromEntries(
       (professor.schedules ?? []).map((entry) => [entry.modalityId, entry.slots]),
     );
-    const modalityIds = professor.modalityIds.filter(
-      (id) => (schedulesMap[id] ?? []).length > 0,
-    );
+    const modalityIds = professor.modalityIds;
 
     setFormMode("edit");
     setEditingProfessorId(professor.id);
@@ -173,9 +183,9 @@ export default function OwnerProfessoresPage() {
   async function handleSubmitProfessor(event: FormEvent) {
     event.preventDefault();
 
-    const modalityIds = resolveFormModalityIds(form.modalityIds, formSchedules);
+    const modalityIds = resolveFormModalityIds(form.modalityIds);
     if (modalityIds.length === 0) {
-      setError("Selecione ao menos uma modalidade com horários.");
+      setError("Selecione ao menos uma modalidade para este professor.");
       return;
     }
 
@@ -261,6 +271,67 @@ export default function OwnerProfessoresPage() {
         ? `Professor desabilitado em ${modalityName}.`
         : `Professor habilitado em ${modalityName}.`,
     );
+  }
+
+  function schedulePayload(professor: ProfessorItem, modalityIds: string[]) {
+    return (professor.schedules ?? [])
+      .filter((entry) => modalityIds.includes(entry.modalityId) && entry.slots.length > 0)
+      .map((entry) => ({
+        modalityId: entry.modalityId,
+        slots: entry.slots.map((slot) => ({
+          weekday: slot.weekday,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+        })),
+      }));
+  }
+
+  async function setProfessorOnModality(professor: ProfessorItem, modalityId: string, linked: boolean) {
+    const modalityIds = linked
+      ? Array.from(new Set([...professor.modalityIds, modalityId]))
+      : professor.modalityIds.filter((id) => id !== modalityId);
+
+    if (modalityIds.length === 0) {
+      setError("Para tirar o professor da última modalidade, exclua o cadastro.");
+      return;
+    }
+
+    const modalityName =
+      activeModalities.find((item) => item.id === modalityId)?.name ?? "modalidade";
+    await updateProfessor(
+      professor.id,
+      {
+        modalityIds,
+        schedules: schedulePayload(professor, modalityIds),
+      },
+      linked
+        ? `Professor selecionado em ${modalityName}.`
+        : `Professor removido de ${modalityName}.`,
+    );
+  }
+
+  async function deleteProfessor(professor: ProfessorItem) {
+    const label = professor.name ?? professor.email;
+    const confirmed = window.confirm(
+      `Excluir o cadastro de ${label}? As aulas e horários deste professor também serão removidos.`,
+    );
+    if (!confirmed) return;
+
+    setDeletingProfessorId(professor.id);
+    setError("");
+    setSuccess("");
+    try {
+      const result = await apiFetch<{ message: string }>(`/owner/professores/${professor.id}`, {
+        method: "DELETE",
+      });
+      if (editingProfessorId === professor.id) resetCreateForm();
+      setSuccess(result.message);
+      load({ silent: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao excluir professor.");
+    } finally {
+      setDeletingProfessorId(null);
+    }
   }
 
   const editingProfessor = useMemo(
@@ -367,7 +438,7 @@ export default function OwnerProfessoresPage() {
                 <div className="flex flex-wrap gap-2">
                   {activeModalities.map((item) => {
                     const slotCount = (formSchedules[item.id] ?? []).length;
-                    const selected = slotCount > 0;
+                    const selected = form.modalityIds.includes(item.id);
                     const editing = formEditingModalityId === item.id;
                     return (
                       <button
@@ -383,7 +454,7 @@ export default function OwnerProfessoresPage() {
                         }`}
                       >
                         {item.name}
-                        {selected ? ` • ${slotCount} horário(s)` : ""}
+                        {slotCount > 0 ? ` • ${slotCount} horário(s)` : ""}
                       </button>
                     );
                   })}
@@ -396,18 +467,31 @@ export default function OwnerProfessoresPage() {
                     (item) => item.id === formEditingModalityId,
                   );
                   if (!modality) return null;
+                  const linked = form.modalityIds.includes(formEditingModalityId);
                   return (
-                    <ModalitySchedulePicker
-                      modality={modality}
-                      selectedSlots={formSchedules[formEditingModalityId] ?? []}
-                      onChange={(slots) => syncFormModalityFromSchedules(formEditingModalityId, slots)}
-                    />
+                    <div className="space-y-3">
+                      <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-[#2E496C]">
+                        <input
+                          type="checkbox"
+                          checked={linked}
+                          onChange={() => toggleFormModality(formEditingModalityId)}
+                        />
+                        Este professor leciona {modality.name}
+                      </label>
+                      <ModalitySchedulePicker
+                        modality={modality}
+                        selectedSlots={formSchedules[formEditingModalityId] ?? []}
+                        onChange={(slots) =>
+                          syncFormModalityFromSchedules(formEditingModalityId, slots)
+                        }
+                      />
+                    </div>
                   );
                 })()
               ) : (
                 <p className="m-0 text-xs text-slate-400">
-                  Clique em uma modalidade para escolher os horários. Só entram no cadastro as que
-                  tiverem horário selecionado.
+                  Clique em cada modalidade e marque que o professor leciona nela. O horário é
+                  opcional e pode ser definido depois.
                 </p>
               )}
               {formMode === "edit" && editingProfessor ? (
@@ -463,16 +547,17 @@ export default function OwnerProfessoresPage() {
               <section className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <p className="m-0 text-sm font-semibold text-[#2E496C]">
-                    Professores — {selectedViewModality.name} ({filteredProfessores.length})
+                    Selecionar professor — {selectedViewModality.name}
                   </p>
                 </div>
                 {filteredProfessores.length === 0 ? (
                   <p className="m-0 py-4 text-center text-sm text-slate-400">
-                    Nenhum professor cadastrado nesta modalidade.
+                    Nenhum professor cadastrado. Use o formulário acima para incluir o primeiro.
                   </p>
                 ) : (
                   <div className="divide-y divide-white/10">
                     {filteredProfessores.map((professor) => {
+                      const linked = professor.modalityIds.includes(formEditingModalityId);
                       const modalityActive = isModalityAssignmentActive(
                         professor,
                         formEditingModalityId,
@@ -499,29 +584,61 @@ export default function OwnerProfessoresPage() {
                         <div className="flex shrink-0 flex-wrap items-center gap-2">
                           <button
                             type="button"
+                            disabled={
+                              updatingProfessorId === professor.id ||
+                              deletingProfessorId === professor.id ||
+                              !professor.active
+                            }
+                            onClick={() =>
+                              setProfessorOnModality(
+                                professor,
+                                formEditingModalityId,
+                                !linked,
+                              )
+                            }
+                            className={`rounded-full px-3 py-1 text-[0.65rem] font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${
+                              linked
+                                ? "bg-[#5B7595] text-white"
+                                : "border border-slate-200 text-slate-600"
+                            }`}
+                          >
+                            {linked ? "Selecionado" : "Selecionar"}
+                          </button>
+                          <button
+                            type="button"
                             disabled={updatingProfessorId === professor.id}
                             onClick={() => openProfessorCadastro(professor)}
                             className="rounded-lg border border-slate-200 px-2.5 py-1 text-[0.65rem] font-semibold text-slate-600"
                           >
                             Cadastro
                           </button>
+                          {linked ? (
+                            <button
+                              type="button"
+                              disabled={updatingProfessorId === professor.id || !professor.active}
+                              onClick={() =>
+                                toggleProfessorModalityAccess(
+                                  professor,
+                                  formEditingModalityId,
+                                  selectedViewModality.name,
+                                )
+                              }
+                              className={`rounded-full px-3 py-1 text-[0.65rem] font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${
+                                modalityActive
+                                  ? "bg-emerald-500/20 text-emerald-700"
+                                  : "border border-slate-200 text-slate-400"
+                              }`}
+                            >
+                              {modalityActive ? "Habilitado" : "Desabilitado"}
+                            </button>
+                          ) : null}
                           <button
                             type="button"
-                            disabled={updatingProfessorId === professor.id || !professor.active}
-                            onClick={() =>
-                              toggleProfessorModalityAccess(
-                                professor,
-                                formEditingModalityId,
-                                selectedViewModality.name,
-                              )
-                            }
-                            className={`rounded-full px-3 py-1 text-[0.65rem] font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${
-                              modalityActive
-                                ? "bg-emerald-500/20 text-emerald-700"
-                                : "border border-slate-200 text-slate-400"
-                            }`}
+                            disabled={deletingProfessorId === professor.id}
+                            onClick={() => deleteProfessor(professor)}
+                            className="rounded-lg border border-red-400/30 px-2.5 py-1 text-[0.65rem] font-semibold text-red-700 disabled:opacity-50"
                           >
-                            {modalityActive ? "Habilitado" : "Desabilitado"}
+                            {deletingProfessorId === professor.id ? "Excluindo..." : "Excluir"}
                           </button>
                         </div>
                       </div>

@@ -206,6 +206,35 @@ async function assertProfessorAccess(
   return Boolean(assignment);
 }
 
+function modalitiesVisibleToStudent<T extends Parameters<typeof modalityMatchesPlan>[0]>(
+  modalidades: T[],
+  planName: string,
+  tenantPlans: Awaited<ReturnType<typeof getTenantPlans>>,
+): T[] {
+  const matched = modalidades.filter((item) =>
+    modalityMatchesPlan(item, planName, tenantPlans),
+  );
+  return matched.length > 0 ? matched : modalidades;
+}
+
+async function studentCanOpenModality(
+  tenantId: string,
+  modality: Parameters<typeof modalityMatchesPlan>[0] & { id: string },
+  planName: string,
+  tenantPlans: Awaited<ReturnType<typeof getTenantPlans>>,
+): Promise<boolean> {
+  if (modalityMatchesPlan(modality, planName, tenantPlans)) return true;
+
+  const active = await prisma.modality.findMany({
+    where: { tenantId, active: true },
+    select: { id: true, name: true, linkedPlans: true, contentType: true, active: true },
+  });
+
+  return modalitiesVisibleToStudent(active, planName, tenantPlans).some(
+    (item) => item.id === modality.id,
+  );
+}
+
 const modalityListInclude = {
   _count: {
     select: {
@@ -765,6 +794,16 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
       grouped.set(row.userId, current);
     }
 
+    const professorUsers = await prisma.user.findMany({
+      where: { tenantId, role: UserRole.PROFESSOR },
+      select: { id: true, email: true, name: true, role: true, active: true },
+    });
+    for (const user of professorUsers) {
+      if (!grouped.has(user.id)) {
+        grouped.set(user.id, { user, modalityIds: [] });
+      }
+    }
+
     const tenantPlans = await getTenantPlans(tenantId);
     const students = await prisma.student.findMany({
       where: { tenantId, active: true },
@@ -1005,6 +1044,47 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
     },
   );
 
+  app.delete<{ Params: { id: string } }>("/owner/professores/:id", async (request, reply) => {
+    const tenantId = request.user.tenantId;
+    const professor = await prisma.user.findFirst({
+      where: {
+        id: request.params.id,
+        tenantId,
+        role: { in: [UserRole.PROFESSOR, UserRole.PROPRIETARIO] },
+      },
+    });
+
+    if (!professor) {
+      return reply.status(404).send({ error: "Professor não encontrado." });
+    }
+
+    const hasAssignment = await prisma.professorModality.findFirst({
+      where: { tenantId, userId: professor.id },
+      select: { id: true },
+    });
+    if (professor.role === UserRole.PROPRIETARIO && !hasAssignment) {
+      return reply.status(404).send({ error: "Professor não encontrado." });
+    }
+
+    if (professor.role === UserRole.PROPRIETARIO) {
+      await prisma.professorScheduleSlot.deleteMany({
+        where: { tenantId, userId: professor.id },
+      });
+      await prisma.professorLesson.deleteMany({
+        where: { tenantId, professorId: professor.id },
+      });
+      await prisma.professorModality.deleteMany({
+        where: { tenantId, userId: professor.id },
+      });
+      return reply.send({
+        message: "Cadastro de professor removido. O acesso de dono da academia foi mantido.",
+      });
+    }
+
+    await prisma.user.delete({ where: { id: professor.id } });
+    return reply.send({ message: "Cadastro do professor excluído." });
+  });
+
   app.patch<{ Params: { professorId: string; lessonId: string } }>(
     "/owner/professores/:professorId/aulas/:lessonId",
     async (request, reply) => {
@@ -1111,12 +1191,26 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
       return reply.status(404).send({ error: "Professor não encontrado." });
     }
 
-    const allowed = await assertProfessorAccess(professor.id, tenantId, data.modalityId);
-    if (!allowed) {
-      return reply.status(400).send({
-        error: "Este professor não está liberado para a modalidade selecionada.",
-      });
+    const modality = await prisma.modality.findFirst({
+      where: { id: data.modalityId, tenantId, active: true },
+      select: { id: true },
+    });
+    if (!modality) {
+      return reply.status(400).send({ error: "Modalidade inválida ou inativa." });
     }
+
+    await prisma.professorModality.upsert({
+      where: {
+        userId_modalityId: { userId: professor.id, modalityId: data.modalityId },
+      },
+      update: { active: true },
+      create: {
+        tenantId,
+        userId: professor.id,
+        modalityId: data.modalityId,
+        active: true,
+      },
+    });
 
     const lesson = await prisma.professorLesson.create({
       data: {
@@ -1504,7 +1598,13 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
       }
 
       const tenantPlans = await getTenantPlans(tenantId);
-      if (!modalityMatchesPlan(lesson.modality, student.planoModalidade, tenantPlans)) {
+      const enrolled = await studentCanOpenModality(
+        tenantId,
+        lesson.modality,
+        student.planoModalidade,
+        tenantPlans,
+      );
+      if (!enrolled) {
         return reply.status(400).send({
           error: "Este aluno não está matriculado na modalidade desta aula.",
         });
@@ -2032,8 +2132,10 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
       include: modalityListInclude,
     });
 
-    const accessible = modalidades.filter((item) =>
-      modalityMatchesPlan(item, student.planoModalidade, tenantPlans),
+    const accessible = modalitiesVisibleToStudent(
+      modalidades,
+      student.planoModalidade,
+      tenantPlans,
     );
 
     return reply.send({
@@ -2069,7 +2171,14 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
         return reply.status(404).send({ error: "Modalidade não encontrada." });
       }
 
-      if (!modalityMatchesPlan(modality, student.planoModalidade, tenantPlans)) {
+      if (
+        !(await studentCanOpenModality(
+          student.tenantId,
+          modality,
+          student.planoModalidade,
+          tenantPlans,
+        ))
+      ) {
         return reply.status(403).send({ error: "Modalidade não incluída no seu plano." });
       }
 
@@ -2178,7 +2287,14 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
         return reply.status(404).send({ error: "Modalidade não encontrada." });
       }
 
-      if (!modalityMatchesPlan(modality, student.planoModalidade, tenantPlans)) {
+      if (
+        !(await studentCanOpenModality(
+          student.tenantId,
+          modality,
+          student.planoModalidade,
+          tenantPlans,
+        ))
+      ) {
         return reply.status(403).send({ error: "Modalidade não incluída no seu plano." });
       }
 
@@ -2266,7 +2382,14 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
         return reply.status(404).send({ error: "Modalidade não encontrada." });
       }
 
-      if (!modalityMatchesPlan(modality, student.planoModalidade, tenantPlans)) {
+      if (
+        !(await studentCanOpenModality(
+          student.tenantId,
+          modality,
+          student.planoModalidade,
+          tenantPlans,
+        ))
+      ) {
         return reply.status(403).send({ error: "Esta modalidade não está incluída no seu plano." });
       }
 
@@ -2417,8 +2540,10 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       });
 
-      const accessible = modalidades.filter((item) =>
-        modalityMatchesPlan(item, student.planoModalidade, tenantPlans),
+      const accessible = modalitiesVisibleToStudent(
+        modalidades,
+        student.planoModalidade,
+        tenantPlans,
       );
 
       const cancellations = await prisma.modalityScheduleCancellation.findMany({
@@ -2507,8 +2632,10 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
         include: { _count: { select: { lessons: { where: { active: true } } } } },
       });
 
-      const accessibleModalidades = modalidades.filter((item) =>
-        modalityMatchesPlan(item, student.planoModalidade, tenantPlans),
+      const accessibleModalidades = modalitiesVisibleToStudent(
+        modalidades,
+        student.planoModalidade,
+        tenantPlans,
       );
 
       const matched = accessibleModalidades.find((item) =>
@@ -2559,9 +2686,11 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
       where: { tenantId: student.tenantId, active: true, contentType: "VIDEO_GALLERY" },
     });
 
-    const matchedModalityIds = modalidades
-      .filter((item) => modalityMatchesPlan(item, student.planoModalidade, tenantPlans))
-      .map((item) => item.id);
+    const matchedModalityIds = modalitiesVisibleToStudent(
+      modalidades,
+      student.planoModalidade,
+      tenantPlans,
+    ).map((item) => item.id);
 
     const aulasDisponiveis = await prisma.professorLesson.findMany({
       where: {
@@ -2640,7 +2769,15 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
       }
 
       const tenantPlans = await getTenantPlans(student.tenantId);
-      if (!lesson.modality || !modalityMatchesPlan(lesson.modality, student.planoModalidade, tenantPlans)) {
+      if (
+        !lesson.modality ||
+        !(await studentCanOpenModality(
+          student.tenantId,
+          lesson.modality,
+          student.planoModalidade,
+          tenantPlans,
+        ))
+      ) {
         return reply.status(403).send({ error: "Esta aula não pertence à sua modalidade." });
       }
 
@@ -2675,7 +2812,14 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
       }
 
       const tenantPlans = await getTenantPlans(student.tenantId);
-      if (!modalityMatchesPlan(lesson.modality, student.planoModalidade, tenantPlans)) {
+      if (
+        !(await studentCanOpenModality(
+          student.tenantId,
+          lesson.modality,
+          student.planoModalidade,
+          tenantPlans,
+        ))
+      ) {
         return reply.status(403).send({ error: "Esta aula não pertence à sua modalidade." });
       }
 

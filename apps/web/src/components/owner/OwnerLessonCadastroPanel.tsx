@@ -49,9 +49,9 @@ export default function OwnerLessonCadastroPanel({
     () =>
       professores.filter((professor) => {
         if (!professor.active) return false;
-        if (!professor.modalityIds.includes(selectedModalityId)) return false;
         const stat = professor.modalityStats?.find((item) => item.modalityId === selectedModalityId);
-        return stat?.assignmentActive ?? true;
+        if (stat && stat.assignmentActive === false) return false;
+        return true;
       }),
     [professores, selectedModalityId],
   );
@@ -97,9 +97,12 @@ export default function OwnerLessonCadastroPanel({
     return () => window.clearTimeout(timer);
   }, [loadAulas]);
   useEffect(() => {
-    setForm({
-      ...EMPTY_FORM,
-      professorId: availableProfessors[0]?.id ?? "",
+    setForm((current) => {
+      const stillValid = availableProfessors.some((item) => item.id === current.professorId);
+      return {
+        ...EMPTY_FORM,
+        professorId: stillValid ? current.professorId : (availableProfessors[0]?.id ?? ""),
+      };
     });
     setSelectedSlotKey("");
     setError("");
