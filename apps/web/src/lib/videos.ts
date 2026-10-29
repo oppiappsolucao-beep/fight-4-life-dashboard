@@ -31,7 +31,7 @@ export function parseVideoEmbed(url: string): ParsedVideoEmbed | null {
     };
   }
 
-  if (/^https?:\/\/.+/i.test(trimmed)) {
+  if (/^https?:\/\/.+/i.test(trimmed) || trimmed.startsWith("/uploads/")) {
     return {
       type: "file",
       embedUrl: trimmed,

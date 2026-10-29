@@ -11,8 +11,8 @@ DATABASE_URL = "postgresql://build:build@127.0.0.1:5432/build?schema=public"
 DIRECT_URL = "postgresql://build:build@127.0.0.1:5432/build?schema=public"
 
 [phases.setup]
-nixPkgs = ["nodejs_20", "openssl"]
-aptPkgs = ["openssl"]
+nixPkgs = ["nodejs_20", "openssl", "ffmpeg"]
+aptPkgs = ["openssl", "ffmpeg"]
 
 [phases.install]
 cmds = ["npm install --include=dev"]

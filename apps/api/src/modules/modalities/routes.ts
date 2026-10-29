@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import bcrypt from "bcryptjs";
+import { randomUUID } from "node:crypto";
 import { Prisma, UserRole } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
 import {
@@ -32,6 +33,7 @@ import {
   workoutInclude,
 } from "../owner/workouts.js";
 import { ensureExerciseCatalog } from "../../lib/exercise-catalog.js";
+import { materializeLessonVideo, persistLessonVideo } from "../../lib/lesson-videos.js";
 import { requireAuth, requireRole } from "../../middleware/auth.js";
 import { requireStudent } from "../../middleware/student.js";
 import {
@@ -1224,8 +1226,23 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
       },
     });
 
+    const lessonId = randomUUID();
+    let videoUrl: string;
+    try {
+      videoUrl = await persistLessonVideo({
+        tenantId,
+        lessonId,
+        videoUrl: data.videoUrl,
+      });
+    } catch (error) {
+      return reply.status(400).send({
+        error: error instanceof Error ? error.message : "Não foi possível processar o vídeo.",
+      });
+    }
+
     const lesson = await prisma.professorLesson.create({
       data: {
+        id: lessonId,
         tenantId,
         modalityId: data.modalityId,
         professorId: professor.id,
@@ -1234,7 +1251,7 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
         classDate: parseClassDate(data.classDate),
         startTime: data.startTime ?? null,
         endTime: data.endTime ?? null,
-        videoUrl: data.videoUrl,
+        videoUrl,
         thumbnailUrl: data.thumbnailUrl?.trim() || null,
         active: true,
       },
@@ -1427,8 +1444,23 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
       return reply.status(403).send({ error: "Modalidade não liberada para você." });
     }
 
+    const lessonId = randomUUID();
+    let videoUrl: string;
+    try {
+      videoUrl = await persistLessonVideo({
+        tenantId,
+        lessonId,
+        videoUrl: data.videoUrl,
+      });
+    } catch (error) {
+      return reply.status(400).send({
+        error: error instanceof Error ? error.message : "Não foi possível processar o vídeo.",
+      });
+    }
+
     const lesson = await prisma.professorLesson.create({
       data: {
+        id: lessonId,
         tenantId,
         modalityId: data.modalityId,
         professorId: request.user.sub,
@@ -1437,7 +1469,7 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
         classDate: parseClassDate(data.classDate),
         startTime: data.startTime ?? null,
         endTime: data.endTime ?? null,
-        videoUrl: data.videoUrl,
+        videoUrl,
         thumbnailUrl: data.thumbnailUrl?.trim() || null,
         active: true,
       },
@@ -1484,6 +1516,21 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
       return reply.status(400).send({ error: "Vídeo inválido." });
     }
 
+    let videoUrl = data.videoUrl;
+    if (videoUrl) {
+      try {
+        videoUrl = await persistLessonVideo({
+          tenantId,
+          lessonId: existing.id,
+          videoUrl,
+        });
+      } catch (error) {
+        return reply.status(400).send({
+          error: error instanceof Error ? error.message : "Não foi possível processar o vídeo.",
+        });
+      }
+    }
+
     const lesson = await prisma.professorLesson.update({
       where: { id: existing.id },
       data: {
@@ -1493,7 +1540,7 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
           ? { description: data.description?.trim() || null }
           : {}),
         ...(data.classDate ? { classDate: parseClassDate(data.classDate) } : {}),
-        ...(data.videoUrl ? { videoUrl: data.videoUrl } : {}),
+        ...(videoUrl ? { videoUrl } : {}),
         ...(data.thumbnailUrl !== undefined
           ? { thumbnailUrl: data.thumbnailUrl?.trim() || null }
           : {}),
@@ -2428,7 +2475,7 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
       });
       const cancelledKeys = buildCancellationKeySet(cancellations);
 
-      const lessons = await prisma.professorLesson.findMany({
+      const storedLessons = await prisma.professorLesson.findMany({
         where: {
           tenantId: student.tenantId,
           modalityId: modality.id,
@@ -2438,6 +2485,18 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
         orderBy: [{ startTime: "asc" }, { createdAt: "asc" }],
         include: lessonInclude,
       });
+
+      const lessons: typeof storedLessons = storedLessons.map((lesson) =>
+        lesson.videoUrl.startsWith("data:") ? { ...lesson, videoUrl: "" } : lesson,
+      );
+
+      for (const lesson of storedLessons) {
+        if (lesson.videoUrl.startsWith("data:")) {
+          void materializeLessonVideo(lesson).catch((error) => {
+            request.log.error(error);
+          });
+        }
+      }
 
       const professorSlots = await prisma.professorScheduleSlot.findMany({
         where: {
@@ -2806,7 +2865,8 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
         return reply.status(403).send({ error: "Esta aula não pertence à sua modalidade." });
       }
 
-      return reply.send({ aula: serializeProfessorLesson(lesson) });
+      const ready = await materializeLessonVideo(lesson);
+      return reply.send({ aula: serializeProfessorLesson(ready) });
     },
   );
 

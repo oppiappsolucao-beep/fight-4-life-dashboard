@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { parseVideoEmbed } from "../../lib/videos";
 import type { LessonVideoCardItem } from "../../types/modality";
 
@@ -15,26 +16,51 @@ export default function ModalityVideoPlayer({
   timeLabel,
 }: ModalityVideoPlayerProps) {
   const parsed = parseVideoEmbed(video.videoUrl);
+  const fileSrc = parsed?.type === "file" ? parsed.embedUrl : null;
+  const [mediaState, setMediaState] = useState<"loading" | "ready" | "error">("loading");
+
+  useEffect(() => {
+    setMediaState("loading");
+  }, [fileSrc]);
 
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
-      <div className="aspect-video w-full bg-black">
-        {!parsed ? (
-          video.videoUrl.startsWith("data:video/") ? (
-            <video src={video.videoUrl} controls playsInline className="h-full w-full bg-black" />
-          ) : (
-            <div className="flex h-full items-center justify-center px-6 text-center text-sm text-slate-500">
-              Formato de vídeo não suportado neste navegador.
-            </div>
-          )
+      <div className="relative aspect-video w-full bg-black">
+        {!video.videoUrl.trim() ? (
+          <div className="flex h-full items-center justify-center px-6 text-center text-sm text-slate-300">
+            Não foi possível preparar o vídeo desta aula. Atualize a página ou peça ao professor para publicar de novo.
+          </div>
+        ) : !parsed ? (
+          <div className="flex h-full items-center justify-center px-6 text-center text-sm text-slate-300">
+            Formato de vídeo não suportado neste navegador.
+          </div>
         ) : parsed.type === "file" ? (
-          <video
-            src={parsed.embedUrl}
-            controls
-            playsInline
-            className="h-full w-full bg-black"
-            poster={video.thumbnailUrl ?? undefined}
-          />
+          <>
+            <video
+              key={fileSrc}
+              src={fileSrc ?? undefined}
+              controls
+              playsInline
+              preload="metadata"
+              className="h-full w-full bg-black"
+              poster={video.thumbnailUrl ?? undefined}
+              onLoadedMetadata={(event) => {
+                const duration = event.currentTarget.duration;
+                setMediaState(Number.isFinite(duration) && duration > 0 ? "ready" : "error");
+              }}
+              onError={() => setMediaState("error")}
+            />
+            {mediaState === "loading" ? (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/70 px-6 text-center text-sm text-slate-200">
+                Preparando vídeo...
+              </div>
+            ) : null}
+            {mediaState === "error" ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/80 px-6 text-center text-sm text-slate-200">
+                Este vídeo não abre neste navegador. Atualize a página. Se continuar preto, o professor precisa enviar de novo.
+              </div>
+            ) : null}
+          </>
         ) : (
           <iframe
             src={parsed.embedUrl}

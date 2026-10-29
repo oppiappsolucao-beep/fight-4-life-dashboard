@@ -95,6 +95,16 @@ if (existsSync(webDist)) {
 try {
   await app.listen({ port: PORT, host: HOST });
   console.log(`API rodando em http://${HOST}:${PORT}`);
+  void import("./lib/lesson-videos.js")
+    .then(({ migrateBase64LessonVideos }) => migrateBase64LessonVideos())
+    .then((migrated) => {
+      if (migrated > 0) {
+        console.log(`[videos] Aulas em base64 convertidas para arquivo: ${migrated}.`);
+      }
+    })
+    .catch((error) => {
+      console.error("[videos] Falha ao migrar vídeos de aula:", error);
+    });
 } catch (error) {
   app.log.error(error);
   process.exit(1);

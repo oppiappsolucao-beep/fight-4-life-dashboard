@@ -22,6 +22,7 @@ export function getUploadsRoot(): string {
 export async function ensureUploadsDir(): Promise<string> {
   const root = getUploadsRoot();
   await mkdir(join(root, "students"), { recursive: true });
+  await mkdir(join(root, "lessons"), { recursive: true });
   return root;
 }
 

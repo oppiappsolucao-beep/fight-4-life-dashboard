@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ModalityVideoPlayer from "../modality/ModalityVideoPlayer";
 import ProgressRing from "./ProgressRing";
 import WorkoutDateStrip from "./WorkoutDateStrip";
@@ -116,6 +116,8 @@ export default function StudentLessonTreinoFlow({
   const [activePhase, setActivePhase] = useState<LessonPhase>("AQUECIMENTO");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [videoFailed, setVideoFailed] = useState(false);
+  const videoFetchAttempted = useRef(new Set<string>());
 
   const selectedSlot = useMemo(
     () => horarios.find((item) => lessonSlotKey(item) === selectedSlotKey) ?? null,
@@ -296,6 +298,38 @@ export default function StudentLessonTreinoFlow({
   useEffect(() => {
     loadSchedule();
   }, [loadSchedule]);
+
+  useEffect(() => {
+    videoFetchAttempted.current.clear();
+    setVideoFailed(false);
+  }, [classDate, modalityId]);
+
+  useEffect(() => {
+    if (!session?.id || !activeLesson?.id || activeLesson.videoUrl) return;
+    const lessonId = activeLesson.id;
+    if (videoFetchAttempted.current.has(lessonId)) return;
+    videoFetchAttempted.current.add(lessonId);
+    let cancelled = false;
+    let finished = false;
+    apiFetch<{ aula: ProfessorLessonItem }>(`/student/aulas/${lessonId}`, {}, session.id)
+      .then((data) => {
+        finished = true;
+        if (cancelled) return;
+        if (!data.aula.videoUrl) {
+          setVideoFailed(true);
+          return;
+        }
+        setActiveLesson((current) => (current?.id === data.aula.id ? data.aula : current));
+      })
+      .catch(() => {
+        finished = true;
+        if (!cancelled) setVideoFailed(true);
+      });
+    return () => {
+      cancelled = true;
+      if (!finished) videoFetchAttempted.current.delete(lessonId);
+    };
+  }, [session?.id, activeLesson?.id, activeLesson?.videoUrl]);
 
   function selectSlot(slot: StudentLessonSlotOption) {
     setSelectedSlotKey(lessonSlotKey(slot));
@@ -478,16 +512,26 @@ export default function StudentLessonTreinoFlow({
             </section>
           ) : activeLesson ? (
             <div className="space-y-3">
-              <ModalityVideoPlayer
-                video={lessonToVideoCard(activeLesson)}
-                professorName={
-                  activeLesson.professor?.name ??
-                  activeLesson.professor?.email ??
-                  selectedSlot?.professorName
-                }
-                classDate={formatWorkoutDateLabel(classDate)}
-                timeLabel={selectedSlot?.label}
-              />
+              {activeLesson.videoUrl ? (
+                <ModalityVideoPlayer
+                  video={lessonToVideoCard(activeLesson)}
+                  professorName={
+                    activeLesson.professor?.name ??
+                    activeLesson.professor?.email ??
+                    selectedSlot?.professorName
+                  }
+                  classDate={formatWorkoutDateLabel(classDate)}
+                  timeLabel={selectedSlot?.label}
+                />
+              ) : videoFailed ? (
+                <div className="flex aspect-video items-center justify-center rounded-2xl border border-slate-200 bg-black px-6 text-center text-sm text-slate-200">
+                  Não foi possível preparar o vídeo. Atualize a página.
+                </div>
+              ) : (
+                <div className="flex aspect-video items-center justify-center rounded-2xl border border-slate-200 bg-black px-6 text-center text-sm text-slate-200">
+                  Preparando vídeo...
+                </div>
+              )}
               <button
                 type="button"
                 onClick={markAulaCompleted}
