@@ -11,6 +11,14 @@ const queryClient = new QueryClient();
 
 bootstrapTenantFromHost();
 
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    void navigator.serviceWorker.register("/sw.js").catch(() => {
+      // Sem service worker o site continua no navegador; o atalho do Android não fica standalone.
+    });
+  });
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>

@@ -74,6 +74,17 @@ if (existsSync(webDist)) {
   await app.register(fastifyStatic, {
     root: webDist,
     decorateReply: true,
+    setHeaders(res, filePath) {
+      const normalized = filePath.replace(/\\/g, "/");
+      if (normalized.endsWith("/sw.js")) {
+        res.setHeader("Cache-Control", "no-cache");
+        res.setHeader("Service-Worker-Allowed", "/");
+      }
+      if (normalized.endsWith("/manifest.json")) {
+        res.setHeader("Content-Type", "application/manifest+json");
+        res.setHeader("Cache-Control", "no-cache");
+      }
+    },
   });
 
   app.setNotFoundHandler((request, reply) => {
