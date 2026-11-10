@@ -19,7 +19,13 @@ import type {
   WorkoutExerciseDraft,
   WorkoutSummary,
 } from "../../types/workout";
-import type { ModalityItem, ProfessorLessonItem, ProfessorModalitySchedule, WarmupMovementCatalogEntry } from "../../types/modality";
+import {
+  isExerciseCatalogModality,
+  type ModalityItem,
+  type ProfessorLessonItem,
+  type ProfessorModalitySchedule,
+  type WarmupMovementCatalogEntry,
+} from "../../types/modality";
 import { LESSON_PHASES, type LessonPhase } from "../../lib/lesson";
 import LessonVideoUploadField from "../../components/professor/LessonVideoUploadField";
 import {
@@ -156,7 +162,7 @@ export default function ProfessorCadastroTreinoPage() {
     () => modalidades.find((item) => item.id === selectedModalityId),
     [modalidades, selectedModalityId],
   );
-  const isMusculacao = selectedModality?.contentType === "EXERCISE_CATALOG";
+  const isMusculacao = selectedModality ? isExerciseCatalogModality(selectedModality) : false;
 
   const alunosForModality = useMemo(() => {
     if (!selectedModalityId) return alunos;
@@ -275,7 +281,11 @@ export default function ProfessorCadastroTreinoPage() {
           const activeModalities = modalidadesResult.value.modalidades.filter((item) => item.active);
           setModalidades(activeModalities);
           if (activeModalities.length > 0) {
-            setSelectedModalityId((current) => current || activeModalities[0].id);
+            setSelectedModalityId((current) => {
+              if (current && activeModalities.some((item) => item.id === current)) return current;
+              const catalog = activeModalities.find((item) => isExerciseCatalogModality(item));
+              return catalog?.id ?? activeModalities[0].id;
+            });
           }
         }
         if (schedulesResult.status === "fulfilled") {

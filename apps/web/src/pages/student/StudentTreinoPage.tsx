@@ -23,7 +23,7 @@ import {
   type WorkoutCompletionStatus,
   type WorkoutPhase,
 } from "../../lib/workout";
-import type { ModalityItem } from "../../types/modality";
+import { isExerciseCatalogModality, type ModalityItem } from "../../types/modality";
 import type { StudentWorkout, WorkoutExerciseItem, WorkoutSummary } from "../../types/workout";
 import StudentSectionPage from "./StudentSectionPage";
 
@@ -113,7 +113,7 @@ export default function StudentTreinoPage() {
     () => accessModalidades.find((item) => item.id === selectedModalityId),
     [accessModalidades, selectedModalityId],
   );
-  const isMusculacao = selectedModality?.contentType === "EXERCISE_CATALOG";
+  const isMusculacao = selectedModality ? isExerciseCatalogModality(selectedModality) : false;
 
   const selectedScheduleWeekdays = useMemo(() => {
     const slots = selectedModality?.scheduleSlots ?? [];
@@ -141,9 +141,7 @@ export default function StudentTreinoPage() {
           const videoModality = data.modalidades.find(
             (item) => item.contentType === "VIDEO_GALLERY",
           );
-          const musculacao = data.modalidades.find(
-            (item) => item.contentType === "EXERCISE_CATALOG",
-          );
+          const musculacao = data.modalidades.find((item) => isExerciseCatalogModality(item));
           return videoModality?.id ?? musculacao?.id ?? data.modalidades[0]?.id ?? "";
         });
       })

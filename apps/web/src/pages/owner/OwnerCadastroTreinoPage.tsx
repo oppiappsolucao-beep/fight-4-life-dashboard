@@ -17,7 +17,7 @@ import type {
   WorkoutExerciseDraft,
   WorkoutSummary,
 } from "../../types/workout";
-import type { ModalityItem, ProfessorItem } from "../../types/modality";
+import { isExerciseCatalogModality, type ModalityItem, type ProfessorItem } from "../../types/modality";
 import OwnerLessonCadastroPanel from "../../components/owner/OwnerLessonCadastroPanel";
 import OwnerModalityWarmupPanel from "../../components/owner/OwnerModalityWarmupPanel";
 import OwnerSectionPage from "./OwnerSectionPage";
@@ -117,7 +117,7 @@ export default function OwnerCadastroTreinoPage() {
     () => modalidades.find((item) => item.id === selectedModalityId),
     [modalidades, selectedModalityId],
   );
-  const isMusculacao = selectedModality?.contentType === "EXERCISE_CATALOG";
+  const isMusculacao = selectedModality ? isExerciseCatalogModality(selectedModality) : false;
 
   const loadBase = useCallback(() => {
     setLoading(true);
@@ -142,7 +142,11 @@ export default function OwnerCadastroTreinoPage() {
           const activeModalities = modalidadesResult.value.modalidades.filter((item) => item.active);
           setModalidades(activeModalities);
           if (activeModalities.length > 0) {
-            setSelectedModalityId((current) => current || activeModalities[0].id);
+            setSelectedModalityId((current) => {
+              if (current && activeModalities.some((item) => item.id === current)) return current;
+              const catalog = activeModalities.find((item) => isExerciseCatalogModality(item));
+              return catalog?.id ?? activeModalities[0].id;
+            });
           }
         }
         if (professoresResult.status === "fulfilled") {

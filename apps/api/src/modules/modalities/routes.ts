@@ -4,8 +4,11 @@ import { randomUUID } from "node:crypto";
 import { Prisma, UserRole } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
 import {
+  alignTenantMusculacaoModalities,
+  DEFAULT_MODALITY_TEMPLATES,
   ensureModalityTemplates,
   ensureTenantModalities,
+  modalityLooksLikeMusculacao,
   seedTenantModalitiesFromTemplates,
   isAllowedVideoUrl,
   modalityMatchesPlan,
@@ -374,6 +377,7 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
   app.get("/owner/modalidades", async (request, reply) => {
     const tenantId = request.user.tenantId;
     await ensureTenantModalities(tenantId);
+    await alignTenantMusculacaoModalities(tenantId);
 
     const modalidades = await prisma.modality.findMany({
       where: { tenantId },
@@ -386,19 +390,48 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
 
   app.post("/owner/modalidades/import-templates", async (request, reply) => {
     const tenantId = request.user.tenantId;
-    const count = await seedTenantModalitiesFromTemplates(tenantId);
+    const focus =
+      request.body &&
+      typeof request.body === "object" &&
+      "focus" in request.body &&
+      (request.body as { focus?: string }).focus === "musculacao"
+        ? "musculacao"
+        : "all";
+    const result = await seedTenantModalitiesFromTemplates(tenantId, {
+      focus,
+      activateMusculacao: focus === "musculacao",
+    });
     const modalidades = await prisma.modality.findMany({
       where: { tenantId },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       include: modalityListInclude,
     });
 
+    let message = "Modalidades já existem nesta academia.";
+    if (focus === "musculacao") {
+      if (result.professorCount > 0) {
+        message =
+          "Treinos de musculação puxados e liberados para o professor montar a ficha do aluno.";
+      } else if (result.created > 0 || result.aligned > 0) {
+        message =
+          "Treinos de musculação puxados. Libere essa modalidade para o professor em Professores.";
+      } else {
+        message =
+          "Os treinos de musculação já estão na academia. Libere um professor nessa modalidade.";
+      }
+    } else if (result.created > 0) {
+      message = "Catálogo padrão importado. Ative as modalidades que deseja ofertar.";
+    } else if (result.aligned > 0) {
+      message = "Treinos de musculação atualizados no catálogo da academia.";
+    }
+
     return reply.send({
       modalidades: modalidades.map(serializeModality),
-      message:
-        count > 0
-          ? "Catálogo padrão importado. Ative as modalidades que deseja ofertar."
-          : "Modalidades já existem nesta academia.",
+      created: result.created,
+      aligned: result.aligned,
+      exerciseCount: result.exerciseCount,
+      professorCount: result.professorCount,
+      message,
     });
   });
 
@@ -422,6 +455,16 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
       return reply.status(409).send({ error: "Já existe uma modalidade com esse nome." });
     }
 
+    const looksLikeMusculacao = modalityLooksLikeMusculacao({ slug, name: data.name });
+    const template = looksLikeMusculacao
+      ? await prisma.modalityTemplate.findUnique({ where: { slug: "musculacao" } })
+      : await prisma.modalityTemplate.findUnique({ where: { slug } });
+    const linkedPlans = looksLikeMusculacao
+      ? (DEFAULT_MODALITY_TEMPLATES.find((item) => item.slug === "musculacao")?.linkedPlans ?? [
+          data.name.trim(),
+        ])
+      : [data.name.trim()];
+
     const last = await prisma.modality.findFirst({
       where: { tenantId },
       orderBy: { sortOrder: "desc" },
@@ -431,16 +474,21 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
     const modality = await prisma.modality.create({
       data: {
         tenantId,
+        templateId: template?.id,
         name: data.name.trim(),
         slug,
-        contentType: data.contentType,
-        description: data.description?.trim() || null,
-        linkedPlans: [data.name.trim()],
+        contentType: looksLikeMusculacao ? "EXERCISE_CATALOG" : (template?.contentType ?? data.contentType),
+        description: data.description?.trim() || template?.description || null,
+        linkedPlans,
         sortOrder: (last?.sortOrder ?? 0) + 1,
         active: true,
       },
       include: modalityListInclude,
     });
+
+    if (looksLikeMusculacao) {
+      await ensureExerciseCatalog({ syncRemote: false });
+    }
 
     return reply.send({
       modalidade: serializeModality(modality),
@@ -905,6 +953,8 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
       await saveProfessorSchedules(tenantId, professor.id, schedules);
     }
 
+    await alignTenantMusculacaoModalities(tenantId, data.modalityIds);
+
     return reply.send({
       professor: await serializeProfessorDetails(professor, tenantId, data.modalityIds),
       message: "Professor cadastrado e modalidades liberadas.",
@@ -950,6 +1000,8 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
     if (schedules.length > 0) {
       await saveProfessorSchedules(tenantId, userId, schedules);
     }
+
+    await alignTenantMusculacaoModalities(tenantId, data.modalityIds);
 
     const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
     return reply.send({
@@ -1050,6 +1102,8 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
           select: { modalityId: true },
         })
       ).map((item) => item.modalityId);
+
+      await alignTenantMusculacaoModalities(tenantId, allModalityIds);
 
       return reply.send({
         professor: await serializeProfessorDetails(updated, tenantId, allModalityIds),
@@ -1279,6 +1333,8 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
     if (modalityIds.length === 0) {
       return reply.status(403).send({ error: "Nenhuma modalidade liberada para você." });
     }
+
+    await alignTenantMusculacaoModalities(tenantId, modalityIds);
 
     const modalidades = await prisma.modality.findMany({
       where: { tenantId, id: { in: modalityIds }, active: true },
@@ -1920,6 +1976,7 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
   });
 
   app.get("/professor/exercises", async (_request, reply) => {
+    await ensureExerciseCatalog({ syncRemote: false });
     const exercises = await prisma.exercise.findMany({
       where: { active: true },
       orderBy: [{ muscleGroup: "asc" }, { name: "asc" }],
@@ -2196,6 +2253,7 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
     }
 
     await ensureTenantModalities(student.tenantId);
+    await alignTenantMusculacaoModalities(student.tenantId);
     const tenantPlans = await getTenantPlans(student.tenantId);
 
     const modalidades = await prisma.modality.findMany({

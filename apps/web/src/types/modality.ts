@@ -190,6 +190,25 @@ export function contentTypeLabel(contentType: ModalityContentType): string {
   return contentType === "EXERCISE_CATALOG" ? "Catálogo de treinos" : "Galeria de vídeos";
 }
 
+function normalizeModalityKey(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+/** Musculação usa o catálogo de treinos, mesmo se a modalidade foi criada como galeria. */
+export function isExerciseCatalogModality(modality: {
+  contentType: ModalityContentType | string;
+  slug?: string;
+  name?: string;
+}): boolean {
+  if (modality.contentType === "EXERCISE_CATALOG") return true;
+  const slug = normalizeModalityKey(modality.slug ?? "");
+  const name = normalizeModalityKey(modality.name ?? "");
+  return slug.includes("musculacao") || name.includes("musculacao");
+}
+
 /** Compatível com player de vídeo existente */
 export interface LessonVideoCardItem {
   id: string;

@@ -157,6 +157,24 @@ export default function OwnerModalidadesPage() {
     setSuccess("");
   }
 
+  async function handlePullMusculacao() {
+    setImporting(true);
+    setError("");
+    setSuccess("");
+    try {
+      const result = await apiFetch<{ message: string }>("/owner/modalidades/import-templates", {
+        method: "POST",
+        body: JSON.stringify({ focus: "musculacao" }),
+      });
+      setSuccess(result.message);
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao puxar os treinos de musculação.");
+    } finally {
+      setImporting(false);
+    }
+  }
+
   async function handleImportTemplates() {
     setImporting(true);
     setError("");
@@ -272,6 +290,23 @@ export default function OwnerModalidadesPage() {
               {success}
             </div>
           ) : null}
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-4">
+            <p className="m-0 text-sm font-semibold text-[#2E496C]">Treinos de musculação</p>
+            <p className="m-0 mt-1 text-xs leading-relaxed text-slate-500">
+              A academia passou a oferecer musculação? Puxe o catálogo de treinos já implantado.
+              Se o professor já está liberado nessa modalidade, a ficha do aluno aparece para ele.
+              Se ainda não, libere o professor em Professores.
+            </p>
+            <button
+              type="button"
+              disabled={importing}
+              onClick={handlePullMusculacao}
+              className="mt-4 rounded-xl bg-[#5B7595] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+            >
+              {importing ? "Puxando treinos..." : "Puxar treinos de musculação"}
+            </button>
+          </section>
 
           {modalidades.length === 0 ? (
             <section className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">

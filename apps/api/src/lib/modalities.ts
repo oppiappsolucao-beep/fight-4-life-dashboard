@@ -262,23 +262,115 @@ export async function ensureTenantModalities(tenantId: string): Promise<number> 
   return prisma.modality.count({ where: { tenantId } });
 }
 
-export async function seedTenantModalitiesFromTemplates(tenantId: string): Promise<number> {
-  await ensureModalityTemplates();
+export function modalityLooksLikeMusculacao(modality: {
+  slug?: string | null;
+  name?: string | null;
+}): boolean {
+  const slug = slugifyModality(modality.slug || "");
+  const name = slugifyModality(modality.name || "");
+  return slug.includes("musculacao") || name.includes("musculacao");
+}
 
-  const existing = await prisma.modality.count({ where: { tenantId } });
-  if (existing > 0) return existing;
+export interface ModalitySeedResult {
+  created: number;
+  aligned: number;
+  exerciseCount: number;
+  professorCount: number;
+}
+
+async function ensureMusculacaoExerciseCatalog(): Promise<number> {
+  const { ensureExerciseCatalog } = await import("./exercise-catalog.js");
+  return ensureExerciseCatalog({ syncRemote: false });
+}
+
+/** Modalidade criada como vídeo com nome de musculação passa a usar o catálogo de treinos. */
+export async function alignTenantMusculacaoModalities(
+  tenantId: string,
+  modalityIds?: string[],
+): Promise<{ aligned: number; exerciseCount: number }> {
+  await ensureModalityTemplates();
+  const template = await prisma.modalityTemplate.findUnique({ where: { slug: "musculacao" } });
+  if (!template) return { aligned: 0, exerciseCount: 0 };
+
+  const modalities = await prisma.modality.findMany({
+    where: {
+      tenantId,
+      ...(modalityIds ? { id: { in: modalityIds } } : {}),
+    },
+  });
+
+  let aligned = 0;
+  let hasCatalog = false;
+
+  for (const modality of modalities) {
+    if (!modalityLooksLikeMusculacao(modality)) continue;
+    hasCatalog = true;
+    if (modality.contentType === "EXERCISE_CATALOG" && modality.templateId === template.id) {
+      continue;
+    }
+
+    const linkedPlans =
+      modality.linkedPlans.length > 0
+        ? modality.linkedPlans
+        : (DEFAULT_MODALITY_TEMPLATES.find((item) => item.slug === "musculacao")?.linkedPlans ??
+          []);
+
+    await prisma.modality.update({
+      where: { id: modality.id },
+      data: {
+        templateId: template.id,
+        contentType: template.contentType,
+        description: modality.description ?? template.description,
+        linkedPlans,
+      },
+    });
+    aligned += 1;
+  }
+
+  const exerciseCount = hasCatalog ? await ensureMusculacaoExerciseCatalog() : 0;
+  return { aligned, exerciseCount };
+}
+
+export async function seedTenantModalitiesFromTemplates(
+  tenantId: string,
+  options?: { focus?: "musculacao" | "all"; activateMusculacao?: boolean },
+): Promise<ModalitySeedResult> {
+  await ensureModalityTemplates();
+  const focus = options?.focus ?? "all";
 
   const templates = await prisma.modalityTemplate.findMany({
     where: { active: true },
     orderBy: { sortOrder: "asc" },
   });
+  const scope =
+    focus === "musculacao"
+      ? templates.filter(
+          (item) => item.slug === "musculacao" || item.contentType === "EXERCISE_CATALOG",
+        )
+      : templates;
 
   const templateBySlug = new Map(
     DEFAULT_MODALITY_TEMPLATES.map((item) => [item.slug, item.linkedPlans]),
   );
 
-  for (const template of templates) {
-    await prisma.modality.create({
+  const existing = await prisma.modality.findMany({ where: { tenantId } });
+  const hadModalities = existing.length > 0;
+  let created = 0;
+
+  for (const template of scope) {
+    const isMusculacao =
+      template.slug === "musculacao" || template.contentType === "EXERCISE_CATALOG";
+    const match =
+      existing.find((item) => item.templateId === template.id || item.slug === template.slug) ??
+      (isMusculacao ? existing.find((item) => modalityLooksLikeMusculacao(item)) : undefined);
+
+    if (match) continue;
+    if (!isMusculacao && hadModalities) continue;
+
+    const slugTaken = existing.some((item) => item.slug === template.slug);
+    if (slugTaken) continue;
+
+    const row = await prisma.modality.create({
       data: {
         tenantId,
         templateId: template.id,
@@ -288,12 +380,46 @@ export async function seedTenantModalitiesFromTemplates(tenantId: string): Promi
         description: template.description,
         linkedPlans: templateBySlug.get(template.slug) ?? [],
         sortOrder: template.sortOrder,
-        active: false,
+        active: isMusculacao && options?.activateMusculacao === true,
       },
+    });
+    existing.push(row);
+    created += 1;
+  }
+
+  const alignment = scope.some((item) => item.contentType === "EXERCISE_CATALOG")
+    ? await alignTenantMusculacaoModalities(tenantId)
+    : { aligned: 0, exerciseCount: 0 };
+
+  if (options?.activateMusculacao) {
+    await prisma.modality.updateMany({
+      where: { tenantId, template: { slug: "musculacao" } },
+      data: { active: true },
     });
   }
 
-  return templates.length;
+  const musculacaoRows = await prisma.modality.findMany({
+    where: { tenantId, template: { slug: "musculacao" } },
+    select: { id: true },
+  });
+  const professors = musculacaoRows.length
+    ? await prisma.professorModality.findMany({
+        where: {
+          tenantId,
+          active: true,
+          modalityId: { in: musculacaoRows.map((item) => item.id) },
+        },
+        select: { userId: true },
+        distinct: ["userId"],
+      })
+    : [];
+
+  return {
+    created,
+    aligned: alignment.aligned,
+    exerciseCount: alignment.exerciseCount,
+    professorCount: professors.length,
+  };
 }
 
 export function serializeModalityTemplate(template: ModalityTemplate) {
