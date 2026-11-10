@@ -215,13 +215,13 @@ export default function ProfessorCadastroTreinoPage() {
   }, [savedTreinos, savedAulas, workoutDate, isMusculacao, selectedModalityId]);
 
   const professorScheduleWeekdays = useMemo(() => {
-    if (isMusculacao || !selectedModalityId) return [];
+    if (!selectedModalityId) return [];
     const professorSlots =
       professorSchedules.find((entry) => entry.modalityId === selectedModalityId)?.slots ?? [];
     const modalitySlots = selectedModality?.scheduleSlots ?? [];
     const source = professorSlots.length > 0 ? professorSlots : modalitySlots;
     return Array.from(new Set(source.map((slot) => slot.weekday))).sort((a, b) => a - b);
-  }, [isMusculacao, selectedModalityId, professorSchedules, selectedModality]);
+  }, [selectedModalityId, professorSchedules, selectedModality]);
   const savedCatalog = useMemo(
     () => selectedModality?.warmupMovementCatalog ?? [],
     [selectedModality],
@@ -851,15 +851,22 @@ export default function ProfessorCadastroTreinoPage() {
               closePhaseEditor();
               closeLessonPhaseEditor();
             }}
-            onCreateDate={isMusculacao ? setWorkoutDate : undefined}
-            sectionLabel={isMusculacao ? "Treinos do aluno" : "Datas da aula"}
+            onCreateDate={
+              isMusculacao && professorScheduleWeekdays.length === 0 ? setWorkoutDate : undefined
+            }
+            sectionLabel={isMusculacao ? "Grade do aluno" : "Datas da aula"}
             showLegend={false}
             scheduleWeekdays={
-              !isMusculacao && professorScheduleWeekdays.length > 0
-                ? professorScheduleWeekdays
-                : undefined
+              professorScheduleWeekdays.length > 0 ? professorScheduleWeekdays : undefined
             }
           />
+          {isMusculacao && professorScheduleWeekdays.length > 0 ? (
+            <p className="-mt-3 text-sm text-slate-500">
+              Grade liberada:{" "}
+              {professorScheduleWeekdays.map((day) => WEEKDAY_LABELS[day]).join(", ")}. O treino
+              publicado neste dia repete nas próximas semanas.
+            </p>
+          ) : null}
 
           <section className="grid gap-4 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-4 sm:p-5">
             {isMusculacao ? (

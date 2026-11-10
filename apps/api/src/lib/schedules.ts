@@ -88,6 +88,20 @@ export function listDatesInMonth(year: number, month: number, weekdays: number[]
   return dates;
 }
 
+/** Mesma data e as próximas ocorrências do mesmo dia da semana, inclusive a inicial. */
+export function listSameWeekdayDates(startDate: string, occurrences: number): string[] {
+  const [year, month, day] = startDate.split("-").map(Number);
+  const total = Math.max(1, occurrences);
+  const dates: string[] = [];
+
+  for (let index = 0; index < total; index += 1) {
+    const date = new Date(Date.UTC(year, month - 1, day + index * 7));
+    dates.push(date.toISOString().slice(0, 10));
+  }
+
+  return dates;
+}
+
 export function scheduleOccurrenceKey(classDate: string, startTime: string, endTime: string): string {
   return `${classDate}|${startTime}|${endTime}`;
 }

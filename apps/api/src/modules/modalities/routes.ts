@@ -25,7 +25,7 @@ import {
   serializeProfessorLessonSummary,
   slugifyModality,
 } from "../../lib/modalities.js";
-import { normalizeScheduleSlots, serializeScheduleSlot, weekdayFromDateInput, listDatesInMonth, parseMonthInput, currentMonthInput, scheduleOccurrenceKey } from "../../lib/schedules.js";
+import { normalizeScheduleSlots, serializeScheduleSlot, weekdayFromDateInput, listDatesInMonth, listSameWeekdayDates, parseMonthInput, currentMonthInput, scheduleOccurrenceKey } from "../../lib/schedules.js";
 import { getWeekRange } from "../../lib/billing.js";
 import { normalizePlans } from "../owner/plans.js";
 import {
@@ -2170,72 +2170,163 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
         return reply.status(400).send({ error: "Um ou mais exercícios selecionados não existem." });
       }
 
-      const treino = await prisma.$transaction(async (tx) => {
-        const existing = await tx.studentWorkout.findUnique({
-          where: {
-            studentId_workoutDate: { studentId: student.id, workoutDate },
+      const [modality, professorSlots] = await Promise.all([
+        prisma.modality.findFirst({
+          where: { id: data.modalityId, tenantId },
+          select: {
+            contentType: true,
+            slug: true,
+            name: true,
+            scheduleRepeatsMonthly: true,
+            scheduleSlots: {
+              where: { active: true },
+              select: { weekday: true, startTime: true, endTime: true },
+            },
           },
-          select: { id: true },
-        });
+        }),
+        prisma.professorScheduleSlot.findMany({
+          where: {
+            tenantId,
+            userId: request.user.sub,
+            modalityId: data.modalityId,
+            active: true,
+          },
+          select: { weekday: true, startTime: true, endTime: true },
+        }),
+      ]);
 
-        if (existing) {
-          await tx.studentWorkoutExercise.deleteMany({ where: { studentWorkoutId: existing.id } });
-          return tx.studentWorkout.update({
-            where: { id: existing.id },
-            data: {
-              title: data.title.trim(),
-              notes: data.notes?.trim() || null,
+      const scheduleSlots = professorSlots.length > 0 ? professorSlots : (modality?.scheduleSlots ?? []);
+      const weekday = weekdayFromDateInput(data.workoutDate);
+      const repeatsOnGrade =
+        (modality?.contentType === "EXERCISE_CATALOG" ||
+          (modality ? modalityLooksLikeMusculacao(modality) : false)) &&
+        scheduleSlots.some((slot) => slot.weekday === weekday);
+
+      const candidateDates = repeatsOnGrade
+        ? listSameWeekdayDates(data.workoutDate, 8)
+        : [data.workoutDate];
+
+      const daySlots = scheduleSlots.filter((slot) => slot.weekday === weekday);
+      const cancellations = repeatsOnGrade
+        ? await prisma.modalityScheduleCancellation.findMany({
+            where: {
+              tenantId,
               modalityId: data.modalityId,
-              assignedBy: request.user.sub,
-              source: "OWNER",
-              active: true,
-              exercises: {
-                create: data.exercises.map((item) => ({
-                  exerciseId: item.exerciseId,
-                  phase: item.phase,
-                  order: item.order,
-                  sets: item.sets,
-                  reps: item.reps,
-                  load: item.load?.trim() || null,
-                  restSeconds: item.restSeconds ?? 60,
-                  notes: item.notes?.trim() || null,
-                })),
+              classDate: {
+                gte: parseWorkoutDate(candidateDates[0]),
+                lte: parseWorkoutDate(candidateDates[candidateDates.length - 1]),
               },
             },
-            include: workoutInclude,
-          });
-        }
+            select: { classDate: true, startTime: true, endTime: true },
+          })
+        : [];
+      const cancelledDates = new Set(
+        candidateDates.filter((date) => {
+          const dayCancellations = cancellations.filter(
+            (item) => formatClassDate(item.classDate) === date,
+          );
+          if (dayCancellations.length === 0 || daySlots.length === 0) return false;
+          return daySlots.every((slot) =>
+            dayCancellations.some(
+              (item) => item.startTime === slot.startTime && item.endTime === slot.endTime,
+            ),
+          );
+        }),
+      );
+      const dates = candidateDates.filter(
+        (date) => date === data.workoutDate || !cancelledDates.has(date),
+      );
 
-        return tx.studentWorkout.create({
-          data: {
-            tenantId,
-            studentId: student.id,
-            modalityId: data.modalityId,
+      const exerciseRows = data.exercises.map((item) => ({
+        exerciseId: item.exerciseId,
+        phase: item.phase,
+        order: item.order,
+        sets: item.sets,
+        reps: item.reps,
+        load: item.load?.trim() || null,
+        restSeconds: item.restSeconds ?? 60,
+        notes: item.notes?.trim() || null,
+      }));
+
+      const publishedDates = await prisma.$transaction(async (tx) => {
+        let published = 0;
+
+        for (const date of dates) {
+          const dateValue = parseWorkoutDate(date);
+          const existing = await tx.studentWorkout.findUnique({
+            where: {
+              studentId_workoutDate: { studentId: student.id, workoutDate: dateValue },
+            },
+            select: {
+              id: true,
+              source: true,
+              exercises: { select: { completedSets: true } },
+            },
+          });
+
+          const selected = date === data.workoutDate;
+          if (!selected && existing?.source === "STUDENT") continue;
+          if (
+            !selected &&
+            existing?.exercises.some((item) => item.completedSets.length > 0)
+          ) {
+            continue;
+          }
+
+          const payload = {
             title: data.title.trim(),
             notes: data.notes?.trim() || null,
-            workoutDate,
+            modalityId: data.modalityId,
             assignedBy: request.user.sub,
-            source: "OWNER",
-            exercises: {
-              create: data.exercises.map((item) => ({
-                exerciseId: item.exerciseId,
-                phase: item.phase,
-                order: item.order,
-                sets: item.sets,
-                reps: item.reps,
-                load: item.load?.trim() || null,
-                restSeconds: item.restSeconds ?? 60,
-                notes: item.notes?.trim() || null,
-              })),
-            },
-          },
-          include: workoutInclude,
-        });
+            source: "OWNER" as const,
+            active: true,
+          };
+
+          if (existing) {
+            await tx.studentWorkoutExercise.deleteMany({ where: { studentWorkoutId: existing.id } });
+            await tx.studentWorkout.update({
+              where: { id: existing.id },
+              data: {
+                ...payload,
+                exercises: { create: exerciseRows },
+              },
+            });
+          } else {
+            await tx.studentWorkout.create({
+              data: {
+                ...payload,
+                tenantId,
+                studentId: student.id,
+                workoutDate: dateValue,
+                exercises: { create: exerciseRows },
+              },
+            });
+          }
+
+          published += 1;
+        }
+
+        return published;
       });
+
+      const treino = await prisma.studentWorkout.findUnique({
+        where: {
+          studentId_workoutDate: { studentId: student.id, workoutDate },
+        },
+        include: workoutInclude,
+      });
+
+      if (!treino) {
+        return reply.status(500).send({ error: "Não foi possível publicar o treino." });
+      }
 
       return reply.send({
         treino: serializeWorkout(treino),
-        message: "Treino salvo e publicado para o aluno.",
+        repeatedDates: publishedDates,
+        message:
+          publishedDates > 1
+            ? `Treino publicado e repetido em ${publishedDates} datas da grade.`
+            : "Treino salvo e publicado para o aluno.",
       });
     },
   );
