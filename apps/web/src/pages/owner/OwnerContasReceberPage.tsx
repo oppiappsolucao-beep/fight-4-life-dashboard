@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiFetch } from "../../lib/api";
 import {
-  getEffectiveDueStatus,
+  getDueStatus,
   getNextDueDate,
-  type BillingDueStatus,
+  hasActiveBillingRelease,
 } from "../../lib/billing";
 import { formatCpf, formatPhone } from "../../lib/format";
 import {
@@ -49,13 +49,28 @@ function parseDueDay(diaVencimento: string): number {
   return day;
 }
 
+type ContaGrupo = "cancelado" | "pago" | "a_pagar" | "vencido";
+
+function contaGrupo(aluno: AlunoRecebivel): ContaGrupo {
+  const charge = aluno.latestCharge?.status;
+  if (charge === "CANCELLED" || charge === "REFUNDED") return "cancelado";
+  if (charge === "PAID") return "pago";
+  if (charge === "OVERDUE" || getDueStatus(aluno.diaVencimento) === "vencido") return "vencido";
+  if (hasActiveBillingRelease(aluno)) return "pago";
+  return "a_pagar";
+}
+
+function valorAluno(aluno: AlunoRecebivel, priceMap: Record<string, number>): number {
+  return aluno.latestCharge?.amountBrl ?? priceMap[aluno.planoModalidade] ?? 0;
+}
+
 export default function OwnerContasReceberPage() {
   const [alunos, setAlunos] = useState<AlunoRecebivel[]>([]);
   const [planos, setPlanos] = useState<PlanItem[]>(DEFAULT_OWNER_PLANS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [releasingId, setReleasingId] = useState<string | null>(null);
+  const [settlingId, setSettlingId] = useState<string | null>(null);
 
   const priceMap = useMemo(() => plansToPriceMap(planos), [planos]);
 
@@ -83,37 +98,49 @@ export default function OwnerContasReceberPage() {
     load();
   }, [load]);
 
-  async function liberarAluno(aluno: AlunoRecebivel) {
-    setReleasingId(aluno.id);
+  async function darBaixa(aluno: AlunoRecebivel) {
+    setSettlingId(aluno.id);
     setError("");
     setSuccess("");
     try {
-      const result = await apiFetch<{ message: string; aluno: AlunoRecebivel }>(
-        `/owner/alunos/${aluno.id}/liberar-acesso`,
-        { method: "POST" },
-      );
+      const result = await apiFetch<{
+        message: string;
+        aluno: { acessoLiberadoAte: string | null };
+        latestCharge: LatestCharge;
+      }>(`/owner/alunos/${aluno.id}/dar-baixa`, { method: "POST" });
       setAlunos((current) =>
         current.map((item) =>
           item.id === aluno.id
-            ? { ...item, acessoLiberadoAte: result.aluno.acessoLiberadoAte }
+            ? {
+                ...item,
+                acessoLiberadoAte: result.aluno.acessoLiberadoAte,
+                latestCharge: result.latestCharge,
+              }
             : item,
         ),
       );
       setSuccess(result.message);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao liberar aluno.");
+      setError(err instanceof Error ? err.message : "Erro ao dar baixa.");
     } finally {
-      setReleasingId(null);
+      setSettlingId(null);
     }
   }
 
-  const totalPrevisto = alunos.reduce(
-    (sum, aluno) => sum + (priceMap[aluno.planoModalidade] ?? 0),
-    0,
-  );
-  const vencidos = alunos.filter(
-    (a) => getEffectiveDueStatus(a) === "vencido",
-  ).length;
+  const grupos = useMemo(() => {
+    const buckets: Record<ContaGrupo, { count: number; total: number }> = {
+      cancelado: { count: 0, total: 0 },
+      pago: { count: 0, total: 0 },
+      a_pagar: { count: 0, total: 0 },
+      vencido: { count: 0, total: 0 },
+    };
+    for (const aluno of alunos) {
+      const grupo = contaGrupo(aluno);
+      buckets[grupo].count += 1;
+      buckets[grupo].total += valorAluno(aluno, priceMap);
+    }
+    return buckets;
+  }, [alunos, priceMap]);
   return (
     <OwnerSectionPage
       title="Contas a Receber"
@@ -153,13 +180,27 @@ export default function OwnerContasReceberPage() {
 
       {!loading && !error && alunos.length > 0 ? (
         <>
-          <div className="mb-6 grid gap-4 sm:grid-cols-3">
-            <SummaryCard label="Alunos ativos" value={String(alunos.length)} />
+          <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <SummaryCard
-              label="Receita prevista (mês)"
-              value={formatPlanCurrency(totalPrevisto)}
+              label="Cancelados"
+              value={formatPlanCurrency(grupos.cancelado.total)}
+              hint={`${grupos.cancelado.count} aluno(s)`}
             />
-            <SummaryCard label="Vencidos no mês" value={String(vencidos)} />
+            <SummaryCard
+              label="Pagos"
+              value={formatPlanCurrency(grupos.pago.total)}
+              hint={`${grupos.pago.count} aluno(s)`}
+            />
+            <SummaryCard
+              label="A pagar"
+              value={formatPlanCurrency(grupos.a_pagar.total)}
+              hint={`${grupos.a_pagar.count} aluno(s)`}
+            />
+            <SummaryCard
+              label="Vencidos"
+              value={formatPlanCurrency(grupos.vencido.total)}
+              hint={`${grupos.vencido.count} aluno(s)`}
+            />
           </div>
 
           <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white backdrop-blur-sm">
@@ -176,9 +217,8 @@ export default function OwnerContasReceberPage() {
               </thead>
               <tbody>
                 {alunos.map((aluno) => {
-                  const valor =
-                    aluno.latestCharge?.amountBrl ?? priceMap[aluno.planoModalidade];
-                  const status = getEffectiveDueStatus(aluno);
+                  const valor = valorAluno(aluno, priceMap);
+                  const grupo = contaGrupo(aluno);
                   const proximoVenc = getNextDueDate(aluno.diaVencimento);
 
                   return (
@@ -211,21 +251,21 @@ export default function OwnerContasReceberPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <StatusBadge status={status} liberadoAte={aluno.acessoLiberadoAte} />
+                        <StatusBadge grupo={grupo} liberadoAte={aluno.acessoLiberadoAte} />
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex flex-col gap-1.5">
-                          {status === "vencido" ? (
-                            <button
-                              type="button"
-                              disabled={releasingId === aluno.id}
-                              onClick={() => liberarAluno(aluno)}
-                              className="rounded-lg border border-emerald-400/30 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-500/10 disabled:opacity-50"
-                            >
-                              {releasingId === aluno.id ? "Liberando..." : "Liberar aluno"}
-                            </button>
-                          ) : null}
-                        </div>
+                        {grupo === "a_pagar" || grupo === "vencido" ? (
+                          <button
+                            type="button"
+                            disabled={settlingId === aluno.id}
+                            onClick={() => darBaixa(aluno)}
+                            className="rounded-lg border border-emerald-400/30 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-500/10 disabled:opacity-50"
+                          >
+                            {settlingId === aluno.id ? "Baixando..." : "Dar baixa"}
+                          </button>
+                        ) : (
+                          <span className="text-xs text-slate-400">—</span>
+                        )}
                       </td>
                     </tr>
                   );
@@ -239,32 +279,49 @@ export default function OwnerContasReceberPage() {
   );
 }
 
-function SummaryCard({ label, value }: { label: string; value: string }) {
+function SummaryCard({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+}) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-5 py-4 backdrop-blur-sm">
       <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400">
         {label}
       </p>
       <p className="mt-1 text-xl font-semibold text-[#2E496C]">{value}</p>
+      <p className="m-0 mt-1 text-xs text-slate-400">{hint}</p>
     </div>
   );
 }
 
 function StatusBadge({
-  status,
+  grupo,
   liberadoAte,
 }: {
-  status: BillingDueStatus;
+  grupo: ContaGrupo;
   liberadoAte: string | null;
 }) {
   const styles =
-    status === "em_dia"
+    grupo === "pago"
       ? "bg-emerald-500/15 text-emerald-700"
-      : status === "hoje"
+      : grupo === "a_pagar"
         ? "bg-amber-500/15 text-amber-800"
-        : "bg-red-500/15 text-red-700";
+        : grupo === "cancelado"
+          ? "bg-slate-200 text-slate-600"
+          : "bg-red-500/15 text-red-700";
   const label =
-    status === "em_dia" ? "Em dia" : status === "hoje" ? "Vence hoje" : "Vencido";
+    grupo === "pago"
+      ? "Pago"
+      : grupo === "a_pagar"
+        ? "A pagar"
+        : grupo === "cancelado"
+          ? "Cancelado"
+          : "Vencido";
 
   return (
     <div>

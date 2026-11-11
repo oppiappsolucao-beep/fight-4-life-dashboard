@@ -1,8 +1,8 @@
 import type { FastifyInstance } from "fastify";
-import { Prisma, UserRole } from "@prisma/client";
+import { ChargeStatus, Prisma, UserRole } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
-import { getDueStatus, getNextDueDate, getWeekRange, formatIsoDate } from "../../lib/billing.js";
+import { getDueStatus, getNextDueDate, getWeekRange, formatIsoDate, hasActiveBillingRelease } from "../../lib/billing.js";
 import {
   DEV_NEW_ACADEMIES_GOAL,
   OWNER_NEW_STUDENTS_GOAL,
@@ -25,6 +25,8 @@ import { isMinorStudent } from "../../lib/student-age.js";
 const MINOR_STUDENT_ERROR =
   "O cadastro de aluno é somente para maiores de 18 anos.";
 import { centsToBrl } from "../../lib/platform-fees.js";
+import { confirmStudentChargePaid } from "../../lib/charge-payments.js";
+import { getAcademyBillingCycle } from "../../lib/academy-billing-cycle.js";
 
 const STUDENT_ASAAS_BLOCKED =
   "A cobrança Asaas é da academia, emitida para o dono no cadastro. A mensalidade do aluno é combinada direto com a academia.";
@@ -560,6 +562,128 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
       return reply.send({
         aluno: updated,
         message: `Acesso liberado até ${releaseUntil.split("-").reverse().join("/")}.`,
+      });
+    },
+  );
+
+  app.post<{ Params: { id: string } }>(
+    "/owner/alunos/:id/dar-baixa",
+    async (request, reply) => {
+      const tenantId = request.user.tenantId;
+      const aluno = await prisma.student.findFirst({
+        where: { id: request.params.id, tenantId, active: true },
+        select: {
+          id: true,
+          nomeCompleto: true,
+          planoModalidade: true,
+          diaVencimento: true,
+          acessoLiberadoAte: true,
+        },
+      });
+
+      if (!aluno) {
+        return reply.status(404).send({ error: "Aluno não encontrado." });
+      }
+
+      const openCharge = await prisma.studentCharge.findFirst({
+        where: {
+          tenantId,
+          studentId: aluno.id,
+          status: { in: [ChargeStatus.PENDING, ChargeStatus.OVERDUE] },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      let chargeId = openCharge?.id;
+      if (!chargeId) {
+        const alreadyPaid = await prisma.studentCharge.findFirst({
+          where: { tenantId, studentId: aluno.id, status: ChargeStatus.PAID },
+          orderBy: { paidAt: "desc" },
+        });
+        if (
+          alreadyPaid &&
+          hasActiveBillingRelease({
+            diaVencimento: aluno.diaVencimento,
+            acessoLiberadoAte: aluno.acessoLiberadoAte,
+          })
+        ) {
+          return reply.status(409).send({ error: "Esta mensalidade já está baixada." });
+        }
+
+        const tenant = await prisma.tenant.findUnique({
+          where: { id: tenantId },
+          select: { createdAt: true, billingCycleDay: true },
+        });
+        const config = await prisma.tenantConfig.findUnique({
+          where: { tenantId },
+          select: { planosPrecos: true },
+        });
+        const priceMap = plansToPriceMap(normalizePlans(config?.planosPrecos ?? null));
+        const planBrl = priceMap[aluno.planoModalidade];
+        const amountCents =
+          planBrl != null ? Math.round(planBrl * 100) : (alreadyPaid?.amountCents ?? 0);
+        const cycle = getAcademyBillingCycle(
+          tenant?.createdAt ?? new Date(),
+          new Date(),
+          tenant?.billingCycleDay,
+        );
+        const due = new Date();
+        const dueDay = Number.parseInt(aluno.diaVencimento.replace(/\D/g, ""), 10);
+        if (Number.isFinite(dueDay) && dueDay >= 1 && dueDay <= 31) {
+          due.setDate(dueDay);
+        }
+
+        const created = await prisma.studentCharge.create({
+          data: {
+            tenantId,
+            studentId: aluno.id,
+            amountCents,
+            status: ChargeStatus.PENDING,
+            dueDate: formatIsoDate(due),
+            billingCycleKey: cycle.key,
+            description: `Baixa manual — ${aluno.planoModalidade}`,
+          },
+        });
+        chargeId = created.id;
+      }
+
+      try {
+        await confirmStudentChargePaid({ chargeId });
+      } catch (error) {
+        return reply.status(400).send({
+          error: error instanceof Error ? error.message : "Não foi possível dar baixa.",
+        });
+      }
+
+      const [updated, charge] = await Promise.all([
+        prisma.student.findUniqueOrThrow({
+          where: { id: aluno.id },
+          select: { id: true, nomeCompleto: true, acessoLiberadoAte: true },
+        }),
+        prisma.studentCharge.findUniqueOrThrow({
+          where: { id: chargeId },
+          select: {
+            id: true,
+            status: true,
+            dueDate: true,
+            amountCents: true,
+            asaasPaymentId: true,
+            paidAt: true,
+          },
+        }),
+      ]);
+
+      return reply.send({
+        aluno: updated,
+        latestCharge: {
+          id: charge.id,
+          status: charge.status,
+          dueDate: charge.dueDate,
+          amountBrl: centsToBrl(charge.amountCents),
+          asaasPaymentId: charge.asaasPaymentId,
+          paidAt: charge.paidAt,
+        },
+        message: `Baixa registrada para ${updated.nomeCompleto}.`,
       });
     },
   );
