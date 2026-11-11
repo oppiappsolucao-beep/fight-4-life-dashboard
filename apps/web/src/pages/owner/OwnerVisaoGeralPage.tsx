@@ -115,6 +115,7 @@ export default function OwnerVisaoGeralPage() {
           <OverviewQuickLinks
             links={[
               { to: "/dono/cadastro-aluno", label: "Cadastrar aluno" },
+              { to: "/dono/cadastro-professor", label: "Cadastrar professor" },
               { to: "/dono/professores", label: "Professores" },
               { to: "/dono/contas-a-receber", label: "Contas a receber" },
               { to: "/dono/planos", label: "Planos" },

@@ -106,6 +106,7 @@ export default function App() {
         <Route path="dono/alunos" element={<OwnerAlunosPage />} />
         <Route path="dono/cadastro-treino" element={<Navigate to="/dono/visao-geral" replace />} />
         <Route path="dono/modalidades" element={<OwnerModalidadesPage />} />
+        <Route path="dono/cadastro-professor" element={<OwnerProfessoresPage />} />
         <Route path="dono/professores" element={<OwnerProfessoresPage />} />
         <Route path="dono/planos" element={<OwnerPlanosPage />} />
         <Route path="dono/contas-a-receber" element={<OwnerContasReceberPage />} />

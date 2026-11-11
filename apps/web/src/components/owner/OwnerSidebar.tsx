@@ -9,6 +9,7 @@ const MENU_ITEMS = [
   { to: "/dono/cadastro-aluno", label: "Cadastro Aluno", icon: UserPlusIcon },
   { to: "/dono/alunos", label: "Alunos", icon: UsersIcon },
   { to: "/dono/modalidades", label: "Modalidades", icon: ModalityIcon },
+  { to: "/dono/cadastro-professor", label: "Cadastro Professor", icon: UserPlusIcon },
   { to: "/dono/professores", label: "Professores", icon: UsersIcon },
   { to: "/dono/planos", label: "Planos", icon: PlanIcon },
   { to: "/dono/contas-a-receber", label: "Contas a Receber", icon: PaymentIcon },

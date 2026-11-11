@@ -1,5 +1,5 @@
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import ModalitySchedulePicker from "../../components/owner/ModalitySchedulePicker";
 import WeeklyScheduleGrid from "../../components/owner/WeeklyScheduleGrid";
 import { apiFetch } from "../../lib/api";
@@ -19,6 +19,10 @@ const EMPTY_FORM = {
 };
 
 export default function OwnerProfessoresPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isCadastro = location.pathname.endsWith("/cadastro-professor");
+  const openedEditId = useRef<string | null>(null);
   const [professores, setProfessores] = useState<ProfessorItem[]>([]);
   const [modalidades, setModalidades] = useState<ModalityItem[]>([]);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -67,6 +71,29 @@ export default function OwnerProfessoresPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (isCadastro || loading || activeModalities.length === 0) return;
+    if (
+      formEditingModalityId &&
+      activeModalities.some((item) => item.id === formEditingModalityId)
+    ) {
+      return;
+    }
+    setFormEditingModalityId(activeModalities[0].id);
+  }, [isCadastro, loading, activeModalities, formEditingModalityId]);
+
+  useEffect(() => {
+    if (isCadastro) return;
+    const state = location.state as { cadastro?: string } | null;
+    if (state?.cadastro !== "ok" && state?.cadastro !== "atualizado") return;
+    setSuccess(
+      state.cadastro === "ok"
+        ? "Professor cadastrado com sucesso."
+        : "Ficha do professor atualizada.",
+    );
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [isCadastro, location.pathname, location.state, navigate]);
 
   const modalityColorMap = useMemo(
     () => buildModalityColorMap(activeModalities.map((item) => item.id)),
@@ -211,6 +238,22 @@ export default function OwnerProfessoresPage() {
     cadastroFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  useEffect(() => {
+    if (!isCadastro || loading) return;
+    const professorId =
+      (location.state as { professorId?: string } | null)?.professorId ?? null;
+    if (!professorId) {
+      if (formMode === "edit") resetCreateForm();
+      openedEditId.current = null;
+      return;
+    }
+    if (openedEditId.current === professorId) return;
+    const professor = professores.find((item) => item.id === professorId);
+    if (!professor) return;
+    openedEditId.current = professorId;
+    openProfessorCadastro(professor);
+  }, [isCadastro, loading, location.state, professores, formMode]);
+
   function selectFormModality(id: string) {
     setFormEditingModalityId((current) => (current === id ? null : id));
     setSuccess("");
@@ -232,7 +275,7 @@ export default function OwnerProfessoresPage() {
     setSuccess("");
     try {
       if (formMode === "create") {
-        const result = await apiFetch<{ message: string }>("/owner/professores", {
+        await apiFetch<{ message: string }>("/owner/professores", {
           method: "POST",
           body: JSON.stringify({
             name: form.name,
@@ -242,7 +285,11 @@ export default function OwnerProfessoresPage() {
             schedules,
           }),
         });
-        setSuccess(result.message);
+        if (isCadastro) {
+          navigate("/dono/professores", { replace: true, state: { cadastro: "ok" } });
+          return;
+        }
+        setSuccess("Professor cadastrado com sucesso.");
         resetCreateForm();
       } else if (editingProfessorId) {
         await updateProfessor(
@@ -255,6 +302,10 @@ export default function OwnerProfessoresPage() {
           },
           "Ficha do professor atualizada.",
         );
+        if (isCadastro) {
+          navigate("/dono/professores", { replace: true, state: { cadastro: "atualizado" } });
+          return;
+        }
         resetCreateForm();
       }
       load();
@@ -399,8 +450,12 @@ export default function OwnerProfessoresPage() {
 
   return (
     <OwnerSectionPage
-      title="Professores"
-      description="Gerencie professores, modalidades e horários da grade."
+      title={isCadastro ? "Cadastro de professor" : "Professores"}
+      description={
+        isCadastro
+          ? "Preencha nome, acesso, modalidades e horários do professor."
+          : "Visualize e gerencie os professores cadastrados na academia."
+      }
     >
       {loading ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
@@ -422,6 +477,27 @@ export default function OwnerProfessoresPage() {
             </div>
           ) : null}
 
+          {isCadastro ? (
+            <p className="m-0 text-sm text-slate-500">
+              <Link to="/dono/professores" className="font-semibold text-[#5B7595] no-underline hover:underline">
+                Ver professores
+              </Link>
+            </p>
+          ) : (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="m-0 text-sm text-slate-500">
+                {professores.length} professor(es) cadastrado(s)
+              </p>
+              <Link
+                to="/dono/cadastro-professor"
+                className="rounded-lg bg-[#5B7595] px-4 py-2 text-sm font-semibold text-white no-underline transition hover:bg-[#2E496C]"
+              >
+                Novo professor
+              </Link>
+            </div>
+          )}
+
+          {isCadastro ? (
           <form
             ref={cadastroFormRef}
             onSubmit={handleSubmitProfessor}
@@ -435,7 +511,11 @@ export default function OwnerProfessoresPage() {
               {formMode === "edit" ? (
                 <button
                   type="button"
-                  onClick={resetCreateForm}
+                  onClick={() => {
+                    openedEditId.current = null;
+                    resetCreateForm();
+                    navigate("/dono/cadastro-professor", { replace: true, state: {} });
+                  }}
                   className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
                 >
                   Novo cadastro
@@ -581,8 +661,8 @@ export default function OwnerProfessoresPage() {
                     </button>
                   </div>
                   <p className="m-0 mt-2 text-[0.65rem] text-[#2E496C]/40">
-                    Bloqueie aqui para impedir o professor em todas as modalidades. Na lista abaixo,
-                    habilitar/desabilitar vale só para a modalidade selecionada.
+                    Bloqueie aqui para impedir o professor em todas as modalidades. Em Professores,
+                    habilitar ou desabilitar vale só para a modalidade selecionada.
                   </p>
                 </div>
               ) : null}
@@ -599,8 +679,31 @@ export default function OwnerProfessoresPage() {
                   : "Salvar ficha"}
             </button>
           </form>
+          ) : null}
 
-          {formEditingModalityId && selectedViewModality ? (
+          {!isCadastro && activeModalities.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {activeModalities.map((item) => {
+                const selected = formEditingModalityId === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setFormEditingModalityId(item.id)}
+                    className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                      selected
+                        ? "bg-[#5B7595] text-white"
+                        : "border border-slate-200 text-slate-500"
+                    }`}
+                  >
+                    {item.name}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+
+          {!isCadastro && formEditingModalityId && selectedViewModality ? (
             <>
               <section className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <div className="mb-2 flex items-center justify-between gap-3">
@@ -610,7 +713,10 @@ export default function OwnerProfessoresPage() {
                 </div>
                 {filteredProfessores.length === 0 ? (
                   <p className="m-0 py-4 text-center text-sm text-slate-400">
-                    Nenhum professor cadastrado. Use o formulário acima para incluir o primeiro.
+                    Nenhum professor cadastrado.{" "}
+                    <Link to="/dono/cadastro-professor" className="font-semibold text-[#5B7595] no-underline hover:underline">
+                      Cadastrar o primeiro
+                    </Link>
                   </p>
                 ) : (
                   <div className="divide-y divide-white/10">
@@ -665,7 +771,11 @@ export default function OwnerProfessoresPage() {
                           <button
                             type="button"
                             disabled={updatingProfessorId === professor.id}
-                            onClick={() => openProfessorCadastro(professor)}
+                            onClick={() =>
+                              navigate("/dono/cadastro-professor", {
+                                state: { professorId: professor.id },
+                              })
+                            }
                             className="rounded-lg border border-slate-200 px-2.5 py-1 text-[0.65rem] font-semibold text-slate-600"
                           >
                             Cadastro
@@ -714,11 +824,20 @@ export default function OwnerProfessoresPage() {
                 filterLabel={selectedViewModality.name}
               />
             </>
-          ) : (
+          ) : !isCadastro ? (
             <div className="rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-400">
-              Selecione uma modalidade acima para ver os professores e a grade de horários.
+              {activeModalities.length === 0 ? (
+                <>
+                  Nenhuma modalidade nesta academia.{" "}
+                  <Link to="/dono/modalidades" className="font-semibold text-[#5B7595] no-underline hover:underline">
+                    Cadastre em Modalidades
+                  </Link>
+                </>
+              ) : (
+                "Selecione uma modalidade para ver os professores e a grade de horários."
+              )}
             </div>
-          )}
+          ) : null}
         </div>
       )}
     </OwnerSectionPage>
