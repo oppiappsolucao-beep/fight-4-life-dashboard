@@ -24,6 +24,7 @@ import {
   brandingToForm,
 
   formToBranding,
+  parseCatraca,
 
   parseAsaasCharge,
   parseBilling,
@@ -577,6 +578,7 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
 
           billing: parseBilling(tenant.branding),
           asaasCharge: parseAsaasCharge(tenant.branding),
+          catraca: parseCatraca(tenant.branding),
 
           owner: owner
 
@@ -800,7 +802,7 @@ export async function devRoutes(app: FastifyInstance): Promise<void> {
           name: data.nomeFantasia,
           active: data.active,
           subdomain: nextSubdomain,
-          branding: formToBranding(data, emailLogin),
+          branding: formToBranding(data, emailLogin, tenant.branding),
           users: {
             update: {
               where: { id: owner.id },

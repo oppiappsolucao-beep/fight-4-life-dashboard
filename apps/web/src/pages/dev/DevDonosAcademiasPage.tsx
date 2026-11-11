@@ -65,6 +65,18 @@ export default function DevDonosAcademiasPage() {
                     <td className="px-5 py-4">
                       <p className="font-medium text-[#2E496C]">{academia.name}</p>
                       <p className="mt-0.5 text-xs text-[#2E496C]/40">{academia.slug}</p>
+                      <span
+                        className={[
+                          "mt-1 inline-block rounded-full px-2 py-0.5 text-[0.65rem] font-semibold",
+                          academia.catraca?.usa
+                            ? "bg-emerald-500/15 text-emerald-700"
+                            : "bg-slate-100 text-slate-500",
+                        ].join(" ")}
+                      >
+                        {academia.catraca?.usa
+                          ? `Com catraca${academia.catraca.ip ? ` · ${academia.catraca.ip}` : ""}`
+                          : "Sem catraca"}
+                      </span>
                       {academia.url ? (
                         <a
                           href={academia.url}

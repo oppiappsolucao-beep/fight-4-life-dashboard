@@ -28,6 +28,18 @@ export interface AcademiaAsaasCharge {
   payerName: string;
 }
 
+export interface AcademiaCatraca {
+  usa: boolean;
+  ip: string;
+  porta: number | null;
+  equipamento: string;
+  serie: string;
+  edgeId: string;
+  teclado: boolean;
+  facial: boolean;
+  digital: boolean;
+}
+
 export interface DevAcademia {
   id: string;
   slug: string;
@@ -39,6 +51,7 @@ export interface DevAcademia {
   owner: AcademiaOwner | null;
   billing: AcademiaBilling;
   asaasCharge?: AcademiaAsaasCharge | null;
+  catraca?: AcademiaCatraca | null;
 }
 
 export function useDevAcademias() {

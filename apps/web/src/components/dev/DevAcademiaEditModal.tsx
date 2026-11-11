@@ -4,6 +4,11 @@ import { apiFetch } from "../../lib/api";
 import { notifyDevAcademiasChanged } from "../../lib/devAcademias";
 import { academyPublicUrl, primaryAppBaseDomain } from "../../lib/tenantHost";
 import AcademyPlanPicker from "./AcademyPlanPicker";
+import CatracaIntegracaoFields, {
+  CATRACA_FORM_DEFAULT,
+  catracaFormError,
+  type CatracaFormValue,
+} from "./CatracaIntegracaoFields";
 import type { PlatformPlan } from "../../types/platformPlan";
 
 const UF_LIST = [
@@ -16,6 +21,7 @@ const STEPS = [
   { id: 0, label: "Empresa", hint: "Dados e domínio" },
   { id: 1, label: "Acesso", hint: "Login do dono" },
   { id: 2, label: "Plano", hint: "SaaS e status" },
+  { id: 3, label: "Catraca", hint: "Integração" },
 ] as const;
 
 interface AcademyFormData {
@@ -43,6 +49,15 @@ interface AcademyFormData {
   planId?: string;
   faixa?: number;
   valor?: number;
+  usaCatraca: boolean;
+  catracaIp: string;
+  catracaPorta: string;
+  catracaEquipamento: string;
+  catracaSerie: string;
+  catracaEdgeId: string;
+  catracaTeclado: boolean;
+  catracaFacial: boolean;
+  catracaDigital: boolean;
   senha: string;
   confirmarSenha: string;
   active: boolean;
@@ -86,11 +101,21 @@ export default function DevAcademiaEditModal({
     apiFetch<AcademyDetailResponse>(`/dev/academias/${academiaId}`)
       .then((data) => {
         setForm({
+          ...CATRACA_FORM_DEFAULT,
           ...data.form,
           subdominio: data.form.subdominio ?? data.subdomain ?? data.slug ?? "",
           planId: data.form.planId ?? "",
           faixa: data.form.faixa ?? 0,
           valor: data.form.valor ?? 0,
+          usaCatraca: Boolean(data.form.usaCatraca),
+          catracaIp: data.form.catracaIp ?? "",
+          catracaPorta: data.form.catracaPorta ? String(data.form.catracaPorta) : "7878",
+          catracaEquipamento: data.form.catracaEquipamento ?? "",
+          catracaSerie: data.form.catracaSerie ?? "",
+          catracaEdgeId: data.form.catracaEdgeId ?? "",
+          catracaTeclado: Boolean(data.form.catracaTeclado),
+          catracaFacial: Boolean(data.form.catracaFacial),
+          catracaDigital: Boolean(data.form.catracaDigital),
           senha: "",
           confirmarSenha: "",
           active: data.active,
@@ -147,6 +172,9 @@ export default function DevAcademiaEditModal({
       if (!form.planId || !form.plano || !form.periodo) {
         return "Selecione o plano contratado pela academia.";
       }
+    }
+    if (current === 3) {
+      return catracaFormError(form);
     }
     return null;
   }
@@ -565,6 +593,25 @@ export default function DevAcademiaEditModal({
                       }}
                     />
                   </Field>
+                </div>
+              ) : null}
+
+              {step === 3 ? (
+                <div className="space-y-5">
+                  <div>
+                    <h3 className="m-0 text-base font-semibold text-[#2E496C]">Catraca</h3>
+                    <p className="mt-1 text-sm text-slate-400">
+                      Defina se esta academia contratou a liberação da catraca.
+                    </p>
+                  </div>
+                  <CatracaIntegracaoFields
+                    value={form}
+                    onChange={(catraca: CatracaFormValue) => {
+                      setForm((prev) => (prev ? { ...prev, ...catraca } : prev));
+                      setSuccess("");
+                      setError("");
+                    }}
+                  />
                 </div>
               ) : null}
 

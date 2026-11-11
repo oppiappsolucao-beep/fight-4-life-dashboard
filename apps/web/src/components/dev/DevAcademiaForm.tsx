@@ -5,6 +5,10 @@ import { apiFetch } from "../../lib/api";
 import { notifyDevAcademiasChanged } from "../../lib/devAcademias";
 import { academyPublicUrl, primaryAppBaseDomain } from "../../lib/tenantHost";
 import AcademyPlanPicker from "./AcademyPlanPicker";
+import CatracaIntegracaoFields, {
+  CATRACA_FORM_DEFAULT,
+  catracaFormError,
+} from "./CatracaIntegracaoFields";
 import type { PlatformPlan } from "../../types/platformPlan";
 
 const UF_LIST = [
@@ -40,6 +44,7 @@ const INITIAL_FORM = {
   planId: "",
   faixa: 0,
   valor: 0,
+  ...CATRACA_FORM_DEFAULT,
 };
 
 type FormData = typeof INITIAL_FORM;
@@ -104,6 +109,11 @@ export default function DevAcademiaForm() {
     }
     if (!form.planId || !form.plano || !form.periodo) {
       setError("Selecione o plano contratado pela academia.");
+      return;
+    }
+    const catracaError = catracaFormError(form);
+    if (catracaError) {
+      setError(catracaError);
       return;
     }
 
@@ -384,6 +394,17 @@ export default function DevAcademiaForm() {
         <p className="mt-2 text-xs text-slate-600">
           Cadastre novos planos em Desenvolvimento → Planos.
         </p>
+      </FormSection>
+
+      <FormSection title="Catraca">
+        <CatracaIntegracaoFields
+          value={form}
+          onChange={(catraca) => {
+            setForm((prev) => ({ ...prev, ...catraca }));
+            setSuccess(null);
+            setError("");
+          }}
+        />
       </FormSection>
 
       {error && (
