@@ -93,6 +93,7 @@ export const professorSelfSchema = z.object({
 
 export const professorUpdateSchema = z.object({
   name: z.string().min(1).optional(),
+  email: z.string().email("E-mail inválido.").optional(),
   active: z.boolean().optional(),
   modalityIds: z.array(z.string().uuid()).optional(),
   modalityUpdates: z

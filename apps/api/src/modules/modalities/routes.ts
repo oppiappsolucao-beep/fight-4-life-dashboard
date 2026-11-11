@@ -1034,10 +1034,21 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
       }
 
       const data = parsed.data;
+      const email = data.email?.trim().toLowerCase();
+      if (email && email !== professor.email) {
+        const taken = await prisma.user.findUnique({
+          where: { tenantId_email: { tenantId, email } },
+        });
+        if (taken && taken.id !== professor.id) {
+          return reply.status(409).send({ error: "Este e-mail já está em uso." });
+        }
+      }
+
       const updated = await prisma.user.update({
         where: { id: professor.id },
         data: {
           ...(data.name ? { name: data.name.trim() } : {}),
+          ...(email && email !== professor.email ? { email } : {}),
           ...(data.active !== undefined ? { active: data.active } : {}),
           ...(data.password && professor.role === UserRole.PROFESSOR
             ? { passwordHash: await bcrypt.hash(data.password, 10) }

@@ -32,7 +32,9 @@ import DevContasReceberPage from "./pages/dev/DevContasReceberPage";
 import DevModalidadesPage from "./pages/dev/DevModalidadesPage";
 import DevPlanosPage from "./pages/dev/DevPlanosPage";
 import OwnerModalidadesPage from "./pages/owner/OwnerModalidadesPage";
-import OwnerProfessoresPage from "./pages/owner/OwnerProfessoresPage";
+import OwnerProfessoresPage, {
+  OwnerCadastroProfessorPage,
+} from "./pages/owner/OwnerProfessoresPage";
 import ProfessorLayout from "./components/professor/ProfessorLayout";
 import ProfessorLoginPage from "./pages/ProfessorLoginPage";
 
@@ -106,7 +108,7 @@ export default function App() {
         <Route path="dono/alunos" element={<OwnerAlunosPage />} />
         <Route path="dono/cadastro-treino" element={<Navigate to="/dono/visao-geral" replace />} />
         <Route path="dono/modalidades" element={<OwnerModalidadesPage />} />
-        <Route path="dono/cadastro-professor" element={<OwnerProfessoresPage />} />
+        <Route path="dono/cadastro-professor" element={<OwnerCadastroProfessorPage />} />
         <Route path="dono/professores" element={<OwnerProfessoresPage />} />
         <Route path="dono/planos" element={<OwnerPlanosPage />} />
         <Route path="dono/contas-a-receber" element={<OwnerContasReceberPage />} />

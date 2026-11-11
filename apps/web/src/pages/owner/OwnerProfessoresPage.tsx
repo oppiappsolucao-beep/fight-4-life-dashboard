@@ -1,5 +1,5 @@
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import ModalitySchedulePicker from "../../components/owner/ModalitySchedulePicker";
 import WeeklyScheduleGrid from "../../components/owner/WeeklyScheduleGrid";
 import { apiFetch } from "../../lib/api";
@@ -21,7 +21,9 @@ const EMPTY_FORM = {
 export default function OwnerProfessoresPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isCadastro = location.pathname.endsWith("/cadastro-professor");
+  const editProfessorId = searchParams.get("id");
   const openedEditId = useRef<string | null>(null);
   const [professores, setProfessores] = useState<ProfessorItem[]>([]);
   const [modalidades, setModalidades] = useState<ModalityItem[]>([]);
@@ -240,19 +242,23 @@ export default function OwnerProfessoresPage() {
 
   useEffect(() => {
     if (!isCadastro || loading) return;
-    const professorId =
-      (location.state as { professorId?: string } | null)?.professorId ?? null;
-    if (!professorId) {
-      if (formMode === "edit") resetCreateForm();
-      openedEditId.current = null;
+    if (!editProfessorId) {
+      if (openedEditId.current) {
+        openedEditId.current = null;
+        resetCreateForm();
+      }
       return;
     }
-    if (openedEditId.current === professorId) return;
-    const professor = professores.find((item) => item.id === professorId);
-    if (!professor) return;
-    openedEditId.current = professorId;
+    if (openedEditId.current === editProfessorId) return;
+    const professor = professores.find((item) => item.id === editProfessorId);
+    if (!professor) {
+      openedEditId.current = `missing:${editProfessorId}`;
+      setError("Não encontrei esse professor para editar.");
+      return;
+    }
+    openedEditId.current = editProfessorId;
     openProfessorCadastro(professor);
-  }, [isCadastro, loading, location.state, professores, formMode]);
+  }, [isCadastro, loading, editProfessorId, professores]);
 
   function selectFormModality(id: string) {
     setFormEditingModalityId((current) => (current === id ? null : id));
@@ -296,6 +302,7 @@ export default function OwnerProfessoresPage() {
           editingProfessorId,
           {
             name: form.name.trim(),
+            email: form.email.trim(),
             ...(form.password ? { password: form.password } : {}),
             modalityIds,
             schedules,
@@ -514,7 +521,7 @@ export default function OwnerProfessoresPage() {
                   onClick={() => {
                     openedEditId.current = null;
                     resetCreateForm();
-                    navigate("/dono/cadastro-professor", { replace: true, state: {} });
+                    navigate("/dono/cadastro-professor", { replace: true });
                   }}
                   className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
                 >
@@ -542,10 +549,14 @@ export default function OwnerProfessoresPage() {
                   placeholder="professor@academia.com"
                   className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
                   required
-                  readOnly={formMode === "edit"}
                   autoComplete="off"
                   name="professor-cadastro-email"
                 />
+                {formMode === "edit" ? (
+                  <span className="mt-1 block text-[0.65rem] text-slate-400">
+                    Este e-mail é o login do professor. Corrija aqui se foi informado errado.
+                  </span>
+                ) : null}
               </label>
               <label className="block text-xs text-slate-500">
                 {formMode === "edit" ? "Nova senha (opcional)" : "Senha de acesso"}
@@ -772,9 +783,7 @@ export default function OwnerProfessoresPage() {
                             type="button"
                             disabled={updatingProfessorId === professor.id}
                             onClick={() =>
-                              navigate("/dono/cadastro-professor", {
-                                state: { professorId: professor.id },
-                              })
+                              navigate(`/dono/cadastro-professor?id=${professor.id}`)
                             }
                             className="rounded-lg border border-slate-200 px-2.5 py-1 text-[0.65rem] font-semibold text-slate-600"
                           >
@@ -842,4 +851,10 @@ export default function OwnerProfessoresPage() {
       )}
     </OwnerSectionPage>
   );
+}
+
+export function OwnerCadastroProfessorPage() {
+  const [params] = useSearchParams();
+  const professorId = params.get("id") ?? "novo";
+  return <OwnerProfessoresPage key={professorId} />;
 }
