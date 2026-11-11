@@ -91,6 +91,11 @@ const activeStudentSelect = {
   email: true,
   diaVencimento: true,
   acessoLiberadoAte: true,
+  charges: {
+    orderBy: { createdAt: "desc" as const },
+    take: 1,
+    select: { status: true },
+  },
   tenant: {
     select: { id: true, slug: true, name: true, active: true },
   },
@@ -401,7 +406,7 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
       });
     }
 
-    if (isStudentBillingBlocked(student)) {
+    if (isStudentBillingBlocked(student, new Date(), student.charges[0]?.status)) {
       return reply.status(403).send({
         error: STUDENT_BILLING_BLOCKED_MESSAGE,
         code: "BILLING_BLOCKED",

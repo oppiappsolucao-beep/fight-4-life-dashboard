@@ -27,8 +27,10 @@ export function hasActiveBillingRelease(
 export function isStudentBillingBlocked(
   student: StudentBillingFields,
   reference = new Date(),
+  chargeStatus?: string | null,
 ): boolean {
   if (hasActiveBillingRelease(student, reference)) return false;
+  if (chargeStatus === "CANCELLED" || chargeStatus === "REFUNDED") return true;
   return getDueStatus(student.diaVencimento, reference) === "vencido";
 }
 

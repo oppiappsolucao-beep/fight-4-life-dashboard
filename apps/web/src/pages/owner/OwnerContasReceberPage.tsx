@@ -54,9 +54,10 @@ type ContaGrupo = "cancelado" | "pago" | "a_pagar" | "vencido";
 function contaGrupo(aluno: AlunoRecebivel): ContaGrupo {
   const charge = aluno.latestCharge?.status;
   if (charge === "CANCELLED" || charge === "REFUNDED") return "cancelado";
-  if (charge === "PAID") return "pago";
-  if (charge === "OVERDUE" || getDueStatus(aluno.diaVencimento) === "vencido") return "vencido";
-  if (hasActiveBillingRelease(aluno)) return "pago";
+  const overdue = charge === "OVERDUE" || getDueStatus(aluno.diaVencimento) === "vencido";
+  const paidAndOpen = charge === "PAID" && (hasActiveBillingRelease(aluno) || !overdue);
+  if (paidAndOpen) return "pago";
+  if (overdue) return "vencido";
   return "a_pagar";
 }
 
@@ -71,6 +72,7 @@ export default function OwnerContasReceberPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [settlingId, setSettlingId] = useState<string | null>(null);
+  const [releaseDays, setReleaseDays] = useState<Record<string, string>>({});
 
   const priceMap = useMemo(() => plansToPriceMap(planos), [planos]);
 
@@ -98,6 +100,26 @@ export default function OwnerContasReceberPage() {
     load();
   }, [load]);
 
+  function applyGestao(
+    alunoId: string,
+    result: {
+      aluno: { acessoLiberadoAte: string | null };
+      latestCharge: LatestCharge | null;
+    },
+  ) {
+    setAlunos((current) =>
+      current.map((item) =>
+        item.id === alunoId
+          ? {
+              ...item,
+              acessoLiberadoAte: result.aluno.acessoLiberadoAte,
+              latestCharge: result.latestCharge ?? item.latestCharge,
+            }
+          : item,
+      ),
+    );
+  }
+
   async function darBaixa(aluno: AlunoRecebivel) {
     setSettlingId(aluno.id);
     setError("");
@@ -108,20 +130,42 @@ export default function OwnerContasReceberPage() {
         aluno: { acessoLiberadoAte: string | null };
         latestCharge: LatestCharge;
       }>(`/owner/alunos/${aluno.id}/dar-baixa`, { method: "POST" });
-      setAlunos((current) =>
-        current.map((item) =>
-          item.id === aluno.id
-            ? {
-                ...item,
-                acessoLiberadoAte: result.aluno.acessoLiberadoAte,
-                latestCharge: result.latestCharge,
-              }
-            : item,
-        ),
-      );
+      applyGestao(aluno.id, result);
       setSuccess(result.message);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao dar baixa.");
+      setError(err instanceof Error ? err.message : "Erro ao marcar como pago.");
+    } finally {
+      setSettlingId(null);
+    }
+  }
+
+  async function gerirAluno(aluno: AlunoRecebivel, acao: "cancelado" | "liberar") {
+    const dias = Number.parseInt(releaseDays[aluno.id] ?? "", 10);
+    if (acao === "liberar" && (!Number.isFinite(dias) || dias < 1 || dias > 90)) {
+      setError("Informe de 1 a 90 dias para liberar.");
+      setSuccess("");
+      return;
+    }
+
+    setSettlingId(aluno.id);
+    setError("");
+    setSuccess("");
+    try {
+      const result = await apiFetch<{
+        message: string;
+        aluno: { acessoLiberadoAte: string | null };
+        latestCharge: LatestCharge | null;
+      }>(`/owner/alunos/${aluno.id}/gestao`, {
+        method: "POST",
+        body: JSON.stringify({
+          acao,
+          ...(acao === "liberar" ? { dias } : {}),
+        }),
+      });
+      applyGestao(aluno.id, result);
+      setSuccess(result.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao atualizar o aluno.");
     } finally {
       setSettlingId(null);
     }
@@ -254,18 +298,53 @@ export default function OwnerContasReceberPage() {
                         <StatusBadge grupo={grupo} liberadoAte={aluno.acessoLiberadoAte} />
                       </td>
                       <td className="px-4 py-3">
-                        {grupo === "a_pagar" || grupo === "vencido" ? (
-                          <button
-                            type="button"
-                            disabled={settlingId === aluno.id}
-                            onClick={() => darBaixa(aluno)}
-                            className="rounded-lg border border-emerald-400/30 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-500/10 disabled:opacity-50"
-                          >
-                            {settlingId === aluno.id ? "Baixando..." : "Dar baixa"}
-                          </button>
-                        ) : (
-                          <span className="text-xs text-slate-400">—</span>
-                        )}
+                        <div className="flex min-w-[16rem] flex-col gap-2">
+                          <div className="flex flex-wrap gap-1.5">
+                            <button
+                              type="button"
+                              disabled={settlingId === aluno.id || grupo === "pago"}
+                              onClick={() => darBaixa(aluno)}
+                              className="rounded-lg border border-emerald-400/30 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-500/10 disabled:opacity-50"
+                            >
+                              {settlingId === aluno.id ? "Salvando..." : "Pago"}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={settlingId === aluno.id || grupo === "cancelado"}
+                              onClick={() => gerirAluno(aluno, "cancelado")}
+                              className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50"
+                            >
+                              Cancelado
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs text-slate-500">Liberar</span>
+                            <input
+                              type="number"
+                              min={1}
+                              max={90}
+                              inputMode="numeric"
+                              value={releaseDays[aluno.id] ?? ""}
+                              placeholder="dias"
+                              onChange={(event) =>
+                                setReleaseDays((current) => ({
+                                  ...current,
+                                  [aluno.id]: event.target.value,
+                                }))
+                              }
+                              className="w-16 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs text-[#2E496C] outline-none"
+                            />
+                            <span className="text-xs text-slate-500">dias</span>
+                            <button
+                              type="button"
+                              disabled={settlingId === aluno.id}
+                              onClick={() => gerirAluno(aluno, "liberar")}
+                              className="rounded-lg border border-[#5B7595]/30 px-2.5 py-1.5 text-xs font-semibold text-[#2E496C] hover:bg-[#5B7595]/10 disabled:opacity-50"
+                            >
+                              Liberar
+                            </button>
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   );

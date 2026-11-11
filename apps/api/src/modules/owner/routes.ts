@@ -688,6 +688,134 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
     },
   );
 
+  app.post<{ Params: { id: string } }>(
+    "/owner/alunos/:id/gestao",
+    async (request, reply) => {
+      const parsed = z
+        .object({
+          acao: z.enum(["cancelado", "liberar"]),
+          dias: z.number().int().min(1).max(90).optional(),
+        })
+        .safeParse(request.body);
+
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.errors[0]?.message ?? "Dados inválidos.",
+        });
+      }
+
+      const tenantId = request.user.tenantId;
+      const aluno = await prisma.student.findFirst({
+        where: { id: request.params.id, tenantId, active: true },
+        select: { id: true, nomeCompleto: true, planoModalidade: true, diaVencimento: true },
+      });
+      if (!aluno) {
+        return reply.status(404).send({ error: "Aluno não encontrado." });
+      }
+
+      if (parsed.data.acao === "liberar") {
+        const dias = parsed.data.dias;
+        if (!dias) {
+          return reply.status(400).send({ error: "Informe quantos dias liberar." });
+        }
+        const until = new Date();
+        until.setHours(12, 0, 0, 0);
+        until.setDate(until.getDate() + dias);
+        const acessoLiberadoAte = formatIsoDate(until);
+        const updated = await prisma.student.update({
+          where: { id: aluno.id },
+          data: { acessoLiberadoAte },
+          select: { id: true, nomeCompleto: true, acessoLiberadoAte: true },
+        });
+        const latest = await prisma.studentCharge.findFirst({
+          where: { tenantId, studentId: aluno.id },
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            status: true,
+            dueDate: true,
+            amountCents: true,
+            asaasPaymentId: true,
+            paidAt: true,
+          },
+        });
+        return reply.send({
+          aluno: updated,
+          latestCharge: latest
+            ? {
+                id: latest.id,
+                status: latest.status,
+                dueDate: latest.dueDate,
+                amountBrl: centsToBrl(latest.amountCents),
+                asaasPaymentId: latest.asaasPaymentId,
+                paidAt: latest.paidAt,
+              }
+            : null,
+          message: `${updated.nomeCompleto} liberado por ${dias} dia(s), até ${acessoLiberadoAte.split("-").reverse().join("/")}. Sem pagamento, o bloqueio volta depois disso.`,
+        });
+      }
+
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: tenantId },
+        select: { createdAt: true, billingCycleDay: true },
+      });
+      const config = await prisma.tenantConfig.findUnique({
+        where: { tenantId },
+        select: { planosPrecos: true },
+      });
+      const priceMap = plansToPriceMap(normalizePlans(config?.planosPrecos ?? null));
+      const planBrl = priceMap[aluno.planoModalidade];
+      const cycle = getAcademyBillingCycle(
+        tenant?.createdAt ?? new Date(),
+        new Date(),
+        tenant?.billingCycleDay,
+      );
+      const due = new Date();
+      const dueDay = Number.parseInt(aluno.diaVencimento.replace(/\D/g, ""), 10);
+      if (Number.isFinite(dueDay) && dueDay >= 1 && dueDay <= 31) {
+        due.setDate(dueDay);
+      }
+
+      const charge = await prisma.studentCharge.create({
+        data: {
+          tenantId,
+          studentId: aluno.id,
+          amountCents: planBrl != null ? Math.round(planBrl * 100) : 0,
+          status: ChargeStatus.CANCELLED,
+          dueDate: formatIsoDate(due),
+          billingCycleKey: cycle.key,
+          description: `Cancelamento manual — ${aluno.planoModalidade}`,
+        },
+        select: {
+          id: true,
+          status: true,
+          dueDate: true,
+          amountCents: true,
+          asaasPaymentId: true,
+          paidAt: true,
+        },
+      });
+      const updated = await prisma.student.update({
+        where: { id: aluno.id },
+        data: { acessoLiberadoAte: null },
+        select: { id: true, nomeCompleto: true, acessoLiberadoAte: true },
+      });
+
+      return reply.send({
+        aluno: updated,
+        latestCharge: {
+          id: charge.id,
+          status: charge.status,
+          dueDate: charge.dueDate,
+          amountBrl: centsToBrl(charge.amountCents),
+          asaasPaymentId: charge.asaasPaymentId,
+          paidAt: charge.paidAt,
+        },
+        message: `${updated.nomeCompleto} marcado como cancelado. O acesso fica bloqueado.`,
+      });
+    },
+  );
+
   app.post("/owner/alunos/:id/cobrancas", async (_request, reply) => {
     return reply.status(400).send({ error: STUDENT_ASAAS_BLOCKED });
   });

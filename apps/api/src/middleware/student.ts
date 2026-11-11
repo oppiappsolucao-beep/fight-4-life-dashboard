@@ -32,6 +32,11 @@ export async function requireStudent(
       id: true,
       diaVencimento: true,
       acessoLiberadoAte: true,
+      charges: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { status: true },
+      },
     },
   });
 
@@ -40,7 +45,7 @@ export async function requireStudent(
     return;
   }
 
-  if (isStudentBillingBlocked(student)) {
+  if (isStudentBillingBlocked(student, new Date(), student.charges[0]?.status)) {
     reply.status(403).send({
       error: STUDENT_BILLING_BLOCKED_MESSAGE,
       code: "BILLING_BLOCKED",
