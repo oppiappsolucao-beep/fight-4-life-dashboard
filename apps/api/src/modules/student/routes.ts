@@ -28,6 +28,7 @@ import {
 } from "../owner/workouts.js";
 import { saveStudentWorkoutSchema, saveWorkoutProgressSchema } from "./workouts.js";
 import { serializeDietMeal } from "../../lib/diet-catalog.js";
+import { academyClock, ensureDailyNotices, serializeNotice } from "../../lib/notices.js";
 import { registerStudentModalityRoutes } from "../modalities/routes.js";
 
 async function getTenantPlans(tenantId: string) {
@@ -691,6 +692,33 @@ export async function studentRoutes(app: FastifyInstance): Promise<void> {
         weekVariantCount: 4,
         meals: plan.meals.map(serializeDietMeal),
       },
+    });
+  });
+
+  app.get("/student/aviso", { preHandler: [requireStudent] }, async (request, reply) => {
+    const student = await prisma.student.findUnique({
+      where: { id: request.studentId },
+      select: { tenantId: true },
+    });
+    if (!student) {
+      return reply.status(401).send({ error: "Aluno não encontrado." });
+    }
+
+    await ensureDailyNotices(student.tenantId);
+    const { date } = academyClock();
+    const notice = await prisma.dailyNotice.findUnique({
+      where: {
+        tenantId_audience_noticeDate: {
+          tenantId: student.tenantId,
+          audience: "ALUNO",
+          noticeDate: date,
+        },
+      },
+    });
+
+    return reply.send({
+      noticeDate: date,
+      aviso: notice ? serializeNotice(notice) : null,
     });
   });
 

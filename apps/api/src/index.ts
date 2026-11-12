@@ -13,6 +13,7 @@ import { studentRoutes } from "./modules/student/routes.js";
 import { registerProfessorRoutes } from "./modules/modalities/routes.js";
 import { webhookRoutes } from "./modules/webhooks/routes.js";
 import { bootstrapDatabase } from "./lib/bootstrap.js";
+import { startDailyNoticeScheduler } from "./lib/notices.js";
 import { ensureUploadsDir, getUploadsRoot } from "./lib/student-photos.js";
 
 // EasyPanel injeta PORT (muitas vezes 80). A Porta do serviço no painel
@@ -106,6 +107,9 @@ if (existsSync(webDist)) {
 try {
   await app.listen({ port: PORT, host: HOST });
   console.log(`API rodando em http://${HOST}:${PORT}`);
+  startDailyNoticeScheduler((error) => {
+    console.error("[avisos] Falha ao publicar o recado padrão do dia:", error);
+  });
   void import("./lib/lesson-videos.js")
     .then(({ migrateBase64LessonVideos }) => migrateBase64LessonVideos())
     .then((migrated) => {

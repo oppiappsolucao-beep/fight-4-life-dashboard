@@ -11,6 +11,7 @@ import {
 } from "../../lib/workout";
 import type { StudentOverview } from "../../types/student";
 import StudentSectionPage from "./StudentSectionPage";
+import NoticeBoard from "../../components/NoticeBoard";
 
 export default function StudentVisaoGeralPage() {
   const session = getStudentSession();
@@ -66,6 +67,8 @@ export default function StudentVisaoGeralPage() {
               Plano: <strong>{overview.aluno.planoModalidade}</strong>
             </p>
           </section>
+
+          <NoticeBoard path="/student/aviso" studentId={session?.id} />
 
           <section className="grid gap-3 sm:grid-cols-2">
             {overview.metas.map((meta) => {

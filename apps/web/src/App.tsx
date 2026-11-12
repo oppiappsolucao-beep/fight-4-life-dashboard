@@ -32,6 +32,7 @@ import DevContasReceberPage from "./pages/dev/DevContasReceberPage";
 import DevModalidadesPage from "./pages/dev/DevModalidadesPage";
 import DevPlanosPage from "./pages/dev/DevPlanosPage";
 import OwnerModalidadesPage from "./pages/owner/OwnerModalidadesPage";
+import OwnerQuadroAvisosPage from "./pages/owner/OwnerQuadroAvisosPage";
 import OwnerProfessoresPage, {
   OwnerCadastroProfessorPage,
 } from "./pages/owner/OwnerProfessoresPage";
@@ -104,6 +105,7 @@ export default function App() {
 
       <Route element={<OwnerLayout />}>
         <Route path="dono/visao-geral" element={<OwnerVisaoGeralPage />} />
+        <Route path="dono/quadro-de-avisos" element={<OwnerQuadroAvisosPage />} />
         <Route path="dono/cadastro-aluno" element={<OwnerCadastroAlunoPage />} />
         <Route path="dono/alunos" element={<OwnerAlunosPage />} />
         <Route path="dono/cadastro-treino" element={<Navigate to="/dono/visao-geral" replace />} />

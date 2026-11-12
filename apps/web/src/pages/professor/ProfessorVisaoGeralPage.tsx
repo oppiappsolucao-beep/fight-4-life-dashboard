@@ -9,6 +9,7 @@ import { apiFetch } from "../../lib/api";
 import { contentTypeLabel } from "../../types/modality";
 import { formatWorkoutDateLabel } from "../../lib/workout";
 import type { ProfessorOverview } from "../../types/overview";
+import NoticeBoard from "../../components/NoticeBoard";
 
 export default function ProfessorVisaoGeralPage() {
   const { user, tenant } = useAuth();
@@ -55,6 +56,8 @@ export default function ProfessorVisaoGeralPage() {
             title={`Olá, ${displayName}`}
             subtitle={`${formatWorkoutDateLabel(overview.mes.start)} a ${formatWorkoutDateLabel(overview.mes.end)}`}
           />
+
+          <NoticeBoard path="/professor/aviso" />
 
           <OverviewMetricGrid
             items={[

@@ -6,6 +6,7 @@ import { sidebarShellClass } from "../DashboardShell";
 
 const MENU_ITEMS = [
   { to: "/dono/visao-geral", label: "Visão Geral", icon: HomeIcon },
+  { to: "/dono/quadro-de-avisos", label: "Quadro de avisos", icon: NoticeIcon },
   { to: "/dono/cadastro-aluno", label: "Cadastro Aluno", icon: UserPlusIcon },
   { to: "/dono/alunos", label: "Alunos", icon: UsersIcon },
   { to: "/dono/modalidades", label: "Modalidades", icon: ModalityIcon },
@@ -139,6 +140,15 @@ function ModalityIcon() {
       <rect x="14" y="4" width="7" height="7" rx="1.5" />
       <rect x="3" y="14" width="7" height="7" rx="1.5" />
       <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </svg>
+  );
+}
+
+function NoticeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v14H6.5A2.5 2.5 0 0 0 4 20.5V6.5Z" />
+      <path d="M8 8h8M8 12h8M8 16h5" />
     </svg>
   );
 }

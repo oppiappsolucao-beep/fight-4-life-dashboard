@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { randomUUID } from "node:crypto";
 import { Prisma, UserRole } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
+import { academyClock, ensureDailyNotices, serializeNotice } from "../../lib/notices.js";
 import {
   alignTenantMusculacaoModalities,
   DEFAULT_MODALITY_TEMPLATES,
@@ -1336,6 +1337,26 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
     "preHandler",
     requireRole(UserRole.PROFESSOR, UserRole.PROPRIETARIO, UserRole.DESENVOLVIMENTO),
   );
+
+  app.get("/professor/aviso", async (request, reply) => {
+    const tenantId = request.user.tenantId;
+    await ensureDailyNotices(tenantId);
+    const { date } = academyClock();
+    const notice = await prisma.dailyNotice.findUnique({
+      where: {
+        tenantId_audience_noticeDate: {
+          tenantId,
+          audience: "PROFESSOR",
+          noticeDate: date,
+        },
+      },
+    });
+
+    return reply.send({
+      noticeDate: date,
+      aviso: notice ? serializeNotice(notice) : null,
+    });
+  });
 
   app.get("/professor/modalidades", async (request, reply) => {
     const tenantId = request.user.tenantId;

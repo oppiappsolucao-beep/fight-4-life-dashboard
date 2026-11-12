@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { ChargeStatus, Prisma, UserRole } from "@prisma/client";
+import { ChargeStatus, NoticeAudience, Prisma, UserRole } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
 import { getDueStatus, getNextDueDate, getWeekRange, formatIsoDate, hasActiveBillingRelease } from "../../lib/billing.js";
@@ -27,6 +27,7 @@ const MINOR_STUDENT_ERROR =
 import { centsToBrl } from "../../lib/platform-fees.js";
 import { confirmStudentChargePaid } from "../../lib/charge-payments.js";
 import { getAcademyBillingCycle } from "../../lib/academy-billing-cycle.js";
+import { ensureDailyNotices, academyClock, serializeNotice, DEFAULT_NOTICES } from "../../lib/notices.js";
 
 const STUDENT_ASAAS_BLOCKED =
   "A cobrança Asaas é da academia, emitida para o dono no cadastro. A mensalidade do aluno é combinada direto com a academia.";
@@ -1208,6 +1209,72 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
       }
     },
   );
+
+  app.put("/owner/avisos", async (request, reply) => {
+    const parsed = z
+      .object({
+        audience: z.nativeEnum(NoticeAudience),
+        message: z.string().max(400, "O recado pode ter no máximo 400 caracteres."),
+      })
+      .safeParse(request.body);
+
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: parsed.error.errors[0]?.message ?? "Recado inválido.",
+      });
+    }
+
+    const tenantId = request.user.tenantId;
+    const { date } = academyClock();
+    const text = parsed.data.message.trim();
+    const automatic = text.length === 0;
+    const message = automatic ? DEFAULT_NOTICES[parsed.data.audience] : text;
+
+    const notice = await prisma.dailyNotice.upsert({
+      where: {
+        tenantId_audience_noticeDate: {
+          tenantId,
+          audience: parsed.data.audience,
+          noticeDate: date,
+        },
+      },
+      update: { message, automatic },
+      create: {
+        tenantId,
+        audience: parsed.data.audience,
+        noticeDate: date,
+        message,
+        automatic,
+      },
+    });
+
+    const who = parsed.data.audience === NoticeAudience.ALUNO ? "alunos" : "professores";
+    return reply.send({
+      aviso: serializeNotice(notice),
+      message: automatic
+        ? `Recado dos ${who} voltou para a mensagem padrão.`
+        : `Recado enviado para os ${who}.`,
+    });
+  });
+
+  app.get("/owner/avisos", async (request, reply) => {
+    const tenantId = request.user.tenantId;
+    await ensureDailyNotices(tenantId);
+    const { date } = academyClock();
+    const notices = await prisma.dailyNotice.findMany({
+      where: { tenantId, noticeDate: date },
+    });
+
+    const byAudience = Object.fromEntries(notices.map((notice) => [notice.audience, serializeNotice(notice)]));
+
+    return reply.send({
+      noticeDate: date,
+      avisos: {
+        ALUNO: byAudience.ALUNO ?? null,
+        PROFESSOR: byAudience.PROFESSOR ?? null,
+      },
+    });
+  });
 
   await registerOwnerModalityRoutes(app);
 }
