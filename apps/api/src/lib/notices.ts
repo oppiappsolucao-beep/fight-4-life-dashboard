@@ -61,6 +61,7 @@ export function serializeNotice(notice: {
 }
 
 export async function ensureDailyNotices(tenantId: string, reference = new Date()) {
+  await ensureNoticeTable();
   if (!isPastDailyNoticeTime(reference)) return;
   const { date } = academyClock(reference);
 
@@ -85,6 +86,57 @@ export async function ensureDailyNotices(tenantId: string, reference = new Date(
       }),
     ),
   );
+}
+
+let noticeTableReady = false;
+
+export async function ensureNoticeTable(): Promise<void> {
+  if (noticeTableReady) return;
+
+  await prisma.$executeRawUnsafe(`
+    DO $$ BEGIN
+      CREATE TYPE "NoticeAudience" AS ENUM ('ALUNO', 'PROFESSOR');
+    EXCEPTION
+      WHEN duplicate_object THEN NULL;
+    END $$;
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "DailyNotice" (
+      "id" TEXT NOT NULL,
+      "tenantId" TEXT NOT NULL,
+      "audience" "NoticeAudience" NOT NULL,
+      "noticeDate" TEXT NOT NULL,
+      "message" TEXT NOT NULL,
+      "automatic" BOOLEAN NOT NULL DEFAULT false,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" TIMESTAMP(3) NOT NULL,
+      CONSTRAINT "DailyNotice_pkey" PRIMARY KEY ("id")
+    );
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE UNIQUE INDEX IF NOT EXISTS "DailyNotice_tenantId_audience_noticeDate_key"
+    ON "DailyNotice"("tenantId", "audience", "noticeDate");
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE INDEX IF NOT EXISTS "DailyNotice_tenantId_noticeDate_idx"
+    ON "DailyNotice"("tenantId", "noticeDate");
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    DO $$ BEGIN
+      ALTER TABLE "DailyNotice"
+        ADD CONSTRAINT "DailyNotice_tenantId_fkey"
+        FOREIGN KEY ("tenantId") REFERENCES "Tenant"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE;
+    EXCEPTION
+      WHEN duplicate_object THEN NULL;
+    END $$;
+  `);
+
+  noticeTableReady = true;
 }
 
 let lastEnsuredDate: string | null = null;

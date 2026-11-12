@@ -54,6 +54,14 @@ export async function bootstrapDatabase(): Promise<void> {
   }
 
   try {
+    const { ensureNoticeTable } = await import("./notices.js");
+    await ensureNoticeTable();
+    console.log("[avisos] Tabela do quadro de avisos pronta.");
+  } catch (error) {
+    console.error("[avisos] Falha ao preparar o quadro de avisos:", error);
+  }
+
+  try {
     console.log("[bootstrap] Sincronizando schema (prisma db push)...", apiRoot);
     execSync("npx prisma db push --skip-generate --accept-data-loss", {
       cwd: apiRoot,

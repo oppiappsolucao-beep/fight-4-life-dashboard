@@ -27,7 +27,13 @@ const MINOR_STUDENT_ERROR =
 import { centsToBrl } from "../../lib/platform-fees.js";
 import { confirmStudentChargePaid } from "../../lib/charge-payments.js";
 import { getAcademyBillingCycle } from "../../lib/academy-billing-cycle.js";
-import { ensureDailyNotices, academyClock, serializeNotice, DEFAULT_NOTICES } from "../../lib/notices.js";
+import {
+  academyClock,
+  DEFAULT_NOTICES,
+  ensureDailyNotices,
+  ensureNoticeTable,
+  serializeNotice,
+} from "../../lib/notices.js";
 
 const STUDENT_ASAAS_BLOCKED =
   "A cobrança Asaas é da academia, emitida para o dono no cadastro. A mensalidade do aluno é combinada direto com a academia.";
@@ -1225,6 +1231,7 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
     }
 
     const tenantId = request.user.tenantId;
+    await ensureNoticeTable();
     const { date } = academyClock();
     const text = parsed.data.message.trim();
     const automatic = text.length === 0;
@@ -1258,22 +1265,31 @@ export async function ownerRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.get("/owner/avisos", async (request, reply) => {
-    const tenantId = request.user.tenantId;
-    await ensureDailyNotices(tenantId);
-    const { date } = academyClock();
-    const notices = await prisma.dailyNotice.findMany({
-      where: { tenantId, noticeDate: date },
-    });
+    try {
+      const tenantId = request.user.tenantId;
+      await ensureDailyNotices(tenantId);
+      const { date } = academyClock();
+      const notices = await prisma.dailyNotice.findMany({
+        where: { tenantId, noticeDate: date },
+      });
 
-    const byAudience = Object.fromEntries(notices.map((notice) => [notice.audience, serializeNotice(notice)]));
+      const byAudience = Object.fromEntries(
+        notices.map((notice) => [notice.audience, serializeNotice(notice)]),
+      );
 
-    return reply.send({
-      noticeDate: date,
-      avisos: {
-        ALUNO: byAudience.ALUNO ?? null,
-        PROFESSOR: byAudience.PROFESSOR ?? null,
-      },
-    });
+      return reply.send({
+        noticeDate: date,
+        avisos: {
+          ALUNO: byAudience.ALUNO ?? null,
+          PROFESSOR: byAudience.PROFESSOR ?? null,
+        },
+      });
+    } catch (error) {
+      request.log.error(error);
+      return reply.status(503).send({
+        error: "Não foi possível abrir o quadro de avisos. Atualize a página em instantes.",
+      });
+    }
   });
 
   await registerOwnerModalityRoutes(app);
