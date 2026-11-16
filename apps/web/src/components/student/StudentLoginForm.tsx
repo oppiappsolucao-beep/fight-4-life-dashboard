@@ -1,11 +1,13 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiFetch, setTenantSlug } from "../../lib/api";
+import { ApiError, apiFetch, setTenantSlug, type BillingScreenNotice } from "../../lib/api";
+import { dismissBillingNotice, isBillingNoticeDismissed } from "../../lib/billingNotice";
 import { formatCpf } from "../../lib/format";
 import {
   setStudentSession,
   type StudentLoginType,
 } from "../../lib/studentSession";
+import StudentBillingNoticeModal from "./StudentBillingNoticeModal";
 
 const TAB_CONFIG: Record<
   StudentLoginType,
@@ -39,6 +41,7 @@ export default function StudentLoginForm() {
   const [identifier, setIdentifier] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState<BillingScreenNotice | null>(null);
 
   function handleTabChange(next: StudentLoginType) {
     setTab(next);
@@ -80,6 +83,10 @@ export default function StudentLoginForm() {
       });
       navigate("/inicio");
     } catch (err) {
+      const aviso = err instanceof ApiError ? err.avisoFatura : undefined;
+      if (aviso && !isBillingNoticeDismissed(aviso)) {
+        setNotice(aviso);
+      }
       setError(err instanceof Error ? err.message : "Erro ao entrar.");
     } finally {
       setLoading(false);
@@ -88,6 +95,15 @@ export default function StudentLoginForm() {
 
   return (
     <div className="flex min-h-full items-center px-4 py-8 sm:px-6">
+      {notice ? (
+        <StudentBillingNoticeModal
+          message={notice.message}
+          onClose={() => {
+            dismissBillingNotice(notice);
+            setNotice(null);
+          }}
+        />
+      ) : null}
       <div className="mx-auto w-full max-w-md">
         <div className="mb-6 text-center">
           <h1 className="m-0 text-[clamp(1.4rem,4vw,1.9rem)] font-normal text-white/95">

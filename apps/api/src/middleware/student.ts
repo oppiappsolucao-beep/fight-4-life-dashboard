@@ -1,8 +1,5 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
-import {
-  isStudentBillingBlocked,
-  STUDENT_BILLING_BLOCKED_MESSAGE,
-} from "../lib/billing.js";
+import { billingBlockedBody, isStudentBillingBlocked } from "../lib/billing.js";
 import { prisma } from "../lib/prisma.js";
 
 declare module "fastify" {
@@ -46,10 +43,7 @@ export async function requireStudent(
   }
 
   if (isStudentBillingBlocked(student, new Date(), student.charges[0]?.status)) {
-    reply.status(403).send({
-      error: STUDENT_BILLING_BLOCKED_MESSAGE,
-      code: "BILLING_BLOCKED",
-    });
+    reply.status(403).send(billingBlockedBody(student));
     return;
   }
 

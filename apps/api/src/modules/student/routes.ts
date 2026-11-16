@@ -4,6 +4,7 @@ import { prisma } from "../../lib/prisma.js";
 import {
   formatBrDate,
   formatIsoDate,
+  getBillingScreenNotice,
   getDueStatus,
   getEffectiveDueStatus,
   getNextDueDate,
@@ -531,6 +532,22 @@ export async function studentRoutes(app: FastifyInstance): Promise<void> {
       }
     },
   );
+
+  app.get("/student/aviso-fatura", { preHandler: [requireStudent] }, async (request, reply) => {
+    const student = await prisma.student.findUnique({
+      where: { id: request.studentId },
+      select: { id: true, diaVencimento: true, active: true },
+    });
+
+    if (!student?.active) {
+      return reply.status(404).send({ error: "Aluno não encontrado." });
+    }
+
+    const aviso = getBillingScreenNotice(student.diaVencimento);
+    return reply.send({
+      aviso: aviso ? { ...aviso, studentId: student.id } : null,
+    });
+  });
 
   app.get(
     "/student/pagamentos",

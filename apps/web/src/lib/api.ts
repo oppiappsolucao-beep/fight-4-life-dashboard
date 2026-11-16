@@ -1,4 +1,31 @@
-﻿const API_BASE = import.meta.env.VITE_API_URL ?? "/api";
+﻿export type BillingNoticePhase = "tres_dias" | "vence_hoje" | "dois_dias_apos";
+
+export interface BillingScreenNotice {
+  phase: BillingNoticePhase;
+  dueDate: string;
+  message: string;
+  studentId: string;
+}
+
+export class ApiError extends Error {
+  status: number;
+  code?: string;
+  avisoFatura?: BillingScreenNotice;
+
+  constructor(
+    message: string,
+    status: number,
+    extra?: { code?: string; avisoFatura?: BillingScreenNotice },
+  ) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = extra?.code;
+    this.avisoFatura = extra?.avisoFatura;
+  }
+}
+
+const API_BASE = import.meta.env.VITE_API_URL ?? "/api";
 const DEFAULT_TENANT_SLUG = import.meta.env.VITE_TENANT_SLUG ?? "oppifit";
 
 export function getTenantSlug(): string {
@@ -43,7 +70,20 @@ export async function apiFetch<T>(
       (response.status === 500 || response.status === 503
         ? "Servidor indisponível. Verifique se o banco Neon está configurado."
         : `Erro na requisição (${response.status}).`);
-    throw new Error(message);
+    const aviso = data.avisoFatura;
+    const avisoFatura =
+      aviso &&
+      typeof aviso === "object" &&
+      typeof aviso.phase === "string" &&
+      typeof aviso.dueDate === "string" &&
+      typeof aviso.message === "string" &&
+      typeof aviso.studentId === "string"
+        ? (aviso as BillingScreenNotice)
+        : undefined;
+    throw new ApiError(message, response.status, {
+      code: typeof data.code === "string" ? data.code : undefined,
+      avisoFatura,
+    });
   }
 
   return data as T;

@@ -3,10 +3,7 @@ import bcrypt from "bcryptjs";
 import { UserRole } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
-import {
-  isStudentBillingBlocked,
-  STUDENT_BILLING_BLOCKED_MESSAGE,
-} from "../../lib/billing.js";
+import { billingBlockedBody, isStudentBillingBlocked } from "../../lib/billing.js";
 import {
   extractSubdomainFromHost,
   findAcademyTenantByKey,
@@ -407,10 +404,7 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
     }
 
     if (isStudentBillingBlocked(student, new Date(), student.charges[0]?.status)) {
-      return reply.status(403).send({
-        error: STUDENT_BILLING_BLOCKED_MESSAGE,
-        code: "BILLING_BLOCKED",
-      });
+      return reply.status(403).send(billingBlockedBody(student));
     }
 
     return reply.send({

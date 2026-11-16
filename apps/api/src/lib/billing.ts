@@ -77,6 +77,71 @@ export function getDueStatus(diaVencimento: string, reference = new Date()): Bil
   return "em_dia";
 }
 
+export type BillingNoticePhase = "tres_dias" | "vence_hoje" | "dois_dias_apos";
+
+export interface BillingScreenNotice {
+  phase: BillingNoticePhase;
+  dueDate: string;
+  message: string;
+}
+
+const BILLING_NOTICE_MESSAGES: Record<BillingNoticePhase, string> = {
+  tres_dias:
+    "Prezado aluno, faltam 3 dias para o vencimento da sua fatura. Entre em contato com a recepção.",
+  vence_hoje: "Prezado aluno, a sua fatura vence hoje. Entre em contato com a recepção.",
+  dois_dias_apos:
+    "Prezado aluno, sua fatura venceu há 2 dias. Entre em contato com a recepção.",
+};
+
+function startOfLocalDay(value: Date): Date {
+  const date = new Date(value);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function diffCalendarDays(from: Date, to: Date): number {
+  const ms = startOfLocalDay(to).getTime() - startOfLocalDay(from).getTime();
+  return Math.round(ms / 86_400_000);
+}
+
+export function getBillingScreenNotice(
+  diaVencimento: string,
+  reference = new Date(),
+): BillingScreenNotice | null {
+  const day = parseDueDay(diaVencimento);
+  const today = startOfLocalDay(reference);
+  const phases: Array<{ daysUntil: number; phase: BillingNoticePhase }> = [
+    { daysUntil: 3, phase: "tres_dias" },
+    { daysUntil: 0, phase: "vence_hoje" },
+    { daysUntil: -2, phase: "dois_dias_apos" },
+  ];
+
+  for (const offset of [-1, 0, 1]) {
+    const due = startOfLocalDay(new Date(today.getFullYear(), today.getMonth() + offset, day));
+    const daysUntil = diffCalendarDays(today, due);
+    const match = phases.find((item) => item.daysUntil === daysUntil);
+    if (!match) continue;
+    return {
+      phase: match.phase,
+      dueDate: formatIsoDate(due),
+      message: BILLING_NOTICE_MESSAGES[match.phase],
+    };
+  }
+
+  return null;
+}
+
+export function billingBlockedBody(student: { id: string; diaVencimento: string }) {
+  const aviso = getBillingScreenNotice(student.diaVencimento);
+  return {
+    error: STUDENT_BILLING_BLOCKED_MESSAGE,
+    code: "BILLING_BLOCKED" as const,
+    ...(aviso && aviso.phase === "dois_dias_apos"
+      ? { avisoFatura: { ...aviso, studentId: student.id } }
+      : {}),
+  };
+}
+
 export function formatIsoDate(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
