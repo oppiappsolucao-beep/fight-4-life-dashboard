@@ -40,6 +40,8 @@ export default function OwnerLessonCadastroPanel({
   const [aulas, setAulas] = useState<ProfessorLessonItem[]>([]);
   const [loadingAulas, setLoadingAulas] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
+  const [lessonHasVideo, setLessonHasVideo] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const loadAulasRequestRef = useRef(0);
@@ -105,6 +107,8 @@ export default function OwnerLessonCadastroPanel({
       };
     });
     setSelectedSlotKey("");
+    setEditingLessonId(null);
+    setLessonHasVideo(false);
     setError("");
     setSuccess("");
   }, [selectedModalityId, availableProfessors]);
@@ -117,6 +121,30 @@ export default function OwnerLessonCadastroPanel({
       endTime: "",
     }));
   }, [form.professorId, classDate]);
+
+  function beginEdit(aula: ProfessorLessonItem) {
+    setEditingLessonId(aula.id);
+    setLessonHasVideo(Boolean(aula.hasVideo));
+    setForm({
+      professorId: aula.professorId,
+      title: aula.title,
+      description: aula.description ?? "",
+      videoUrl: "",
+      startTime: aula.startTime ?? "",
+      endTime: aula.endTime ?? "",
+    });
+    if (aula.startTime && aula.endTime) {
+      setSelectedSlotKey(
+        scheduleSlotKey({
+          weekday,
+          startTime: aula.startTime,
+          endTime: aula.endTime,
+        }),
+      );
+    }
+    setError("");
+    setSuccess("");
+  }
 
   function selectSlot(slot: ScheduleSlot) {
     const key = scheduleSlotKey(slot);
@@ -142,33 +170,35 @@ export default function OwnerLessonCadastroPanel({
       setError("Informe o título da aula.");
       return;
     }
-    if (!form.videoUrl.trim()) {
-      setError("Envie o vídeo do movimento ou informe a URL.");
-      return;
-    }
 
     setSaving(true);
     setError("");
     setSuccess("");
     try {
-      const result = await apiFetch<{ message: string }>("/owner/aulas", {
-        method: "POST",
-        body: JSON.stringify({
-          modalityId: selectedModalityId,
-          professorId: form.professorId,
-          classDate,
-          title: form.title.trim(),
-          description: form.description.trim() || undefined,
-          startTime: form.startTime || undefined,
-          endTime: form.endTime || undefined,
-          videoUrl: form.videoUrl,
-        }),
-      });
+      const payload = {
+        modalityId: selectedModalityId,
+        professorId: form.professorId,
+        classDate,
+        title: form.title.trim(),
+        description: form.description.trim() || undefined,
+        startTime: form.startTime || undefined,
+        endTime: form.endTime || undefined,
+        ...(form.videoUrl.trim() ? { videoUrl: form.videoUrl } : {}),
+      };
+      const result = await apiFetch<{ message: string }>(
+        editingLessonId ? `/owner/aulas/${editingLessonId}` : "/owner/aulas",
+        {
+          method: editingLessonId ? "PATCH" : "POST",
+          body: JSON.stringify(payload),
+        },
+      );
       setSuccess(result.message);
       setForm({
         ...EMPTY_FORM,
         professorId: form.professorId,
       });
+      setEditingLessonId(null);
+      setLessonHasVideo(false);
       setSelectedSlotKey("");
       loadAulas();
     } catch (err) {
@@ -225,7 +255,7 @@ export default function OwnerLessonCadastroPanel({
         </div>
         <div className="sm:col-span-2">
           <p className="m-0 text-sm text-slate-500">
-            Cadastre a aula em vídeo do dia para a modalidade{" "}
+            Cadastre a aula do dia para a modalidade{" "}
             <strong className="text-[#2E496C]">{selectedModality?.name ?? "—"}</strong>. Os alunos
             visualizam na galeria e marcam presença.
           </p>
@@ -237,7 +267,16 @@ export default function OwnerLessonCadastroPanel({
         className="grid gap-5 rounded-xl border border-slate-200 bg-white p-4 sm:p-5 xl:grid-cols-[1fr_0.95fr]"
       >
         <div className="space-y-4">
-          <p className="m-0 text-sm font-semibold text-[#2E496C]">Publicar aula do professor</p>
+          <p className="m-0 text-sm font-semibold text-[#2E496C]">
+            {editingLessonId ? "Editar aula do professor" : "Publicar aula do professor"}
+          </p>
+          <p className="m-0 text-sm text-slate-500">
+            O vídeo é opcional. O aluno só vê aquecimento e vídeo aula depois que o vídeo for
+            anexado.
+            {lessonHasVideo && !form.videoUrl.trim()
+              ? " Esta aula já tem vídeo. Envie outro só se for substituir."
+              : ""}
+          </p>
 
           <label className="block text-xs text-slate-500">
             Professor
@@ -369,7 +408,7 @@ export default function OwnerLessonCadastroPanel({
             disabled={saving || availableProfessors.length === 0}
             className="rounded-lg bg-[#5B7595] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2E496C] disabled:opacity-60"
           >
-            {saving ? "Publicando..." : "Publicar aula"}
+            {saving ? "Salvando..." : editingLessonId ? "Salvar aula" : "Publicar aula"}
           </button>
         </div>
 
@@ -400,6 +439,13 @@ export default function OwnerLessonCadastroPanel({
                 {aula.description ? (
                   <p className="m-0 mt-2 text-sm text-slate-500">{aula.description}</p>
                 ) : null}
+                <button
+                  type="button"
+                  onClick={() => beginEdit(aula)}
+                  className="mt-3 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600"
+                >
+                  Editar
+                </button>
                 <p
                   className={`m-0 mt-2 inline-flex rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ${
                     aula.active

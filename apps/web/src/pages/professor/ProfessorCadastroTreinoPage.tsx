@@ -1,4 +1,4 @@
-import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { apiFetch } from "../../lib/api";
 import WorkoutDateStrip from "../../components/student/WorkoutDateStrip";
@@ -78,6 +78,37 @@ function isCustomExerciseId(exerciseId: string) {
   return exerciseId.startsWith("custom:");
 }
 
+function draftsFromWarmup(
+  warmup: NonNullable<ModalityItem["warmupExercises"]>,
+  catalog: ExerciseCatalogItem[],
+) {
+  const nextDrafts: WorkoutExerciseDraft[] = warmup.map((item, index) => {
+    const customId = item.customName ? `custom:${index}-${item.order}` : (item.exerciseId ?? "");
+    return {
+      exerciseId: customId,
+      phase: "INICIO" as const,
+      order: item.order ?? index + 1,
+      sets: item.sets,
+      reps: item.reps ?? "",
+      load: item.load ?? "",
+      restSeconds: item.restSeconds ?? 60,
+      notes: item.notes ?? "",
+    };
+  });
+  const meta: Record<string, ExerciseCatalogItem> = {};
+  warmup.forEach((item, index) => {
+    if (item.customName) {
+      const customId = `custom:${index}-${item.order}`;
+      meta[customId] = customExerciseCatalogItem(customId, item.customName);
+      return;
+    }
+    if (!item.exerciseId) return;
+    const exercise = catalog.find((entry) => entry.id === item.exerciseId);
+    if (exercise) meta[item.exerciseId] = exercise;
+  });
+  return { nextDrafts, meta };
+}
+
 function reindexPhase(drafts: WorkoutExerciseDraft[], phase: WorkoutPhase) {
   let order = 1;
   return drafts.map((item) => {
@@ -113,6 +144,8 @@ export default function ProfessorCadastroTreinoPage() {
   const [notes, setNotes] = useState("");
   const [lessonDescription, setLessonDescription] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
+  const [lessonHasVideo, setLessonHasVideo] = useState(false);
+  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
   const [selectedSlotKey, setSelectedSlotKey] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
@@ -127,6 +160,8 @@ export default function ProfessorCadastroTreinoPage() {
   const [savingCatalog, setSavingCatalog] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const lessonFormKey = useRef("");
+  const warmupLoadKey = useRef("");
 
   const muscleGroups = useMemo(() => {
     if (!activePhase) return ["Todos"];
@@ -411,37 +446,63 @@ export default function ProfessorCadastroTreinoPage() {
     loadSavedAulas();
   }, [loadBase, loadSavedAulas]);
 
-  useEffect(() => {
-    if (isMusculacao || !selectedModalityId || !workoutDate) return;
-
+  const selectedAula = useMemo(() => {
+    if (isMusculacao || !selectedModalityId) return null;
     const aulasDoDia = savedAulas.filter(
       (item) => item.classDate === workoutDate && item.modalityId === selectedModalityId,
     );
+    if (selectedSlotKey) {
+      return (
+        aulasDoDia.find((item) => {
+          if (!item.startTime || !item.endTime) return false;
+          return (
+            scheduleSlotKey({
+              weekday: weekdayFromDateInput(workoutDate),
+              startTime: item.startTime,
+              endTime: item.endTime,
+            }) === selectedSlotKey
+          );
+        }) ?? null
+      );
+    }
+    return aulasDoDia[0] ?? null;
+  }, [isMusculacao, selectedModalityId, savedAulas, workoutDate, selectedSlotKey]);
 
-    if (aulasDoDia.length === 0) {
-      setTitle(`Aula ${formatWorkoutDateLabel(workoutDate)}`);
-      setLessonDescription("");
+  useEffect(() => {
+    if (isMusculacao || !selectedModalityId || !workoutDate) return;
+    const key = `${selectedModalityId}|${workoutDate}|${selectedAula?.id ?? "nova"}|${selectedSlotKey}`;
+    if (lessonFormKey.current === key) return;
+    lessonFormKey.current = key;
+
+    if (selectedAula) {
+      setEditingLessonId(selectedAula.id);
+      setLessonHasVideo(Boolean(selectedAula.hasVideo));
+      setTitle(selectedAula.title);
+      setLessonDescription(selectedAula.description ?? "");
       setVideoUrl("");
-      setSelectedSlotKey("");
-      setStartTime("");
-      setEndTime("");
+      if (selectedAula.startTime && selectedAula.endTime) {
+        const slot = {
+          weekday: weekdayFromDateInput(workoutDate),
+          startTime: selectedAula.startTime,
+          endTime: selectedAula.endTime,
+        };
+        setSelectedSlotKey(scheduleSlotKey(slot));
+        setStartTime(selectedAula.startTime);
+        setEndTime(selectedAula.endTime);
+      }
       return;
     }
 
-    const aula = aulasDoDia[0];
-    setTitle(aula.title);
-    setLessonDescription(aula.description ?? "");
-    if (aula.startTime && aula.endTime) {
-      const slot = {
-        weekday: weekdayFromDateInput(workoutDate),
-        startTime: aula.startTime,
-        endTime: aula.endTime,
-      };
-      setSelectedSlotKey(scheduleSlotKey(slot));
-      setStartTime(aula.startTime);
-      setEndTime(aula.endTime);
+    setEditingLessonId(null);
+    setLessonHasVideo(false);
+    if (!selectedSlotKey) {
+      setTitle(`Aula ${formatWorkoutDateLabel(workoutDate)}`);
+      setLessonDescription("");
+      setVideoUrl("");
+      setStartTime("");
+      setEndTime("");
     }
-  }, [isMusculacao, selectedModalityId, workoutDate, savedAulas]);
+  }, [isMusculacao, selectedModalityId, workoutDate, selectedAula, selectedSlotKey]);
 
   useEffect(() => {
     if (!muscleGroups.includes(muscleFilter)) {
@@ -450,11 +511,10 @@ export default function ProfessorCadastroTreinoPage() {
   }, [muscleGroups, muscleFilter]);
 
   useEffect(() => {
-    if (selectedStudentId) {
-      loadStudentTreinos(selectedStudentId);
-      loadStudentWorkout(selectedStudentId, workoutDate);
-    }
-  }, [selectedStudentId, workoutDate, loadStudentTreinos, loadStudentWorkout]);
+    if (!isMusculacao || !selectedStudentId) return;
+    loadStudentTreinos(selectedStudentId);
+    loadStudentWorkout(selectedStudentId, workoutDate);
+  }, [isMusculacao, selectedStudentId, workoutDate, loadStudentTreinos, loadStudentWorkout]);
 
   useEffect(() => {
     setActivePhase(null);
@@ -469,34 +529,17 @@ export default function ProfessorCadastroTreinoPage() {
 
   useEffect(() => {
     if (!selectedModality || isMusculacao) return;
-    const warmup = selectedModality.warmupExercises ?? [];
-    const nextDrafts: WorkoutExerciseDraft[] = warmup.map((item, index) => {
-      const customId = item.customName ? `custom:${index}-${item.order}` : (item.exerciseId ?? "");
-      return {
-        exerciseId: customId,
-        phase: "INICIO",
-        order: item.order ?? index + 1,
-        sets: item.sets,
-        reps: item.reps ?? "",
-        load: item.load ?? "",
-        restSeconds: item.restSeconds ?? 60,
-        notes: item.notes ?? "",
-      };
-    });
+    const key = `${selectedModality.id}|${workoutDate}|${selectedAula?.id ?? "nova"}|${selectedAula?.updatedAt ?? ""}|${catalog.length}`;
+    if (warmupLoadKey.current === key) return;
+    warmupLoadKey.current = key;
+    const warmup =
+      selectedAula && selectedAula.warmupExercises != null
+        ? selectedAula.warmupExercises
+        : (selectedModality.warmupExercises ?? []);
+    const { nextDrafts, meta } = draftsFromWarmup(warmup, catalog);
     setDrafts(nextDrafts);
-    const meta: Record<string, ExerciseCatalogItem> = {};
-    warmup.forEach((item, index) => {
-      if (item.customName) {
-        const customId = `custom:${index}-${item.order}`;
-        meta[customId] = customExerciseCatalogItem(customId, item.customName);
-        return;
-      }
-      if (!item.exerciseId) return;
-      const exercise = catalog.find((entry) => entry.id === item.exerciseId);
-      if (exercise) meta[item.exerciseId] = exercise;
-    });
     setDraftMeta(meta);
-  }, [selectedModality, isMusculacao, catalog]);
+  }, [selectedModality, isMusculacao, catalog, workoutDate, selectedAula]);
 
   const weekday = useMemo(() => weekdayFromDateInput(workoutDate), [workoutDate]);
   const availableSlots = useMemo(() => {
@@ -650,6 +693,14 @@ export default function ProfessorCadastroTreinoPage() {
     setDraftMeta((current) => ({ ...current, [exercise.id]: exercise }));
   }
 
+  function renameCustomDraft(exerciseId: string, name: string) {
+    setDraftMeta((current) => {
+      const exercise = current[exerciseId];
+      if (!exercise) return current;
+      return { ...current, [exerciseId]: { ...exercise, name } };
+    });
+  }
+
   function updateDraft(draftKey: string, patch: Partial<WorkoutExerciseDraft>) {
     setDrafts((current) =>
       current.map((item) => {
@@ -714,10 +765,6 @@ export default function ProfessorCadastroTreinoPage() {
       setError("Selecione um horário da grade cadastrada pela academia.");
       return;
     }
-    if (!videoUrl.trim()) {
-      setError("Envie o vídeo da aula ou informe a URL.");
-      return;
-    }
 
     setSaving(true);
     setError("");
@@ -728,7 +775,7 @@ export default function ProfessorCadastroTreinoPage() {
         const isCustom = isCustomExerciseId(item.exerciseId);
         return {
           ...(isCustom
-            ? { customName: exercise?.name ?? "Movimento" }
+            ? { customName: exercise?.name?.trim() || "Movimento" }
             : { exerciseId: item.exerciseId }),
           order: index + 1,
           sets: item.sets,
@@ -740,18 +787,26 @@ export default function ProfessorCadastroTreinoPage() {
         body: JSON.stringify({ warmupExercises }),
       });
 
-      const result = await apiFetch<{ message: string }>("/professor/aulas", {
-        method: "POST",
-        body: JSON.stringify({
-          modalityId: selectedModalityId,
-          classDate: workoutDate,
-          title: title.trim(),
-          description: lessonDescription.trim() || undefined,
-          startTime: startTime || undefined,
-          endTime: endTime || undefined,
-          videoUrl,
-        }),
-      });
+      const payload = {
+        modalityId: selectedModalityId,
+        classDate: workoutDate,
+        title: title.trim(),
+        description: lessonDescription.trim() || undefined,
+        startTime: startTime || undefined,
+        endTime: endTime || undefined,
+        warmupExercises,
+        ...(videoUrl.trim() ? { videoUrl } : {}),
+      };
+      const result = await apiFetch<{ message: string; aula: { id: string; hasVideo?: boolean } }>(
+        editingLessonId ? `/professor/aulas/${editingLessonId}` : "/professor/aulas",
+        {
+          method: editingLessonId ? "PATCH" : "POST",
+          body: JSON.stringify(payload),
+        },
+      );
+      setEditingLessonId(result.aula?.id ?? editingLessonId);
+      setLessonHasVideo(Boolean(result.aula?.hasVideo || videoUrl.trim() || lessonHasVideo));
+      setVideoUrl("");
 
       setSuccess(result.message);
       loadSavedAulas();
@@ -1019,13 +1074,17 @@ export default function ProfessorCadastroTreinoPage() {
                 type="submit"
                 disabled={
                   saving ||
-                  (isMusculacao
-                    ? drafts.length === 0
-                    : !videoUrl.trim() || !selectedSlotKey)
+                  (isMusculacao ? drafts.length === 0 : !selectedSlotKey)
                 }
                 className="rounded-lg bg-[#5B7595] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2E496C] disabled:opacity-60"
               >
-                {saving ? "Salvando..." : isMusculacao ? "Publicar treino" : "Publicar aula"}
+                {saving
+                  ? "Salvando..."
+                  : isMusculacao
+                    ? "Publicar treino"
+                    : editingLessonId
+                      ? "Salvar aula"
+                      : "Publicar aula"}
               </button>
             </div>
 
@@ -1314,14 +1373,15 @@ export default function ProfessorCadastroTreinoPage() {
             ) : !activeLessonPhase ? (
               <>
                 <p className="mb-3 text-sm text-slate-400">
-                  Clique em uma etapa para montar o aquecimento ou publicar a aula em vídeo.
+                  Anote o nome da posição no aquecimento e publique sem vídeo, se quiser. O aluno
+                  só vê o aquecimento e o vídeo da aula quando você anexar o vídeo.
                 </p>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {LESSON_PHASES.map((phase) => {
                     const count =
                       phase.id === "AQUECIMENTO"
                         ? drafts.length
-                        : videoUrl.trim()
+                        : videoUrl.trim() || lessonHasVideo
                           ? 1
                           : 0;
                     return (
@@ -1338,9 +1398,11 @@ export default function ProfessorCadastroTreinoPage() {
                         <p className="m-0 mt-3 text-xs font-medium text-slate-600">
                           {phase.id === "AQUECIMENTO"
                             ? `${count} movimento${count === 1 ? "" : "s"}`
-                            : count > 0
-                              ? "Vídeo pronto"
-                              : "Sem vídeo"}
+                            : videoUrl.trim()
+                              ? "Vídeo pronto para enviar"
+                              : lessonHasVideo
+                                ? "Vídeo já anexado"
+                                : "Vídeo opcional"}
                         </p>
                       </button>
                     );
@@ -1370,6 +1432,13 @@ export default function ProfessorCadastroTreinoPage() {
                     className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
                   />
                 </label>
+                <p className="m-0 text-sm text-slate-500">
+                  Anexe o vídeo só quando quiser. Sem vídeo, a aula fica salva e o aluno não vê
+                  aquecimento nem vídeo aula.
+                  {lessonHasVideo && !videoUrl.trim()
+                    ? " Esta aula já tem um vídeo. Envie outro apenas se for trocar."
+                    : ""}
+                </p>
                 <LessonVideoUploadField onChange={setVideoUrl} />
                 <input
                   value={videoUrl.startsWith("data:") ? "" : videoUrl}
@@ -1508,9 +1577,20 @@ export default function ProfessorCadastroTreinoPage() {
                             >
                               <div className="flex items-center gap-2 p-3">
                                 <div className="min-w-0 flex-1">
-                                  <p className="m-0 truncate text-sm font-semibold text-[#2E496C]">
-                                    {draft.order}. {exercise.name}
-                                  </p>
+                                  {isCustomExerciseId(draft.exerciseId) ? (
+                                    <input
+                                      value={exercise.name}
+                                      aria-label="Nome da posição"
+                                      onChange={(event) =>
+                                        renameCustomDraft(draft.exerciseId, event.target.value)
+                                      }
+                                      className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm font-semibold text-[#2E496C]"
+                                    />
+                                  ) : (
+                                    <p className="m-0 truncate text-sm font-semibold text-[#2E496C]">
+                                      {draft.order}. {exercise.name}
+                                    </p>
+                                  )}
                                   <p className="m-0 mt-0.5 text-xs text-slate-400">{draft.sets}x</p>
                                 </div>
                                 <div className="flex shrink-0 items-center gap-1">

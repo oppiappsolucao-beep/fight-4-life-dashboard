@@ -73,6 +73,7 @@ const lessonSummarySelect = {
   startTime: true,
   endTime: true,
   thumbnailUrl: true,
+  warmupExercises: true,
   active: true,
   createdAt: true,
   updatedAt: true,
@@ -106,6 +107,114 @@ function isOccurrenceCancelled(
   endTime: string,
 ): boolean {
   return cancellations.has(scheduleOccurrenceKey(classDate, startTime, endTime));
+}
+
+async function lessonIdsWithVideo(ids: string[]): Promise<Set<string>> {
+  if (ids.length === 0) return new Set();
+  const rows = await prisma.professorLesson.findMany({
+    where: { id: { in: ids }, NOT: { videoUrl: "" } },
+    select: { id: true },
+  });
+  return new Set(rows.map((item) => item.id));
+}
+
+async function upsertPublishedLesson(input: {
+  tenantId: string;
+  professorId: string;
+  modalityId: string;
+  title: string;
+  description?: string | null;
+  classDate: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  videoUrl?: string | null;
+  warmupExercises?: unknown;
+  lessonId?: string | null;
+}) {
+  const classDate = parseClassDate(input.classDate);
+  const startTime = input.startTime || null;
+  const endTime = input.endTime || null;
+  const warmup =
+    input.warmupExercises === undefined
+      ? undefined
+      : (normalizeWarmupExercises(input.warmupExercises) as unknown as Prisma.InputJsonValue);
+
+  const existing = input.lessonId
+    ? await prisma.professorLesson.findFirst({
+        where: { id: input.lessonId, tenantId: input.tenantId },
+      })
+    : await prisma.professorLesson.findFirst({
+        where: {
+          tenantId: input.tenantId,
+          professorId: input.professorId,
+          modalityId: input.modalityId,
+          classDate,
+          startTime,
+          endTime,
+          active: true,
+        },
+      });
+
+  const rawVideo = input.videoUrl?.trim() ?? "";
+  let storedVideo = rawVideo;
+  const lessonId = existing?.id ?? randomUUID();
+  if (rawVideo) {
+    if (!isAllowedVideoUrl(rawVideo)) {
+      throw new Error("URL ou upload de vídeo inválido.");
+    }
+    storedVideo = await persistLessonVideo({
+      tenantId: input.tenantId,
+      lessonId,
+      videoUrl: rawVideo,
+    });
+  }
+
+  const lesson = existing
+    ? await prisma.professorLesson.update({
+        where: { id: existing.id },
+        data: {
+          modalityId: input.modalityId,
+          professorId: input.professorId,
+          title: input.title.trim() || existing.title,
+          description:
+            input.description !== undefined ? input.description?.trim() || null : existing.description,
+          classDate,
+          startTime,
+          endTime,
+          ...(rawVideo ? { videoUrl: storedVideo } : {}),
+          ...(warmup !== undefined ? { warmupExercises: warmup } : {}),
+          active: true,
+        },
+        include: lessonInclude,
+      })
+    : await prisma.professorLesson.create({
+        data: {
+          id: lessonId,
+          tenantId: input.tenantId,
+          modalityId: input.modalityId,
+          professorId: input.professorId,
+          title: input.title.trim(),
+          description: input.description?.trim() || null,
+          classDate,
+          startTime,
+          endTime,
+          videoUrl: rawVideo ? storedVideo : "",
+          warmupExercises: warmup ?? [],
+          active: true,
+        },
+        include: lessonInclude,
+      });
+
+  const hasVideo = Boolean(lesson.videoUrl?.trim());
+  return {
+    lesson,
+    created: !existing,
+    message: hasVideo
+      ? existing
+        ? "Aula atualizada."
+        : "Aula publicada."
+      : "Aula salva. O aluno vê o aquecimento e o vídeo somente quando o vídeo for anexado.",
+  };
 }
 
 async function buildProfessorStats(
@@ -380,13 +489,27 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
     await ensureTenantModalities(tenantId);
     await alignTenantMusculacaoModalities(tenantId);
 
-    const modalidades = await prisma.modality.findMany({
-      where: { tenantId },
-      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-      include: modalityListInclude,
-    });
+    const [modalidades, students, tenantPlans] = await Promise.all([
+      prisma.modality.findMany({
+        where: { tenantId },
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+        include: modalityListInclude,
+      }),
+      prisma.student.findMany({
+        where: { tenantId, active: true },
+        select: { planoModalidade: true },
+      }),
+      getTenantPlans(tenantId),
+    ]);
 
-    return reply.send({ modalidades: modalidades.map(serializeModality) });
+    return reply.send({
+      modalidades: modalidades.map((item) => ({
+        ...serializeModality(item),
+        studentCount: students.filter((student) =>
+          modalityMatchesPlan(item, student.planoModalidade, tenantPlans),
+        ).length,
+      })),
+    });
   });
 
   app.post("/owner/modalidades/import-templates", async (request, reply) => {
@@ -1239,7 +1362,13 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
         select: lessonSummarySelect,
       });
 
-      return reply.send({ aulas: aulas.map(serializeProfessorLessonSummary) });
+      const withVideo = await lessonIdsWithVideo(aulas.map((item) => item.id));
+      return reply.send({
+        aulas: aulas.map((item) => ({
+          ...serializeProfessorLessonSummary(item),
+          hasVideo: withVideo.has(item.id),
+        })),
+      });
     },
   );
 
@@ -1253,10 +1382,6 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
 
     const tenantId = request.user.tenantId;
     const data = parsed.data;
-
-    if (!isAllowedVideoUrl(data.videoUrl)) {
-      return reply.status(400).send({ error: "URL ou upload de vídeo inválido." });
-    }
 
     const professor = await prisma.user.findFirst({
       where: {
@@ -1292,42 +1417,88 @@ export async function registerOwnerModalityRoutes(app: FastifyInstance): Promise
       },
     });
 
-    const lessonId = randomUUID();
-    let videoUrl: string;
     try {
-      videoUrl = await persistLessonVideo({
+      const saved = await upsertPublishedLesson({
         tenantId,
-        lessonId,
+        professorId: professor.id,
+        modalityId: data.modalityId,
+        title: data.title,
+        description: data.description,
+        classDate: data.classDate,
+        startTime: data.startTime,
+        endTime: data.endTime,
         videoUrl: data.videoUrl,
+        warmupExercises: data.warmupExercises,
+      });
+      return reply.send({
+        aula: serializeProfessorLesson(saved.lesson),
+        message: saved.message,
       });
     } catch (error) {
       return reply.status(400).send({
-        error: error instanceof Error ? error.message : "Não foi possível processar o vídeo.",
+        error: error instanceof Error ? error.message : "Não foi possível salvar a aula.",
+      });
+    }
+  });
+
+  app.patch<{ Params: { id: string } }>("/owner/aulas/:id", async (request, reply) => {
+    const parsed = ownerLessonCreateSchema.partial().safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: parsed.error.errors[0]?.message ?? "Dados inválidos.",
       });
     }
 
-    const lesson = await prisma.professorLesson.create({
-      data: {
-        id: lessonId,
-        tenantId,
-        modalityId: data.modalityId,
-        professorId: professor.id,
-        title: data.title.trim(),
-        description: data.description?.trim() || null,
-        classDate: parseClassDate(data.classDate),
-        startTime: data.startTime ?? null,
-        endTime: data.endTime ?? null,
-        videoUrl,
-        thumbnailUrl: data.thumbnailUrl?.trim() || null,
-        active: true,
-      },
-      include: lessonInclude,
+    const tenantId = request.user.tenantId;
+    const existing = await prisma.professorLesson.findFirst({
+      where: { id: request.params.id, tenantId },
     });
+    if (!existing) {
+      return reply.status(404).send({ error: "Aula não encontrada." });
+    }
 
-    return reply.send({
-      aula: serializeProfessorLesson(lesson),
-      message: "Aula publicada para a modalidade.",
-    });
+    const data = parsed.data;
+    const professorId = data.professorId ?? existing.professorId;
+    const modalityId = data.modalityId ?? existing.modalityId;
+
+    if (data.professorId) {
+      const professor = await prisma.user.findFirst({
+        where: {
+          id: professorId,
+          tenantId,
+          active: true,
+          role: { in: [UserRole.PROFESSOR, UserRole.PROPRIETARIO] },
+        },
+        select: { id: true },
+      });
+      if (!professor) {
+        return reply.status(404).send({ error: "Professor não encontrado." });
+      }
+    }
+
+    try {
+      const saved = await upsertPublishedLesson({
+        tenantId,
+        lessonId: existing.id,
+        professorId,
+        modalityId,
+        title: data.title ?? existing.title,
+        description: data.description !== undefined ? data.description : existing.description,
+        classDate: data.classDate ?? formatClassDate(existing.classDate),
+        startTime: data.startTime !== undefined ? data.startTime : existing.startTime,
+        endTime: data.endTime !== undefined ? data.endTime : existing.endTime,
+        videoUrl: data.videoUrl,
+        warmupExercises: data.warmupExercises,
+      });
+      return reply.send({
+        aula: serializeProfessorLesson(saved.lesson),
+        message: saved.message,
+      });
+    } catch (error) {
+      return reply.status(400).send({
+        error: error instanceof Error ? error.message : "Não foi possível atualizar a aula.",
+      });
+    }
   });
 }
 
@@ -1509,7 +1680,13 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
       select: lessonSummarySelect,
     });
 
-    return reply.send({ aulas: aulas.map(serializeProfessorLessonSummary) });
+    const withVideo = await lessonIdsWithVideo(aulas.map((item) => item.id));
+    return reply.send({
+      aulas: aulas.map((item) => ({
+        ...serializeProfessorLessonSummary(item),
+        hasVideo: withVideo.has(item.id),
+      })),
+    });
   });
 
   app.post("/professor/aulas", async (request, reply) => {
@@ -1523,51 +1700,33 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
     const tenantId = request.user.tenantId;
     const data = parsed.data;
 
-    if (!isAllowedVideoUrl(data.videoUrl)) {
-      return reply.status(400).send({ error: "URL ou upload de vídeo inválido." });
-    }
-
     const allowed = await assertProfessorAccess(request.user.sub, tenantId, data.modalityId);
     if (!allowed) {
       return reply.status(403).send({ error: "Modalidade não liberada para você." });
     }
 
-    const lessonId = randomUUID();
-    let videoUrl: string;
     try {
-      videoUrl = await persistLessonVideo({
+      const saved = await upsertPublishedLesson({
         tenantId,
-        lessonId,
+        professorId: request.user.sub,
+        modalityId: data.modalityId,
+        title: data.title,
+        description: data.description,
+        classDate: data.classDate,
+        startTime: data.startTime,
+        endTime: data.endTime,
         videoUrl: data.videoUrl,
+        warmupExercises: data.warmupExercises,
+      });
+      return reply.send({
+        aula: serializeProfessorLesson(saved.lesson),
+        message: saved.message,
       });
     } catch (error) {
       return reply.status(400).send({
-        error: error instanceof Error ? error.message : "Não foi possível processar o vídeo.",
+        error: error instanceof Error ? error.message : "Não foi possível publicar a aula.",
       });
     }
-
-    const lesson = await prisma.professorLesson.create({
-      data: {
-        id: lessonId,
-        tenantId,
-        modalityId: data.modalityId,
-        professorId: request.user.sub,
-        title: data.title.trim(),
-        description: data.description?.trim() || null,
-        classDate: parseClassDate(data.classDate),
-        startTime: data.startTime ?? null,
-        endTime: data.endTime ?? null,
-        videoUrl,
-        thumbnailUrl: data.thumbnailUrl?.trim() || null,
-        active: true,
-      },
-      include: lessonInclude,
-    });
-
-    return reply.send({
-      aula: serializeProfessorLesson(lesson),
-      message: "Aula publicada.",
-    });
   });
 
   app.patch<{ Params: { id: string } }>("/professor/aulas/:id", async (request, reply) => {
@@ -1600,46 +1759,29 @@ export async function registerProfessorRoutes(app: FastifyInstance): Promise<voi
       }
     }
 
-    if (data.videoUrl && !isAllowedVideoUrl(data.videoUrl)) {
-      return reply.status(400).send({ error: "Vídeo inválido." });
+    try {
+      const saved = await upsertPublishedLesson({
+        tenantId,
+        lessonId: existing.id,
+        professorId: request.user.sub,
+        modalityId: data.modalityId ?? existing.modalityId,
+        title: data.title ?? existing.title,
+        description: data.description !== undefined ? data.description : existing.description,
+        classDate: data.classDate ?? formatClassDate(existing.classDate),
+        startTime: data.startTime !== undefined ? data.startTime : existing.startTime,
+        endTime: data.endTime !== undefined ? data.endTime : existing.endTime,
+        videoUrl: data.videoUrl,
+        warmupExercises: data.warmupExercises,
+      });
+      return reply.send({
+        aula: serializeProfessorLesson(saved.lesson),
+        message: saved.message,
+      });
+    } catch (error) {
+      return reply.status(400).send({
+        error: error instanceof Error ? error.message : "Não foi possível atualizar a aula.",
+      });
     }
-
-    let videoUrl = data.videoUrl;
-    if (videoUrl) {
-      try {
-        videoUrl = await persistLessonVideo({
-          tenantId,
-          lessonId: existing.id,
-          videoUrl,
-        });
-      } catch (error) {
-        return reply.status(400).send({
-          error: error instanceof Error ? error.message : "Não foi possível processar o vídeo.",
-        });
-      }
-    }
-
-    const lesson = await prisma.professorLesson.update({
-      where: { id: existing.id },
-      data: {
-        ...(data.modalityId ? { modalityId: data.modalityId } : {}),
-        ...(data.title ? { title: data.title.trim() } : {}),
-        ...(data.description !== undefined
-          ? { description: data.description?.trim() || null }
-          : {}),
-        ...(data.classDate ? { classDate: parseClassDate(data.classDate) } : {}),
-        ...(videoUrl ? { videoUrl } : {}),
-        ...(data.thumbnailUrl !== undefined
-          ? { thumbnailUrl: data.thumbnailUrl?.trim() || null }
-          : {}),
-      },
-      include: lessonInclude,
-    });
-
-    return reply.send({
-      aula: serializeProfessorLesson(lesson),
-      message: "Aula atualizada.",
-    });
   });
 
   app.delete<{ Params: { id: string } }>("/professor/aulas/:id", async (request, reply) => {
@@ -2397,11 +2539,12 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
     });
   });
 
-  app.get<{ Querystring: { modalityId: string } }>(
+  app.get<{ Querystring: { modalityId: string; lessonId?: string } }>(
     "/student/modality-aquecimento",
     { preHandler: [requireStudent] },
     async (request, reply) => {
       const modalityId = request.query.modalityId;
+      const lessonId = request.query.lessonId;
       if (!modalityId) {
         return reply.status(400).send({ error: "Informe a modalidade." });
       }
@@ -2435,7 +2578,26 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
         return reply.status(403).send({ error: "Modalidade não incluída no seu plano." });
       }
 
-      const warmupItems = normalizeWarmupExercises(modality.warmupExercises);
+      let warmupSource: unknown = modality.warmupExercises;
+      if (lessonId) {
+        const lesson = await prisma.professorLesson.findFirst({
+          where: {
+            id: lessonId,
+            tenantId: student.tenantId,
+            modalityId,
+            active: true,
+          },
+          select: { videoUrl: true, warmupExercises: true },
+        });
+        if (!lesson?.videoUrl?.trim()) {
+          return reply.send({ exercises: [] });
+        }
+        if (lesson.warmupExercises != null) {
+          warmupSource = lesson.warmupExercises;
+        }
+      }
+
+      const warmupItems = normalizeWarmupExercises(warmupSource);
       if (warmupItems.length === 0) {
         return reply.send({ exercises: [] });
       }
@@ -2667,9 +2829,11 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
         include: lessonInclude,
       });
 
-      const lessons: typeof storedLessons = storedLessons.map((lesson) =>
-        lesson.videoUrl.startsWith("data:") ? { ...lesson, videoUrl: "" } : lesson,
-      );
+      const lessons = storedLessons.map((lesson) => {
+        const hasVideo = Boolean(lesson.videoUrl?.trim());
+        const safe = lesson.videoUrl.startsWith("data:") ? { ...lesson, videoUrl: "" } : lesson;
+        return { ...serializeProfessorLesson(safe), hasVideo };
+      });
 
       for (const lesson of storedLessons) {
         if (lesson.videoUrl.startsWith("data:")) {
@@ -2733,7 +2897,7 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
             ? `${lesson.startTime} – ${lesson.endTime}`
             : lesson.title,
         professorName: lesson.professor?.name ?? lesson.professor?.email ?? null,
-        lesson: serializeProfessorLesson(lesson),
+        lesson,
       }));
 
       const usedKeys = new Set(
@@ -2754,7 +2918,7 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
             label: `${slot.startTime} – ${slot.endTime}`,
             professorName:
               lesson?.professor?.name ?? lesson?.professor?.email ?? slot.professorName,
-            lesson: lesson ? serializeProfessorLesson(lesson) : null,
+            lesson,
           };
         });
 
@@ -2924,12 +3088,18 @@ export async function registerStudentModalityRoutes(app: FastifyInstance): Promi
           })
         : [];
 
+      const withVideo = await lessonIdsWithVideo(lessons.map((item) => item.id));
       return reply.send({
         planoModalidade: student.planoModalidade,
         modalidadeAtual: matched ? serializeModality(matched) : null,
         modalidadeSelecionada: selectedModality ? serializeModality(selectedModality) : null,
         modalidades: accessibleModalidades.map(serializeModality),
-        aulas: lessons.map(serializeProfessorLessonSummary),
+        aulas: lessons
+          .filter((item) => withVideo.has(item.id))
+          .map((item) => ({
+            ...serializeProfessorLessonSummary(item),
+            hasVideo: true,
+          })),
       });
     },
   );

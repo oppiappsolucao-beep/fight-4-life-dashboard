@@ -43,6 +43,7 @@ export interface ModalityItem {
   sortOrder: number;
   lessonCount: number;
   professorCount?: number;
+  studentCount?: number;
   scheduleSlots?: ScheduleSlot[];
   createdAt: string;
   updatedAt: string;
@@ -106,6 +107,8 @@ export interface ProfessorLessonItem {
   startTime: string | null;
   endTime: string | null;
   videoUrl: string;
+  hasVideo?: boolean;
+  warmupExercises?: ModalityItem["warmupExercises"] | null;
   thumbnailUrl: string | null;
   active: boolean;
   attendanceCount: number;

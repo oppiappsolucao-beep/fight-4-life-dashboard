@@ -214,16 +214,17 @@ export default function StudentLessonTreinoFlow({
       });
   }, [session?.id, modalityId, modalityName, weekScheduleDates]);
 
-  const loadWarmupForDay = useCallback(
-    (hasLesson: boolean) => {
-      if (!session?.id || !modalityId || !hasLesson) {
+  const loadWarmupForLesson = useCallback(
+    (lesson: ProfessorLessonItem | null) => {
+      const hasVideo = Boolean(lesson?.hasVideo || lesson?.videoUrl?.trim());
+      if (!session?.id || !modalityId || !lesson || !hasVideo) {
         setWarmupExercises([]);
         setSetsMap({});
         return;
       }
 
       apiFetch<{ exercises: WorkoutExerciseItem[] }>(
-        `/student/modality-aquecimento?modalityId=${encodeURIComponent(modalityId)}`,
+        `/student/modality-aquecimento?modalityId=${encodeURIComponent(modalityId)}&lessonId=${encodeURIComponent(lesson.id)}`,
         {},
         session.id,
       )
@@ -261,12 +262,12 @@ export default function StudentLessonTreinoFlow({
               ? readAulaCompleted(modalityId, classDate, firstSlot.lesson.id)
               : false,
           );
-          loadWarmupForDay(true);
+          loadWarmupForLesson(firstSlot.lesson);
         } else {
           setSelectedSlotKey("");
           setActiveLesson(null);
           setAulaCompleted(false);
-          loadWarmupForDay(true);
+          loadWarmupForLesson(null);
         }
       })
       .catch((err) => {
@@ -274,11 +275,11 @@ export default function StudentLessonTreinoFlow({
         setActiveLesson(null);
         setSelectedSlotKey("");
         setAulaCompleted(false);
-        loadWarmupForDay(false);
+        loadWarmupForLesson(null);
         setError(err instanceof Error ? err.message : "Erro ao carregar aulas.");
       })
       .finally(() => setLoading(false));
-  }, [session?.id, modalityId, classDate, loadWarmupForDay]);
+  }, [session?.id, modalityId, classDate, loadWarmupForLesson]);
 
   useEffect(() => {
     setHorarios([]);
@@ -337,8 +338,9 @@ export default function StudentLessonTreinoFlow({
     setAulaCompleted(
       slot.lesson ? readAulaCompleted(modalityId, classDate, slot.lesson.id) : false,
     );
-    setActivePhase(slot.lesson ? "AULA" : "AQUECIMENTO");
-    loadWarmupForDay(true);
+    const hasVideo = Boolean(slot.lesson?.hasVideo || slot.lesson?.videoUrl?.trim());
+    setActivePhase(hasVideo ? "AULA" : "AQUECIMENTO");
+    loadWarmupForLesson(slot.lesson);
   }
 
   function handleToggleSet(item: WorkoutExerciseItem, setNumber: number) {
@@ -362,6 +364,8 @@ export default function StudentLessonTreinoFlow({
       );
     }
   }
+
+  const lessonHasVideo = Boolean(activeLesson?.hasVideo || activeLesson?.videoUrl?.trim());
 
   const warmupPercent =
     warmupExercises.length > 0
@@ -439,7 +443,6 @@ export default function StudentLessonTreinoFlow({
                     >
                       {slot.label}
                       {slot.professorName ? ` • ${slot.professorName}` : ""}
-                      {slot.lesson ? "" : " (sem vídeo)"}
                     </button>
                   );
                 })}
@@ -447,6 +450,8 @@ export default function StudentLessonTreinoFlow({
             </section>
           ) : null}
 
+          {lessonHasVideo ? (
+          <>
           <section className="sticky top-14 z-20 -mx-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm md:top-0">
             <div className="grid grid-cols-2 gap-2">
               {LESSON_PHASES.map((phase) => {
@@ -547,6 +552,14 @@ export default function StudentLessonTreinoFlow({
           ) : (
             <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">
               Nenhuma aula publicada para {formatWorkoutDateLabel(classDate)} em {modalityName}.
+            </div>
+          )}
+          </>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+              {activeLesson
+                ? "Aula registrada. O aquecimento e o vídeo aparecem quando o professor anexar o vídeo."
+                : `Nenhuma aula publicada para ${formatWorkoutDateLabel(classDate)} em ${modalityName}.`}
             </div>
           )}
         </>

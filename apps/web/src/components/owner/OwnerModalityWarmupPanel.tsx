@@ -4,7 +4,9 @@ import type { ExerciseCatalogItem } from "../../types/workout";
 import type { ModalityItem } from "../../types/modality";
 
 interface WarmupDraft {
+  key: string;
   exerciseId: string;
+  customName: string;
   order: number;
   sets: number;
   reps: string;
@@ -35,8 +37,20 @@ export default function OwnerModalityWarmupPanel({ modality }: OwnerModalityWarm
       .then(([exercisesData, modalidadesData]) => {
         setCatalog(exercisesData.exercises);
         const current = modalidadesData.modalidades.find((item) => item.id === modality.id);
-        const warmup = (current?.warmupExercises ?? []) as WarmupDraft[];
-        setDrafts(warmup);
+        const warmup = current?.warmupExercises ?? [];
+        setDrafts(
+          warmup.map((item, index) => ({
+            key: `${item.exerciseId ?? "custom"}-${item.order}-${index}`,
+            exerciseId: item.exerciseId ?? "",
+            customName: item.customName ?? "",
+            order: item.order ?? index + 1,
+            sets: item.sets,
+            reps: item.reps ?? "12",
+            load: item.load ?? "",
+            restSeconds: item.restSeconds ?? 60,
+            notes: item.notes ?? "",
+          })),
+        );
       })
       .catch((err) =>
         setError(err instanceof Error ? err.message : "Erro ao carregar aquecimento."),
@@ -66,7 +80,9 @@ export default function OwnerModalityWarmupPanel({ modality }: OwnerModalityWarm
     setDrafts((current) => [
       ...current,
       {
+        key: exercise.id,
         exerciseId: exercise.id,
+        customName: "",
         order: current.length + 1,
         sets: 3,
         reps: "12",
@@ -76,12 +92,19 @@ export default function OwnerModalityWarmupPanel({ modality }: OwnerModalityWarm
     setSuccess("");
   }
 
-  function removeDraft(exerciseId: string) {
+  function removeDraft(key: string) {
     setDrafts((current) =>
       current
-        .filter((item) => item.exerciseId !== exerciseId)
+        .filter((item) => item.key !== key)
         .map((item, index) => ({ ...item, order: index + 1 })),
     );
+  }
+
+  function updateDraft(key: string, patch: Partial<WarmupDraft>) {
+    setDrafts((current) =>
+      current.map((item) => (item.key === key ? { ...item, ...patch } : item)),
+    );
+    setSuccess("");
   }
 
   async function saveWarmup() {
@@ -91,7 +114,18 @@ export default function OwnerModalityWarmupPanel({ modality }: OwnerModalityWarm
     try {
       await apiFetch(`/owner/modalidades/${modality.id}`, {
         method: "PATCH",
-        body: JSON.stringify({ warmupExercises: drafts }),
+        body: JSON.stringify({
+          warmupExercises: drafts.map((item, index) => ({
+            ...(item.exerciseId ? { exerciseId: item.exerciseId } : {}),
+            ...(item.customName.trim() ? { customName: item.customName.trim() } : {}),
+            order: index + 1,
+            sets: item.sets,
+            reps: item.reps,
+            load: item.load,
+            restSeconds: item.restSeconds,
+            notes: item.notes,
+          })),
+        }),
       });
       setSuccess("Movimentos de aquecimento salvos.");
     } catch (err) {
@@ -115,7 +149,7 @@ export default function OwnerModalityWarmupPanel({ modality }: OwnerModalityWarm
         Aquecimento — {modality.name}
       </p>
       <p className="m-0 mt-1 text-sm text-slate-500">
-        Movimentos que o aluno verá na etapa &quot;Aquecimento&quot; do treino.
+        Movimentos desta modalidade. Dá para alterar o nome, as séries e a ordem depois de salvar. O aluno só vê o aquecimento quando a aula tiver vídeo.
       </p>
 
       {error ? (
@@ -157,15 +191,42 @@ export default function OwnerModalityWarmupPanel({ modality }: OwnerModalityWarm
           </p>
           {drafts.map((draft) => {
             const exercise = catalog.find((item) => item.id === draft.exerciseId);
+            const label = draft.customName || exercise?.name || "Movimento";
             return (
               <div
-                key={draft.exerciseId}
+                key={draft.key}
                 className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
               >
-                <span className="text-sm text-[#2E496C]">{exercise?.name ?? "Exercício"}</span>
+                <div className="min-w-0 flex-1">
+                  {draft.exerciseId ? (
+                    <span className="text-sm text-[#2E496C]">{label}</span>
+                  ) : (
+                    <input
+                      value={draft.customName}
+                      aria-label="Nome do movimento"
+                      onChange={(event) =>
+                        updateDraft(draft.key, { customName: event.target.value })
+                      }
+                      className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-[#2E496C]"
+                    />
+                  )}
+                </div>
+                <label className="flex items-center gap-1 text-xs text-slate-500">
+                  Séries
+                  <input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={draft.sets}
+                    onChange={(event) =>
+                      updateDraft(draft.key, { sets: Number(event.target.value) || 1 })
+                    }
+                    className="w-14 rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-[#2E496C]"
+                  />
+                </label>
                 <button
                   type="button"
-                  onClick={() => removeDraft(draft.exerciseId)}
+                  onClick={() => removeDraft(draft.key)}
                   className="rounded-md border border-red-400/25 px-2 py-1 text-xs text-red-700"
                 >
                   Remover

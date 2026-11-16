@@ -168,6 +168,7 @@ export default function OwnerProfessoresPage() {
   }
 
   const selectedViewModality = activeModalities.find((item) => item.id === formEditingModalityId);
+  const selectedModalityStudents = selectedViewModality?.studentCount ?? 0;
 
   const filteredProfessores = useMemo(() => {
     if (!formEditingModalityId) return [];
@@ -708,6 +709,10 @@ export default function OwnerProfessoresPage() {
                     }`}
                   >
                     {item.name}
+                    <span className={selected ? "text-white/80" : "text-slate-400"}>
+                      {" "}
+                      · {item.studentCount ?? 0} aluno{(item.studentCount ?? 0) === 1 ? "" : "s"}
+                    </span>
                   </button>
                 );
               })}
@@ -718,9 +723,15 @@ export default function OwnerProfessoresPage() {
             <>
               <section className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <div className="mb-2 flex items-center justify-between gap-3">
-                  <p className="m-0 text-sm font-semibold text-[#2E496C]">
-                    Selecionar professor — {selectedViewModality.name}
-                  </p>
+                  <div>
+                    <p className="m-0 text-sm font-semibold text-[#2E496C]">
+                      Selecionar professor — {selectedViewModality.name}
+                    </p>
+                    <p className="m-0 mt-1 text-xs text-slate-500">
+                      {selectedModalityStudents} aluno{selectedModalityStudents === 1 ? "" : "s"}{" "}
+                      cadastrado{selectedModalityStudents === 1 ? "" : "s"} nesta modalidade
+                    </p>
+                  </div>
                 </div>
                 {filteredProfessores.length === 0 ? (
                   <p className="m-0 py-4 text-center text-sm text-slate-400">
@@ -750,6 +761,12 @@ export default function OwnerProfessoresPage() {
                           <p className="m-0 truncate text-[0.65rem] text-[#2E496C]/40">
                             {professor.email}
                           </p>
+                          {linked ? (
+                            <p className="m-0 mt-1 text-[0.65rem] font-medium text-[#5B7595]">
+                              Turma: {selectedModalityStudents} aluno
+                              {selectedModalityStudents === 1 ? "" : "s"}
+                            </p>
+                          ) : null}
                           {!professor.active ? (
                             <p className="m-0 mt-1 text-[0.6rem] text-red-300">
                               Acesso geral bloqueado

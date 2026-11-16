@@ -67,12 +67,12 @@ export default function OwnerVisaoGeralPage() {
                 hint: "Mensalidades dos alunos ativos",
               },
               {
-                label: "Vencidos",
+                label: "Pagos",
                 value: String(overview.metrics.vencidos),
                 hint:
                   overview.metrics.venceHoje > 0
                     ? `${overview.metrics.venceHoje} vence(m) hoje`
-                    : "Cobranças em atraso",
+                    : "Alunos pagantes",
               },
             ]}
           />

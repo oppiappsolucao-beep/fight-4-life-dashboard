@@ -512,6 +512,9 @@ export function serializeProfessorLesson(
     startTime: lesson.startTime,
     endTime: lesson.endTime,
     videoUrl: lesson.videoUrl,
+    hasVideo: Boolean(lesson.videoUrl?.trim()),
+    warmupExercises:
+      lesson.warmupExercises == null ? null : normalizeWarmupExercises(lesson.warmupExercises),
     thumbnailUrl: lesson.thumbnailUrl,
     active: lesson.active,
     attendanceCount: lesson._count?.attendances ?? 0,
@@ -541,6 +544,9 @@ type ProfessorLessonSummarySource = Pick<
   | "createdAt"
   | "updatedAt"
 > & {
+  videoUrl?: string | null;
+  warmupExercises?: unknown;
+} & {
   modality?: Pick<Modality, "id" | "name" | "slug">;
   professor?: Pick<User, "id" | "name" | "email">;
   _count?: { attendances: number };
@@ -558,6 +564,9 @@ export function serializeProfessorLessonSummary(lesson: ProfessorLessonSummarySo
     startTime: lesson.startTime,
     endTime: lesson.endTime,
     videoUrl: "",
+    hasVideo: Boolean(lesson.videoUrl?.trim()),
+    warmupExercises:
+      lesson.warmupExercises == null ? null : normalizeWarmupExercises(lesson.warmupExercises),
     thumbnailUrl: lesson.thumbnailUrl,
     active: lesson.active,
     attendanceCount: lesson._count?.attendances ?? 0,

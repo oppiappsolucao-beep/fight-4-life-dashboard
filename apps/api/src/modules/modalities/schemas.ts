@@ -121,7 +121,8 @@ export const professorLessonSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe a data no formato AAAA-MM-DD."),
   startTime: scheduleSlotSchema.shape.startTime.optional(),
   endTime: scheduleSlotSchema.shape.endTime.optional(),
-  videoUrl: z.string().min(1, "Envie o vídeo ou informe a URL."),
+  videoUrl: z.string().optional(),
+  warmupExercises: tenantModalityUpdateSchema.shape.warmupExercises,
   thumbnailUrl: z.union([z.string(), z.literal("")]).optional(),
 });
 

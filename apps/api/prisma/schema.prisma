@@ -442,6 +442,8 @@ model ProfessorLesson {
   startTime    String?
   endTime      String?
   videoUrl     String
+  /// Movimentos desta aula. O aluno só vê quando houver vídeo anexado.
+  warmupExercises Json?
   thumbnailUrl String?
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())

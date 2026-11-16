@@ -64,11 +64,6 @@ export default function ProfessorAulasPage() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!form.videoUrl.trim()) {
-      setError("Envie um vídeo ou informe a URL.");
-      return;
-    }
-
     setSaving(true);
     setError("");
     setSuccess("");
@@ -95,7 +90,7 @@ export default function ProfessorAulasPage() {
         </p>
         <h1 className="m-0 text-2xl font-semibold text-[#2E496C]">Minhas Aulas</h1>
         <p className="mt-2 text-sm text-slate-500">
-          Cadastre a data, título, descrição e vídeo do movimento para suas modalidades liberadas.
+          Cadastre a data e o nome da posição. O vídeo é opcional e pode ser anexado depois.
         </p>
       </header>
 
@@ -197,6 +192,9 @@ export default function ProfessorAulasPage() {
                   className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-[#2E496C]"
                 />
               </label>
+              <p className="m-0 text-xs text-slate-500">
+                Vídeo opcional. O aluno só vê aquecimento e vídeo aula se ele for anexado.
+              </p>
               <LessonVideoUploadField onChange={(videoUrl) => setForm((c) => ({ ...c, videoUrl }))} />
               <label className="block text-xs text-slate-500">
                 URL do vídeo (opcional se fez upload)
