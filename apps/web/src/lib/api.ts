@@ -11,17 +11,26 @@ export class ApiError extends Error {
   status: number;
   code?: string;
   avisoFatura?: BillingScreenNotice;
+  diaVencimento?: string;
+  studentId?: string;
 
   constructor(
     message: string,
     status: number,
-    extra?: { code?: string; avisoFatura?: BillingScreenNotice },
+    extra?: {
+      code?: string;
+      avisoFatura?: BillingScreenNotice;
+      diaVencimento?: string;
+      studentId?: string;
+    },
   ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.code = extra?.code;
     this.avisoFatura = extra?.avisoFatura;
+    this.diaVencimento = extra?.diaVencimento;
+    this.studentId = extra?.studentId;
   }
 }
 
@@ -83,6 +92,8 @@ export async function apiFetch<T>(
     throw new ApiError(message, response.status, {
       code: typeof data.code === "string" ? data.code : undefined,
       avisoFatura,
+      diaVencimento: typeof data.diaVencimento === "string" ? data.diaVencimento : undefined,
+      studentId: typeof data.studentId === "string" ? data.studentId : undefined,
     });
   }
 

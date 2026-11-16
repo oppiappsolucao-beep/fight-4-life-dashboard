@@ -43,6 +43,18 @@ export function getEffectiveDueStatus(
 }
 
 export function parseDueDay(diaVencimento: string): number {
+  const iso = diaVencimento.match(/\d{4}-\d{2}-(\d{2})/);
+  if (iso) {
+    const fromIso = Number(iso[1]);
+    if (fromIso >= 1 && fromIso <= 31) return fromIso;
+  }
+
+  const leading = diaVencimento.trim().match(/^(\d{1,2})(?:\D|$)/);
+  if (leading) {
+    const fromLeading = Number(leading[1]);
+    if (fromLeading >= 1 && fromLeading <= 31) return fromLeading;
+  }
+
   const day = Number.parseInt(diaVencimento.replace(/\D/g, ""), 10);
   if (!Number.isFinite(day) || day < 1 || day > 31) return 1;
   return day;
@@ -93,10 +105,24 @@ const BILLING_NOTICE_MESSAGES: Record<BillingNoticePhase, string> = {
     "Prezado aluno, sua fatura venceu há 2 dias. Entre em contato com a recepção.",
 };
 
+const ACADEMY_TIMEZONE = "America/Sao_Paulo";
+
 function startOfLocalDay(value: Date): Date {
   const date = new Date(value);
   date.setHours(0, 0, 0, 0);
   return date;
+}
+
+function academyCalendarToday(reference: Date): Date {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: ACADEMY_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(reference);
+  const read = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((part) => part.type === type)?.value);
+  return startOfLocalDay(new Date(read("year"), read("month") - 1, read("day")));
 }
 
 function diffCalendarDays(from: Date, to: Date): number {
@@ -109,7 +135,7 @@ export function getBillingScreenNotice(
   reference = new Date(),
 ): BillingScreenNotice | null {
   const day = parseDueDay(diaVencimento);
-  const today = startOfLocalDay(reference);
+  const today = academyCalendarToday(reference);
   const phases: Array<{ daysUntil: number; phase: BillingNoticePhase }> = [
     { daysUntil: 3, phase: "tres_dias" },
     { daysUntil: 0, phase: "vence_hoje" },
@@ -134,8 +160,10 @@ export function getBillingScreenNotice(
 export function billingBlockedBody(student: { id: string; diaVencimento: string }) {
   const aviso = getBillingScreenNotice(student.diaVencimento);
   return {
-    error: STUDENT_BILLING_BLOCKED_MESSAGE,
+    error: aviso?.phase === "dois_dias_apos" ? aviso.message : STUDENT_BILLING_BLOCKED_MESSAGE,
     code: "BILLING_BLOCKED" as const,
+    studentId: student.id,
+    diaVencimento: student.diaVencimento,
     ...(aviso && aviso.phase === "dois_dias_apos"
       ? { avisoFatura: { ...aviso, studentId: student.id } }
       : {}),

@@ -1,6 +1,11 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { ApiError, apiFetch, type BillingScreenNotice } from "../../lib/api";
-import { dismissBillingNotice, isBillingNoticeDismissed } from "../../lib/billingNotice";
+import {
+  billingNoticeFromError,
+  buildBillingScreenNotice,
+  dismissBillingNotice,
+  isBillingNoticeDismissed,
+} from "../../lib/billingNotice";
 import { clearStudentSession, getStudentSession } from "../../lib/studentSession";
 import StudentBillingNoticeModal from "./StudentBillingNoticeModal";
 
@@ -19,23 +24,26 @@ export default function StudentBillingGate({ children }: { children: ReactNode }
       return;
     }
 
-    apiFetch<{ aviso: BillingScreenNotice | null }>("/student/aviso-fatura", {}, session.id)
+    const studentId = session.id;
+
+    apiFetch<{ diaVencimento: string }>("/student/pagamentos", {}, studentId)
       .then((data) => {
-        const aviso = data.aviso;
+        const aviso = buildBillingScreenNotice(data.diaVencimento, studentId);
         setNotice(aviso);
         setNoticeOpen(Boolean(aviso) && !isBillingNoticeDismissed(aviso!));
       })
       .catch((err) => {
         const blockedByBilling =
           (err instanceof ApiError && err.code === "BILLING_BLOCKED") ||
-          (err instanceof Error && err.message.includes("contato com a academia"));
+          (err instanceof Error &&
+            (err.message.includes("contato com a academia") ||
+              err.message.includes("contato com a recepção")));
         if (!blockedByBilling) return;
         setBlocked(true);
-        const aviso = err instanceof ApiError ? err.avisoFatura : undefined;
-        if (aviso && !isBillingNoticeDismissed(aviso)) {
-          setNotice(aviso);
-          setNoticeOpen(true);
-        }
+        const aviso = billingNoticeFromError(err, studentId);
+        if (!aviso) return;
+        setNotice(aviso);
+        setNoticeOpen(!isBillingNoticeDismissed(aviso));
       })
       .finally(() => setChecking(false));
   }, [session?.id]);
@@ -53,12 +61,15 @@ export default function StudentBillingGate({ children }: { children: ReactNode }
     );
   }
 
+  const blockedMessage =
+    notice?.phase === "dois_dias_apos" ? notice.message : BLOCKED_MESSAGE;
+
   return (
     <>
       {blocked ? (
         <div className="mx-auto flex min-h-[50vh] max-w-md flex-col items-center justify-center px-6 text-center">
           <div className="rounded-2xl border border-red-400/30 bg-red-500/10 px-6 py-8">
-            <p className="m-0 text-lg font-semibold text-red-100">{BLOCKED_MESSAGE}</p>
+            <p className="m-0 text-lg font-semibold text-red-100">{blockedMessage}</p>
             <p className="m-0 mt-3 text-sm text-red-700/80">
               Seu plano está vencido. Regularize na recepção para voltar a acessar o app.
             </p>

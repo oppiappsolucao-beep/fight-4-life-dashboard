@@ -2,7 +2,9 @@ import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthEntryLayout, { authInputClass } from "../components/AuthEntryLayout";
 import { useAuth } from "../contexts/AuthContext";
-import { apiFetch, setTenantSlug } from "../lib/api";
+import StudentBillingNoticeModal from "../components/student/StudentBillingNoticeModal";
+import { apiFetch, setTenantSlug, type BillingScreenNotice } from "../lib/api";
+import { billingNoticeFromError, dismissBillingNotice, isBillingNoticeDismissed } from "../lib/billingNotice";
 import { formatCpf } from "../lib/format";
 import { clearStudentSession, setStudentSession } from "../lib/studentSession";
 
@@ -62,6 +64,7 @@ export default function StudentLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState<BillingScreenNotice | null>(null);
 
   function resetToIdentify() {
     setStep("identify");
@@ -132,6 +135,10 @@ export default function StudentLoginPage() {
       setProfile(lookup);
       setStep("password");
     } catch (err) {
+      const aviso = billingNoticeFromError(err);
+      if (aviso && !isBillingNoticeDismissed(aviso)) {
+        setNotice(aviso);
+      }
       setError(err instanceof Error ? err.message : "Erro ao verificar cadastro.");
     } finally {
       setLoading(false);
@@ -212,6 +219,15 @@ export default function StudentLoginPage() {
       }
       subtitle={headerSubtitle}
     >
+      {notice ? (
+        <StudentBillingNoticeModal
+          message={notice.message}
+          onClose={() => {
+            dismissBillingNotice(notice);
+            setNotice(null);
+          }}
+        />
+      ) : null}
       {step === "identify" ? (
         <form onSubmit={handleIdentify}>
           <input

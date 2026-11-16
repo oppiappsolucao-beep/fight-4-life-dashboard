@@ -30,6 +30,18 @@ export function getEffectiveDueStatus(
 }
 
 export function parseDueDay(diaVencimento: string): number {
+  const iso = diaVencimento.match(/\d{4}-\d{2}-(\d{2})/);
+  if (iso) {
+    const fromIso = Number(iso[1]);
+    if (fromIso >= 1 && fromIso <= 31) return fromIso;
+  }
+
+  const leading = diaVencimento.trim().match(/^(\d{1,2})(?:\D|$)/);
+  if (leading) {
+    const fromLeading = Number(leading[1]);
+    if (fromLeading >= 1 && fromLeading <= 31) return fromLeading;
+  }
+
   const day = Number.parseInt(diaVencimento.replace(/\D/g, ""), 10);
   if (!Number.isFinite(day) || day < 1 || day > 31) return 1;
   return day;

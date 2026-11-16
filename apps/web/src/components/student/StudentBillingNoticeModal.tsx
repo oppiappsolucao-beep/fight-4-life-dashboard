@@ -1,3 +1,6 @@
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
+
 interface StudentBillingNoticeModalProps {
   message: string;
   onClose: () => void;
@@ -7,8 +10,16 @@ export default function StudentBillingNoticeModal({
   message,
   onClose,
 }: StudentBillingNoticeModalProps) {
-  return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/50 px-4">
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
+
+  return createPortal(
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/50 px-4">
       <div
         role="dialog"
         aria-modal="true"
@@ -30,6 +41,7 @@ export default function StudentBillingNoticeModal({
           Fechar
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

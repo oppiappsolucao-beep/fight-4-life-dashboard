@@ -1,7 +1,11 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ApiError, apiFetch, setTenantSlug, type BillingScreenNotice } from "../../lib/api";
-import { dismissBillingNotice, isBillingNoticeDismissed } from "../../lib/billingNotice";
+import { apiFetch, setTenantSlug, type BillingScreenNotice } from "../../lib/api";
+import {
+  billingNoticeFromError,
+  dismissBillingNotice,
+  isBillingNoticeDismissed,
+} from "../../lib/billingNotice";
 import { formatCpf } from "../../lib/format";
 import {
   setStudentSession,
@@ -83,7 +87,7 @@ export default function StudentLoginForm() {
       });
       navigate("/inicio");
     } catch (err) {
-      const aviso = err instanceof ApiError ? err.avisoFatura : undefined;
+      const aviso = billingNoticeFromError(err);
       if (aviso && !isBillingNoticeDismissed(aviso)) {
         setNotice(aviso);
       }
